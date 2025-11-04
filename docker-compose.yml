@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  # Services will be defined here as they are developed
+  # Example structure:
+  # service-name:
+  #   build:
+  #     context: ./services/service-name
+  #     dockerfile: ../../docker/Dockerfile.service-name
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - ENV_VAR=value
+  #   networks:
+  #     - platform-network
+
+networks:
+  platform-network:
+    driver: bridge
