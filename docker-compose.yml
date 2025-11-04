@@ -39,11 +39,8 @@ services:
       - ./docker/nats-data:/data
     networks:
       - unityplan-network
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8222/healthz"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # Note: NATS image is minimal without shell utilities, so health check is disabled.
+    # Server logs show "Server is ready" and monitoring is available at http://localhost:8222
 
   # Redis for caching
   redis:
