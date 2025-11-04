@@ -1,19 +1,123 @@
-version: '3.8'
-
 services:
-  # Services will be defined here as they are developed
-  # Example structure:
-  # service-name:
-  #   build:
-  #     context: ./services/service-name
-  #     dockerfile: ../../docker/Dockerfile.service-name
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     - ENV_VAR=value
-  #   networks:
-  #     - platform-network
+  # PostgreSQL 16 with TimescaleDB
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: unityplan-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-unityplan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-unityplan_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-unityplan_dev}
+    volumes:
+      - ./docker/postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - unityplan-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-unityplan}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NATS with JetStream
+  nats:
+    image: nats:latest
+    container_name: unityplan-nats
+    restart: unless-stopped
+    ports:
+      - "4222:4222"  # Client connections
+      - "8222:8222"  # HTTP monitoring
+      - "6222:6222"  # Cluster connections
+    command: [
+      "-js",                    # Enable JetStream
+      "-m", "8222",            # HTTP monitoring port
+      "--store_dir=/data"      # JetStream storage directory
+    ]
+    volumes:
+      - ./docker/nats-data:/data
+    networks:
+      - unityplan-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: unityplan-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - ./docker/redis-data:/data
+    networks:
+      - unityplan-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Adminer for database management (development only)
+  adminer:
+    image: adminer:latest
+    container_name: unityplan-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
+    networks:
+      - unityplan-network
+    depends_on:
+      - postgres
+
+  # IPFS (will be used later in Phase 1)
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: unityplan-ipfs
+    restart: unless-stopped
+    ports:
+      - "5001:5001"  # API
+      - "8081:8080"  # Gateway (changed from 8080 to avoid conflict)
+      - "4001:4001"  # Swarm
+    volumes:
+      - ./docker/ipfs-data:/data/ipfs
+    environment:
+      - IPFS_PROFILE=server
+    networks:
+      - unityplan-network
+    healthcheck:
+      test: ["CMD", "ipfs", "id"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Matrix Synapse (will be configured later in Phase 1)
+  matrix-synapse:
+    image: matrixdotorg/synapse:latest
+    container_name: unityplan-matrix
+    restart: unless-stopped
+    ports:
+      - "8008:8008"  # HTTP
+    volumes:
+      - ./docker/matrix-data:/data
+    environment:
+      - SYNAPSE_SERVER_NAME=localhost
+      - SYNAPSE_REPORT_STATS=no
+      - SYNAPSE_NO_TLS=1
+    networks:
+      - unityplan-network
+    # Note: Requires initial setup with generate command
+    # Run: docker run -it --rm -v ./docker/matrix-data:/data -e SYNAPSE_SERVER_NAME=localhost matrixdotorg/synapse:latest generate
 
 networks:
-  platform-network:
+  unityplan-network:
     driver: bridge
+    name: unityplan-network
