@@ -1,0 +1,251 @@
+# Territory Pod Stack Template
+# Purpose: Core services for a specific territory/country
+# Deployment: One instance per territory (Denmark, Norway, Sweden, etc.)
+# Usage: 
+#   docker compose -f docker-compose.pod.yml -p pod-dk --env-file pods/denmark/.env up -d
+#   docker compose -f docker-compose.pod.yml -p pod-no --env-file pods/norway/.env up -d
+
+# Environment variables required in .env file:
+# POD_ID=dk|no|se (territory identifier)
+# POD_NAME=denmark|norway|sweden (human-readable name)
+# POSTGRES_PORT=5432|5433|5434 (unique per pod on same host)
+# REDIS_PORT=6379|6380|6381
+# NATS_CLIENT_PORT=4222|4223|4224
+# NATS_CLUSTER_PORT=6222|6223|6224
+# NATS_MONITOR_PORT=8222|8223|8224
+# IPFS_API_PORT=5001|5002|5003
+# IPFS_GATEWAY_PORT=8081|8082|8083
+# IPFS_SWARM_PORT=4001|4002|4003
+# MATRIX_PORT=8008|8009|8010
+# POD_POSTGRES_EXPORTER_PORT=9187|9188|9189
+# POD_REDIS_EXPORTER_PORT=9121|9122|9123
+# POD_NATS_EXPORTER_PORT=7777|7778|7779
+# POD_NODE_EXPORTER_PORT=9100|9101|9102
+# POD_CADVISOR_PORT=8089|8090|8091
+# POD_PROMETHEUS_PORT=9090|9091|9092
+# NATS_ROUTES=nats://service-nats-dk:6222,nats://service-nats-no:6223 (comma-separated cluster routes)
+
+name: unityplan-pod-${POD_ID}
+
+services:
+  # PostgreSQL 16 with TimescaleDB
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: service-postgres-${POD_ID}
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-unityplan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-unityplan_dev_password}
+      POSTGRES_DB: unityplan_${POD_ID}
+    volumes:
+      - ./docker/pods/${POD_ID}/postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - pod-net
+      - mesh-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-unityplan}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NATS with JetStream (clustered with other pods)
+  nats:
+    image: nats:latest
+    container_name: service-nats-${POD_ID}
+    restart: unless-stopped
+    ports:
+      - "${NATS_CLIENT_PORT}:4222"    # Client connections
+      - "${NATS_MONITOR_PORT}:8222"   # HTTP monitoring
+      - "${NATS_CLUSTER_PORT}:6222"   # Cluster connections
+    command:
+      - "-js"                                      # Enable JetStream
+      - "-m=8222"                                 # HTTP monitoring port
+      - "--store_dir=/data"                       # JetStream storage directory
+      - "--name=nats-${POD_ID}"                   # Server name for clustering
+      - "--cluster=nats://0.0.0.0:6222"          # Cluster listen address
+      - "--cluster_name=unityplan-global"        # Global cluster name
+      - "--routes=${NATS_ROUTES:-}"              # Cluster routes to other pods (optional)
+    volumes:
+      - ./docker/pods/${POD_ID}/nats-data:/data
+    networks:
+      - pod-net
+      - mesh-network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: service-redis-${POD_ID}
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT}:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - ./docker/pods/${POD_ID}/redis-data:/data
+    networks:
+      - pod-net
+      - mesh-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # IPFS (will be used later in Phase 1)
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: service-ipfs-${POD_ID}
+    restart: unless-stopped
+    ports:
+      - "${IPFS_API_PORT}:5001"       # API
+      - "${IPFS_GATEWAY_PORT}:8080"   # Gateway
+      - "${IPFS_SWARM_PORT}:4001"     # Swarm
+    volumes:
+      - ./docker/pods/${POD_ID}/ipfs-data:/data/ipfs
+    environment:
+      - IPFS_PROFILE=server
+    networks:
+      - pod-net
+      - mesh-network
+    healthcheck:
+      test: ["CMD", "ipfs", "id"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Matrix Synapse (will be configured later in Phase 1)
+  matrix-synapse:
+    image: matrixdotorg/synapse:latest
+    container_name: service-matrix-${POD_ID}
+    restart: unless-stopped
+    ports:
+      - "${MATRIX_PORT}:8008"  # HTTP
+    volumes:
+      - ./docker/pods/${POD_ID}/matrix-data:/data
+    environment:
+      - SYNAPSE_SERVER_NAME=${POD_NAME}.unityplan.local
+      - SYNAPSE_REPORT_STATS=no
+      - SYNAPSE_NO_TLS=1
+    networks:
+      - pod-net
+      - mesh-network
+
+  # PostgreSQL Exporter for Pod-local Prometheus
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: monitoring-postgres-exporter-${POD_ID}
+    restart: unless-stopped
+    ports:
+      - "${POD_POSTGRES_EXPORTER_PORT}:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-unityplan}:${POSTGRES_PASSWORD:-unityplan_dev_password}@postgres:5432/unityplan_${POD_ID}?sslmode=disable"
+    networks:
+      - pod-net
+      - mesh-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Redis Exporter for Pod-local Prometheus
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: monitoring-redis-exporter-${POD_ID}
+    restart: unless-stopped
+    ports:
+      - "${POD_REDIS_EXPORTER_PORT}:9121"
+    environment:
+      REDIS_ADDR: "redis:6379"
+    networks:
+      - pod-net
+      - mesh-network
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # NATS Exporter for Prometheus
+  nats-exporter:
+    image: natsio/prometheus-nats-exporter:latest
+    container_name: monitoring-nats-exporter-${POD_ID}
+    restart: unless-stopped
+    ports:
+      - "${POD_NATS_EXPORTER_PORT}:7777"
+    command:
+      - -varz
+      - -jsz=all
+      - "http://nats:8222"
+    networks:
+      - pod-net
+      - mesh-network
+    depends_on:
+      - nats
+
+  # Node Exporter for Pod metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: monitoring-node-exporter-${POD_ID}
+    restart: unless-stopped
+    ports:
+      - "${POD_NODE_EXPORTER_PORT}:9100"
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - pod-net
+      - mesh-network
+
+  # cAdvisor for container metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: monitoring-cadvisor-${POD_ID}
+    restart: unless-stopped
+    ports:
+      - "${POD_CADVISOR_PORT}:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - pod-net
+      - mesh-network
+
+  # Pod-local Prometheus (optional - for pod-level metrics before federation)
+  # Uncomment to enable pod-local Prometheus that central Prometheus will federate from
+  # prometheus-pod:
+  #   image: prom/prometheus:latest
+  #   container_name: monitoring-prometheus-${POD_ID}
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${POD_PROMETHEUS_PORT}:9090"
+  #   networks:
+  #     - pod-net
+  #     - mesh-network
+  #   volumes:
+  #     - ./docker/pods/${POD_ID}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - ./docker/pods/${POD_ID}/prometheus-data:/prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--web.enable-lifecycle'
+  #   environment:
+  #     - POD=${POD_ID}
+  #     - TERRITORY=${POD_NAME}
+
+networks:
+  # Pod-specific network (isolated)
+  pod-net:
+    driver: bridge
+    name: unityplan-pod-${POD_ID}-net
+  
+  # Mesh network for cross-pod communication (shared across all pods)
+  mesh-network:
+    external: true
+    name: unityplan-mesh-network

@@ -28,21 +28,26 @@
 ┌─────────────────────────────────────────────────────────┐
 │ Infrastructure Bootstrap                                │
 ├─────────────────────────────────────────────────────────┤
-│ ☐ Set up cloud infrastructure (VPS/Cloud provider)      │
-│ ☐ Configure Docker & Docker Compose                     │
-│ ☐ Set up PostgreSQL 16 + TimescaleDB                    │
-│ ☐ Configure NATS message bus                            │
-│ ☐ Set up Traefik reverse proxy                          │
+│ ✅ Configure Docker & Docker Compose                    │
+│ ✅ Set up PostgreSQL 16 + TimescaleDB                   │
+│ ✅ Configure NATS message bus clustering                │
+│ ✅ Set up Traefik reverse proxy                         │
+│ ✅ Create multi-pod architecture (DK, NO, SE, EU)       │
+│ ✅ Set up monitoring (Prometheus + Grafana)             │
+│ ☐ Set up Forgejo (version control + MCP)                │
+│ ☐ Set up Docker Registry (local image storage)          │
 │ ☐ Configure SSL/TLS certificates (Let's Encrypt)        │
-│ ☐ Create development Docker Compose setup               │
-│ ☐ Set up GitHub repository structure                    │
 └─────────────────────────────────────────────────────────┘
 
 Deliverables:
-✓ docker-compose.yml for local development
-✓ docker-compose.prod.yml for production
-✓ Infrastructure as Code (IaC) scripts
-✓ Development environment documentation
+✅ docker-compose.dev.yml (development tools)
+✅ docker-compose.monitoring.yml (Prometheus, Grafana, Jaeger)
+✅ docker-compose.pod.yml (single-territory template)
+✅ docker-compose.multi-territory-pod.yml (shared infrastructure)
+✅ Multi-pod deployment scripts
+✅ NATS clustering guide
+☐ Forgejo with MCP integration (docs/forgejo-mcp-setup.md)
+☐ Docker Registry for local builds
 ```
 
 #### Database Schema Design
@@ -50,12 +55,18 @@ Deliverables:
 ┌─────────────────────────────────────────────────────────┐
 │ Database Schema Creation                                │
 ├─────────────────────────────────────────────────────────┤
-│ ☐ Design global schema                                  │
-│   • users table                                          │
-│   • territories table                                    │
+│ ✅ Design territory schema architecture                 │
+│   • global schema (replicated across territories)       │
+│   • territory_{CODE} schema (isolated per territory)    │
+│   • Territory ID Format standard (countries, First      │
+│     Nations, communities)                                │
+│                                                          │
+│ ☐ Design global schema tables                           │
+│   • territories table (DK, NO, SE, DE, FR, ES, etc.)    │
+│   • users table (global authentication)                 │
 │   • audit_logs table                                     │
 │                                                          │
-│ ☐ Design public schema                                  │
+│ ☐ Design public schema (shared data)                    │
 │   • badge_definitions table                              │
 │   • translations table                                   │
 │   • tool_types table                                     │
@@ -64,17 +75,19 @@ Deliverables:
 │   • user_profiles                                        │
 │   • user_badges                                          │
 │   • courses                                              │
-│   • forums                                               │
-│   • communities                                          │
+│   • forums, communities, posts                           │
 │                                                          │
-│ ☐ Create migration scripts                              │
-│ ☐ Set up SQLx for compile-time query validation         │
+│ ☐ Create migration scripts with SQLx                    │
+│ ☐ Multi-territory PostgreSQL init script                │
 └─────────────────────────────────────────────────────────┘
 
 Deliverables:
-✓ migrations/ directory with all SQL migrations
-✓ Database schema documentation
-✓ Entity-Relationship Diagrams (ERDs)
+✅ Territory ID Format standard (project_docs/9-territory-management-standard.md)
+✅ Multi-pod architecture with data isolation
+✅ PostgreSQL init scripts for DK, NO, SE
+✅ Multi-territory init script (DE, FR, ES on Europe pod)
+☐ migrations/ directory with SQLx migrations
+☐ Database schema documentation with ERDs
 ```
 
 ### Week 3-4: Authentication Service

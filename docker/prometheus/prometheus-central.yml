@@ -1,0 +1,301 @@
+# Prometheus Central Configuration
+# Purpose: Central Prometheus instance for multi-pod monitoring
+# Deployment: docker-compose.monitoring.yml
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: "unityplan-central"
+    environment: "development"
+
+# Alerting configuration (future)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Rule files for alerts (future)
+# rule_files:
+#   - '/etc/prometheus/rules/*.yml'
+
+# ===================================================================
+# SCRAPE CONFIGURATIONS
+# ===================================================================
+
+scrape_configs:
+  # ------------------------------------------------------------------
+  # Self-monitoring
+  # ------------------------------------------------------------------
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          instance: "central"
+
+  # ------------------------------------------------------------------
+  # Global Infrastructure
+  # ------------------------------------------------------------------
+  - job_name: "traefik"
+    static_configs:
+      - targets: ["reverse-proxy-traefik:8083"]
+        labels:
+          service: "reverse-proxy"
+
+  - job_name: "jaeger"
+    static_configs:
+      - targets: ["monitoring-jaeger:14269"]
+        labels:
+          service: "tracing"
+
+  # ------------------------------------------------------------------
+  # Pod Denmark Exporters
+  # ------------------------------------------------------------------
+  - job_name: "postgres-dk"
+    static_configs:
+      - targets: ["monitoring-postgres-exporter-dk:9187"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "postgres"
+
+  - job_name: "redis-dk"
+    static_configs:
+      - targets: ["monitoring-redis-exporter-dk:9121"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "redis"
+
+  - job_name: "nats-dk"
+    static_configs:
+      - targets: ["monitoring-nats-exporter-dk:7777"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "nats"
+          cluster: "unityplan-global"
+
+  - job_name: "node-dk"
+    static_configs:
+      - targets: ["monitoring-node-exporter-dk:9100"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "node"
+
+  - job_name: "cadvisor-dk"
+    static_configs:
+      - targets: ["monitoring-cadvisor-dk:8080"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "cadvisor"
+
+  # IPFS metrics (HTTP API endpoint)
+  - job_name: "ipfs-dk"
+    metrics_path: "/debug/metrics/prometheus"
+    static_configs:
+      - targets: ["service-ipfs-dk:5001"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "ipfs"
+
+  # Matrix Synapse metrics
+  - job_name: "matrix-dk"
+    metrics_path: "/_synapse/metrics"
+    static_configs:
+      - targets: ["service-matrix-dk:8008"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "matrix"
+
+  # ------------------------------------------------------------------
+  # Pod Norway Exporters
+  # ------------------------------------------------------------------
+  - job_name: "postgres-no"
+    static_configs:
+      - targets: ["monitoring-postgres-exporter-no:9188"]
+        labels:
+          pod: "no"
+          territory: "norway"
+          service: "postgres"
+
+  - job_name: "redis-no"
+    static_configs:
+      - targets: ["monitoring-redis-exporter-no:9122"]
+        labels:
+          pod: "no"
+          territory: "norway"
+          service: "redis"
+
+  - job_name: "nats-no"
+    static_configs:
+      - targets: ["monitoring-nats-exporter-no:7778"]
+        labels:
+          pod: "no"
+          territory: "norway"
+          service: "nats"
+          cluster: "unityplan-global"
+
+  - job_name: "node-no"
+    static_configs:
+      - targets: ["monitoring-node-exporter-no:9101"]
+        labels:
+          pod: "no"
+          territory: "norway"
+          service: "node"
+
+  - job_name: "cadvisor-no"
+    static_configs:
+      - targets: ["monitoring-cadvisor-no:8090"]
+        labels:
+          pod: "no"
+          territory: "norway"
+          service: "cadvisor"
+
+  - job_name: "ipfs-no"
+    metrics_path: "/debug/metrics/prometheus"
+    static_configs:
+      - targets: ["service-ipfs-no:5001"]
+        labels:
+          pod: "no"
+          territory: "norway"
+          service: "ipfs"
+
+  - job_name: "matrix-no"
+    metrics_path: "/_synapse/metrics"
+    static_configs:
+      - targets: ["service-matrix-no:8008"]
+        labels:
+          pod: "no"
+          territory: "norway"
+          service: "matrix"
+
+  # ------------------------------------------------------------------
+  # Pod Sweden Exporters
+  # ------------------------------------------------------------------
+  - job_name: "postgres-se"
+    static_configs:
+      - targets: ["monitoring-postgres-exporter-se:9189"]
+        labels:
+          pod: "se"
+          territory: "sweden"
+          service: "postgres"
+
+  - job_name: "redis-se"
+    static_configs:
+      - targets: ["monitoring-redis-exporter-se:9123"]
+        labels:
+          pod: "se"
+          territory: "sweden"
+          service: "redis"
+
+  - job_name: "nats-se"
+    static_configs:
+      - targets: ["monitoring-nats-exporter-se:7779"]
+        labels:
+          pod: "se"
+          territory: "sweden"
+          service: "nats"
+          cluster: "unityplan-global"
+
+  - job_name: "node-se"
+    static_configs:
+      - targets: ["monitoring-node-exporter-se:9102"]
+        labels:
+          pod: "se"
+          territory: "sweden"
+          service: "node"
+
+  - job_name: "cadvisor-se"
+    static_configs:
+      - targets: ["monitoring-cadvisor-se:8091"]
+        labels:
+          pod: "se"
+          territory: "sweden"
+          service: "cadvisor"
+
+  - job_name: "ipfs-se"
+    metrics_path: "/debug/metrics/prometheus"
+    static_configs:
+      - targets: ["service-ipfs-se:5001"]
+        labels:
+          pod: "se"
+          territory: "sweden"
+          service: "ipfs"
+
+  - job_name: "matrix-se"
+    metrics_path: "/_synapse/metrics"
+    static_configs:
+      - targets: ["service-matrix-se:8008"]
+        labels:
+          pod: "se"
+          territory: "sweden"
+          service: "matrix"
+# ===================================================================
+# FEDERATION CONFIGURATION (Future: Pod-Local Prometheus)
+# ===================================================================
+# Uncomment when deploying pod-local Prometheus instances
+#
+# - job_name: 'federate-pod-dk'
+#   honor_labels: true
+#   metrics_path: '/federate'
+#   params:
+#     'match[]':
+#       - '{job=~"postgres|redis|nats|node|cadvisor|ipfs|matrix"}'
+#       - '{__name__=~"up|container_.*|process_.*"}'
+#   static_configs:
+#     - targets: ['monitoring-prometheus-dk:9090']
+#       labels:
+#         pod: 'denmark'
+#         territory: 'dk'
+#
+# - job_name: 'federate-pod-no'
+#   honor_labels: true
+#   metrics_path: '/federate'
+#   params:
+#     'match[]':
+#       - '{job=~"postgres|redis|nats|node|cadvisor|ipfs|matrix"}'
+#       - '{__name__=~"up|container_.*|process_.*"}'
+#   static_configs:
+#     - targets: ['monitoring-prometheus-no:9090']
+#       labels:
+#         pod: 'norway'
+#         territory: 'no'
+#
+# - job_name: 'federate-pod-se'
+#   honor_labels: true
+#   metrics_path: '/federate'
+#   params:
+#     'match[]':
+#       - '{job=~"postgres|redis|nats|node|cadvisor|ipfs|matrix"}'
+#       - '{__name__=~"up|container_.*|process_.*"}'
+#   static_configs:
+#     - targets: ['monitoring-prometheus-se:9090']
+#       labels:
+#         pod: 'sweden'
+#         territory: 'se'
+
+# ===================================================================
+# EXAMPLE QUERIES FOR MULTI-POD MONITORING
+# ===================================================================
+#
+# Total messages across all NATS nodes:
+#   sum(rate(gnatsd_varz_in_msgs[5m]))
+#
+# Per-pod message rate:
+#   sum(rate(gnatsd_varz_in_msgs[5m])) by (pod)
+#
+# Database connections per territory:
+#   pg_stat_database_numbackends{pod=~".*"}
+#
+# Redis memory usage comparison:
+#   redis_memory_used_bytes{pod=~".*"}
+#
+# Cross-pod latency (future with blackbox exporter):
+#   probe_duration_seconds{job="blackbox-nats"}
+#
+# ===================================================================

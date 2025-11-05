@@ -3,12 +3,7 @@ global:
   evaluation_interval: 15s
   external_labels:
     monitor: "unityplan-dev"
-
-# Alertmanager configuration (optional, can be added later)
-# alerting:
-#   alertmanagers:
-#     - static_configs:
-#         - targets: []
+    environment: "development"
 
 # Scrape configurations
 scrape_configs:
@@ -17,66 +12,151 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
-  # PostgreSQL metrics via postgres_exporter
-  - job_name: "postgres"
+  # ========================================
+  # POD: Denmark (dk)
+  # ========================================
+
+  # PostgreSQL metrics - Denmark pod
+  - job_name: "postgres-dk"
     static_configs:
-      - targets: ["postgres-exporter:9187"]
+      - targets: ["monitoring-postgres-exporter-dk:9187"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "postgres"
 
-  # Redis metrics via redis_exporter
-  - job_name: "redis"
+  # Redis metrics - Denmark pod
+  - job_name: "redis-dk"
     static_configs:
-      - targets: ["redis-exporter:9121"]
+      - targets: ["monitoring-redis-exporter-dk:9121"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "redis"
 
-  # NATS metrics via nats-exporter
-  - job_name: "nats"
+  # NATS metrics - Denmark pod
+  - job_name: "nats-dk"
     static_configs:
-      - targets: ["nats-exporter:7777"]
+      - targets: ["monitoring-nats-exporter-dk:7777"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "nats"
 
-  # Node Exporter - Host system metrics
-  - job_name: "node"
+  # Node Exporter - Denmark pod host metrics
+  - job_name: "node-dk"
     static_configs:
-      - targets: ["node-exporter:9100"]
+      - targets: ["monitoring-node-exporter-dk:9100"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "node"
 
-  # cAdvisor - Container metrics
-  - job_name: "cadvisor"
+  # cAdvisor - Denmark pod container metrics
+  - job_name: "cadvisor-dk"
     static_configs:
-      - targets: ["cadvisor:8080"]
+      - targets: ["monitoring-cadvisor-dk:8080"]
+        labels:
+          pod: "dk"
+          territory: "denmark"
+          service: "cadvisor"
 
-  # Microservices (will add as they're developed)
-  # Each Rust service should expose metrics at /metrics endpoint
+  # ========================================
+  # POD: Norway (no) - Add when deployed
+  # ========================================
 
-  # - job_name: 'auth-service'
+  # - job_name: "postgres-no"
   #   static_configs:
-  #     - targets: ['auth-service:8001']
+  #     - targets: ["monitoring-postgres-exporter-no:9188"]
+  #       labels:
+  #         pod: "no"
+  #         territory: "norway"
+  #         service: "postgres"
 
-  # - job_name: 'user-service'
+  # - job_name: "redis-no"
   #   static_configs:
-  #     - targets: ['user-service:8002']
+  #     - targets: ["monitoring-redis-exporter-no:9122"]
+  #       labels:
+  #         pod: "no"
+  #         territory: "norway"
+  #         service: "redis"
 
-  # - job_name: 'territory-service'
+  # - job_name: "nats-no"
   #   static_configs:
-  #     - targets: ['territory-service:8003']
+  #     - targets: ["monitoring-nats-exporter-no:7778"]
+  #       labels:
+  #         pod: "no"
+  #         territory: "norway"
+  #         service: "nats"
 
-  # - job_name: 'badge-service'
-  #   static_configs:
-  #     - targets: ['badge-service:8004']
+  # ========================================
+  # POD: Sweden (se) - Add when deployed
+  # ========================================
 
-  # - job_name: 'course-service'
+  # - job_name: "postgres-se"
   #   static_configs:
-  #     - targets: ['course-service:8005']
+  #     - targets: ["monitoring-postgres-exporter-se:9189"]
+  #       labels:
+  #         pod: "se"
+  #         territory: "sweden"
+  #         service: "postgres"
 
-  # - job_name: 'forum-service'
-  #   static_configs:
-  #     - targets: ['forum-service:8006']
+  # ========================================
+  # Application Services (Rust Microservices)
+  # ========================================
+  # Each service runs per-pod and exposes /metrics endpoint
+  # Uncomment as services are deployed
 
-  # - job_name: 'ipfs-service'
+  # API Gateway - Denmark
+  # - job_name: 'api-gateway-dk'
   #   static_configs:
-  #     - targets: ['ipfs-service:8007']
+  #     - targets: ['api-gateway-dk:8000']
+  #       labels:
+  #         pod: "dk"
+  #         territory: "denmark"
+  #         service: "api-gateway"
 
-  # - job_name: 'translation-service'
+  # Auth Service - Denmark
+  # - job_name: 'auth-service-dk'
   #   static_configs:
-  #     - targets: ['translation-service:8008']
+  #     - targets: ['auth-service-dk:8001']
+  #       labels:
+  #         pod: "dk"
+  #         territory: "denmark"
+  #         service: "auth"
 
-  # - job_name: 'matrix-gateway'
+  # User Service - Denmark
+  # - job_name: 'user-service-dk'
   #   static_configs:
-  #     - targets: ['matrix-gateway:8009']
+  #     - targets: ['user-service-dk:8002']
+  #       labels:
+  #         pod: "dk"
+  #         territory: "denmark"
+  #         service: "user"
+
+  # Community Service - Denmark
+  # - job_name: 'community-service-dk'
+  #   static_configs:
+  #     - targets: ['community-service-dk:8003']
+  #       labels:
+  #         pod: "dk"
+  #         territory: "denmark"
+  #         service: "community"
+
+  # Event Service - Denmark
+  # - job_name: 'event-service-dk'
+  #   static_configs:
+  #     - targets: ['event-service-dk:8004']
+  #       labels:
+  #         pod: "dk"
+  #         territory: "denmark"
+  #         service: "event"
+
+  # WebSocket Gateway - Denmark
+  # - job_name: 'websocket-gateway-dk'
+  #   static_configs:
+  #     - targets: ['websocket-gateway-dk:8005']
+  #       labels:
+  #         pod: "dk"
+  #         territory: "denmark"
+  #         service: "websocket"

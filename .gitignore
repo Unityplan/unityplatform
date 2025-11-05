@@ -42,6 +42,14 @@ docker/matrix-data/
 docker/prometheus-data/
 docker/grafana-data/
 docker/traefik-data/
+docker/pods/*/postgres-data/
+docker/pods/*/nats-data/
+docker/pods/*/redis-data/
+docker/pods/*/ipfs-data/
+docker/pods/*/matrix-data/
+docker/pods/postgres-data/
+docker/pods/nats-data/
+docker/pods/redis-data/
 
 # Uploads and user content
 uploads/

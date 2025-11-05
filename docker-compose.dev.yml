@@ -1,0 +1,124 @@
+# Development Tools Stack
+# Purpose: Developer productivity and debugging tools with global visibility
+# Deployment: Once per environment, connects to all pods
+# Usage: docker compose -f docker-compose.dev.yml up -d
+
+name: unityplan-dev
+
+services:
+  # Development Dashboard - Links to all tools
+  dev-dashboard:
+    image: nginx:alpine
+    container_name: dev-dashboard
+    restart: unless-stopped
+    ports:
+      - "8888:80"
+    networks:
+      - global-net
+      - mesh-network
+    volumes:
+      - ./docker/dev-dashboard:/usr/share/nginx/html:ro
+
+  # Adminer - Database management with connections to all pod databases
+  adminer:
+    image: adminer:latest
+    container_name: dev-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
+    networks:
+      - global-net
+      - mesh-network
+    # Can connect to: service-postgres-dk, service-postgres-no, etc.
+
+    # MailHog - Email testing for all pods
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: dev-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI
+    networks:
+      - global-net
+      - mesh-network
+    environment:
+      - MH_STORAGE=memory
+      - MH_SMTP_BIND_ADDR=0.0.0.0:1025
+      - MH_UI_BIND_ADDR=0.0.0.0:8025
+
+  # Redis Commander - Redis management UI for all pod Redis instances
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: dev-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8082:8081"
+    networks:
+      - global-net
+      - mesh-network
+    environment:
+      # Can add multiple Redis hosts:
+      # REDIS_HOSTS=dk:service-redis-dk:6379,no:service-redis-no:6379
+      - REDIS_HOSTS=local:service-redis-dk:6379
+
+  # =================================================================
+  # PHASE 1: VERSION CONTROL & IMAGE STORAGE
+  # =================================================================
+
+  # Forgejo - Self-hosted Git with MCP integration
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:9
+    container_name: dev-forgejo
+    restart: unless-stopped
+    ports:
+      - "3000:3000" # Web UI
+      - "2222:22" # SSH (use different port to avoid conflict with host)
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - FORGEJO__database__DB_TYPE=sqlite3
+      - FORGEJO__server__DOMAIN=192.168.60.133
+      - FORGEJO__server__ROOT_URL=http://192.168.60.133:3000/
+      - FORGEJO__server__SSH_DOMAIN=192.168.60.133
+      - FORGEJO__server__SSH_PORT=2222
+      - FORGEJO__security__INSTALL_LOCK=true
+    volumes:
+      - forgejo-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - global-net
+      - mesh-network
+
+  # Docker Registry - Local image storage for development
+  registry:
+    image: registry:2
+    container_name: dev-registry
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+    volumes:
+      - registry-data:/var/lib/registry
+    networks:
+      - global-net
+      - mesh-network
+
+volumes:
+  forgejo-data:
+  registry-data:
+
+
+networks:
+  global-net:
+    driver: bridge
+    name: unityplan-global-net
+
+  mesh-network:
+    external: true
+    name: unityplan-mesh-network

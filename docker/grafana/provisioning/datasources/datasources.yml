@@ -4,7 +4,8 @@ datasources:
   - name: Prometheus
     type: prometheus
     access: proxy
-    url: http://prometheus:9090
+    url: http://monitoring-prometheus:9090
+    uid: prometheus
     isDefault: true
     editable: true
     jsonData:
@@ -13,8 +14,6 @@ datasources:
   - name: Jaeger
     type: jaeger
     access: proxy
-    url: http://jaeger:16686
+    url: http://monitoring-jaeger:16686
+    uid: jaeger
     editable: true
-    jsonData:
-      tracesToLogsV2:
-        datasourceUid: "loki"

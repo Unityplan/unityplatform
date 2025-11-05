@@ -66,38 +66,126 @@ This platform follows a microservices architecture with progressive decentraliza
 
 - **Docker** and **Docker Compose** (v2.0+)
 - **Rust** (1.91.0 or latest stable)
-- **Node.js** (v18+) and **pnpm** (recommended) or npm
+- **Node.js** (v20+) and **npm**
 - **SQLx CLI**: `cargo install sqlx-cli --no-default-features --features postgres`
 
-### Quick Start (Development)
+### Phase 1 Development Setup (Minimal)
 
-1. **Clone and initialize:**
+1. **Clone repository:**
    ```bash
    git clone <repository-url>
    cd workspace
    ```
 
-2. **Set up environment variables:**
+2. **Start Phase 1 development environment:**
    ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
+   # Option 1: Minimal Phase 1 (Forgejo + Registry only)
+   ./scripts/start-phase1-dev.sh
+   
+   # Option 2: Use new architecture script
+   ./scripts/start-new-architecture.sh --phase1
+   ```
+   
+   This starts:
+   - ✅ Forgejo (version control + MCP integration)
+   - ✅ Docker Registry (local image storage)
+
+3. **Configure Forgejo (first-time setup):**
+   - Open http://localhost:3000
+   - Create admin account
+   - Create `unityplan_platform` repository
+   - Push code: `git remote add forgejo http://localhost:3000/admin/unityplan_platform.git`
+
+4. **Optional: Install forgejo-mcp for AI assistance:**
+   ```bash
+   npm install -g @goern/forgejo-mcp
+   # See docs/forgejo-mcp-setup.md for configuration
    ```
 
-3. **Start infrastructure:**
+5. **Configure Docker to use local registry:**
    ```bash
-   docker-compose up -d
+   # Add to /etc/docker/daemon.json:
+   { "insecure-registries": ["localhost:5000"] }
+   
+   sudo systemctl restart docker
    ```
 
-4. **Run database migrations:**
+6. **Start building Rust backend:**
    ```bash
    cd services
-   sqlx migrate run
+   cargo build --release
+   cargo test
    ```
 
-5. **Start backend services:**
-   ```bash
-   # In services/ directory
-   cargo run --bin auth-service
+### Full Development Environment (Optional)
+
+For complete development setup with all tools:
+
+```bash
+# Option 1: Using new architecture script
+./scripts/start-new-architecture.sh --dev-tools
+
+# Option 2: Using docker compose directly
+docker compose -f docker-compose.dev.yml up -d
+
+# Access:
+# - Dev Dashboard: http://localhost:8888
+# - Adminer (DB UI): http://localhost:8080
+# - MailHog: http://localhost:8025
+# - Redis Commander: http://localhost:8082
+# - Forgejo: http://localhost:3000
+# - Docker Registry: http://localhost:5000
+```
+
+### Monitoring Stack (Optional)
+
+```bash
+# Option 1: Using new architecture script
+./scripts/start-new-architecture.sh --monitoring
+
+# Option 2: Using docker compose directly
+docker compose -f docker-compose.monitoring.yml up -d
+
+# Access:
+# - Prometheus: http://192.168.60.133:9090
+# - Grafana: http://192.168.60.133:3001 (admin/admin)
+# - Jaeger: http://192.168.60.133:16686
+```
+
+### Multi-Pod Deployment (Phase 2)
+
+```bash
+# Option 1: Deploy specific pod
+./scripts/start-new-architecture.sh --pod dk
+
+# Option 2: Deploy all pods
+./scripts/start-new-architecture.sh --all-pods
+# Or use the dedicated script:
+./scripts/deploy-multi-pod.sh
+
+# Option 3: Start everything (dev tools + monitoring + all pods)
+./scripts/start-new-architecture.sh --full
+
+# Verify deployment
+./scripts/verify-multi-pod.sh
+
+# See MULTI-POD-README.md for details
+```
+
+### Stop Services
+
+```bash
+# Stop specific components
+./scripts/stop-new-architecture.sh --dev-tools
+./scripts/stop-new-architecture.sh --pod dk
+./scripts/stop-new-architecture.sh --all-pods
+
+# Stop everything
+./scripts/stop-new-architecture.sh --all
+
+# Stop and remove data (WARNING: deletes all data!)
+./scripts/stop-new-architecture.sh --all --clean
+```
    # Repeat for other services
    ```
 
@@ -148,10 +236,23 @@ cd frontend && pnpm test:e2e
 
 ## 📚 Documentation
 
+### Core Documentation
 - **[Project Summary](./project_docs/1-project-summary.md)** - Executive overview
-- **[Project Overview](./project_docs/2-project-overview.md)** - Detailed project description
+- **[Project Overview](./project_docs/2-project-overview.md)** - Detailed project description with **Territory ID Format**
 - **[Tech Stack](./project_docs/3-project-techstack.md)** - Technology documentation
 - **[Infrastructure](./project_docs/4-project-infrastructure.md)** - Infrastructure architecture
+
+### Multi-Pod Architecture
+- **[Multi-Pod Architecture](./project_docs/5-multi-pod-architecture.md)** - Complete multi-pod design with **Territory ID Format**
+- **[Multi-Pod Deployment Guide](./project_docs/6-multi-pod-deployment-guide.md)** - Step-by-step deployment
+- **[NATS Clustering Guide](./project_docs/7-nats-clustering-guide.md)** - NATS configuration and operations
+- **[Testing & Verification Guide](./project_docs/8-testing-verification-guide.md)** - Comprehensive testing procedures
+- **[Multi-Pod Quick Start](./MULTI-POD-README.md)** - Quick reference
+
+### Critical Standards
+- **[⚠️ Territory Management Standard](./project_docs/9-territory-management-standard.md)** - **CRITICAL:** Territory ID format for countries, First Nations, and communities
+
+### Implementation Tracking
 - **[Phase 1 Checklist](./project_status/phase-1-implementation-checklist.md)** - Implementation guide
 - **[Phase 1 Status](./project_status/phase-1-status.md)** - Current progress tracking
 

@@ -90,6 +90,105 @@ Each territory operates with **full autonomy** over:
 - Community structure and policies
 - Data residency and compliance requirements
 
+---
+
+#### 🆔 Territory ID Format Standard
+
+UnityPlan uses a standardized territory identification system that respects sovereignty for both countries and First Nations.
+
+##### **Countries** (ISO 3166-1 Alpha-2)
+
+Uses standard two-letter country codes:
+
+| ID | Name | Notes |
+|----|------|-------|
+| `US` | United States | ISO 3166-1 |
+| `CA` | Canada | ISO 3166-1 |
+| `AU` | Australia | ISO 3166-1 |
+| `NZ` | New Zealand | ISO 3166-1 |
+| `MX` | Mexico | ISO 3166-1 |
+| `GB` | United Kingdom | ISO 3166-1 |
+| `FR` | France | ISO 3166-1 |
+| `DK` | Denmark | ISO 3166-1 |
+| `NO` | Norway | ISO 3166-1 |
+| `SE` | Sweden | ISO 3166-1 |
+
+**Total**: 249 countries (ISO 3166-1 standard)
+
+##### **First Nations** ({NAME}-FN-{COUNTRY})
+
+Format prioritizes First Nation name, followed by FN marker, followed by country code for **geographic context only**:
+
+**Format**: `{NAME}-FN-{COUNTRY}`
+
+**CRITICAL**: The country code in a First Nation ID is **GEOGRAPHIC METADATA ONLY** and does **NOT** create a parent-child relationship. First Nations are **top-level sovereign territories** with `parent_territory = None`.
+
+**Examples**:
+
+| ID | Name | Country Context | parent_territory | Notes |
+|----|------|-----------------|------------------|-------|
+| `HAIDA-FN-CA` | Haida Nation | Canada (geographic) | `None` | Independent, Pacific Northwest |
+| `NAVAJO-FN-US` | Navajo Nation | United States (geographic) | `None` | Independent, largest US tribe |
+| `CREE-FN-CA` | Cree Nation | Canada (geographic) | `None` | Independent, largest FN in Canada |
+| `CHEROKEE-FN-US` | Cherokee Nation | United States (geographic) | `None` | Independent, second largest US tribe |
+| `YOLNGU-FN-AU` | Yolngu people | Australia (geographic) | `None` | Independent, Northern Territory |
+| `MAORI-FN-NZ` | Māori | New Zealand (geographic) | `None` | Independent, Indigenous Polynesian |
+| `ZAPOTEC-FN-MX` | Zapotec people | Mexico (geographic) | `None` | Independent, Oaxaca region |
+| `INUIT-FN-CA` | Inuit | Canada (geographic) | `None` | Independent, Arctic regions |
+| `SAMI-FN-NO` | Sámi people | Norway (geographic) | `None` | Independent (also in SE, FI, RU) |
+
+**Sovereignty Principles**:
+- ✅ First Nation name comes **first** (respects sovereignty)
+- ✅ `FN` marker clearly identifies as First Nation
+- ✅ Country code provides **geographic context** (prevents name collisions)
+- ✅ **`parent_territory = None`** (top-level, equal to countries)
+- ✅ First Nations control their own communities (e.g., `HAIDA-FN-CA-MASSETT`)
+- ✅ Self-identification respected (registered name is authoritative)
+
+**Why Keep Country Code?**
+1. **Prevents name collisions**: `EAGLE-FN-CA` vs `EAGLE-FN-US` are distinct
+2. **Geographic context**: Helps users understand location
+3. **No power implication**: Code is metadata, NOT hierarchy
+4. **Practical**: Matches how First Nations often identify themselves internationally
+
+**What This Means for Governance**:
+- TeacherRegistrar for `CA` **CANNOT** manage `HAIDA-FN-CA` (separate hierarchies)
+- TeacherRegistrar for `HAIDA-FN-CA` **CANNOT** manage `CA` (separate hierarchies)
+- Each is sovereign within their own hierarchy
+- Platform respects Indigenous self-determination
+
+##### **Communities** ({PARENT}-{NAME})
+
+Communities are nested within countries or First Nations:
+
+**Format**: `{PARENT_ID}-{COMMUNITY_NAME}`
+
+**Examples**:
+
+| ID | Name | Parent | Type |
+|----|------|--------|------|
+| `US-CA-SF` | San Francisco | United States → California | City |
+| `HAIDA-FN-CA-MASSETT` | Massett | Haida Nation (Canada) | Village |
+| `CA-BC-VANCOUVER` | Vancouver | Canada → British Columbia | City |
+| `NAVAJO-FN-US-WINDOW-ROCK` | Window Rock | Navajo Nation (US) | Capital |
+| `AU-NSW-SYDNEY` | Sydney | Australia → New South Wales | City |
+| `DK-COPENHAGEN` | Copenhagen | Denmark | City |
+| `NO-OSLO` | Oslo | Norway | City |
+| `SE-STOCKHOLM` | Stockholm | Sweden | City |
+
+**Hierarchy Depth**: Unlimited (communities can nest within communities)
+
+---
+
+### Territory Autonomy & Data Architecture
+
+Each territory operates with **full autonomy** over:
+- User management and invitations
+- Local content and curriculum
+- Language preferences and translations
+- Community structure and policies
+- Data residency and compliance requirements
+
 ### Role System & Permission Model
 
 The platform uses a **badge-based permission system** where access to courses, forums, and administrative functions is granted through earning badges (primarily via course completion). The role hierarchy flows from **global (bottom/foundation) → territory → community → user (top)**, reflecting the inverted pyramid model.
