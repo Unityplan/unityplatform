@@ -1,0 +1,24 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "UnityPlan Denmark Pod",
+      "database": "unityplan_dk",
+      "username": "unityplan",
+      "password": "unityplan_dev_password_dk",
+      "connectionTimeout": 30
+    }
+  ],
+  "sqltools.useNodeRuntime": true,
+  "sqltools.format": {
+    "language": "sql",
+    "indent": "  "
+  },
+  "[sql]": {
+    "editor.defaultFormatter": "mtxr.sqltools",
+    "editor.formatOnSave": false
+  }
+}
