@@ -60,6 +60,11 @@ temp/
 *.tmp
 .temp/
 
+# Archived documentation (to be deleted)
+docs-archived/
+project_docs/
+project_status/
+
 # SQLx offline mode
 .sqlx/
 
