@@ -11,12 +11,69 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-gradient-start: #059669;
+            --bg-gradient-mid: #10b981;
+            --bg-gradient-end: #34d399;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-tertiary: #999;
+            --card-bg: white;
+            --header-text: white;
+            --status-bg: rgba(255,255,255,0.2);
+            --shadow-color: rgba(0,0,0,0.1);
+            --shadow-hover: rgba(0,0,0,0.15);
+        }
+
+        body.dark-mode {
+            --bg-gradient-start: #064e3b;
+            --bg-gradient-mid: #065f46;
+            --bg-gradient-end: #047857;
+            --text-primary: #e5e7eb;
+            --text-secondary: #d1d5db;
+            --text-tertiary: #9ca3af;
+            --card-bg: #1f2937;
+            --header-text: #f3f4f6;
+            --status-bg: rgba(0,0,0,0.3);
+            --shadow-color: rgba(0,0,0,0.3);
+            --shadow-hover: rgba(0,0,0,0.5);
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%);
             min-height: 100vh;
             padding: 2rem;
-            color: #333;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--status-bg);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            background: rgba(255,255,255,0.3);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
         }
 
         .container {
@@ -27,7 +84,7 @@
         header {
             text-align: center;
             margin-bottom: 3rem;
-            color: white;
+            color: var(--header-text);
         }
 
         h1 {
@@ -44,7 +101,7 @@
 
         .status {
             display: inline-block;
-            background: rgba(255,255,255,0.2);
+            background: var(--status-bg);
             padding: 0.5rem 1rem;
             border-radius: 20px;
             margin-top: 1rem;
@@ -68,7 +125,7 @@
         }
 
         .section-title {
-            color: white;
+            color: var(--header-text);
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 1rem;
@@ -81,7 +138,7 @@
             content: "";
             width: 4px;
             height: 24px;
-            background: white;
+            background: var(--header-text);
             border-radius: 2px;
         }
 
@@ -92,13 +149,13 @@
         }
 
         .card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 1.5rem;
             text-decoration: none;
-            color: #333;
+            color: var(--text-primary);
             transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px var(--shadow-color);
             position: relative;
             overflow: hidden;
         }
@@ -117,7 +174,7 @@
 
         .card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+            box-shadow: 0 12px 24px var(--shadow-hover);
         }
 
         .card:hover::before {
@@ -139,14 +196,14 @@
 
         .card-description {
             font-size: 0.9rem;
-            color: #666;
+            color: var(--text-secondary);
             line-height: 1.5;
             margin-bottom: 1rem;
         }
 
         .card-port {
             font-size: 0.85rem;
-            color: #999;
+            color: var(--text-tertiary);
             font-family: 'Courier New', monospace;
         }
 
@@ -173,7 +230,7 @@
 
         footer {
             text-align: center;
-            color: white;
+            color: var(--header-text);
             margin-top: 3rem;
             opacity: 0.8;
             font-size: 0.9rem;
@@ -184,7 +241,7 @@
         }
 
         .footer-links a {
-            color: white;
+            color: var(--header-text);
             text-decoration: none;
             margin: 0 1rem;
             opacity: 0.8;
@@ -207,6 +264,10 @@
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <span class="theme-icon">🌙</span>
+    </button>
+    
     <div class="container">
         <header>
             <h1>🚀 UnityPlan Development</h1>
@@ -308,13 +369,40 @@
             <p>UnityPlan Platform - Microservices Development Environment</p>
             <div class="footer-links">
                 <a href="https://github.com" target="_blank">📚 Documentation</a>
-                <a href="http://localhost:8888" target="_blank">🏠 Dashboard</a>
-                <a href="#" onclick="location.reload()">🔄 Refresh</a>
+                <a href="http://localhost:8888">🏠 Dashboard</a>
+                <a href="#" onclick="location.reload(); return false;">🔄 Refresh</a>
             </div>
-            <p style="margin-top: 1rem; font-size: 0.8rem;">
-                Press <kbd>Ctrl+Click</kbd> to open links in new tabs
-            </p>
         </footer>
     </div>
+
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.querySelector('.theme-icon');
+            
+            body.classList.toggle('dark-mode');
+            
+            // Update icon
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Load saved theme on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            const themeIcon = document.querySelector('.theme-icon');
+            
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.textContent = '☀️';
+            }
+        });
+    </script>
 </body>
 </html>
