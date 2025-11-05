@@ -970,7 +970,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_cpu_usage_seconds_total{name=\"unityplan-postgres\"}[5m]) * 100",
+                    "expr": "rate(container_cpu_usage_seconds_total{name=\"service-postgres\"}[5m]) * 100",
                     "refId": "A"
                 }
             ],
@@ -1033,7 +1033,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_cpu_usage_seconds_total{name=\"unityplan-redis\"}[5m]) * 100",
+                    "expr": "rate(container_cpu_usage_seconds_total{name=\"service-redis\"}[5m]) * 100",
                     "refId": "A"
                 }
             ],
@@ -1096,7 +1096,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_cpu_usage_seconds_total{name=\"unityplan-nats\"}[5m]) * 100",
+                    "expr": "rate(container_cpu_usage_seconds_total{name=\"service-nats\"}[5m]) * 100",
                     "refId": "A"
                 }
             ],
@@ -1159,7 +1159,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_cpu_usage_seconds_total{name=\"unityplan-prometheus\"}[5m]) * 100",
+                    "expr": "rate(container_cpu_usage_seconds_total{name=\"monitoring-prometheus\"}[5m]) * 100",
                     "refId": "A"
                 }
             ],
@@ -1222,7 +1222,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_cpu_usage_seconds_total{name=\"unityplan-grafana\"}[5m]) * 100",
+                    "expr": "rate(container_cpu_usage_seconds_total{name=\"monitoring-grafana\"}[5m]) * 100",
                     "refId": "A"
                 }
             ],
@@ -1285,7 +1285,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_cpu_usage_seconds_total{name=\"unityplan-jaeger\"}[5m]) * 100",
+                    "expr": "rate(container_cpu_usage_seconds_total{name=\"monitoring-jaeger\"}[5m]) * 100",
                     "refId": "A"
                 }
             ],
@@ -1348,7 +1348,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_cpu_usage_seconds_total{name=\"unityplan-traefik\"}[5m]) * 100",
+                    "expr": "rate(container_cpu_usage_seconds_total{name=\"reverse-proxy-traefik\"}[5m]) * 100",
                     "refId": "A"
                 }
             ],
@@ -1411,7 +1411,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_cpu_usage_seconds_total{name=\"unityplan-ipfs\"}[5m]) * 100",
+                    "expr": "rate(container_cpu_usage_seconds_total{name=\"service-ipfs\"}[5m]) * 100",
                     "refId": "A"
                 }
             ],
@@ -1486,7 +1486,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "container_memory_usage_bytes{name=\"unityplan-postgres\"}",
+                    "expr": "container_memory_usage_bytes{name=\"service-postgres\"}",
                     "refId": "A"
                 }
             ],
@@ -1548,7 +1548,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "container_memory_usage_bytes{name=\"unityplan-redis\"}",
+                    "expr": "container_memory_usage_bytes{name=\"service-redis\"}",
                     "refId": "A"
                 }
             ],
@@ -1610,7 +1610,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "container_memory_usage_bytes{name=\"unityplan-nats\"}",
+                    "expr": "container_memory_usage_bytes{name=\"service-nats\"}",
                     "refId": "A"
                 }
             ],
@@ -1672,7 +1672,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "container_memory_usage_bytes{name=\"unityplan-prometheus\"}",
+                    "expr": "container_memory_usage_bytes{name=\"monitoring-prometheus\"}",
                     "refId": "A"
                 }
             ],
@@ -1734,7 +1734,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "container_memory_usage_bytes{name=\"unityplan-grafana\"}",
+                    "expr": "container_memory_usage_bytes{name=\"monitoring-grafana\"}",
                     "refId": "A"
                 }
             ],
@@ -1796,7 +1796,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "container_memory_usage_bytes{name=\"unityplan-jaeger\"}",
+                    "expr": "container_memory_usage_bytes{name=\"monitoring-jaeger\"}",
                     "refId": "A"
                 }
             ],
@@ -1858,7 +1858,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "container_memory_usage_bytes{name=\"unityplan-traefik\"}",
+                    "expr": "container_memory_usage_bytes{name=\"reverse-proxy-traefik\"}",
                     "refId": "A"
                 }
             ],
@@ -1920,7 +1920,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "container_memory_usage_bytes{name=\"unityplan-ipfs\"}",
+                    "expr": "container_memory_usage_bytes{name=\"service-ipfs\"}",
                     "refId": "A"
                 }
             ],
@@ -1995,7 +1995,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_network_receive_bytes_total{name=\"unityplan-postgres\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"unityplan-postgres\"}[5m])",
+                    "expr": "rate(container_network_receive_bytes_total{name=\"service-postgres\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"service-postgres\"}[5m])",
                     "refId": "A"
                 }
             ],
@@ -2057,7 +2057,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_network_receive_bytes_total{name=\"unityplan-redis\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"unityplan-redis\"}[5m])",
+                    "expr": "rate(container_network_receive_bytes_total{name=\"service-redis\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"service-redis\"}[5m])",
                     "refId": "A"
                 }
             ],
@@ -2119,7 +2119,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_network_receive_bytes_total{name=\"unityplan-nats\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"unityplan-nats\"}[5m])",
+                    "expr": "rate(container_network_receive_bytes_total{name=\"service-nats\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"service-nats\"}[5m])",
                     "refId": "A"
                 }
             ],
@@ -2181,7 +2181,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_network_receive_bytes_total{name=\"unityplan-prometheus\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"unityplan-prometheus\"}[5m])",
+                    "expr": "rate(container_network_receive_bytes_total{name=\"monitoring-prometheus\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"monitoring-prometheus\"}[5m])",
                     "refId": "A"
                 }
             ],
@@ -2243,7 +2243,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_network_receive_bytes_total{name=\"unityplan-grafana\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"unityplan-grafana\"}[5m])",
+                    "expr": "rate(container_network_receive_bytes_total{name=\"monitoring-grafana\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"monitoring-grafana\"}[5m])",
                     "refId": "A"
                 }
             ],
@@ -2305,7 +2305,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_network_receive_bytes_total{name=\"unityplan-jaeger\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"unityplan-jaeger\"}[5m])",
+                    "expr": "rate(container_network_receive_bytes_total{name=\"monitoring-jaeger\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"monitoring-jaeger\"}[5m])",
                     "refId": "A"
                 }
             ],
@@ -2367,7 +2367,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_network_receive_bytes_total{name=\"unityplan-traefik\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"unityplan-traefik\"}[5m])",
+                    "expr": "rate(container_network_receive_bytes_total{name=\"reverse-proxy-traefik\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"reverse-proxy-traefik\"}[5m])",
                     "refId": "A"
                 }
             ],
@@ -2429,7 +2429,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "rate(container_network_receive_bytes_total{name=\"unityplan-ipfs\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"unityplan-ipfs\"}[5m])",
+                    "expr": "rate(container_network_receive_bytes_total{name=\"service-ipfs\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"service-ipfs\"}[5m])",
                     "refId": "A"
                 }
             ],

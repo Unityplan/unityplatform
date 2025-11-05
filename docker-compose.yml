@@ -1,8 +1,10 @@
+name: unityplan
+
 services:
   # PostgreSQL 16 with TimescaleDB
   postgres:
     image: timescale/timescaledb:latest-pg16
-    container_name: unityplan-postgres
+    container_name: service-postgres
     restart: unless-stopped
     ports:
       - "5432:5432"
@@ -24,7 +26,7 @@ services:
   # NATS with JetStream
   nats:
     image: nats:latest
-    container_name: unityplan-nats
+    container_name: service-nats
     restart: unless-stopped
     ports:
       - "4222:4222"  # Client connections
@@ -45,7 +47,7 @@ services:
   # Redis for caching
   redis:
     image: redis:7-alpine
-    container_name: unityplan-redis
+    container_name: service-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -63,7 +65,7 @@ services:
   # PostgreSQL Exporter for Prometheus
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:latest
-    container_name: unityplan-postgres-exporter
+    container_name: monitoring-postgres-exporter
     restart: unless-stopped
     ports:
       - "9187:9187"
@@ -78,7 +80,7 @@ services:
   # Redis Exporter for Prometheus
   redis-exporter:
     image: oliver006/redis_exporter:latest
-    container_name: unityplan-redis-exporter
+    container_name: monitoring-redis-exporter
     restart: unless-stopped
     ports:
       - "9121:9121"
@@ -93,7 +95,7 @@ services:
   # NATS Exporter for Prometheus
   nats-exporter:
     image: natsio/prometheus-nats-exporter:latest
-    container_name: unityplan-nats-exporter
+    container_name: monitoring-nats-exporter
     restart: unless-stopped
     ports:
       - "7777:7777"
@@ -106,7 +108,7 @@ services:
   # Node Exporter - Host system metrics for Prometheus
   node-exporter:
     image: prom/node-exporter:latest
-    container_name: unityplan-node-exporter
+    container_name: monitoring-node-exporter
     restart: unless-stopped
     ports:
       - "9100:9100"
@@ -125,7 +127,7 @@ services:
   # cAdvisor - Container metrics for Prometheus
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
-    container_name: unityplan-cadvisor
+    container_name: monitoring-cadvisor
     restart: unless-stopped
     ports:
       - "8089:8080"
@@ -144,7 +146,7 @@ services:
   # Adminer for database management (development only)
   adminer:
     image: adminer:latest
-    container_name: unityplan-adminer
+    container_name: dev-adminer
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -159,7 +161,7 @@ services:
   # IPFS (will be used later in Phase 1)
   ipfs:
     image: ipfs/kubo:latest
-    container_name: unityplan-ipfs
+    container_name: service-ipfs
     restart: unless-stopped
     ports:
       - "5001:5001"  # API
@@ -180,7 +182,7 @@ services:
   # Matrix Synapse (will be configured later in Phase 1)
   matrix-synapse:
     image: matrixdotorg/synapse:latest
-    container_name: unityplan-matrix
+    container_name: service-matrix
     restart: unless-stopped
     ports:
       - "8008:8008"  # HTTP
@@ -198,7 +200,7 @@ services:
   # MailHog - Email testing (development only)
   mailhog:
     image: mailhog/mailhog:latest
-    container_name: unityplan-mailhog
+    container_name: dev-mailhog
     restart: unless-stopped
     ports:
       - "1025:1025"  # SMTP server
@@ -213,7 +215,7 @@ services:
   # Development Dashboard - Links to all tools
   dev-dashboard:
     image: nginx:alpine
-    container_name: unityplan-dev-dashboard
+    container_name: dev-dashboard
     restart: unless-stopped
     ports:
       - "8888:80"
@@ -225,7 +227,7 @@ services:
   # Jaeger - Distributed tracing
   jaeger:
     image: jaegertracing/all-in-one:latest
-    container_name: unityplan-jaeger
+    container_name: monitoring-jaeger
     restart: unless-stopped
     ports:
       - "5775:5775/udp"  # Zipkin compact thrift
@@ -245,7 +247,7 @@ services:
   # Prometheus - Metrics collection
   prometheus:
     image: prom/prometheus:latest
-    container_name: unityplan-prometheus
+    container_name: monitoring-prometheus
     restart: unless-stopped
     ports:
       - "9090:9090"
@@ -264,7 +266,7 @@ services:
   # Grafana - Metrics visualization
   grafana:
     image: grafana/grafana:latest
-    container_name: unityplan-grafana
+    container_name: monitoring-grafana
     restart: unless-stopped
     ports:
       - "3001:3000"  # Using 3001 to avoid conflict with frontend dev server
@@ -284,7 +286,7 @@ services:
   # Redis Commander - Redis management UI
   redis-commander:
     image: rediscommander/redis-commander:latest
-    container_name: unityplan-redis-commander
+    container_name: dev-redis-commander
     restart: unless-stopped
     ports:
       - "8082:8081"
@@ -298,7 +300,7 @@ services:
   # Traefik - Reverse proxy and service router
   traefik:
     image: traefik:v3.2
-    container_name: unityplan-traefik
+    container_name: reverse-proxy-traefik
     restart: unless-stopped
     ports:
       - "80:80"      # HTTP
@@ -321,7 +323,7 @@ services:
   # Landing Page - Main entry point for Traefik
   landing-page:
     image: nginx:alpine
-    container_name: unityplan-landing
+    container_name: reverse-proxy-landing
     restart: unless-stopped
     networks:
       - unityplan-network
@@ -346,7 +348,7 @@ services:
   # Error Pages Server - Serves custom error pages for Traefik
   error-pages:
     image: nginx:alpine
-    container_name: unityplan-error-pages
+    container_name: reverse-proxy-error-pages
     restart: unless-stopped
     networks:
       - unityplan-network
