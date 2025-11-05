@@ -249,8 +249,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.landing.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.landing.entrypoints=web"
+      - "traefik.http.routers.landing.entrypoints=web,websecure"
       - "traefik.http.routers.landing.priority=1"
+      - "traefik.http.routers.landing.tls=true"
 
   # Error Pages Server - Serves custom error pages for Traefik
   error-pages:
