@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UnityPlan - Development Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .status {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .status::before {
+            content: "●";
+            color: #4ade80;
+            margin-right: 0.5rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: "";
+            width: 4px;
+            height: 24px;
+            background: white;
+            border-radius: 2px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-color-light));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .card-description {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .card-port {
+            font-size: 0.85rem;
+            color: #999;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Color schemes for different categories */
+        .card.infrastructure {
+            --accent-color: #3b82f6;
+            --accent-color-light: #60a5fa;
+        }
+
+        .card.development {
+            --accent-color: #8b5cf6;
+            --accent-color-light: #a78bfa;
+        }
+
+        .card.observability {
+            --accent-color: #ec4899;
+            --accent-color-light: #f472b6;
+        }
+
+        .card.application {
+            --accent-color: #10b981;
+            --accent-color-light: #34d399;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 3rem;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 UnityPlan Development</h1>
+            <p class="subtitle">Microservices Platform - Development Environment</p>
+            <div class="status">All Systems Operational</div>
+        </header>
+
+        <div class="section">
+            <h2 class="section-title">🎯 Application</h2>
+            <div class="cards">
+                <a href="http://localhost:5173" class="card application" target="_blank">
+                    <span class="card-icon">⚛️</span>
+                    <div class="card-title">Frontend</div>
+                    <div class="card-description">React + Vite development server</div>
+                    <div class="card-port">Port 5173</div>
+                </a>
+                <a href="http://localhost:8000" class="card application" target="_blank">
+                    <span class="card-icon">🔌</span>
+                    <div class="card-title">API Gateway</div>
+                    <div class="card-description">Main API endpoint for all services</div>
+                    <div class="card-port">Port 8000</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🗄️ Infrastructure</h2>
+            <div class="cards">
+                <a href="http://localhost:8080" class="card infrastructure" target="_blank">
+                    <span class="card-icon">🐘</span>
+                    <div class="card-title">Adminer</div>
+                    <div class="card-description">PostgreSQL database management</div>
+                    <div class="card-port">Port 8080</div>
+                </a>
+                <a href="http://localhost:8082" class="card infrastructure" target="_blank">
+                    <span class="card-icon">💾</span>
+                    <div class="card-title">Redis Commander</div>
+                    <div class="card-description">Redis cache management UI</div>
+                    <div class="card-port">Port 8082</div>
+                </a>
+                <a href="http://localhost:8222" class="card infrastructure" target="_blank">
+                    <span class="card-icon">📨</span>
+                    <div class="card-title">NATS Monitor</div>
+                    <div class="card-description">Message bus monitoring & stats</div>
+                    <div class="card-port">Port 8222</div>
+                </a>
+                <a href="http://localhost:8081" class="card infrastructure" target="_blank">
+                    <span class="card-icon">🌐</span>
+                    <div class="card-title">IPFS Gateway</div>
+                    <div class="card-description">Decentralized storage gateway</div>
+                    <div class="card-port">Port 8081</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🛠️ Development Tools</h2>
+            <div class="cards">
+                <a href="http://localhost:8025" class="card development" target="_blank">
+                    <span class="card-icon">📧</span>
+                    <div class="card-title">MailHog</div>
+                    <div class="card-description">Email testing & debugging</div>
+                    <div class="card-port">SMTP: 1025 | Web: 8025</div>
+                </a>
+                <a href="http://localhost:8083/dashboard/" class="card development" target="_blank">
+                    <span class="card-icon">🔀</span>
+                    <div class="card-title">Traefik</div>
+                    <div class="card-description">Reverse proxy & routing dashboard</div>
+                    <div class="card-port">Port 8083</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📊 Observability</h2>
+            <div class="cards">
+                <a href="http://localhost:3001" class="card observability" target="_blank">
+                    <span class="card-icon">📈</span>
+                    <div class="card-title">Grafana</div>
+                    <div class="card-description">Metrics dashboards & visualization</div>
+                    <div class="card-port">Port 3001 | admin/admin</div>
+                </a>
+                <a href="http://localhost:9090" class="card observability" target="_blank">
+                    <span class="card-icon">🔥</span>
+                    <div class="card-title">Prometheus</div>
+                    <div class="card-description">Metrics collection & querying</div>
+                    <div class="card-port">Port 9090</div>
+                </a>
+                <a href="http://localhost:16686" class="card observability" target="_blank">
+                    <span class="card-icon">🔍</span>
+                    <div class="card-title">Jaeger</div>
+                    <div class="card-description">Distributed tracing & APM</div>
+                    <div class="card-port">Port 16686</div>
+                </a>
+            </div>
+        </div>
+
+        <footer>
+            <p>UnityPlan Platform - Microservices Development Environment</p>
+            <div class="footer-links">
+                <a href="https://github.com" target="_blank">📚 Documentation</a>
+                <a href="http://localhost:8888" target="_blank">🏠 Dashboard</a>
+                <a href="#" onclick="location.reload()">🔄 Refresh</a>
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.8rem;">
+                Press <kbd>Ctrl+Click</kbd> to open links in new tabs
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

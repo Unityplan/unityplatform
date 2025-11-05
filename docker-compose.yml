@@ -129,6 +129,18 @@ services:
       - MH_SMTP_BIND_ADDR=0.0.0.0:1025
       - MH_UI_BIND_ADDR=0.0.0.0:8025
 
+  # Development Dashboard - Links to all tools
+  dev-dashboard:
+    image: nginx:alpine
+    container_name: unityplan-dev-dashboard
+    restart: unless-stopped
+    ports:
+      - "8888:80"
+    networks:
+      - unityplan-network
+    volumes:
+      - ./docker/dev-dashboard:/usr/share/nginx/html:ro
+
   # Jaeger - Distributed tracing
   jaeger:
     image: jaegertracing/all-in-one:latest

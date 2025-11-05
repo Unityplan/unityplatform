@@ -110,6 +110,9 @@ This platform follows a microservices architecture with progressive decentraliza
 
 7. **Access the application and development tools:**
    
+   **🎯 Development Dashboard (Quick Access):**
+   - **Dashboard:** http://localhost:8888 - All tools in one place!
+   
    **Application:**
    - Frontend: http://localhost:5173
    - API Gateway: http://localhost:8000
