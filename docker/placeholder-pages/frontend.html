@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Not Started - UnityPlan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        h1 {
+            color: #059669;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .instructions {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .instructions-title {
+            color: #0c4a6e;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .command {
+            background: #1e293b;
+            color: #10b981;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 0.5rem 0;
+            font-size: 0.95rem;
+            overflow-x: auto;
+        }
+
+        .step {
+            margin: 1rem 0;
+            color: #334155;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #0284c7;
+            color: white;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #059669;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #047857;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+            transform: translateY(-2px);
+        }
+
+        .info {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">⚛️</div>
+        <h1>Frontend Development Server</h1>
+        <p>The frontend application hasn't been started yet. Follow the steps below to launch it.</p>
+        
+        <div class="instructions">
+            <div class="instructions-title">🚀 Quick Start Instructions</div>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Navigate to the frontend directory
+            </div>
+            <div class="command">cd frontend</div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                Install dependencies (first time only)
+            </div>
+            <div class="command">pnpm install</div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                Start the development server
+            </div>
+            <div class="command">pnpm dev</div>
+        </div>
+
+        <div class="actions">
+            <a href="http://localhost:8888" class="btn btn-primary">
+                🏠 Development Dashboard
+            </a>
+            <a href="javascript:location.reload()" class="btn btn-secondary">
+                🔄 Check Again
+            </a>
+        </div>
+
+        <div class="info">
+            <strong>Expected:</strong> Frontend will be available at <strong>http://localhost:5173</strong> after starting the dev server.
+        </div>
+    </div>
+</body>
+</html>

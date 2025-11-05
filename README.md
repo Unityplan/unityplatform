@@ -111,23 +111,24 @@ This platform follows a microservices architecture with progressive decentraliza
 7. **Access the application and development tools:**
    
    **🎯 Development Dashboard (Quick Access):**
-   - **Dashboard:** http://localhost:8888 - All tools in one place!
+   - **Landing Page:** http://192.168.60.133 - Main entry point
+   - **Dashboard:** http://192.168.60.133:8888 - All tools in one place!
    
    **Application:**
-   - Frontend: http://localhost:5173
-   - API Gateway: http://localhost:8000
+   - Frontend: http://192.168.60.133:5173
+   - API Gateway: http://192.168.60.133:8000
    
    **Infrastructure Management:**
-   - Adminer (PostgreSQL UI): http://localhost:8080
-   - Redis Commander: http://localhost:8082
-   - MailHog (Email Testing): http://localhost:8025
+   - Adminer (PostgreSQL UI): http://192.168.60.133:8080
+   - Redis Commander: http://192.168.60.133:8082
+   - MailHog (Email Testing): http://192.168.60.133:8025
    
    **Observability & Monitoring:**
-   - Prometheus (Metrics): http://localhost:9090
-   - Grafana (Dashboards): http://localhost:3001 (admin/admin)
-   - Jaeger (Tracing): http://localhost:16686
-   - Traefik Dashboard: http://localhost:8083/dashboard/
-   - NATS Monitoring: http://localhost:8222
+   - Prometheus (Metrics): http://192.168.60.133:9090
+   - Grafana (Dashboards): http://192.168.60.133:3001 (admin/admin)
+   - Jaeger (Tracing): http://192.168.60.133:16686
+   - Traefik Dashboard: http://192.168.60.133:8083/dashboard/
+   - NATS Monitoring: http://192.168.60.133:8222
 
 ## 🧪 Testing
 

@@ -267,6 +267,18 @@
             }
         }
     </style>
+    <script>
+        // Get the current host (IP or localhost)
+        const HOST = window.location.hostname;
+        const BASE_URL = `http://${HOST}`;
+        
+        // Update all localhost links on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a[href^="http://localhost"]').forEach(link => {
+                link.href = link.href.replace('http://localhost', BASE_URL);
+            });
+        });
+    </script>
 </head>
 <body>
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">

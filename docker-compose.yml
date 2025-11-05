@@ -237,6 +237,21 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--log.level=INFO"
 
+  # Landing Page - Main entry point for Traefik
+  landing-page:
+    image: nginx:alpine
+    container_name: unityplan-landing
+    restart: unless-stopped
+    networks:
+      - unityplan-network
+    volumes:
+      - ./docker/traefik/landing-page:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.landing.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.landing.entrypoints=web"
+      - "traefik.http.routers.landing.priority=1"
+
   # Error Pages Server - Serves custom error pages for Traefik
   error-pages:
     image: nginx:alpine
