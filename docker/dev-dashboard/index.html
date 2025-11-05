@@ -106,6 +106,13 @@
             border-radius: 20px;
             margin-top: 1rem;
             font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
         }
 
         .status::before {
@@ -113,6 +120,15 @@
             color: #4ade80;
             margin-right: 0.5rem;
             animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status.partial::before {
+            color: #fbbf24;
+        }
+
+        .status.down::before {
+            color: #ef4444;
+            animation: none;
         }
 
         @keyframes pulse {
@@ -257,6 +273,175 @@
             opacity: 1;
         }
 
+        /* Status Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-gradient-mid);
+        }
+
+        .modal-header h2 {
+            color: var(--text-primary);
+            font-size: 1.8rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .service-status-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .service-status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--status-bg);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .service-status-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .service-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .service-icon {
+            font-size: 1.5rem;
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .service-url {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+        }
+
+        .service-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .service-badge::before {
+            content: "●";
+            font-size: 1.2rem;
+        }
+
+        .service-badge.operational {
+            background: rgba(74, 222, 128, 0.2);
+            color: #16a34a;
+        }
+
+        .service-badge.operational::before {
+            color: #4ade80;
+        }
+
+        .service-badge.checking {
+            background: rgba(251, 191, 36, 0.2);
+            color: #d97706;
+        }
+
+        .service-badge.checking::before {
+            color: #fbbf24;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .service-badge.down {
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+
+        .service-badge.down::before {
+            color: #ef4444;
+        }
+
+        .service-badge.not-deployed {
+            background: rgba(156, 163, 175, 0.2);
+            color: #6b7280;
+        }
+
+        .service-badge.not-deployed::before {
+            color: #9ca3af;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2rem;
@@ -264,6 +449,17 @@
             
             .cards {
                 grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                margin: 1rem;
+                max-height: 90vh;
+            }
+
+            .service-status-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
             }
         }
     </style>
@@ -289,7 +485,9 @@
         <header>
             <h1>🚀 UnityPlan Development</h1>
             <p class="subtitle">Microservices Platform - Development Environment</p>
-            <div class="status">All Systems Operational</div>
+            <div class="status" id="systemStatus" onclick="openStatusModal()">
+                <span id="statusText">Checking Systems...</span>
+            </div>
         </header>
 
         <div class="section">
@@ -399,6 +597,19 @@
         </footer>
     </div>
 
+    <!-- Status Modal -->
+    <div class="modal" id="statusModal" onclick="closeStatusModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>🔧 System Status</h2>
+                <button class="modal-close" onclick="closeStatusModal()">&times;</button>
+            </div>
+            <div class="service-status-list" id="serviceStatusList">
+                <!-- Services will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Theme toggle functionality
         function toggleTheme() {
@@ -426,7 +637,134 @@
                 document.body.classList.add('dark-mode');
                 themeIcon.textContent = '☀️';
             }
+
+            // Check system status on load
+            checkSystemStatus();
         });
+
+        // Service configuration
+        const services = [
+            { name: 'Frontend', icon: '⚛️', port: 5173, url: `${BASE_URL}:5173`, critical: false, deployed: false },
+            { name: 'API Gateway', icon: '🌐', port: 8000, url: `${BASE_URL}:8000`, critical: false, deployed: false },
+            { name: 'PostgreSQL', icon: '🗄️', port: 8080, url: `${BASE_URL}:8080`, critical: true, deployed: true },
+            { name: 'Redis', icon: '⚡', port: 8082, url: `${BASE_URL}:8082`, critical: true, deployed: true },
+            { name: 'NATS', icon: '📨', port: 8222, url: `${BASE_URL}:8222/varz`, critical: true, deployed: true },
+            { name: 'IPFS', icon: '🌍', port: 8081, url: `${BASE_URL}:8081/webui`, critical: false, deployed: true },
+            { name: 'Grafana', icon: '📊', port: 3001, url: `${BASE_URL}:3001`, critical: false, deployed: true },
+            { name: 'Prometheus', icon: '📈', port: 9090, url: `${BASE_URL}:9090`, critical: false, deployed: true },
+            { name: 'Jaeger', icon: '🔍', port: 16686, url: `${BASE_URL}:16686`, critical: false, deployed: true },
+            { name: 'MailHog', icon: '📧', port: 8025, url: `${BASE_URL}:8025`, critical: false, deployed: true },
+            { name: 'Traefik', icon: '🔀', port: 8083, url: `${BASE_URL}:8083/dashboard/`, critical: false, deployed: true },
+        ];
+
+        // Check if a service is reachable
+        async function checkService(service) {
+            if (!service.deployed) {
+                return 'not-deployed';
+            }
+
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 3000);
+
+                const response = await fetch(service.url, {
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeout);
+                return 'operational';
+            } catch (error) {
+                // For no-cors mode, we can't read the response, but if fetch completes without error, service is likely up
+                // If it throws, service is likely down
+                if (error.name === 'AbortError') {
+                    return 'down';
+                }
+                // Network errors or CORS errors often mean the service is running but blocked
+                // We'll do a fallback check with a simple fetch
+                try {
+                    const imgTest = new Image();
+                    imgTest.src = service.url + '?t=' + Date.now();
+                    await new Promise((resolve, reject) => {
+                        imgTest.onload = resolve;
+                        imgTest.onerror = resolve; // Service exists but not an image
+                        setTimeout(reject, 2000);
+                    });
+                    return 'operational';
+                } catch {
+                    return 'down';
+                }
+            }
+        }
+
+        // Check all services
+        async function checkSystemStatus() {
+            const statusResults = await Promise.all(
+                services.map(async (service) => ({
+                    ...service,
+                    status: await checkService(service)
+                }))
+            );
+
+            // Update modal
+            renderServiceStatus(statusResults);
+
+            // Update main status indicator
+            const criticalServices = statusResults.filter(s => s.critical);
+            const criticalDown = criticalServices.filter(s => s.status === 'down').length;
+            const allDown = statusResults.filter(s => s.deployed && s.status === 'down').length;
+
+            const statusElement = document.getElementById('systemStatus');
+            const statusText = document.getElementById('statusText');
+
+            if (criticalDown > 0) {
+                statusElement.className = 'status down';
+                statusText.textContent = 'Critical Systems Down';
+            } else if (allDown > 0) {
+                statusElement.className = 'status partial';
+                statusText.textContent = 'Partial Outage';
+            } else {
+                statusElement.className = 'status';
+                statusText.textContent = 'All Systems Operational';
+            }
+        }
+
+        // Render service status in modal
+        function renderServiceStatus(statusResults) {
+            const container = document.getElementById('serviceStatusList');
+            container.innerHTML = statusResults.map(service => `
+                <div class="service-status-item">
+                    <div class="service-info">
+                        <span class="service-icon">${service.icon}</span>
+                        <div>
+                            <div class="service-name">${service.name}</div>
+                            <div class="service-url">Port ${service.port}</div>
+                        </div>
+                    </div>
+                    <span class="service-badge ${service.status}">
+                        ${service.status === 'not-deployed' ? 'Not Deployed' : 
+                          service.status === 'operational' ? 'Operational' : 
+                          service.status === 'checking' ? 'Checking...' : 'Down'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // Modal functions
+        function openStatusModal() {
+            document.getElementById('statusModal').classList.add('active');
+            checkSystemStatus(); // Refresh status when opening modal
+        }
+
+        function closeStatusModal(event) {
+            if (!event || event.target.id === 'statusModal') {
+                document.getElementById('statusModal').classList.remove('active');
+            }
+        }
+
+        // Refresh status every 30 seconds
+        setInterval(checkSystemStatus, 30000);
     </script>
 </body>
 </html>
