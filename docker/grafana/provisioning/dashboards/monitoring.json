@@ -228,7 +228,7 @@
             "pluginVersion": "9.0.0",
             "targets": [
                 {
-                    "expr": "gnatsd_varz_connections >= 0",
+                    "expr": "clamp_max(gnatsd_varz_connections >= 0, 1)",
                     "refId": "A"
                 }
             ],
