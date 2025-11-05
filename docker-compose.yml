@@ -90,6 +90,19 @@ services:
       redis:
         condition: service_healthy
 
+  # NATS Exporter for Prometheus
+  nats-exporter:
+    image: natsio/prometheus-nats-exporter:latest
+    container_name: unityplan-nats-exporter
+    restart: unless-stopped
+    ports:
+      - "7777:7777"
+    command: ["-varz", "http://nats:8222"]
+    networks:
+      - unityplan-network
+    depends_on:
+      - nats
+
   # Adminer for database management (development only)
   adminer:
     image: adminer:latest

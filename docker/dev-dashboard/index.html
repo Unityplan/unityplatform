@@ -596,6 +596,12 @@
                     <div class="card-description">Cache metrics for Prometheus</div>
                     <div class="card-port">Port 9121</div>
                 </a>
+                <a href="http://localhost:7777/metrics" class="card observability" target="_blank">
+                    <span class="card-icon">📨</span>
+                    <div class="card-title">NATS Exporter</div>
+                    <div class="card-description">Message bus metrics for Prometheus</div>
+                    <div class="card-port">Port 7777</div>
+                </a>
             </div>
         </div>
 
@@ -667,6 +673,7 @@
             { name: 'Jaeger', icon: '🔍', port: 16686, url: `${BASE_URL}:16686`, critical: false, deployed: true },
             { name: 'PostgreSQL Exporter', icon: '🐘', port: 9187, url: `${BASE_URL}:9187/metrics`, critical: false, deployed: true },
             { name: 'Redis Exporter', icon: '💾', port: 9121, url: `${BASE_URL}:9121/metrics`, critical: false, deployed: true },
+            { name: 'NATS Exporter', icon: '📨', port: 7777, url: `${BASE_URL}:7777/metrics`, critical: false, deployed: true },
             { name: 'MailHog', icon: '📧', port: 8025, url: `${BASE_URL}:8025`, critical: false, deployed: true },
             { name: 'Traefik', icon: '🔀', port: 8083, url: `${BASE_URL}:8083/dashboard/`, critical: false, deployed: true },
         ];
