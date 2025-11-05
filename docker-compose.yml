@@ -248,10 +248,19 @@ services:
       - ./docker/traefik/landing-page:/usr/share/nginx/html:ro
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.landing.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.landing.entrypoints=web,websecure"
-      - "traefik.http.routers.landing.priority=1"
-      - "traefik.http.routers.landing.tls=true"
+      # HTTP Router
+      - "traefik.http.routers.landing-http.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.landing-http.entrypoints=web"
+      - "traefik.http.routers.landing-http.priority=1"
+      - "traefik.http.routers.landing-http.service=landing-page"
+      # HTTPS Router
+      - "traefik.http.routers.landing-https.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.landing-https.entrypoints=websecure"
+      - "traefik.http.routers.landing-https.priority=1"
+      - "traefik.http.routers.landing-https.tls=true"
+      - "traefik.http.routers.landing-https.service=landing-page"
+      # Service
+      - "traefik.http.services.landing-page.loadbalancer.server.port=80"
 
   # Error Pages Server - Serves custom error pages for Traefik
   error-pages:
