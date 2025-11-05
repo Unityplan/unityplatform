@@ -201,6 +201,11 @@
             margin-bottom: 1rem;
         }
 
+        .card-description strong {
+            color: var(--text-primary);
+            font-size: 0.85rem;
+        }
+
         .card-port {
             font-size: 0.85rem;
             color: var(--text-tertiary);
@@ -299,7 +304,11 @@
                 <a href="http://localhost:8080" class="card infrastructure" target="_blank">
                     <span class="card-icon">🐘</span>
                     <div class="card-title">Adminer</div>
-                    <div class="card-description">PostgreSQL database management</div>
+                    <div class="card-description">PostgreSQL database management<br>
+                    <strong>Server:</strong> postgres<br>
+                    <strong>User:</strong> unityplan<br>
+                    <strong>Pass:</strong> unityplan_dev_password<br>
+                    <strong>DB:</strong> unityplan_dev</div>
                     <div class="card-port">Port 8080</div>
                 </a>
                 <a href="http://localhost:8082" class="card infrastructure" target="_blank">
@@ -347,8 +356,9 @@
                 <a href="http://localhost:3001" class="card observability" target="_blank">
                     <span class="card-icon">📈</span>
                     <div class="card-title">Grafana</div>
-                    <div class="card-description">Metrics dashboards & visualization</div>
-                    <div class="card-port">Port 3001 | admin/admin</div>
+                    <div class="card-description">Metrics dashboards & visualization<br>
+                    <strong>User:</strong> admin | <strong>Pass:</strong> admin</div>
+                    <div class="card-port">Port 3001</div>
                 </a>
                 <a href="http://localhost:9090" class="card observability" target="_blank">
                     <span class="card-icon">🔥</span>
