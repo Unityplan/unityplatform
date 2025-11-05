@@ -114,6 +114,21 @@ services:
     # Note: Requires initial setup with generate command
     # Run: docker run -it --rm -v ./docker/matrix-data:/data -e SYNAPSE_SERVER_NAME=localhost matrixdotorg/synapse:latest generate
 
+  # MailHog - Email testing (development only)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: unityplan-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    networks:
+      - unityplan-network
+    environment:
+      - MH_STORAGE=memory
+      - MH_SMTP_BIND_ADDR=0.0.0.0:1025
+      - MH_UI_BIND_ADDR=0.0.0.0:8025
+
 networks:
   unityplan-network:
     driver: bridge
