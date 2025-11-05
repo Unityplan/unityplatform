@@ -1,7 +1,7 @@
 # UnityPlan Version Matrix
 
 **Last Updated:** November 5, 2025  
-**Platform Version:** 0.1.0 (MVP Phase 1 - Development)
+**Platform Version:** 0.1.0-alpha.1 (MVP Phase 1 - Early Development)
 
 ---
 
@@ -15,13 +15,15 @@
 | Frontend | ⬜ Not Started | Planned for Stage 5 |
 | Decentralization | ⬜ Not Started | Phase 3 (Holochain integration) |
 
+**Release Stage:** Alpha (Internal testing, infrastructure only)
+
 ---
 
 ## 🔧 Backend Services
 
 | Service | Version | Status | Last Updated | Dependencies |
 |---------|---------|--------|--------------|--------------|
-| **shared-lib** | 0.1.0 | ✅ Active | 2025-11-05 | sqlx, async-nats, actix-web |
+| **shared-lib** | 0.1.0-alpha.1 | ✅ Active | 2025-11-05 | sqlx, async-nats, actix-web |
 | **auth-service** | - | 🟡 Development | - | shared-lib@0.1.0 |
 | **user-service** | - | ⬜ Not Started | - | shared-lib@0.1.0, auth-service |
 | **territory-service** | - | ⬜ Not Started | - | shared-lib@0.1.0 |
@@ -128,8 +130,8 @@
 
 ## 🔄 Version History
 
-### Platform v0.1.0 - November 5, 2025
-**Status:** Development (Phase 1 - MVP)
+### Platform v0.1.0-alpha.1 - November 5, 2025
+**Status:** Alpha (Early Development - Infrastructure Only)
 
 **Completed:**
 - ✅ Multi-pod infrastructure deployed

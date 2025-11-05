@@ -14,9 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User service (user-service)
 - Frontend application (Vite + React)
 
+### Next Milestone: 0.1.0-alpha.2
+- Complete auth-service implementation
+- Working user registration and login
+
 ---
 
-## [0.1.0] - 2025-11-05
+## [0.1.0-alpha.1] - 2025-11-05
+
+**Release Stage:** Alpha (Infrastructure foundation, no working services yet)
 
 ### Added
 - Multi-pod infrastructure architecture

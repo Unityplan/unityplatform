@@ -3,7 +3,8 @@
 **Last Updated:** November 5, 2025  
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
-**Progress:** 18% (Stage 1 complete, Stage 2 complete)
+**Progress:** 18% (Stage 1 complete, Stage 2 complete)  
+**Release Stage:** Alpha (0.1.0-alpha.1)
 
 ---
 

@@ -38,9 +38,53 @@ MAJOR.MINOR.PATCH
 For development and testing:
 
 ```
-0.1.0-alpha.1   # Alpha release
-0.1.0-beta.2    # Beta release
-0.1.0-rc.1      # Release candidate
+0.1.0-alpha.1   # Alpha release (early development, incomplete)
+0.1.0-alpha.2   # Alpha iteration
+0.1.0-beta.1    # Beta release (feature complete, testing)
+0.1.0-beta.2    # Beta iteration
+0.1.0-rc.1      # Release candidate (production ready, final testing)
+0.1.0           # Stable release
+```
+
+**Release Stage Definitions:**
+
+- **Alpha** (`-alpha.N`): 
+  - Early development
+  - Incomplete features
+  - Internal testing only
+  - Breaking changes expected
+  - Example: Infrastructure complete but no working services
+
+- **Beta** (`-beta.N`):
+  - Feature complete for this version
+  - External testing and feedback
+  - Bug fixes and refinements
+  - API should be stable
+  - Example: All services working, testing with users
+
+- **Release Candidate** (`-rc.N`):
+  - Production ready
+  - Final testing before release
+  - Only critical bug fixes
+  - No new features
+  - Example: Ready to deploy, final validation
+
+- **Stable** (no suffix):
+  - Production release
+  - Fully tested and validated
+  - No known critical bugs
+  - Supported for use
+
+**Current Platform Stage:** `0.1.0-alpha.1` (Infrastructure only, no services)
+
+**Progression Plan:**
+```
+0.1.0-alpha.1  → Infrastructure + database (current)
+0.1.0-alpha.2  → Auth service working
+0.1.0-alpha.3  → User service working
+0.1.0-beta.1   → All core services integrated
+0.1.0-rc.1     → Ready for MVP launch
+0.1.0          → MVP Phase 1 complete
 ```
 
 ---
