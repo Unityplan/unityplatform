@@ -1,0 +1,97 @@
+# Denmark Pod - Deployment Versions
+
+**Pod ID:** dk  
+**Pod Name:** Denmark  
+**Last Deployment:** 2025-11-05T20:00:00Z  
+**Platform Version:** 0.1.0  
+**Environment:** Development
+
+---
+
+## 📦 Deployed Services
+
+| Service | Version | Image | Deployed | Status |
+|---------|---------|-------|----------|--------|
+| PostgreSQL | 16-alpine | postgres:16-alpine | 2025-11-04T15:00:00Z | ✅ Running |
+| NATS | 2.10-alpine | nats:2.10-alpine | 2025-11-04T15:00:00Z | ✅ Running |
+| Redis | 7-alpine | redis:7-alpine | 2025-11-04T15:00:00Z | ✅ Running |
+| IPFS | latest | ipfs/kubo:latest | 2025-11-04T15:00:00Z | ✅ Running |
+
+---
+
+## 🗄️ Database
+
+**Version:** PostgreSQL 16  
+**Schema Version:** 20251105000001  
+**Schemas:**
+- global (users, territories, sessions, audit_log)
+- territory_dk (communities, community_members, settings)
+
+**Applied Migrations:**
+- 20251105000001_initial_schema
+
+---
+
+## ⚙️ Configuration
+
+**Environment File:** `pods/denmark/.env`  
+**Configuration:**
+```
+POD_ID=dk
+TERRITORY_CODE=DK
+TERRITORY_NAME=Denmark
+POSTGRES_DB=unityplan_dk
+POSTGRES_USER=unityplan
+NATS_CLUSTER_NAME=unityplan-dk
+```
+
+---
+
+## 📊 Monitoring
+
+**Exporters Status:**
+- ✅ postgres-exporter (service-postgres-dk:5432)
+- ✅ redis-exporter (service-redis-dk:6379)
+- ✅ nats-exporter (service-nats-dk:4222)
+- ✅ node-exporter (host metrics)
+- ✅ cadvisor (container metrics)
+- ⬜ matrix-exporter (not deployed)
+
+**Metrics:** Scraped by Prometheus (monitoring-prometheus:9090)  
+**Dashboards:** Available in Grafana (monitoring-grafana:3001)  
+**Tracing:** Jaeger (monitoring-jaeger:16686)
+
+---
+
+## 🌐 Networks
+
+- unityplan-pod-dk-net (pod internal)
+- unityplan-mesh-network (cross-pod communication)
+
+---
+
+## 📝 Notes
+
+- Initial deployment for MVP Phase 1
+- Development environment (not production)
+- All core infrastructure operational
+- Backend services not yet deployed (auth-service, user-service pending)
+
+---
+
+## 🔄 Deployment History
+
+### 2025-11-05T20:00:00Z - Database Schema Deployed
+- Applied initial migration 20251105000001
+- Created global and territory_dk schemas
+- Territory DK registered
+
+### 2025-11-04T15:00:00Z - Initial Pod Deployment
+- Deployed PostgreSQL, NATS, Redis, IPFS
+- Configured monitoring exporters
+- Connected to mesh network
+
+---
+
+**Maintained by:** UnityPlan Operations Team  
+**Next Update:** When backend services are deployed

@@ -7,8 +7,17 @@ members = [
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-authors = ["UnityPlan Team"]
+authors = ["UnityPlan Team <dev@unityplan.org>"]
 license = "MIT OR Apache-2.0"
+homepage = "https://github.com/unityplan/platform"
+repository = "https://github.com/unityplan/platform"
+documentation = "https://docs.unityplan.org"
+keywords = ["education", "collaboration", "decentralized", "multi-tenant"]
+categories = ["web-programming", "authentication"]
+
+[workspace.metadata]
+# Minimum Supported Rust Version
+msrv = "1.75.0"
 
 [workspace.dependencies]
 # Async runtime

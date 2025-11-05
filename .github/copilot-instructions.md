@@ -28,6 +28,7 @@ This workspace contains a microservices platform with:
 - `frontend/` - Vite + React application
 - `docker/` - Docker configuration files
 - `docs/` - Project documentation
+- `doce-archived/` - Archived project documentation that have been added ti the main docs/ folder and dock that is no longer relevant
 - `scripts/` - Utility scripts for development and deployment
 - `project_docs/` - Project-specific documents and planning files
 - `project_status/` - Current status reports and roadmaps
