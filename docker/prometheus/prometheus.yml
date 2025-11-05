@@ -32,6 +32,16 @@ scrape_configs:
     static_configs:
       - targets: ['nats-exporter:7777']
 
+  # Node Exporter - Host system metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # cAdvisor - Container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
   # Microservices (will add as they're developed)
   # Each Rust service should expose metrics at /metrics endpoint
 

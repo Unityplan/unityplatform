@@ -103,6 +103,44 @@ services:
     depends_on:
       - nats
 
+  # Node Exporter - Host system metrics for Prometheus
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: unityplan-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - unityplan-network
+
+  # cAdvisor - Container metrics for Prometheus
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: unityplan-cadvisor
+    restart: unless-stopped
+    ports:
+      - "8089:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - unityplan-network
+
   # Adminer for database management (development only)
   adminer:
     image: adminer:latest

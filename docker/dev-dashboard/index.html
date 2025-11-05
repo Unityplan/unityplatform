@@ -602,6 +602,18 @@
                     <div class="card-description">Message bus metrics for Prometheus</div>
                     <div class="card-port">Port 7777</div>
                 </a>
+                <a href="http://localhost:9100/metrics" class="card observability" target="_blank">
+                    <span class="card-icon">🖥️</span>
+                    <div class="card-title">Node Exporter</div>
+                    <div class="card-description">Host system metrics (CPU, RAM, Disk)</div>
+                    <div class="card-port">Port 9100</div>
+                </a>
+                <a href="http://localhost:8089" class="card observability" target="_blank">
+                    <span class="card-icon">🐳</span>
+                    <div class="card-title">cAdvisor</div>
+                    <div class="card-description">Container resource monitoring</div>
+                    <div class="card-port">Port 8089</div>
+                </a>
             </div>
         </div>
 
@@ -674,6 +686,8 @@
             { name: 'PostgreSQL Exporter', icon: '🐘', port: 9187, url: `${BASE_URL}:9187/metrics`, critical: false, deployed: true },
             { name: 'Redis Exporter', icon: '💾', port: 9121, url: `${BASE_URL}:9121/metrics`, critical: false, deployed: true },
             { name: 'NATS Exporter', icon: '📨', port: 7777, url: `${BASE_URL}:7777/metrics`, critical: false, deployed: true },
+            { name: 'Node Exporter', icon: '🖥️', port: 9100, url: `${BASE_URL}:9100/metrics`, critical: false, deployed: true },
+            { name: 'cAdvisor', icon: '🐳', port: 8089, url: `${BASE_URL}:8089`, critical: false, deployed: true },
             { name: 'MailHog', icon: '📧', port: 8025, url: `${BASE_URL}:8025`, critical: false, deployed: true },
             { name: 'Traefik', icon: '🔀', port: 8083, url: `${BASE_URL}:8083/dashboard/`, critical: false, deployed: true },
         ];
