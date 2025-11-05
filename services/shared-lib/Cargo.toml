@@ -1,0 +1,51 @@
+[package]
+name = "shared-lib"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# Async runtime
+tokio = { workspace = true }
+
+# Web framework  
+actix-web = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Configuration
+config = { workspace = true }
+dotenvy = { workspace = true }
+
+# Time & UUID
+chrono = { workspace = true }
+uuid = { workspace = true }
+bytes = { workspace = true }
+
+# NATS
+async-nats = { workspace = true }
+
+# Auth & Security
+jsonwebtoken = { workspace = true }
+argon2 = { workspace = true }
+rand = { workspace = true }
+
+# Metrics
+prometheus = { workspace = true }
+
+# Validation
+validator = { workspace = true }
