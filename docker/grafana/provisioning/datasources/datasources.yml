@@ -17,4 +17,4 @@ datasources:
     editable: true
     jsonData:
       tracesToLogsV2:
-        datasourceUid: 'loki'
+        datasourceUid: "loki"

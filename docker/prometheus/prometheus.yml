@@ -2,7 +2,7 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    monitor: 'unityplan-dev'
+    monitor: "unityplan-dev"
 
 # Alertmanager configuration (optional, can be added later)
 # alerting:
@@ -13,9 +13,9 @@ global:
 # Scrape configurations
 scrape_configs:
   # Prometheus self-monitoring
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]
 
   # PostgreSQL metrics (requires postgres_exporter - can add later)
   # - job_name: 'postgres'
@@ -28,46 +28,46 @@ scrape_configs:
   #     - targets: ['redis-exporter:9121']
 
   # NATS metrics (built-in monitoring endpoint)
-  - job_name: 'nats'
+  - job_name: "nats"
     static_configs:
-      - targets: ['nats:8222']
-    metrics_path: '/varz'
+      - targets: ["nats:8222"]
+    metrics_path: "/varz"
 
   # Microservices (will add as they're developed)
   # Each Rust service should expose metrics at /metrics endpoint
-  
+
   # - job_name: 'auth-service'
   #   static_configs:
   #     - targets: ['auth-service:8001']
-  
+
   # - job_name: 'user-service'
   #   static_configs:
   #     - targets: ['user-service:8002']
-  
+
   # - job_name: 'territory-service'
   #   static_configs:
   #     - targets: ['territory-service:8003']
-  
+
   # - job_name: 'badge-service'
   #   static_configs:
   #     - targets: ['badge-service:8004']
-  
+
   # - job_name: 'course-service'
   #   static_configs:
   #     - targets: ['course-service:8005']
-  
+
   # - job_name: 'forum-service'
   #   static_configs:
   #     - targets: ['forum-service:8006']
-  
+
   # - job_name: 'ipfs-service'
   #   static_configs:
   #     - targets: ['ipfs-service:8007']
-  
+
   # - job_name: 'translation-service'
   #   static_configs:
   #     - targets: ['translation-service:8008']
-  
+
   # - job_name: 'matrix-gateway'
   #   static_configs:
   #     - targets: ['matrix-gateway:8009']
