@@ -237,6 +237,20 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--log.level=INFO"
 
+  # Error Pages Server - Serves custom error pages for Traefik
+  error-pages:
+    image: nginx:alpine
+    container_name: unityplan-error-pages
+    restart: unless-stopped
+    networks:
+      - unityplan-network
+    volumes:
+      - ./docker/traefik/error-pages:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.error-pages.rule=Host(`error-pages.localhost`)"
+      - "traefik.http.routers.error-pages.entrypoints=web"
+
 networks:
   unityplan-network:
     driver: bridge
