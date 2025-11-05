@@ -39,6 +39,9 @@ docker/nats-data/
 docker/redis-data/
 docker/ipfs-data/
 docker/matrix-data/
+docker/prometheus-data/
+docker/grafana-data/
+docker/traefik-data/
 
 # Uploads and user content
 uploads/

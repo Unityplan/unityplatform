@@ -108,10 +108,23 @@ This platform follows a microservices architecture with progressive decentraliza
    pnpm dev
    ```
 
-7. **Access the application:**
+7. **Access the application and development tools:**
+   
+   **Application:**
    - Frontend: http://localhost:5173
    - API Gateway: http://localhost:8000
-   - Adminer (DB UI): http://localhost:8080
+   
+   **Infrastructure Management:**
+   - Adminer (PostgreSQL UI): http://localhost:8080
+   - Redis Commander: http://localhost:8082
+   - MailHog (Email Testing): http://localhost:8025
+   
+   **Observability & Monitoring:**
+   - Prometheus (Metrics): http://localhost:9090
+   - Grafana (Dashboards): http://localhost:3001 (admin/admin)
+   - Jaeger (Tracing): http://localhost:16686
+   - Traefik Dashboard: http://localhost:8083/dashboard/
+   - NATS Monitoring: http://localhost:8222
 
 ## 🧪 Testing
 

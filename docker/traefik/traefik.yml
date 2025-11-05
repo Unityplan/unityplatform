@@ -1,0 +1,5 @@
+# Traefik Static Configuration
+# Dashboard and API configuration is set via command in docker-compose.yml
+
+# This file can be used for additional static configuration
+# For now, dynamic configuration will be handled via Docker labels
