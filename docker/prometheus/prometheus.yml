@@ -18,29 +18,29 @@ scrape_configs:
       - targets: ["localhost:9090"]
 
   # PostgreSQL metrics via postgres_exporter
-  - job_name: 'postgres'
+  - job_name: "postgres"
     static_configs:
-      - targets: ['postgres-exporter:9187']
+      - targets: ["postgres-exporter:9187"]
 
   # Redis metrics via redis_exporter
-  - job_name: 'redis'
+  - job_name: "redis"
     static_configs:
-      - targets: ['redis-exporter:9121']
+      - targets: ["redis-exporter:9121"]
 
   # NATS metrics via nats-exporter
-  - job_name: 'nats'
+  - job_name: "nats"
     static_configs:
-      - targets: ['nats-exporter:7777']
+      - targets: ["nats-exporter:7777"]
 
   # Node Exporter - Host system metrics
-  - job_name: 'node'
+  - job_name: "node"
     static_configs:
-      - targets: ['node-exporter:9100']
+      - targets: ["node-exporter:9100"]
 
   # cAdvisor - Container metrics
-  - job_name: 'cadvisor'
+  - job_name: "cadvisor"
     static_configs:
-      - targets: ['cadvisor:8080']
+      - targets: ["cadvisor:8080"]
 
   # Microservices (will add as they're developed)
   # Each Rust service should expose metrics at /metrics endpoint
