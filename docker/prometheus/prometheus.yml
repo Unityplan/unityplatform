@@ -17,21 +17,23 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
-  # PostgreSQL metrics (requires postgres_exporter - can add later)
-  # - job_name: 'postgres'
-  #   static_configs:
-  #     - targets: ['postgres-exporter:9187']
-
-  # Redis metrics (requires redis_exporter - can add later)
-  # - job_name: 'redis'
-  #   static_configs:
-  #     - targets: ['redis-exporter:9121']
-
-  # NATS metrics (built-in monitoring endpoint)
-  - job_name: "nats"
+  # PostgreSQL metrics via postgres_exporter
+  - job_name: 'postgres'
     static_configs:
-      - targets: ["nats:8222"]
-    metrics_path: "/varz"
+      - targets: ['postgres-exporter:9187']
+
+  # Redis metrics via redis_exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # NATS metrics (monitoring endpoint - JSON format, not Prometheus)
+  # Note: NATS /varz returns JSON. Use Grafana JSON API datasource or NATS exporter
+  # Keeping for reference but won't scrape as Prometheus metrics
+  # - job_name: "nats"
+  #   static_configs:
+  #     - targets: ["nats:8222"]
+  #   metrics_path: "/varz"
 
   # Microservices (will add as they're developed)
   # Each Rust service should expose metrics at /metrics endpoint

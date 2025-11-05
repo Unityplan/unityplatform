@@ -60,6 +60,36 @@ services:
       timeout: 5s
       retries: 5
 
+  # PostgreSQL Exporter for Prometheus
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: unityplan-postgres-exporter
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-unityplan}:${POSTGRES_PASSWORD:-unityplan_dev_password}@postgres:5432/${POSTGRES_DB:-unityplan_dev}?sslmode=disable"
+    networks:
+      - unityplan-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Redis Exporter for Prometheus
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: unityplan-redis-exporter
+    restart: unless-stopped
+    ports:
+      - "9121:9121"
+    environment:
+      REDIS_ADDR: "redis:6379"
+    networks:
+      - unityplan-network
+    depends_on:
+      redis:
+        condition: service_healthy
+
   # Adminer for database management (development only)
   adminer:
     image: adminer:latest
