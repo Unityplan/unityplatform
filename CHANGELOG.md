@@ -12,11 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Auth-service implementation (register and login endpoints)
 - Migration 20251106000002: NOT NULL constraints on user boolean fields
+- Dynamic schema routing for multi-territory support
 
 ### Fixed
+- **CRITICAL:** Removed hardcoded territory_dk from auth-service
+  - Service now works universally for all territories (DK, NO, SE, etc.)
+  - Dynamic schema selection based on territory_code in requests
+  - Queries use runtime schema interpolation instead of hardcoded names
 - Database schema: User boolean fields now properly constrained as NOT NULL
   - `email_visible`, `profile_public`, `data_export_requested`, `is_verified`, `is_active`
   - All fields have defaults and are now non-nullable
+
+### Changed
+- Auth-service queries: Migrated from compile-time macros (query!) to runtime queries (query())
+  - Enables dynamic schema routing without DATABASE_URL at compile time
+  - Trade-off: Less compile-time safety, more runtime flexibility
 
 ### Planned
 - Authentication service refresh/logout endpoints
