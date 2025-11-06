@@ -55,7 +55,11 @@ pub struct CreateInvitationRequest {
     #[validate(range(min = 1, max = 1000, message = "Max uses must be between 1 and 1000"))]
     pub max_uses: i32,
 
-    #[validate(range(min = 1, max = 365, message = "Expiration must be between 1 and 365 days"))]
+    #[validate(range(
+        min = 1,
+        max = 365,
+        message = "Expiration must be between 1 and 365 days"
+    ))]
     pub expires_in_days: Option<i64>, // Default: 7 days
 
     #[validate(length(max = 500, message = "Purpose must be 500 characters or less"))]
