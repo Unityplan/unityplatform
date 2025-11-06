@@ -1,6 +1,6 @@
 use crate::{
     models::{user::User, AuthResponse, AuthUserInfo, LoginRequest, RegisterRequest},
-    services::{PasswordService, TokenService},
+    services::{validate_invitation_token, use_invitation_token, PasswordService, TokenService},
     utils::crypto::generate_public_key_hash,
 };
 use actix_web::{web, HttpResponse};
@@ -37,6 +37,16 @@ pub async fn register(
 
     // Set schema context to territory (dynamic based on territory_code)
     let schema_name = format!("territory_{}", territory.code.to_lowercase());
+
+    // Validate invitation token
+    let invitation = validate_invitation_token(
+        pool.get_ref(),
+        &schema_name,
+        &req.invitation_token,
+        Some(&req.email),
+    )
+    .await
+    .map_err(actix_web::error::ErrorBadRequest)?;
 
     // Check if email already exists (dynamic schema)
     let existing_email = sqlx::query(&format!(
@@ -79,8 +89,8 @@ pub async fn register(
     let user = sqlx::query_as::<_, User>(&format!(
         r#"
         INSERT INTO {}.users (
-            username, email, password_hash, full_name, public_key_hash
-        ) VALUES ($1, $2, $3, $4, $5)
+            username, email, password_hash, full_name, public_key_hash, invited_by_token_id
+        ) VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING 
             id, public_key_hash, email, password_hash, username, 
             full_name, display_name, avatar_url, bio,
@@ -95,9 +105,15 @@ pub async fn register(
     .bind(&password_hash)
     .bind(&req.full_name)
     .bind(&public_key_hash)
+    .bind(invitation.id)
     .fetch_one(pool.get_ref())
     .await
     .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    // Mark invitation as used
+    use_invitation_token(pool.get_ref(), &schema_name, invitation.id, user.id, None)
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
     // Generate tokens
     let access_token = token_service

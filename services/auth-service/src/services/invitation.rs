@@ -35,7 +35,9 @@ pub async fn validate_invitation_token(
         r#"
         SELECT 
             id, token, token_type, email, max_uses, used_count,
-            expires_at, is_active, created_by, created_at, updated_at, purpose
+            created_by_user_id, purpose, metadata,
+            expires_at, is_active, revoked_at, revoked_by_user_id,
+            created_at, updated_at
         FROM {}.invitation_tokens
         WHERE token = $1
         "#,
@@ -126,7 +128,7 @@ pub async fn use_invitation_token(
     // Create audit record
     let audit_query = format!(
         r#"
-        INSERT INTO {}.invitation_uses (id, token_id, user_id, used_at, ip_address)
+        INSERT INTO {}.invitation_uses (id, invitation_token_id, user_id, used_at, ip_address)
         VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
         "#,
         schema_name
@@ -156,7 +158,7 @@ pub async fn create_invitation_token(
     max_uses: i32,
     expires_in_days: Option<i64>,
     purpose: Option<String>,
-    created_by: Uuid,
+    created_by: Option<Uuid>,  // None for bootstrap tokens
 ) -> Result<InvitationToken, AppError> {
     // Generate token
     let token = generate_invitation_token();
@@ -172,11 +174,13 @@ pub async fn create_invitation_token(
     let insert_query = format!(
         r#"
         INSERT INTO {}.invitation_tokens 
-            (id, token, token_type, email, max_uses, used_count, expires_at, is_active, created_by, purpose)
+            (id, token, token_type, email, max_uses, used_count, expires_at, is_active, created_by_user_id, purpose)
         VALUES ($1, $2, $3, $4, $5, 0, $6, true, $7, $8)
         RETURNING 
             id, token, token_type, email, max_uses, used_count,
-            expires_at, is_active, created_by, created_at, updated_at, purpose
+            created_by_user_id, purpose, metadata,
+            expires_at, is_active, revoked_at, revoked_by_user_id,
+            created_at, updated_at
         "#,
         schema_name
     );
@@ -210,9 +214,11 @@ pub async fn list_user_invitations(
         r#"
         SELECT 
             id, token, token_type, email, max_uses, used_count,
-            expires_at, is_active, created_by, created_at, updated_at, purpose
+            created_by_user_id, purpose, metadata,
+            expires_at, is_active, revoked_at, revoked_by_user_id,
+            created_at, updated_at
         FROM {}.invitation_tokens
-        WHERE created_by = $1
+        WHERE created_by_user_id = $1
         ORDER BY created_at DESC
         "#,
         schema_name
@@ -244,7 +250,7 @@ pub async fn revoke_invitation_token(
         SET 
             is_active = false,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1 AND created_by = $2
+        WHERE id = $1 AND created_by_user_id = $2
         RETURNING id
         "#,
         schema_name
@@ -276,9 +282,9 @@ pub async fn get_invitation_uses(
 ) -> Result<Vec<InvitationUse>, AppError> {
     let query = format!(
         r#"
-        SELECT id, token_id, user_id, used_at, ip_address
+        SELECT id, invitation_token_id, user_id, used_at, ip_address, user_agent
         FROM {}.invitation_uses
-        WHERE token_id = $1
+        WHERE invitation_token_id = $1
         ORDER BY used_at DESC
         "#,
         schema_name
