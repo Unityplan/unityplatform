@@ -2,11 +2,23 @@
 
 ## Project Overview
 
+**Platform:** UnityPlan - User sovereignty-first learning and collaboration platform  
+**Version:** 0.1.0-alpha.1 (MVP Phase 1 - Early Development)  
+**Status:** Infrastructure complete, backend services in development
+
 This workspace contains a microservices platform with:
 
 - **Backend**: Rust-based microservices running in Docker containers
-- **Frontend**: Vite + React application
-- **Matrix**: Matrix protocol integration for decentralized communication (forum/chat structure)
+- **Frontend**: Vite + React application (not yet started)
+- **Matrix**: Matrix protocol integration for decentralized communication (planned)
+- **Multi-Pod Architecture**: Territory-based pod deployment (Denmark pod operational)
+
+## Quick References
+
+- **Version Matrix**: See `VERSIONS.md` for all component versions
+- **Documentation**: `docs/` directory (consolidated structure)
+- **Status**: `docs/status/current/phase-1-status.md` (18% complete)
+- **Database Schema**: `services/shared-lib/migrations/` (version: 20251105000001)
 
 ## Architecture
 
@@ -16,23 +28,36 @@ This workspace contains a microservices platform with:
 
 ## Development Guidelines
 
+- **Current Stage**: Alpha (0.1.0-alpha.1) - Infrastructure complete, services in development
 - Each microservice should be independently deployable and scalable (scalable only if it makes sense)
 - Use Docker Compose for local development orchestration
 - Follow Rust best practices and idiomatic patterns
 - Use TypeScript for React components with shadcn and tailwind where possible
 - Maintain clear separation between frontend and backend concerns
+- **Versioning**: Follow SemVer 2.0.0 - see `docs/guides/development/versioning-strategy.md`
+- **Changelogs**: Update `CHANGELOG.md` and service-specific changelogs for all changes
+- **Version Info**: Use `shared_lib::version` module for runtime version access
 
 ## Project Structure
 
-- `services/` - Rust microservices
-- `frontend/` - Vite + React application
-- `docker/` - Docker configuration files
-- `docs/` - Project documentation
-- `doce-archived/` - Archived project documentation that have been added ti the main docs/ folder and dock that is no longer relevant
+- `services/` - Rust microservices workspace
+  - `shared-lib/` - Shared library (config, database, error, nats) - v0.1.0-alpha.1
+  - `auth-service/` - Authentication service (planned)
+  - Future services: user-service, territory-service, badge-service, course-service, forum-service
+- `docs/` - **Primary documentation** (consolidated, organized structure)
+  - `project/` - Project definition (summary, overview, tech stack)
+  - `architecture/` - System design (infrastructure, multi-pod, territory standard)
+  - `guides/` - Implementation guides (deployment, development, operations)
+  - `status/` - Progress tracking (roadmaps, current status)
+- `docker/` - Docker configuration files and data volumes
+- `pods/` - Territory pod configurations (denmark/, norway/, sweden/, europe/)
 - `scripts/` - Utility scripts for development and deployment
-- `project_docs/` - Project-specific documents and planning files
-- `project_status/` - Current status reports and roadmaps
-- `temp/` - temporary files and experiments (AI agent work directory for testing and logging when building and testing code)
+- `temp/` - Temporary files and AI agent experiments
+- `docs-archived/` - Old documentation (to be deleted)
+- **Root Files**:
+  - `VERSIONS.md` - Version matrix for all components
+  - `CHANGELOG.md` - Platform-level change history
+  - `.github/copilot-instructions.md` - This file
 
 ## Technologies Used
 
@@ -75,7 +100,7 @@ This workspace contains a microservices platform with:
 | **Holochain Client (future)** | `@holochain/client` | Holochain DNA module interaction  |
 | **Tauri (future)**            | latest              | Mobile application packaging      |
 
-## Project power/permission structure
+## Project Power/Permission Structure
 
 The system IS visually an inverted pyramid - wide at top (users), narrow at bottom (global):
 
@@ -94,7 +119,7 @@ This is revolutionary because:
 - Traditional organizations = pyramid (narrow powerful top, wide powerless bottom)
 - Your system = inverted pyramid (wide powerful top/users, narrow service-focused bottom/admins)
 
-The term "inverted pyramid" is perfect and I was wrong to suggest changing it. This accurately describes:
+The term "inverted pyramid" is perfect and accurately describes:
 
 1.  Visual structure: Inverted triangle shape
 2.  Power flow: Users have the most authority
@@ -105,4 +130,32 @@ This is a user-sovereignty-first, bottom-up power structure where:
 - Users (many, powerful) → top of inverted pyramid
 - Global admins (few, servants) → bottom of inverted pyramid
 
-The term Grassroots or Grassroots Empowerment should be replaces with "User Sovereignty" to better reflect the focus on individual user power and control in this inverted pyramid model or better yet, Unified model.
+## Natural Ecosystem Metaphor
+
+To understand how this inverted pyramid functions as a living system, think of the platform as part of nature:
+
+**🌰 Pod (Seed-Pod)**: Each territory deployment is like a seed pod - self-contained, capable of independent growth and reproduction.
+
+**🌿 Roots (IT Infrastructure)**: Docker, PostgreSQL, NATS, Redis form the root system - hidden beneath the surface, providing essential nutrients and stability.
+
+**🍄 Mycorrhizal Network (Global Level)**: The global federation layer acts like a mycorrhizal network - an underground fungal network connecting separate plants, sharing wisdom from elders through LMS teachings and exchanging knowledge between communities across different pods via forum structures.
+
+**🌱 Stem Base (Territory Level)**: A single territory is like the base of a plant stem - managing flow between infrastructure and communities, coordinating local resources.
+
+**🔗 Stalk Joints (Communities)**: Community structures are like the joints where branches emerge - connection points where collaboration branches out.
+
+**🍃 Leaves (Guilds & Study Groups)**: Guilds and study groups are like leaves - where photosynthesis happens, converting knowledge into practical skills and energy.
+
+**🌸 Flowers (Communities with People)**: Communities of active users bloom like flowers - the visible, vibrant expression where people gather, interact, and create.
+
+**🌾 Seeds (New Knowledge)**: Flowers produce seeds of new knowledge and experience, spreading to create new pods, continuing the growth cycle.
+
+**♻️ Energy Cycle**: Knowledge implementation manifests in communities and guilds (flowers and leaves) as shared energy returned to the soil - enriching the entire ecosystem, making all flowers grow bigger and stronger together.
+
+This organic model emphasizes:
+
+- **Interconnection**: Like a forest, all parts support each other
+- **Sovereignty**: Each pod grows independently while benefiting from the network
+- **Wisdom Flow**: Knowledge circulates like nutrients through the mycorrhizal network
+- **Regeneration**: Communities create new knowledge that enriches the whole system
+- **Resilience**: Distributed structure ensures ecosystem thrives even if individual parts face challenges
