@@ -9,8 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Auth-service implementation (register and login endpoints)
+- Migration 20251106000002: NOT NULL constraints on user boolean fields
+
+### Fixed
+- Database schema: User boolean fields now properly constrained as NOT NULL
+  - `email_visible`, `profile_public`, `data_export_requested`, `is_verified`, `is_active`
+  - All fields have defaults and are now non-nullable
+
 ### Planned
-- Authentication service (auth-service)
+- Authentication service refresh/logout endpoints
 - User service (user-service)
 - Frontend application (Vite + React)
 
