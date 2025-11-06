@@ -146,7 +146,7 @@ To understand how this inverted pyramid functions as a living system, think of t
 
 **🍃 Leaves (Guilds & Study Groups)**: Guilds and study groups are like leaves - where photosynthesis happens, converting knowledge into practical skills and energy.
 
-**🌸 Flowers (Communities with People)**: Communities of active users bloom like flowers - the visible, vibrant expression where people gather, interact, and create.
+**🌸 Flowers (Communities with People)**: Communities of active users bloom like flowers - the visible, vibrant expression where people gather, interact, and create. Users are the individual parts that make up the flower (petals, stamens, pistils) - each contributing to the whole.
 
 **🌾 Seeds (New Knowledge)**: Flowers produce seeds of new knowledge and experience, spreading to create new pods, continuing the growth cycle.
 

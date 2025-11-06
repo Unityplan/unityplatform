@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-/// Registration request
-#[derive(Debug, Deserialize, Validate)]
+/// Request to register a new user
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct RegisterRequest {
     #[validate(email(message = "Invalid email format"))]
     pub email: String,
@@ -13,11 +13,13 @@ pub struct RegisterRequest {
     #[validate(length(min = 8, message = "Password must be at least 8 characters"))]
     pub password: String,
 
-    #[validate(length(max = 255))]
     pub full_name: Option<String>,
 
     #[validate(length(min = 2, max = 10, message = "Territory code must be 2-10 characters"))]
     pub territory_code: String,
+
+    #[validate(length(min = 10, max = 100, message = "Invitation token is required"))]
+    pub invitation_token: String, // ⭐ NEW - REQUIRED
 }
 
 /// Login request

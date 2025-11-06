@@ -6,7 +6,7 @@ use crate::{
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
 use sha2::Digest;
-use sqlx::{PgPool, FromRow};
+use sqlx::{FromRow, PgPool};
 use validator::Validate;
 
 // Helper struct for territory validation
@@ -27,7 +27,7 @@ pub async fn register(
 
     // Verify territory exists and is active
     let territory = sqlx::query_as::<_, TerritoryCode>(
-        "SELECT code FROM global.territories WHERE code = $1 AND is_active = true"
+        "SELECT code FROM global.territories WHERE code = $1 AND is_active = true",
     )
     .bind(&req.territory_code)
     .fetch_optional(pool.get_ref())
@@ -147,7 +147,7 @@ pub async fn login(
 
     // Verify territory exists and is active
     let territory = sqlx::query_as::<_, TerritoryCode>(
-        "SELECT code FROM global.territories WHERE code = $1 AND is_active = true"
+        "SELECT code FROM global.territories WHERE code = $1 AND is_active = true",
     )
     .bind(&req.territory_code)
     .fetch_optional(pool.get_ref())
