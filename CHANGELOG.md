@@ -16,11 +16,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Next Milestone: 0.1.0-alpha.2
 - Complete auth-service implementation
-- Working user registration and login
+- Working user registration and login with corrected data sovereignty architecture
 
 ---
 
-## [0.1.0-alpha.1] - 2025-11-05
+## [0.1.0-alpha.1] - 2025-11-06
+
+### Changed
+- **CRITICAL:** User data sovereignty architecture correction
+  - Moved user personal data from `global.users` to `territory_*.users`
+  - Created `global.user_identities` with cryptographic hashes only
+  - Aligned with natural ecosystem metaphor (users belong to their pods)
+  - Prepared for future Holochain migration (agent-based identity)
+  - Added comprehensive documentation: `docs/architecture/user-data-sovereignty.md`
+- Updated copilot instructions with natural ecosystem metaphor
+
+### Added
+- Natural ecosystem metaphor documentation in project overview
+- Migration 20251106000001: User data sovereignty
+- Database triggers for automatic identity sync
+- Support for future WebAuthn/Holochain authentication
+
+### Infrastructure
+- Database schema restructured for data sovereignty
+- Territory schemas now contain ALL user personal data
+- Global schema only coordinates via cryptographic identifiers
+
+### Security
+- Enhanced privacy: personal data never leaves territory
+- GDPR compliance: data stays in user-selected territory
+- Future-proof: compatible with Holochain agent identities
 
 **Release Stage:** Alpha (Infrastructure foundation, no working services yet)
 
