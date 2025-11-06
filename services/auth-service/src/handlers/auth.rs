@@ -1,6 +1,6 @@
 use crate::{
     models::{user::User, AuthResponse, AuthUserInfo, LoginRequest, RegisterRequest},
-    services::{validate_invitation_token, use_invitation_token, PasswordService, TokenService},
+    services::{use_invitation_token, validate_invitation_token, PasswordService, TokenService},
     utils::crypto::generate_public_key_hash,
 };
 use actix_web::{web, HttpResponse};

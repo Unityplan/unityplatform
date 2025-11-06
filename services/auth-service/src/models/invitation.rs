@@ -17,7 +17,7 @@ pub struct InvitationToken {
     pub used_count: i32,
 
     // Metadata
-    pub created_by_user_id: Option<Uuid>,  // NULL for bootstrap tokens
+    pub created_by_user_id: Option<Uuid>, // NULL for bootstrap tokens
     pub purpose: Option<String>,
     pub metadata: Option<serde_json::Value>,
 

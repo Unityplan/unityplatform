@@ -7,22 +7,22 @@ use uuid::Uuid;
 /// Format: "inv_" + 32 hexadecimal characters
 pub fn generate_invitation_token() -> String {
     use rand::Rng;
-    
+
     let mut rng = rand::thread_rng();
     let random_bytes: [u8; 16] = rng.gen();
     let hex_string = hex::encode(random_bytes);
-    
+
     format!("inv_{}", hex_string)
 }
 
 /// Validate an invitation token without consuming it
-/// 
+///
 /// This checks:
 /// 1. Token exists and is active
 /// 2. Token has not expired
 /// 3. Token has available uses (used_count < max_uses)
 /// 4. For single_use tokens: email matches (if provided)
-/// 
+///
 /// Returns the token if valid, error otherwise
 pub async fn validate_invitation_token(
     pool: &PgPool,
@@ -88,12 +88,12 @@ pub async fn validate_invitation_token(
 }
 
 /// Mark an invitation token as used
-/// 
+///
 /// This:
 /// 1. Increments the used_count
 /// 2. Creates an audit record in invitation_uses
 /// 3. Deactivates the token if max_uses is reached
-/// 
+///
 /// Must be called within a transaction along with user creation
 pub async fn use_invitation_token(
     pool: &PgPool,
@@ -134,20 +134,39 @@ pub async fn use_invitation_token(
         schema_name
     );
 
-    sqlx::query(&audit_query)
+    let audit_result = sqlx::query(&audit_query)
         .bind(Uuid::new_v4())
         .bind(token_id)
         .bind(user_id)
         .bind(ip_address)
         .execute(pool)
-        .await
-        .map_err(|e| AppError::Internal(format!("Failed to create invitation use audit record: {}", e)))?;
+        .await;
 
-    Ok(())
+    match audit_result {
+        Ok(_) => {
+            tracing::info!(
+                "Invitation usage audit record created successfully for user {}",
+                user_id
+            );
+            Ok(())
+        }
+        Err(e) => {
+            tracing::error!(
+                "Failed to create invitation use audit record: {} (token_id: {}, user_id: {})",
+                e,
+                token_id,
+                user_id
+            );
+            Err(AppError::Internal(format!(
+                "Failed to create invitation use audit record: {}",
+                e
+            )))
+        }
+    }
 }
 
 /// Create a new invitation token
-/// 
+///
 /// This generates a new token and stores it in the database
 /// Returns the created token with all fields populated
 pub async fn create_invitation_token(
@@ -158,7 +177,7 @@ pub async fn create_invitation_token(
     max_uses: i32,
     expires_in_days: Option<i64>,
     purpose: Option<String>,
-    created_by: Option<Uuid>,  // None for bootstrap tokens
+    created_by: Option<Uuid>, // None for bootstrap tokens
 ) -> Result<InvitationToken, AppError> {
     // Generate token
     let token = generate_invitation_token();
@@ -202,7 +221,7 @@ pub async fn create_invitation_token(
 }
 
 /// List invitation tokens created by a specific user
-/// 
+///
 /// Returns all tokens (active and inactive) created by the user
 /// Useful for territory managers to see their invitations
 pub async fn list_user_invitations(
@@ -234,7 +253,7 @@ pub async fn list_user_invitations(
 }
 
 /// Revoke an invitation token
-/// 
+///
 /// Deactivates the token so it cannot be used for new registrations
 /// Existing users who already used the token are not affected
 pub async fn revoke_invitation_token(
@@ -273,7 +292,7 @@ pub async fn revoke_invitation_token(
 }
 
 /// Get usage statistics for an invitation token
-/// 
+///
 /// Returns list of users who used this token
 pub async fn get_invitation_uses(
     pool: &PgPool,
@@ -306,13 +325,13 @@ mod tests {
     #[test]
     fn test_generate_invitation_token_format() {
         let token = generate_invitation_token();
-        
+
         // Should start with "inv_"
         assert!(token.starts_with("inv_"));
-        
+
         // Should be "inv_" + 32 hex chars = 36 chars total
         assert_eq!(token.len(), 36);
-        
+
         // Everything after "inv_" should be valid hex
         let hex_part = &token[4..];
         assert!(hex_part.chars().all(|c| c.is_ascii_hexdigit()));
@@ -322,7 +341,7 @@ mod tests {
     fn test_generate_invitation_token_uniqueness() {
         let token1 = generate_invitation_token();
         let token2 = generate_invitation_token();
-        
+
         // Tokens should be unique (statistically certain with 128-bit random)
         assert_ne!(token1, token2);
     }
