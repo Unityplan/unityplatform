@@ -13,6 +13,7 @@ actix-cors = "0.7"
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
+futures-util = "0.3"
 
 # Database
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono"] }
@@ -54,3 +55,14 @@ hex = "0.4"
 # Regex
 regex = "1"
 lazy_static = "1.4"
+
+[dev-dependencies]
+# Testing utilities are available by default in actix-web
+
+[lib]
+name = "auth_service"
+path = "src/lib.rs"
+
+[[bin]]
+name = "auth-service"
+path = "src/main.rs"

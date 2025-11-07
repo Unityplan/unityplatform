@@ -34,6 +34,9 @@ pub struct User {
     pub is_active: bool,
     pub last_login_at: Option<DateTime<Utc>>,
 
+    // Invitation tracking
+    pub invited_by_token_id: Option<Uuid>,
+
     // Timestamps
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

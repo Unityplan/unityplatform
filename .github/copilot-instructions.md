@@ -38,6 +38,18 @@ This workspace contains a microservices platform with:
 - **Changelogs**: Update `CHANGELOG.md` and service-specific changelogs for all changes
 - **Version Info**: Use `shared_lib::version` module for runtime version access
 
+## AI Assistant Guidelines
+
+- **Terminal Commands**: NEVER chain commands with `&&` - always use single commands for easier auto-approval
+  - ❌ Bad: `cd services && cargo build && cargo test`
+  - ✅ Good: Single command per tool call
+- **MCP Tools**: ALWAYS use MCP (Model Context Protocol) tools when available:
+  - PostgreSQL operations: Use `pgsql_*` tools instead of raw `psql` commands
+  - Git operations: Use git MCP tools instead of terminal git commands (where it makes sense)
+  - File operations: Use file MCP tools when appropriate
+  - Database queries: Use `pgsql_query` and `pgsql_modify` instead of `docker exec psql`
+- **Reasoning**: MCP tools provide better context, error handling, and user experience
+
 ## Project Structure
 
 - `services/` - Rust microservices workspace

@@ -1,12 +1,13 @@
 # Auth Service Implementation Plan
 
 **Last Updated:** November 6, 2025  
-**Status:** In Progress
+**Status:** In Progress - Phase A Complete, Phase B Next
 
 ---
 
-## ✅ Completed (Option 1: Testing)
+## ✅ Completed
 
+### Testing & Core Authentication
 - [x] Service compiles and runs on port 8001
 - [x] Health endpoint working
 - [x] User registration (DK territory)
@@ -16,42 +17,49 @@
 - [x] Data sovereignty validated (territory_dk.users + global.user_identities)
 - [x] JWT token structure validated
 
----
-
-## 🎯 In Progress (Option 2: Complete Auth Service)
-
-### **Phase A: Invitation System** ⭐ CURRENT PRIORITY
-
-#### Migration
+### Phase A: Invitation System ✅ COMPLETE
 - [x] Created migration 20251106000003_add_invitation_system
 - [x] Applied to database (invitation_tokens + invitation_uses tables)
 - [x] Added invited_by_token_id to users table
+- [x] InvitationToken model
+- [x] InvitationUse model
+- [x] CreateInvitationRequest
+- [x] InvitationResponse
+- [x] Updated RegisterRequest (added invitation_token field - BREAKING CHANGE)
+- [x] POST /api/auth/invitations - Create invitation token
+- [x] GET /api/auth/invitations - List user's invitations
+- [x] DELETE /api/auth/invitations/{id} - Revoke invitation
+- [x] GET /api/auth/invitations/{id}/uses - Get invitation usage audit trail
+- [x] GET /api/auth/invitations/validate/{token} - Validate token (public endpoint)
+- [x] Updated POST /api/auth/register - Validates invitation before registration
+- [x] generate_invitation_token() - Cryptographically secure token generation
+- [x] validate_invitation_token() - Check token validity, expiration, uses, email matching
+- [x] use_invitation_token() - Mark token as used, create audit record
+- [x] Bootstrap script (create-bootstrap-invitation.sh) for territory admins
+- [x] JWT middleware protecting invitation management endpoints
+- [x] User model updated with invited_by_token_id field
+- [x] All SQL queries updated to include invited_by_token_id column
 
-#### Models (To Do)
-- [ ] InvitationToken model
-- [ ] InvitationUse model
-- [ ] CreateInvitationRequest
-- [ ] InvitationResponse
-- [ ] Update RegisterRequest (add invitation_token field)
+**Key Features:**
+- Two token types: `single_use` (email-specific) and `group` (multi-use)
+- Token format: `inv_` + 32 hex characters (cryptographically secure)
+- Automatic deactivation when max_uses reached
+- Audit trail tracks: user_id, timestamp, ip_address, user_agent
+- Email validation for single_use tokens
+- Territory-aware (tokens are territory-specific)
 
-#### Handlers (To Do)
-- [ ] POST /api/auth/invitations - Create invitation token
-- [ ] GET /api/auth/invitations - List user's invitations
-- [ ] DELETE /api/auth/invitations/{id} - Revoke invitation
-- [ ] GET /api/auth/invitations/validate/{token} - Validate token (public)
-- [ ] Update POST /api/auth/register - Validate invitation before registration
-
-#### Utilities (To Do)
-- [ ] generate_invitation_token() - Cryptographically secure token generation
-- [ ] validate_invitation() - Check token validity, expiration, uses
-
-#### Bootstrap (To Do)
-- [ ] Create initial group invitation for territory managers
-- [ ] Document how to use invitations
+**Endpoints Tested:**
+- ✅ POST /api/auth/invitations (protected)
+- ✅ GET /api/auth/invitations (protected)
+- ✅ DELETE /api/auth/invitations/{id} (protected)
+- ✅ GET /api/auth/invitations/{id}/uses (protected)
+- ✅ GET /api/auth/invitations/validate/{token} (public)
 
 ---
 
-### **Phase B: Token Management**
+## 🎯 In Progress
+
+### **Phase B: Token Management** ⭐ NEXT PRIORITY
 
 #### Refresh Token Endpoint
 - [ ] POST /api/auth/refresh handler
@@ -71,14 +79,14 @@
 
 ### **Phase C: Protected Routes**
 
-#### JWT Middleware
-- [ ] Create middleware module
-- [ ] Extract Authorization header
-- [ ] Validate JWT signature
-- [ ] Decode claims
-- [ ] Query user from territory schema
-- [ ] Make AuthenticatedUser available to handlers
-- [ ] Handle errors (expired, invalid, missing token)
+#### JWT Middleware ✅ COMPLETE
+- [x] Create middleware module
+- [x] Extract Authorization header
+- [x] Validate JWT signature
+- [x] Decode claims
+- [x] Query user from territory schema
+- [x] Make AuthenticatedUser available to handlers
+- [x] Handle errors (expired, invalid, missing token)
 
 #### Get Current User Endpoint
 - [ ] GET /api/auth/me handler
@@ -93,7 +101,7 @@
 #### Unit Tests
 - [ ] Password hashing tests (already exists)
 - [ ] Token generation tests (already exists)
-- [ ] Invitation token generation tests
+- [x] Invitation token generation tests (in invitation.rs service)
 - [ ] Invitation validation logic tests
 - [ ] Token expiration tests
 
@@ -103,10 +111,10 @@
 - [ ] Refresh token flow
 - [ ] Logout flow
 - [ ] Protected endpoint access
-- [ ] Invitation creation/usage flow
+- [ ] Invitation creation/usage flow (manual testing complete)
 
 #### Documentation
-- [x] Invitation system architecture
+- [x] Invitation system architecture (docs/architecture/invitation-system.md)
 - [ ] API endpoint documentation
 - [ ] Frontend integration guide
 - [ ] Territory manager guide (how to invite users)
@@ -189,117 +197,124 @@ pub async fn validate_invitation_token(
     // 1. Query token from database
     // 2. Check is_active = true
     // 3. Check expires_at > now
-    // 4. Check used_count < max_uses
-    // 5. For single_use: verify email matches
-    // 6. Return token if valid
-}
+---
 
-pub async fn use_invitation_token(
-    pool: &PgPool,
-    schema_name: &str,
-    token_id: Uuid,
-    user_id: Uuid,
-    ip_address: Option<String>,
-) -> Result<()> {
-    // 1. Increment used_count
-    // 2. Create invitation_uses record
-    // 3. If single_use OR max_uses reached: set is_active = false
-}
+## 📋 Next Steps
 
-pub fn generate_invitation_token() -> String {
-    // Generate cryptographically secure random token
-    // Format: "inv_" + 32 hex characters
-}
-```
+### Immediate (Phase B: Token Management)
 
-### **Step 4: Update Register Handler**
+1. **POST /api/auth/refresh** - Token rotation
+   - Validate refresh token from database
+   - Check expiration
+   - Generate new access + refresh tokens
+   - Update refresh_tokens table
+   - Delete old refresh token
 
-Modify `handlers/auth.rs` register function:
+2. **POST /api/auth/logout** - Revoke session
+   - Validate refresh token
+   - Delete from refresh_tokens table
+   - Return success message
 
-```rust
-pub async fn register(...) -> Result {
-    // 1. Validate request (including invitation_token)
-    // 2. Verify territory exists
-    // 3. Validate invitation token ⭐ NEW
-    // 4. Check email/username not taken
-    // 5. Hash password
-    // 6. Create user (with invited_by_token_id) ⭐ NEW
-    // 7. Record invitation use ⭐ NEW
-    // 8. Generate JWT tokens
-    // 9. Return response
-}
-```
+3. **GET /api/auth/me** - Current user info
+   - Use JWT middleware
+   - Return user profile (respecting privacy settings)
+   - Include territory information
 
-### **Step 5: Create Bootstrap Invitation**
+### Future (Phase D: Testing & Documentation)
 
-Create a script or SQL to generate initial invitation for territory managers:
+1. **Integration Tests**
+   - Complete registration flow with invitation
+   - Token refresh and rotation
+   - Logout and session management
+   - Invitation lifecycle (create → validate → use → revoke)
 
-```sql
--- Bootstrap invitation for Denmark territory manager
-INSERT INTO territory_dk.invitation_tokens (
-    token,
-    token_type,
-    email,
-    max_uses,
-    created_by_user_id,
-    purpose,
-    expires_at,
-    is_active
-) VALUES (
-    'inv_bootstrap_dk_manager_2025',  -- Known token for setup
-    'single_use',
-    'admin@denmark-territory.com',  -- Initial admin email
-    1,
-    (SELECT id FROM territory_dk.users LIMIT 1),  -- System user
-    'Bootstrap invitation for Denmark territory manager',
-    NOW() + INTERVAL '30 days',
-    true
-);
-```
+2. **API Documentation**
+   - OpenAPI/Swagger specification
+   - Request/response examples
+   - Error handling guide
+   - Rate limiting documentation
+
+3. **User Guides**
+   - Territory manager guide (invitation management)
+   - Frontend integration examples
+   - Best practices for token handling
 
 ---
 
-## 🔄 Implementation Flow
+## 🔮 Future Features (Phase 2+)
 
+### **Badge-Based Invitations**
+Extend invitation system to automatically grant badges and permissions upon registration.
+
+**Features:**
+- Attach one or more badges to invitation tokens
+- Auto-grant course access permissions
+- Auto-grant forum category permissions
+- Conditional activation after Code of Conduct course completion
+
+**Database Extension (Conceptual):**
+```sql
+-- Future: Link badges to invitations
+CREATE TABLE territory_dk.invitation_badges (
+    id UUID PRIMARY KEY,
+    invitation_token_id UUID NOT NULL REFERENCES invitation_tokens(id),
+    badge_id UUID NOT NULL,  -- Reference to badge system
+    auto_grant BOOLEAN DEFAULT true,
+    requires_conduct_course BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
 ```
-┌─────────────────────────────────────────────────────┐
-│ Phase A: Invitation System (Current Priority)      │
-│  1. Create models                                   │
-│  2. Update RegisterRequest                          │
-│  3. Implement invitation validation                 │
-│  4. Create invitation CRUD endpoints                │
-│  5. Update register handler                         │
-│  6. Create bootstrap invitation                     │
-└─────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────┐
-│ Phase B: Token Management                          │
-│  1. POST /api/auth/refresh                          │
-│  2. POST /api/auth/logout                           │
-└─────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────┐
-│ Phase C: Protected Routes                          │
-│  1. JWT middleware                                  │
-│  2. GET /api/auth/me                                │
-└─────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────┐
-│ Phase D: Testing & Documentation                   │
-│  1. Integration tests                               │
-│  2. API documentation                               │
-│  3. User guides                                     │
-└─────────────────────────────────────────────────────┘
+
+**API Extension (Conceptual):**
+```json
+POST /api/auth/invitations
+{
+  "token_type": "group",
+  "max_uses": 30,
+  "expires_in_days": 60,
+  "purpose": "Spring 2025 Permaculture Course",
+  "badges": [
+    {
+      "badge_type": "course_access",
+      "course_id": "permaculture-101",
+      "requires_conduct": true
+    },
+    {
+      "badge_type": "forum_access",
+      "category_id": "gardening-discussion",
+      "requires_conduct": true
+    }
+  ]
+}
 ```
+
+**Use Cases:**
+- Workshop invitations grant access to workshop materials
+- Student invitations auto-enroll in semester courses
+- Community invitations grant forum posting rights after onboarding
+- Teacher invitations grant course creation permissions
+
+**Implementation Priority:** Phase 2 (after Badge Service and Course Service are implemented)
 
 ---
 
 ## 📝 Notes
 
-- **Breaking Change:** Existing `/api/auth/register` endpoint will now require `invitation_token`
-- **Migration Path:** Existing users (if any) are grandfathered in
-- **Bootstrap:** Need initial invitation token for first territory manager
-- **Testing:** Will need to create test invitation tokens for development
+- **Breaking Change:** `/api/auth/register` now requires `invitation_token` field
+- **Migration Path:** Bootstrap script creates initial admin invitations
+- **Testing:** Manual testing complete for all invitation endpoints
+- **Security:** Tokens are cryptographically secure (32 hex characters)
+- **Audit:** Full audit trail for invitation usage
+- **Territory Isolation:** All invitation data stored in territory schemas
+
+---
+
+## � Issues Fixed
+
+1. **User model missing invited_by_token_id** - Added to model and all SQL queries
+2. **JWT middleware user_id type mismatch** - Parse String to UUID before database query
+3. **IP address column type** - Changed from inet to text for flexibility
+4. **Bootstrap token foreign key** - Made created_by_user_id nullable for bootstrap scenarios
 
 ---
 

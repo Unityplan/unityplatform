@@ -1,4 +1,5 @@
 mod handlers;
+mod middleware;
 mod models;
 mod services;
 mod utils;
@@ -101,8 +102,31 @@ async fn main() -> Result<()> {
             .app_data(web::Data::from(token_service.clone()))
             .service(
                 web::scope("/api/auth")
+                    // Public auth endpoints
                     .route("/register", web::post().to(handlers::register))
-                    .route("/login", web::post().to(handlers::login)),
+                    .route("/login", web::post().to(handlers::login))
+                    .route("/refresh", web::post().to(handlers::refresh))
+                    .route("/logout", web::post().to(handlers::logout))
+                    // Public invitation validation
+                    .route(
+                        "/invitations/validate/{token}",
+                        web::get().to(handlers::validate_invitation),
+                    )
+                    // Protected endpoints (require JWT)
+                    .service(
+                        web::scope("")
+                            .wrap(middleware::JwtAuth)
+                            .route("/me", web::get().to(handlers::me)),
+                    )
+                    // Protected invitation endpoints
+                    .service(
+                        web::scope("/invitations")
+                            .wrap(middleware::JwtAuth)
+                            .route("", web::post().to(handlers::create_invitation))
+                            .route("", web::get().to(handlers::list_invitations))
+                            .route("/{id}", web::delete().to(handlers::revoke_invitation))
+                            .route("/{id}/uses", web::get().to(handlers::get_invitation_usage)),
+                    ),
             )
             .route("/health", web::get().to(handlers::health))
     })

@@ -151,6 +151,9 @@ COMMENT ON TABLE global.sessions IS 'Active session tracking across territories.
 ALTER TABLE global.audit_log 
     DROP CONSTRAINT IF EXISTS audit_log_user_id_fkey;
 
+-- Drop the old index before renaming the column
+DROP INDEX IF EXISTS global.idx_global_audit_log_user;
+
 ALTER TABLE global.audit_log 
     RENAME COLUMN user_id TO public_key_hash;
 
@@ -161,6 +164,7 @@ ALTER TABLE global.audit_log
     ADD CONSTRAINT audit_log_public_key_hash_fkey 
     FOREIGN KEY (public_key_hash) REFERENCES global.user_identities(public_key_hash) ON DELETE SET NULL;
 
+-- Recreate index with new column
 CREATE INDEX idx_global_audit_log_user ON global.audit_log(public_key_hash);
 
 COMMENT ON COLUMN global.audit_log.public_key_hash IS 'Cryptographic user identity. No personal data in audit logs.';

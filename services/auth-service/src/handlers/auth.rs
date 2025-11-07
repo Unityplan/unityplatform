@@ -182,6 +182,7 @@ pub async fn login(
             full_name, display_name, avatar_url, bio,
             email_visible, profile_public, data_export_requested,
             is_verified, is_active, last_login_at,
+            invited_by_token_id,
             created_at, updated_at
         FROM {}.users WHERE email = $1
         "#,
@@ -261,6 +262,230 @@ pub async fn login(
         refresh_token,
         expires_in: token_service.get_access_token_ttl(),
     }))
+}
+
+/// Get current authenticated user info
+pub async fn me(
+    req: actix_web::HttpRequest,
+    pool: web::Data<PgPool>,
+) -> actix_web::Result<HttpResponse> {
+    // Get authenticated user from JWT middleware
+    let auth_user = crate::middleware::get_authenticated_user(&req)?;
+
+    // Set schema context to territory
+    let schema_name = format!("territory_{}", auth_user.territory_code.to_lowercase());
+
+    // Load full user profile from database
+    let user = sqlx::query_as::<_, User>(&format!(
+        r#"
+        SELECT 
+            id, public_key_hash, email, password_hash, username, 
+            full_name, display_name, avatar_url, bio,
+            email_visible, profile_public, data_export_requested,
+            is_verified, is_active, last_login_at,
+            invited_by_token_id,
+            created_at, updated_at
+        FROM {}.users 
+        WHERE id = $1
+        "#,
+        schema_name
+    ))
+    .bind(auth_user.user_id)
+    .fetch_optional(pool.get_ref())
+    .await
+    .map_err(actix_web::error::ErrorInternalServerError)?
+    .ok_or_else(|| actix_web::error::ErrorNotFound("User not found"))?;
+
+    // Return user info respecting privacy settings
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "id": user.id,
+        "username": user.username,
+        "email": if user.email_visible { user.email } else { None },
+        "full_name": user.full_name,
+        "display_name": user.display_name,
+        "avatar_url": user.avatar_url,
+        "bio": user.bio,
+        "is_verified": user.is_verified,
+        "territory_code": auth_user.territory_code,
+        "created_at": user.created_at,
+        "last_login_at": user.last_login_at,
+    })))
+}
+
+/// Refresh access token
+pub async fn refresh(
+    req: web::Json<crate::models::RefreshTokenRequest>,
+    pool: web::Data<PgPool>,
+    token_service: web::Data<TokenService>,
+) -> actix_web::Result<HttpResponse> {
+    // Validate request
+    req.validate()
+        .map_err(|e| actix_web::error::ErrorBadRequest(format!("Validation error: {}", e)))?;
+
+    // Verify territory exists and is active
+    let territory = sqlx::query_as::<_, TerritoryCode>(
+        "SELECT code FROM global.territories WHERE code = $1 AND is_active = true",
+    )
+    .bind(&req.territory_code)
+    .fetch_optional(pool.get_ref())
+    .await
+    .map_err(actix_web::error::ErrorInternalServerError)?
+    .ok_or_else(|| actix_web::error::ErrorBadRequest("Invalid territory code"))?;
+
+    let schema_name = format!("territory_{}", territory.code.to_lowercase());
+
+    // Hash the provided refresh token
+    let token_hash = format!("{:x}", sha2::Sha256::digest(req.refresh_token.as_bytes()));
+
+    // Query refresh token from database
+    #[derive(FromRow)]
+    struct RefreshTokenRecord {
+        user_id: uuid::Uuid,
+        expires_at: chrono::DateTime<Utc>,
+    }
+
+    let token_record = sqlx::query_as::<_, RefreshTokenRecord>(&format!(
+        "SELECT user_id, expires_at FROM {}.refresh_tokens WHERE token_hash = $1",
+        schema_name
+    ))
+    .bind(&token_hash)
+    .fetch_optional(pool.get_ref())
+    .await
+    .map_err(actix_web::error::ErrorInternalServerError)?
+    .ok_or_else(|| actix_web::error::ErrorUnauthorized("Invalid refresh token"))?;
+
+    // Check if token is expired
+    if token_record.expires_at < Utc::now() {
+        // Delete expired token
+        sqlx::query(&format!(
+            "DELETE FROM {}.refresh_tokens WHERE token_hash = $1",
+            schema_name
+        ))
+        .bind(&token_hash)
+        .execute(pool.get_ref())
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+        return Err(actix_web::error::ErrorUnauthorized("Refresh token expired"));
+    }
+
+    // Load user from database
+    let user = sqlx::query_as::<_, User>(&format!(
+        r#"
+        SELECT 
+            id, public_key_hash, email, password_hash, username, 
+            full_name, display_name, avatar_url, bio,
+            email_visible, profile_public, data_export_requested,
+            is_verified, is_active, last_login_at,
+            invited_by_token_id,
+            created_at, updated_at
+        FROM {}.users 
+        WHERE id = $1 AND is_active = true
+        "#,
+        schema_name
+    ))
+    .bind(token_record.user_id)
+    .fetch_optional(pool.get_ref())
+    .await
+    .map_err(actix_web::error::ErrorInternalServerError)?
+    .ok_or_else(|| actix_web::error::ErrorUnauthorized("User not found or inactive"))?;
+
+    // Generate new tokens
+    let public_key_hash = user
+        .public_key_hash
+        .as_ref()
+        .ok_or_else(|| actix_web::error::ErrorInternalServerError("Missing public key hash"))?;
+
+    let new_access_token = token_service
+        .generate_access_token(
+            public_key_hash,
+            &req.territory_code,
+            user.id,
+            &user.username,
+        )
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    let new_refresh_token = token_service.generate_refresh_token();
+    let new_token_hash = format!("{:x}", sha2::Sha256::digest(new_refresh_token.as_bytes()));
+    let new_expires_at = Utc::now() + chrono::Duration::days(7);
+
+    // Delete old refresh token and insert new one (token rotation)
+    sqlx::query(&format!(
+        "DELETE FROM {}.refresh_tokens WHERE token_hash = $1",
+        schema_name
+    ))
+    .bind(&token_hash)
+    .execute(pool.get_ref())
+    .await
+    .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    sqlx::query(&format!(
+        "INSERT INTO {}.refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)",
+        schema_name
+    ))
+    .bind(user.id)
+    .bind(&new_token_hash)
+    .bind(new_expires_at)
+    .execute(pool.get_ref())
+    .await
+    .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    // Return new tokens
+    Ok(HttpResponse::Ok().json(AuthResponse {
+        user: AuthUserInfo::from(user),
+        access_token: new_access_token,
+        refresh_token: new_refresh_token,
+        expires_in: token_service.get_access_token_ttl(),
+    }))
+}
+
+/// Logout user
+pub async fn logout(
+    req: web::Json<crate::models::LogoutRequest>,
+    pool: web::Data<PgPool>,
+) -> actix_web::Result<HttpResponse> {
+    // Hash the provided refresh token
+    let token_hash = format!("{:x}", sha2::Sha256::digest(req.refresh_token.as_bytes()));
+
+    // Try to delete from all territory schemas
+    // Note: In a real implementation, you might want to track which territory the token belongs to
+    // For now, we'll try the default territory (could be improved with a territory parameter)
+
+    // Get all active territories
+    let territories = sqlx::query_as::<_, TerritoryCode>(
+        "SELECT code FROM global.territories WHERE is_active = true",
+    )
+    .fetch_all(pool.get_ref())
+    .await
+    .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    // Try to delete the token from each territory schema
+    let mut deleted = false;
+    for territory in territories {
+        let schema_name = format!("territory_{}", territory.code.to_lowercase());
+
+        let result = sqlx::query(&format!(
+            "DELETE FROM {}.refresh_tokens WHERE token_hash = $1",
+            schema_name
+        ))
+        .bind(&token_hash)
+        .execute(pool.get_ref())
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+        if result.rows_affected() > 0 {
+            deleted = true;
+            break;
+        }
+    }
+
+    if !deleted {
+        return Err(actix_web::error::ErrorNotFound("Refresh token not found"));
+    }
+
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "message": "Logged out successfully"
+    })))
 }
 
 /// Health check endpoint

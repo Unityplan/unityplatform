@@ -374,12 +374,54 @@ fn generate_invitation_token() -> String {
 
 ## Future Enhancements (Phase 2+)
 
+### **Badge-Based Invitations** ⭐ NEW
+- **Attach badges to invitation tokens** - Pre-grant permissions and access rights
+- **Automatic course enrollment** - Grant access to specific courses upon registration
+- **Forum permissions** - Provide forum access rights through invitation
+- **Conditional activation** - Badges activate after completing Code of Conduct course
+- **Use Cases:**
+  - Workshop invitation grants access to workshop materials course
+  - Community invitation grants forum posting rights after onboarding
+  - Teacher invitation grants course creation permissions
+  - Student invitation auto-enrolls in semester courses
+
+**Implementation Concept:**
+```json
+{
+  "token_type": "group",
+  "max_uses": 30,
+  "purpose": "Spring 2025 Permaculture Course",
+  "badges": [
+    {
+      "badge_id": "course-access-permaculture-101",
+      "auto_grant": true,
+      "requires_conduct_course": true
+    },
+    {
+      "badge_id": "forum-category-gardening",
+      "auto_grant": true,
+      "requires_conduct_course": true
+    }
+  ]
+}
+```
+
+**Flow:**
+1. User accepts invitation and registers
+2. User completes Code of Conduct course (mandatory)
+3. System automatically grants badges from invitation
+4. User gains immediate access to pre-approved courses and forums
+5. Audit trail tracks badge grants via invitation
+
+### **Other Future Features**
 - **Email Integration**: Automatic invitation emails with magic links
 - **Invitation Templates**: Pre-defined invitation messages
 - **Invitation Analytics**: Track conversion rates, popular sources
 - **Referral Rewards**: Gamification for inviting active members
 - **Invitation Chains**: Track how communities grow (social graph)
 - **Conditional Invitations**: Require profile completion, agreements, etc.
+- **Bulk Import**: Upload CSV of emails for mass invitations
+- **Invitation Webhooks**: Notify external systems when invitations are used
 
 ---
 
@@ -388,3 +430,4 @@ fn generate_invitation_token() -> String {
 - [User Data Sovereignty](./user-data-sovereignty.md)
 - [Territory Management Standard](./territory-management-standard.md)
 - [Authentication Flow](./authentication-flow.md) (to be created)
+- [Badge System](./badge-system.md) (to be created)

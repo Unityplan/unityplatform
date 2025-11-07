@@ -1,9 +1,9 @@
 # Phase 1 MVP - Implementation Status
 
-**Last Updated:** November 5, 2025  
+**Last Updated:** November 6, 2025  
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
-**Progress:** 18% (Stage 1 complete, Stage 2 complete)  
+**Progress:** 23% (Stage 1 complete, Stage 2 complete, Stage 3: 52%)  
 **Release Stage:** Alpha (0.1.0-alpha.1)
 
 ---
@@ -11,11 +11,11 @@
 ## 📊 Overall Progress
 
 ```
-[███░░░░░░░░░░░░░░░░░] 18% Complete (Stage 1: 100%, Stage 2: 100%)
+[████░░░░░░░░░░░░░░░░] 23% Complete (Stage 1: 100%, Stage 2: 100%, Stage 3: 52%)
 
 Stage 1:  Foundation & Infrastructure        [██████████] 100%
 Stage 2:  Database Schema & Migrations       [██████████] 100%
-Stage 3:  Authentication Service             [░░░░░░░░░░] 0%
+Stage 3:  Authentication Service             [█████░░░░░] 52%
 Stage 4:  User Service                       [░░░░░░░░░░] 0%
 Stage 5:  Frontend Auth & Profile            [░░░░░░░░░░] 0%
 Stage 6:  Territory & Badge Services         [░░░░░░░░░░] 0%
@@ -31,15 +31,16 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 ## 🎯 Current Sprint
 
-**Sprint:** Sprint 2 - Begin Authentication Service  
-**Sprint Goal:** Implement Rust authentication service with JWT and password hashing  
-**Sprint Dates:** November 5 - November 19, 2025  
+**Sprint:** Sprint 3 - Authentication Service Core Features  
+**Sprint Goal:** Complete invitation system and token management endpoints  
+**Sprint Dates:** November 6 - November 20, 2025  
 **Team Members:** Henrik
 
 ### Active Tasks
-- Create auth-service crate
-- Implement JWT token generation and validation
-- Create user registration and login endpoints
+- Complete JWT middleware testing
+- Implement token refresh endpoint
+- Implement logout endpoint
+- Implement /auth/me endpoint
 
 ### Completed This Session
 - ✅ Full development environment deployed
@@ -55,6 +56,19 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ✅ Multi-territory architecture implemented (schema-based isolation)
 - ✅ Territory management standard followed (ISO 3166-1 Alpha-2 codes)
 - ✅ SQLTools configured for database management
+- ✅ Auth-service crate created and running
+- ✅ User registration endpoint (POST /api/auth/register)
+- ✅ User login endpoint (POST /api/auth/login)
+- ✅ JWT token generation and validation
+- ✅ Password hashing with Argon2
+- ✅ Dynamic schema routing (multi-territory support)
+- ✅ Invitation system database schema (migration 20251106000003)
+- ✅ Invitation models and validation service
+- ✅ Registration requires invitation token (breaking change)
+- ✅ Bootstrap invitation script for territory admins
+- ✅ Invitation CRUD API endpoints (create, list, revoke, validate, get usage)
+- ✅ JWT middleware for protected routes
+- ✅ Audit trail for invitation usage
 
 ### Blockers
 - None
@@ -161,50 +175,65 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 ---
 
 ### Stage 3: Authentication Service
-**Status:** ⬜ Not Started  
-**Progress:** 0/23 tasks completed  
-**Started:** N/A  
+**Status:** 🔄 In Progress  
+**Progress:** 12/23 tasks completed (52%)  
+**Started:** November 5, 2025  
 **Completed:** N/A  
 **Dependencies:** Stage 2 (Database Schema)
 
-#### Step 3.1: Auth Service Scaffolding (0/2)
-- ⬜ Create auth-service crate
-- ⬜ Create service structure
+#### Step 3.1: Auth Service Scaffolding (2/2) ✅
+- ✅ Create auth-service crate
+- ✅ Create service structure
 
-#### Step 3.2: Auth Database Schema (0/2)
-- ⬜ Add auth tables to territory schema template
-- ⬜ Run migration and update territory creation function
+#### Step 3.2: Auth Database Schema (2/2) ✅
+- ✅ Add auth tables to territory schema template
+- ✅ Run migration and update territory creation function
 
-#### Step 3.3: JWT Token Service (0/5)
-- ⬜ Implement TokenService struct
-- ⬜ generate_access_token function
-- ⬜ generate_refresh_token function
-- ⬜ verify_access_token function
-- ⬜ verify_refresh_token function
+#### Step 3.3: JWT Token Service (5/5) ✅
+- ✅ Implement TokenService struct
+- ✅ generate_access_token function
+- ✅ generate_refresh_token function
+- ✅ verify_access_token function
+- ✅ verify_refresh_token function
 
-#### Step 3.4: Auth Handlers Implementation (0/4)
-- ⬜ POST /auth/register - User registration
-- ⬜ POST /auth/login - User login
+#### Step 3.4: Auth Handlers Implementation (2/5) 🔄
+- ✅ POST /auth/register - User registration (with invitation validation)
+- ✅ POST /auth/login - User login
 - ⬜ POST /auth/refresh - Refresh access token
 - ⬜ POST /auth/logout - Logout user
 - ⬜ GET /auth/me - Get current user info
 
-#### Step 3.5: JWT Middleware (0/3)
-- ⬜ Implement JWT authentication middleware
-- ⬜ require_auth() middleware wrapper
+#### Step 3.5: JWT Middleware (1/3) 🔄
+- ✅ Implement JWT authentication middleware
+- ✅ require_auth() middleware wrapper (via JwtAuth Transform)
 - ⬜ Create optional auth middleware
 
-#### Step 3.6: Auth Service Testing (0/4)
-- ⬜ Unit tests (token generation, password hashing)
-- ⬜ Integration tests (register, login, refresh, protected endpoints)
+#### Step 3.6: Invitation System (5/7) 🔄 ⭐ NEW
+- ✅ Database migration (invitation_tokens, invitation_uses tables)
+- ✅ Invitation models and validation
+- ✅ Invitation CRUD API endpoints
+- ✅ Bootstrap script for initial admin invitations
+- ✅ Audit trail for invitation usage
+- ⬜ Integration tests for invitation flows
+- ⬜ Frontend integration documentation
+
+#### Step 3.7: Auth Service Testing (0/4)
+- ⬜ Unit tests (token generation, password hashing, invitation validation)
+- ⬜ Integration tests (register, login, refresh, protected endpoints, invitations)
 - ⬜ Load testing (100 req/s for login)
 - ⬜ Manual testing with curl/Postman
 
 **Notes:**  
-- 
+- ✅ Core authentication working (register, login, JWT tokens)
+- ✅ Invitation-only registration system implemented
+- ✅ JWT middleware protecting invitation management endpoints
+- ✅ Multi-territory support validated (dynamic schema routing)
+- 🔄 Token refresh and logout endpoints pending
+- 🔄 Optional auth middleware for public/protected hybrid routes
+- 💡 **Future Enhancement:** Badge-based invitations for auto-granting course access and forum permissions
 
 **Blockers:**  
-- 
+- None 
 
 ---
 
