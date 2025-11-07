@@ -9,6 +9,8 @@ echo "This script will install all necessary development tools for the UnityPlan
 echo "  - Rust toolchain (rustup, cargo)"
 echo "  - SQLx CLI (database migrations)"
 echo "  - Node.js & npm (for frontend development)"
+echo "  - Go 1.24+ (for Forgejo MCP server)"
+echo "  - Forgejo MCP server (AI development integration)"
 echo "  - Docker & Docker Compose (if not installed)"
 echo "  - PostgreSQL client tools"
 echo ""
@@ -188,9 +190,91 @@ else
 fi
 
 # ============================================================================
-# 7. Additional Development Tools
+# 7. Go (for Forgejo MCP server)
 # ============================================================================
-print_section "7. Additional Development Tools"
+print_section "7. Go Programming Language (for Forgejo MCP)"
+
+if command_exists go; then
+    GO_VERSION=$(go version)
+    print_success "Go already installed: $GO_VERSION"
+    
+    # Check if Go version is at least 1.24
+    GO_VERSION_NUM=$(go version | awk '{print $3}' | sed 's/go//')
+    GO_MAJOR=$(echo $GO_VERSION_NUM | cut -d'.' -f1)
+    GO_MINOR=$(echo $GO_VERSION_NUM | cut -d'.' -f2)
+    
+    if [ "$GO_MAJOR" -lt 1 ] || ([ "$GO_MAJOR" -eq 1 ] && [ "$GO_MINOR" -lt 24 ]); then
+        print_warning "Go version is below 1.24. Upgrading recommended for Forgejo MCP..."
+        echo "  Manual upgrade: https://go.dev/dl/"
+    fi
+else
+    print_warning "Go not found. Installing Go 1.24.0..."
+    
+    # Download and install Go
+    cd /tmp
+    wget https://go.dev/dl/go1.24rc2.linux-amd64.tar.gz
+    sudo rm -rf /usr/local/go
+    sudo tar -C /usr/local -xzf go1.24rc2.linux-amd64.tar.gz
+    rm go1.24rc2.linux-amd64.tar.gz
+    
+    # Add to PATH for current session
+    export PATH=$PATH:/usr/local/go/bin
+    
+    # Add to shell profile
+    if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+    fi
+    
+    print_success "Go installed successfully"
+    go version
+fi
+
+# ============================================================================
+# 8. Forgejo MCP Server
+# ============================================================================
+print_section "8. Forgejo MCP Server (AI Development Integration)"
+
+if command_exists forgejo-mcp; then
+    print_success "Forgejo MCP server already installed"
+    forgejo-mcp --version 2>&1 | head -n 1
+else
+    print_warning "Forgejo MCP server not found. Building from source..."
+    
+    if ! command_exists go; then
+        print_error "Go is required to build Forgejo MCP. Install Go first."
+    else
+        # Clone and build
+        cd /tmp
+        if [ -d "forgejo-mcp" ]; then
+            rm -rf forgejo-mcp
+        fi
+        
+        git clone https://codeberg.org/goern/forgejo-mcp.git
+        cd forgejo-mcp
+        make build
+        
+        # Install to system PATH
+        sudo cp forgejo-mcp /usr/local/bin/
+        
+        # Clean up
+        cd /tmp
+        rm -rf forgejo-mcp
+        
+        print_success "Forgejo MCP server installed successfully"
+        forgejo-mcp --version 2>&1 | head -n 1
+        
+        echo ""
+        echo "  ℹ️  To configure Forgejo MCP:"
+        echo "     1. Generate access token at http://192.168.60.133:3000/user/settings/applications"
+        echo "     2. Create ~/.config/mcp/forgejo.json with server configuration"
+        echo "     3. See docs-archived/forgejo-mcp-setup.md for details"
+    fi
+fi
+
+# ============================================================================
+# 9. Additional Development Tools
+# ============================================================================
+print_section "9. Additional Development Tools"
 
 # Git
 if command_exists git; then
@@ -221,9 +305,9 @@ else
 fi
 
 # ============================================================================
-# 8. Optional Tools
+# 10. Optional Tools
 # ============================================================================
-print_section "8. Optional Development Tools"
+print_section "10. Optional Development Tools"
 
 echo ""
 echo "The following tools are optional but recommended:"
@@ -268,6 +352,8 @@ echo "  SQLx CLI:     $(if command_exists sqlx; then echo "✅ Installed"; else 
 echo "  PostgreSQL:   $(if command_exists psql; then echo "✅ Installed"; else echo "❌ Not installed"; fi)"
 echo "  Node.js:      $(if command_exists node; then echo "✅ Installed"; else echo "❌ Not installed"; fi)"
 echo "  npm:          $(if command_exists npm; then echo "✅ Installed"; else echo "❌ Not installed"; fi)"
+echo "  Go:           $(if command_exists go; then echo "✅ Installed"; else echo "❌ Not installed"; fi)"
+echo "  Forgejo MCP:  $(if command_exists forgejo-mcp; then echo "✅ Installed"; else echo "❌ Not installed"; fi)"
 echo "  Git:          $(if command_exists git; then echo "✅ Installed"; else echo "❌ Not installed"; fi)"
 echo ""
 
