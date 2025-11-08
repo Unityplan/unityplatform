@@ -1,6 +1,7 @@
 # Phase 1 MVP - Step-by-Step Implementation Checklist
 
 ## Overview
+
 This document provides a detailed, dependency-ordered checklist for implementing Phase 1 MVP.
 Each step must be completed before moving to the next dependent step.
 
@@ -9,6 +10,7 @@ Each step must be completed before moving to the next dependent step.
 ## STAGE 1: Foundation & Infrastructure Setup
 
 ### Step 1.1: Repository & Project Structure
+
 ```
 ✅ Initialize Git repository
   └─ Create .gitignore for Rust, Node, Docker
@@ -27,134 +29,124 @@ Each step must be completed before moving to the next dependent step.
 ```
 
 ### Step 1.2: Docker Infrastructure Setup
+
 ```
-☐ Create docker-compose.yml (development)
-  └─ PostgreSQL 16 service
-     └─ Port: 5432
-     └─ Volume: ./docker/postgres-data
-     └─ Environment: POSTGRES_DB=unityplan_dev
-     └─ Health check configured
-  
-  └─ TimescaleDB extension enabled
-     └─ Init script: ./docker/postgres/init.sql
-  
-  └─ NATS service
-     └─ Port: 4222 (client), 8222 (management)
-     └─ Enable JetStream
-     └─ Volume: ./docker/nats-data
-  
-  └─ Redis service (for caching)
-     └─ Port: 6379
-     └─ Volume: ./docker/redis-data
-  
-  └─ Adminer (database UI for development)
-     └─ Port: 8080
-     └─ Connected to PostgreSQL
+✅ Create docker-compose files (multiple configurations)
+  ✅ docker-compose.dev.yml (development tools)
+     ✅ Forgejo, Docker Registry, MailHog, Redis Commander
+  ✅ docker-compose.pod.yml (single-territory template)
+     ✅ PostgreSQL 16 + TimescaleDB
+        └─ Port: 5432
+        └─ Volume: ./docker/pods/{territory}/postgres-data
+        └─ Health check configured
+     ✅ NATS service with JetStream
+        └─ Port: 4222 (client), 8222 (management)
+        └─ Volume: ./docker/pods/{territory}/nats-data
+     ✅ Redis service for caching
+        └─ Port: 6379
+        └─ Volume: ./docker/pods/{territory}/redis-data
+  ✅ docker-compose.multi-territory-pod.yml (shared infrastructure)
+  ✅ docker-compose.monitoring.yml (Prometheus, Grafana, Jaeger)
 
-☐ Create Docker network
-  └─ Name: unityplan-network
-  └─ Driver: bridge
+✅ Create Docker networks
+  ✅ global-net (cross-pod communication)
+  ✅ mesh-network (NATS clustering)
+  ✅ pod-net (territory-specific)
 
-☐ Test infrastructure
-  └─ Run: docker-compose up -d
-  └─ Verify PostgreSQL connection
-  └─ Verify NATS connection
-  └─ Verify Redis connection
-  └─ Check Adminer access at localhost:8080
+✅ Test infrastructure
+  ✅ All services running and healthy
+  ✅ PostgreSQL connections verified
+  ✅ NATS clustering operational
+  ✅ Redis connections verified
+  ✅ Monitoring stack operational
 
-☐ Create database initialization scripts
-  └─ docker/postgres/init.sql
-     └─ Create TimescaleDB extension
-     └─ Create initial schemas: public, global
-     └─ Set up database roles
+✅ Create database initialization scripts
+  ✅ docker/postgres/init.sql (TimescaleDB extension)
+  ✅ SQLx migrations (20251108000001, 20251108000002, 20251108000003)
 ```
 
 ### Step 1.3: Rust Backend Foundation
+
 ```
-☐ Create Rust workspace (services/Cargo.toml)
-  [workspace]
-  members = [
-    "auth-service",
-    "user-service",
-    "territory-service",
-    "badge-service",
-    "course-service",
-    "forum-service",
-    "ipfs-service",
-    "translation-service",
-    "matrix-gateway"
-  ]
+✅ Create Rust workspace (services/Cargo.toml)
+  ✅ Workspace created with resolver = "2"
+  ✅ Members:
+    - auth-service ✅
+    - shared-lib ✅
+  ☐ Future services:
+    - user-service
+    - territory-service
+    - badge-service
+    - course-service
+    - forum-service
+    - ipfs-service
+    - translation-service
+    - matrix-gateway
 
-☐ Create shared library crate (services/shared-lib)
-  └─ Common types and utilities
-  └─ Database connection pool management
-  └─ NATS client wrapper
-  └─ Error handling types
-  └─ Configuration structs
-  └─ Logging setup (tracing)
+✅ Create shared library crate (services/shared-lib)
+  ✅ Common types and utilities
+  ✅ Database connection pool management
+  ✅ NATS client wrapper
+  ✅ Error handling types
+  ✅ Configuration structs
+  ✅ Logging setup (tracing)
   
-  Dependencies:
-    - sqlx = { version = "0.7", features = ["postgres", "runtime-tokio"] }
-    - tokio = { version = "1", features = ["full"] }
-    - serde = { version = "1", features = ["derive"] }
-    - tracing = "0.1"
-    - tracing-subscriber = "0.3"
-    - async-nats = "0.33"
-    - config = "0.14"
-    - dotenvy = "0.15"
+  ✅ Dependencies configured:
+    - sqlx 0.8 (postgres, runtime-tokio-rustls, uuid, chrono, json)
+    - tokio 1.41 (full features)
+    - serde 1.0 (derive)
+    - tracing 0.1
+    - tracing-subscriber 0.3
+    - async-nats (via workspace)
+    - config 0.14
+    - dotenvy 0.15
 
-☐ Create configuration system
-  └─ services/shared-lib/src/config.rs
-     └─ Database URL from env
-     └─ NATS URL from env
-     └─ Redis URL from env
-     └─ Service-specific configs
-     └─ Load from .env file
+✅ Create configuration system
+  ✅ services/shared-lib/src/config.rs implemented
+     ✅ Database URL from env
+     ✅ NATS URL from env
+     ✅ Redis URL from env (via workspace dependencies)
+     ✅ Service-specific configs
+     ✅ Load from .env file support
   
-  └─ .env.example file
-     DATABASE_URL=postgresql://user:pass@localhost:5432/unityplan_dev
-     NATS_URL=nats://localhost:4222
-     REDIS_URL=redis://localhost:6379
-     LOG_LEVEL=debug
+  ✅ .env files in place for services
 
-☐ Create database connection module
-  └─ services/shared-lib/src/db.rs
-     └─ PostgreSQL connection pool (SQLx)
-     └─ Pool configuration (min: 5, max: 50)
-     └─ Health check function
-     └─ Migration runner setup
-     └─ Schema switching capability (for multi-tenancy)
+✅ Create database connection module
+  ✅ services/shared-lib/src/database.rs implemented
+     ✅ PostgreSQL connection pool (SQLx)
+     ✅ Pool configuration
+     ✅ Health check functions
+     ✅ Migration support (SQLx migrations)
+     ✅ Schema switching capability (multi-schema support)
 
-☐ Create NATS client module
-  └─ services/shared-lib/src/nats.rs
-     └─ Connect to NATS
-     └─ Publish message helper
-     └─ Subscribe to topic helper
-     └─ JetStream integration
-     └─ Error handling
+✅ Create NATS client module
+  ✅ services/shared-lib/src/nats.rs implemented
+     ✅ Connect to NATS
+     ✅ Publish/Subscribe helpers
+     ✅ JetStream integration ready
+     ✅ Error handling
 
-☐ Create shared error types
-  └─ services/shared-lib/src/error.rs
-     └─ ServiceError enum
+✅ Create shared error types
+  ✅ services/shared-lib/src/error.rs implemented
+     ✅ ServiceError enum with variants:
         - DatabaseError
-        - NatsError
-        - AuthError
+        - ConfigError
         - ValidationError
-        - NotFoundError
         - InternalError
-     └─ Implement Display and Error traits
-     └─ HTTP status code mapping
+     ✅ Implements Display and Error traits
+     ✅ HTTP status code mapping ready
 
-☐ Set up logging and tracing
-  └─ services/shared-lib/src/observability.rs
-     └─ Initialize tracing subscriber
-     └─ JSON formatter for production
-     └─ Pretty formatter for development
-     └─ Filter by log level from env
-     └─ Add service name to all logs
+✅ Set up logging and tracing
+  ✅ Tracing dependencies configured
+     ✅ tracing 0.1
+     ✅ tracing-subscriber 0.3 (env-filter, json)
+     ✅ tracing-actix-web 0.7
+     ✅ Filter by log level from env
+     ✅ Service-level logging ready
 ```
 
 ### Step 1.4: Frontend Foundation
+
 ```
 ☐ Initialize Vite + React project
   └─ cd frontend
@@ -223,19 +215,27 @@ Each step must be completed before moving to the next dependent step.
 ## STAGE 2: Database Schema & Migrations
 
 ### Step 2.1: Set up SQLx Migrations
+
 ```
-☐ Install SQLx CLI
-  └─ cargo install sqlx-cli --no-default-features --features postgres
+✅ Install SQLx CLI
+  ✅ cargo install sqlx-cli --no-default-features --features postgres
+  ✅ SQLx CLI available for migrations
 
-☐ Create migration directory
-  └─ services/migrations/
+✅ Create migration directory
+  ✅ services/shared-lib/migrations/ created
+  ✅ Three migrations implemented:
+     - 20251108000001_global_schema.up/down.sql
+     - 20251108000002_territory_schema.up/down.sql
+     - 20251108000003_seed_data_dk.up/down.sql
 
-☐ Initialize SQLx for each service
-  └─ Create .sqlx directory for offline mode
-  └─ Configure sqlx-data.json
+✅ Initialize SQLx for services
+  ✅ Migrations configured in shared-lib
+  ✅ All services use shared migrations
+  ✅ Offline mode ready (.sqlx can be generated as needed)
 ```
 
 ### Step 2.2: Global Schema Migration
+
 ```
 ✅ Create migration: 20251108000001_global_schema.up.sql
   
@@ -281,6 +281,7 @@ Each step must be completed before moving to the next dependent step.
 ```
 
 ### Step 2.3: Territory Schema Template
+
 ```
 ✅ Create migration: 20251108000002_territory_schema.up.sql
   
@@ -370,7 +371,7 @@ Each step must be completed before moving to the next dependent step.
   └─ All tests updated to use TERRITORY_SCHEMA constant
   └─ 17/17 tests passing with new schema structure
 ```
-    
+
   END;
   $$ LANGUAGE plpgsql;
 
@@ -396,67 +397,78 @@ Each step must be completed before moving to the next dependent step.
 - ✅ Territory schema template created
 
 **Next Stage:** Authentication Service Implementation
+
 ## STAGE 3: Authentication Service
 
 ### Step 3.1: Auth Service Scaffolding
 ```
-☐ Create auth-service crate
-  └─ cargo new services/auth-service --bin
+✅ Create auth-service crate
+  ✅ services/auth-service created as binary crate
   
-  └─ Update Cargo.toml dependencies:
-     shared-lib = { path = "../shared-lib" }
-     actix-web = "4"
-     actix-cors = "0.7"
-     tokio = { version = "1", features = ["full"] }
-     sqlx = { version = "0.7", features = ["postgres", "runtime-tokio", "uuid"] }
-     serde = { version = "1", features = ["derive"] }
-     serde_json = "1"
-     jsonwebtoken = "9"
-     bcrypt = "0.15"
-     uuid = { version = "1", features = ["v4", "serde"] }
-     chrono = { version = "0.4", features = ["serde"] }
-     validator = { version = "0.18", features = ["derive"] }
-     openidconnect = "3"
-     tracing = "0.1"
-     tracing-actix-web = "0.7"
+  ✅ Cargo.toml dependencies configured:
+     ✅ shared-lib (path dependency)
+     ✅ actix-web 4.9
+     ✅ actix-cors 0.7
+     ✅ tokio 1.41 (full features)
+     ✅ sqlx 0.8 (postgres, runtime-tokio-rustls, uuid, chrono, json)
+     ✅ serde 1.0 (derive)
+     ✅ serde_json 1.0
+     ✅ jsonwebtoken 9.x
+     ✅ bcrypt 0.15
+     ✅ uuid 1.x (v4, serde)
+     ✅ chrono 0.4 (serde)
+     ✅ tracing libraries
 
-☐ Create service structure
-  /services/auth-service/src
-    ├── main.rs              # Entry point
-    ├── config.rs            # Service config
-    ├── handlers/            # HTTP handlers
-    │   ├── mod.rs
-    │   ├── auth.rs          # Login, logout, refresh
-    │   └── oidc.rs          # OpenID Connect
-    ├── models/              # Data models
-    │   ├── mod.rs
-    │   ├── user.rs
-    │   └── token.rs
-    ├── services/            # Business logic
-    │   ├── mod.rs
-    │   ├── auth_service.rs
-    │   └── token_service.rs
-    └── middleware/          # Auth middleware
-        ├── mod.rs
-        └── jwt.rs
+✅ Create service structure
+  ✅ /services/auth-service/src
+    ✅ main.rs              # Entry point with server setup
+    ✅ lib.rs               # Library exports
+    ✅ handlers/            # HTTP handlers
+    │   ✅ mod.rs
+    │   ✅ auth.rs          # Register, login, logout, refresh, me
+    │   ✅ invitation.rs    # Invitation CRUD
+    ✅ models/              # Data models
+    │   ✅ mod.rs
+    │   ✅ user.rs          # User model
+    │   ✅ auth.rs          # Auth request/response models
+    │   ✅ invitation.rs    # Invitation models
+    ✅ services/            # Business logic
+    │   ✅ mod.rs
+    │   ✅ token.rs         # JWT token service
+    │   ✅ password.rs      # Password hashing
+    │   ✅ invitation.rs    # Invitation token generation
+    ✅ middleware/          # Auth middleware
+    │   ✅ mod.rs
+    │   ✅ auth.rs          # JWT validation middleware (JwtAuth)
+    ✅ utils/               # Utilities
+        ✅ crypto.rs        # Cryptographic utilities
+        ✅ validation.rs    # Input validation
 
-☐ Implement main.rs
-  - Initialize tracing/logging
-  - Load configuration
-  - Create database pool
-  - Create NATS client
-  - Configure Actix server
-  - Register routes
-  - Health check endpoint
-  - Graceful shutdown
+✅ Implement main.rs
+  ✅ Initialize tracing/logging
+  ✅ Load configuration from .env
+  ✅ Create database pool
+  ✅ Create TokenService
+  ✅ Configure Actix server
+  ✅ Register routes (/auth/*, /invitations/*)
+  ✅ Health check endpoint (/health)
+  ✅ CORS configuration
+  ✅ Graceful shutdown
 ```
 
 ### Step 3.2: Auth Database Schema
 ```
-☐ Add auth tables to territory schema template
+✅ Auth tables included in territory schema
+  ✅ territory.users table (password_hash, email, username, etc.)
+  ✅ territory.invitation_tokens table
+  ✅ territory.invitation_uses table
+  ✅ global.sessions table (refresh tokens stored globally)
   
-  -- Refresh tokens table
-  CREATE TABLE {schema}.refresh_tokens (
+✅ Migration applied
+  ✅ 20251108000002_territory_schema.up.sql includes all auth tables
+  
+✅ Denmark territory initialized
+  ✅ Seed data applied via 20251108000003_seed_data_dk.up.sql
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES {schema}.users(id) ON DELETE CASCADE,
     token_hash VARCHAR(255) NOT NULL,
@@ -502,51 +514,48 @@ Each step must be completed before moving to the next dependent step.
 
 ### Step 3.3: JWT Token Service
 ```
-☐ Implement token service (services/token_service.rs)
+✅ Implement token service (services/services/token.rs)
   
-  pub struct TokenService {
-      jwt_secret: String,
-      access_token_ttl: i64,  // 15 minutes
-      refresh_token_ttl: i64, // 7 days
-  }
+  ✅ TokenService struct implemented
+      - jwt_secret: String (from .env: JWT_SECRET_KEY)
+      - access_token_ttl: 900 seconds (15 minutes)
+      - refresh_token_ttl: 7 days
   
-  Functions to implement:
-  ☐ generate_access_token(user_id, territory_code, roles)
-    └─ Create JWT with claims
-    └─ Set expiration
-    └─ Sign with secret
+  Functions implemented:
+  ✅ generate_access_token(user_id, username, territory_code)
+    ✅ Creates JWT with Claims struct
+    ✅ Sets expiration (iat + 900s)
+    ✅ Signs with RS256 algorithm
+    ✅ Returns signed JWT string
   
-  ☐ generate_refresh_token()
-    └─ Generate random secure token
-    └─ Hash token for storage
-    └─ Return (token, hash)
+  ✅ generate_refresh_token()
+    ✅ Generates cryptographically secure random token
+    ✅ Returns 32-byte hex string
+    ✅ Used for session tracking in global.sessions
   
-  ☐ verify_access_token(token)
-    └─ Decode JWT
-    └─ Verify signature
-    └─ Check expiration
-    └─ Extract claims
+  ✅ verify_access_token(token)
+    ✅ Decodes JWT with validation
+    ✅ Verifies signature with public key
+    ✅ Checks expiration automatically
+    ✅ Returns decoded Claims on success
   
-  ☐ verify_refresh_token(token, user_id, db)
-    └─ Hash provided token
-    └─ Query database
-    └─ Check expiration
-    └─ Check not revoked
-  
-  ☐ revoke_refresh_token(token_id, db)
-    └─ Update revoked_at timestamp
+  ✅ Refresh token verification handled in handlers
+    ✅ Hash-based lookup in global.sessions
+    ✅ Expiration check
+    ✅ Token rotation on refresh
 
-☐ Create JWT claims structure
-  #[derive(Serialize, Deserialize)]
-  pub struct JwtClaims {
-      pub sub: String,          // user_id
-      pub territory: String,    // territory_code
-      pub roles: Vec<String>,   // user roles
-      pub exp: i64,             // expiration
-      pub iat: i64,             // issued at
-      pub jti: String,          // JWT ID
+✅ Create JWT claims structure
+  ✅ Claims struct in models/auth.rs:
+  #[derive(Serialize, Deserialize, Debug, Clone)]
+  pub struct Claims {
+      pub sub: String,          // user_id (UUID)
+      pub username: String,     // username
+      pub territory_code: String, // territory code (e.g., "dk")
+      pub exp: i64,             // expiration timestamp
+      pub iat: i64,             // issued at timestamp
   }
-```
+  
+  ✅ Unit tests passing (3 tests)
 
 ### Step 3.4: Auth Handlers Implementation
 ```
@@ -648,71 +657,94 @@ Each step must be completed before moving to the next dependent step.
 
 ### Step 3.5: JWT Middleware
 ```
-☐ Implement JWT authentication middleware
-  └─ middleware/jwt.rs
+✅ Implement JWT authentication middleware
+  └─ middleware/auth.rs (services/auth-service/src/middleware/auth.rs)
   
-  Functions:
-  ☐ extract_bearer_token(request)
-    └─ Get Authorization header
-    └─ Extract token from "Bearer {token}"
+  Implementation:
+  ✅ JwtAuth struct implementing actix_web::FromRequest
+    └─ Extracts Authorization header
+    └─ Validates "Bearer {token}" format
+    └─ Verifies token signature using TokenService
+    └─ Extracts and validates claims
+    └─ Returns AuthenticatedUser with user_id and username
   
-  ☐ authenticate(request) -> Result<JwtClaims>
-    └─ Extract token
-    └─ Verify token signature
-    └─ Check expiration
-    └─ Extract claims
-    └─ Add claims to request extensions
+  ✅ Error handling:
+    └─ Missing/invalid token → 401 Unauthorized
+    └─ Expired token → 401 Unauthorized
+    └─ Invalid format → 401 Unauthorized
   
-  ☐ require_auth() - Middleware wrapper
-    └─ Call authenticate
-    └─ If valid: proceed
-    └─ If invalid: return 401 Unauthorized
+  ✅ Integration with handlers:
+    └─ Used in /auth/logout (requires valid JWT)
+    └─ Used in /auth/me (requires valid JWT)
+    └─ Protected endpoints use JwtAuth as extractor
 
-☐ Create optional auth middleware
-  └─ Attempts authentication but doesn't fail if missing
-  └─ Useful for public endpoints with optional user context
+Note: Optional auth middleware not yet implemented (not needed for MVP)
 ```
 
 ### Step 3.6: Auth Service Testing
 ```
-☐ Unit tests
-  └─ Token generation and verification
-  └─ Password hashing and verification
-  └─ JWT claims extraction
-  └─ Refresh token validation
+✅ Unit tests (7 tests passing)
+  └─ services/auth-service/src/services/token.rs:
+     ✅ test_generate_and_verify_access_token
+     ✅ test_verify_expired_token
+     ✅ test_verify_invalid_token
+  └─ services/auth-service/src/services/password.rs:
+     ✅ test_hash_and_verify_password
+     ✅ test_verify_wrong_password
+  └─ services/auth-service/src/services/invitation.rs:
+     ✅ test_generate_invitation_code
+     ✅ test_validate_code_format
 
-☐ Integration tests
-  └─ Register new user
-     └─ Valid data
-     └─ Duplicate email
-     └─ Invalid email format
-     └─ Weak password
+✅ Integration tests (19 tests passing, 100% parallel success rate)
+  └─ services/auth-service/tests/common/mod.rs:
+     ✅ TestContext with isolated databases
+     ✅ Automatic cleanup on drop
+     ✅ Random data generation
   
-  └─ Login
-     └─ Valid credentials
-     └─ Invalid password
-     └─ Non-existent user
-     └─ Rate limiting
+  └─ Registration tests (tests/auth_handlers.rs):
+     ✅ test_register_success - Valid data
+     ✅ test_register_duplicate_email - Duplicate prevention
+     ✅ test_register_invalid_email - Email validation
+     ✅ test_register_weak_password - Password strength
+     ✅ test_register_username_taken - Username uniqueness
   
-  └─ Refresh token
-     └─ Valid token
-     └─ Expired token
-     └─ Revoked token
+  └─ Login tests:
+     ✅ test_login_success - Valid credentials
+     ✅ test_login_wrong_password - Invalid password
+     ✅ test_login_user_not_found - Non-existent user
   
-  └─ Protected endpoints
-     └─ Valid JWT
-     └─ Expired JWT
-     └─ Invalid JWT
-     └─ Missing JWT
+  └─ Refresh token tests:
+     ✅ test_refresh_token_success - Valid token
+     ✅ test_refresh_expired_token - Expired token handling
+     ✅ test_refresh_invalid_token - Invalid token handling
+  
+  └─ Protected endpoints:
+     ✅ test_logout - Valid JWT, session cleanup
+     ✅ test_me_endpoint - Valid JWT returns user data
+     ✅ test_me_endpoint_unauthenticated - Missing/invalid JWT
 
-☐ Load testing
-  └─ Login endpoint: 100 req/s
-  └─ Refresh endpoint: 50 req/s
-  └─ Verify performance targets
+  └─ Invitation tests (tests/invitation_handlers.rs):
+     ✅ test_create_invitation_success
+     ✅ test_create_invitation_duplicate
+     ✅ test_verify_invitation_valid
+     ✅ test_verify_invitation_invalid
+     ✅ test_verify_invitation_expired
 
-☐ Manual testing with curl/Postman
-  └─ Create test scripts
-  └─ Document API usage
+  Test Execution:
+  └─ Execution time: 3.91-4.56s
+  └─ Parallel execution: 100% success rate
+  └─ Zero compiler warnings
+  └─ All tests use random data for isolation
+
+☐ Load testing (not yet implemented - planned for production readiness)
+  └─ Login endpoint: Target 100 req/s
+  └─ Refresh endpoint: Target 50 req/s
+  └─ Protected endpoints: Target 200 req/s
+
+✅ Manual testing
+  └─ API tested via curl during development
+  └─ All endpoints verified functional
+  └─ Error responses validated
 ```
 
 ---
@@ -896,7 +928,7 @@ Each step must be completed before moving to the next dependent step.
 ### Step 4.4: Avatar Upload Handler
 ```
 ☐ POST /users/me/avatar - Upload avatar
-  Headers: 
+  Headers:
     Authorization: Bearer {token}
     Content-Type: multipart/form-data
   
@@ -1076,7 +1108,7 @@ Each step must be completed before moving to the next dependent step.
     refreshToken: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    
+
     // Actions
     login: (credentials) => Promise<void>;
     register: (data) => Promise<void>;
@@ -1437,7 +1469,7 @@ Each step must be completed before moving to the next dependent step.
 ```
 ☐ Create seed script for essential badges
   
-  INSERT INTO territory_test.badge_definitions 
+  INSERT INTO territory_test.badge_definitions
   (code, name, description, category, criteria, required_for_permissions)
   VALUES
   (
@@ -1765,7 +1797,7 @@ Each step must be completed before moving to the next dependent step.
 ```
 ☐ Create Code of Conduct training course
   
-  INSERT INTO territory_test.courses 
+  INSERT INTO territory_test.courses
   (code, title, description, category, difficulty_level, estimated_duration_minutes, status, created_by)
   VALUES (
     'code_of_conduct_training',
@@ -2304,7 +2336,7 @@ Each step must be completed before moving to the next dependent step.
 ### Step 9.3: IPFS Handlers
 ```
 ☐ POST /ipfs/upload - Upload file to IPFS
-  Headers: 
+  Headers:
     Authorization: Bearer {token}
     Content-Type: multipart/form-data
   
