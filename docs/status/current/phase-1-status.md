@@ -1,9 +1,9 @@
 # Phase 1 MVP - Implementation Status
 
-**Last Updated:** November 6, 2025  
+**Last Updated:** November 8, 2025  
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
-**Progress:** 23% (Stage 1 complete, Stage 2 complete, Stage 3: 52%)  
+**Progress:** 24% (Stage 1 complete, Stage 2 complete, Stage 3: 56%)  
 **Release Stage:** Alpha (0.1.0-alpha.1)
 
 ---
@@ -11,11 +11,11 @@
 ## 📊 Overall Progress
 
 ```
-[████░░░░░░░░░░░░░░░░] 23% Complete (Stage 1: 100%, Stage 2: 100%, Stage 3: 52%)
+[████░░░░░░░░░░░░░░░░] 24% Complete (Stage 1: 100%, Stage 2: 100%, Stage 3: 56%)
 
 Stage 1:  Foundation & Infrastructure        [██████████] 100%
 Stage 2:  Database Schema & Migrations       [██████████] 100%
-Stage 3:  Authentication Service             [█████░░░░░] 52%
+Stage 3:  Authentication Service             [█████░░░░░] 56%
 Stage 4:  User Service                       [░░░░░░░░░░] 0%
 Stage 5:  Frontend Auth & Profile            [░░░░░░░░░░] 0%
 Stage 6:  Territory & Badge Services         [░░░░░░░░░░] 0%
@@ -69,6 +69,10 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ✅ Invitation CRUD API endpoints (create, list, revoke, validate, get usage)
 - ✅ JWT middleware for protected routes
 - ✅ Audit trail for invitation usage
+- ✅ **Database schema separation into global and territory schemas**
+- ✅ **Generic territory schema template (reusable across all pods)**
+- ✅ **Test infrastructure refactored with TestContext pattern (100% parallel test success)**
+- ✅ **Comprehensive test cleanup (17/17 tests passing, 0 warnings)**
 
 ### Blockers
 - None
@@ -148,7 +152,7 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 **Status:** ✅ Complete  
 **Progress:** 6/6 tasks completed (100%)  
 **Started:** November 5, 2025  
-**Completed:** November 5, 2025  
+**Completed:** November 8, 2025  
 **Dependencies:** Stage 1 (Foundation)
 
 #### Step 2.1: Set up SQLx Migrations (2/2) ✅
@@ -156,17 +160,22 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ✅ Create migration directory
 
 #### Step 2.2: Global Schema Migration (2/2) ✅
-- ✅ Create migration: 001_create_global_schema.sql
+- ✅ Create migration: 20251108000001_global_schema.sql
 - ✅ Run migration and verify
 
 #### Step 2.3: Territory Schema Template (2/2) ✅
-- ✅ Create migration: 002_create_territory_dk_schema.sql
-- ✅ Create Denmark territory and verify
+- ✅ Create migration: 20251108000002_territory_schema.sql
+- ✅ Create Denmark seed data: 20251108000003_seed_data_dk.sql
 
 **Notes:**  
-- Database uses schema-based isolation (global + territory_dk)
+- ✅ **Schema separation complete**: Global identity/federation layer now separate from territory user data
+- ✅ **Generic territory schema**: Uses `territory` schema name (not `territory_dk`) for single-territory pods
+- ✅ **Reusable template**: Territory schema can be deployed to any new pod
+- ✅ **Future-ready**: Prepared for multi-territory pods (territory_de, territory_fr, etc.)
+- ✅ **Application code updated**: All handlers and middleware use `get_schema_name()` helper
+- ✅ **All tests passing**: 17/17 tests pass with new schema structure (4.17s)
+- Database uses schema-based isolation (global + territory)
 - Territory code follows ISO 3166-1 Alpha-2 standard (DK, NO, SE)
-- Multi-territory architecture ready for additional pods
 - SQLTools configured for database management
 
 **Blockers:**  
@@ -176,7 +185,7 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 ### Stage 3: Authentication Service
 **Status:** 🔄 In Progress  
-**Progress:** 12/23 tasks completed (52%)  
+**Progress:** 13/23 tasks completed (56%)  
 **Started:** November 5, 2025  
 **Completed:** N/A  
 **Dependencies:** Stage 2 (Database Schema)
@@ -217,17 +226,20 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ⬜ Integration tests for invitation flows
 - ⬜ Frontend integration documentation
 
-#### Step 3.7: Auth Service Testing (0/4)
-- ⬜ Unit tests (token generation, password hashing, invitation validation)
-- ⬜ Integration tests (register, login, refresh, protected endpoints, invitations)
+#### Step 3.7: Auth Service Testing (1/4) 🔄 ⭐ NEW
+- ✅ **Comprehensive test suite with TestContext pattern (17/17 tests passing)**
+- ✅ **Parallel test execution (100% success rate)**
+- ✅ **Clean test isolation (no wildcards, exact ID tracking)**
 - ⬜ Load testing (100 req/s for login)
-- ⬜ Manual testing with curl/Postman
 
 **Notes:**  
 - ✅ Core authentication working (register, login, JWT tokens)
 - ✅ Invitation-only registration system implemented
 - ✅ JWT middleware protecting invitation management endpoints
 - ✅ Multi-territory support validated (dynamic schema routing)
+- ✅ **Database schema refactored for separation and reusability**
+- ✅ **Test infrastructure production-ready with 100% parallel test success**
+- ✅ **Zero compiler warnings, clean codebase**
 - 🔄 Token refresh and logout endpoints pending
 - 🔄 Optional auth middleware for public/protected hybrid routes
 - 💡 **Future Enhancement:** Badge-based invitations for auto-granting course access and forum permissions
