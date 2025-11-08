@@ -47,7 +47,7 @@ echo ""
 
 # Start Forgejo and Docker Registry (Phase 1 essentials)
 echo "📦 Starting Forgejo + Docker Registry..."
-docker compose -f docker-compose.dev.yml up -d forgejo registry
+docker compose -f ../docker-compose.dev.yml up -d forgejo registry
 
 # Wait for Forgejo to be ready
 echo "⏳ Waiting for Forgejo to start..."
@@ -107,5 +107,5 @@ echo "   - Architecture: project_docs/5-multi-pod-architecture.md"
 echo "=================================================="
 echo ""
 echo "🛑 To stop:"
-echo "   docker compose -f docker-compose.dev.yml down"
+echo "   cd scripts && docker compose -f ../docker-compose.dev.yml down"
 echo ""
