@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [ "auth-service",
-    "shared-lib",
+    "shared-lib", "user-service",
 ]
 
 [workspace.package]
