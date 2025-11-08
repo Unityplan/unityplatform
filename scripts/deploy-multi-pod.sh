@@ -61,10 +61,10 @@ echo -e "===================================${NC}\n"
 if [ "$CLEAN_START" = true ]; then
   echo -e "${YELLOW}🧹 Cleaning previous deployment...${NC}"
   
-  # Stop all pods
-  docker compose -f docker-compose.pod.yml -p pod-dk down 2>/dev/null || true
-  docker compose -f docker-compose.pod.yml -p pod-no down 2>/dev/null || true
-  docker compose -f docker-compose.pod.yml -p pod-se down 2>/dev/null || true
+  # Stop all pods (using env files to get correct project names)
+  docker compose -f docker-compose.pod.yml --env-file pods/denmark/.env down 2>/dev/null || true
+  docker compose -f docker-compose.pod.yml --env-file pods/norway/.env down 2>/dev/null || true
+  docker compose -f docker-compose.pod.yml --env-file pods/sweden/.env down 2>/dev/null || true
   
   # Stop monitoring and dev
   docker compose -f docker-compose.monitoring.yml down 2>/dev/null || true
@@ -161,7 +161,7 @@ echo -e "${BLUE}🇩🇰 Phase 4: Pod Denmark${NC}"
 echo "-----------------------------------"
 
 echo "Starting Pod Denmark..."
-docker compose -f docker-compose.pod.yml -p pod-dk \
+docker compose -f docker-compose.pod.yml \
   --env-file pods/denmark/.env up -d
 
 # Wait for PostgreSQL health check
@@ -187,7 +187,7 @@ echo -e "${BLUE}🇳🇴 Phase 5: Pod Norway${NC}"
 echo "-----------------------------------"
 
 echo "Starting Pod Norway..."
-docker compose -f docker-compose.pod.yml -p pod-no \
+docker compose -f docker-compose.pod.yml \
   --env-file pods/norway/.env up -d
 
 # Wait for PostgreSQL
@@ -225,7 +225,7 @@ echo -e "${BLUE}🇸🇪 Phase 6: Pod Sweden${NC}"
 echo "-----------------------------------"
 
 echo "Starting Pod Sweden..."
-docker compose -f docker-compose.pod.yml -p pod-se \
+docker compose -f docker-compose.pod.yml \
   --env-file pods/sweden/.env up -d
 
 # Wait for PostgreSQL
@@ -322,7 +322,7 @@ echo ""
 echo "Next Steps:"
 echo "  1. Run verification: ./scripts/verify-multi-pod.sh"
 echo "  2. Check NATS cluster: nats server ls"
-echo "  3. View logs: docker compose -f docker-compose.pod.yml -p pod-dk logs -f"
+echo "  3. View logs: docker compose -f docker-compose.pod.yml --env-file pods/denmark/.env logs -f"
 echo "  4. Test messaging: nats pub --server=nats://${HOST_IP}:4222 test.hello 'Hello World!'"
 echo ""
 

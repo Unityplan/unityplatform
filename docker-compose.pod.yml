@@ -2,8 +2,11 @@
 # Purpose: Core services for a specific territory/country
 # Deployment: One instance per territory (Denmark, Norway, Sweden, etc.)
 # Usage: 
-#   docker compose -f docker-compose.pod.yml -p pod-dk --env-file pods/denmark/.env up -d
-#   docker compose -f docker-compose.pod.yml -p pod-no --env-file pods/norway/.env up -d
+#   docker compose -f docker-compose.pod.yml --env-file pods/denmark/.env up -d
+#   docker compose -f docker-compose.pod.yml --env-file pods/norway/.env up -d
+#
+# Project names are automatically set from the 'name:' field below using POD_ID from .env file
+# Example: unityplan-pod-dk, unityplan-pod-no, unityplan-pod-se
 
 # Environment variables required in .env file:
 # POD_ID=dk|no|se (territory identifier)

@@ -5,6 +5,7 @@ Complete multi-pod architecture setup for UnityPlan platform.
 ## 📋 Overview
 
 This deployment creates 3 territory pods (Denmark, Norway, Sweden) with:
+
 - Full service isolation per territory
 - NATS clustering for cross-pod messaging
 - Unified monitoring via Prometheus & Grafana
@@ -21,6 +22,27 @@ This deployment creates 3 territory pods (Denmark, Norway, Sweden) with:
 
 # Verify deployment
 ./scripts/verify-multi-pod.sh
+```
+
+## 📦 What Gets Deployed
+
+### Project Naming Convention
+
+All pods use the naming pattern: `unityplan-pod-${POD_ID}` where POD_ID is the territory code (dk, no, se, eu).
+
+This is defined in `docker-compose.pod.yml`:
+
+```yaml
+name: unityplan-pod-${POD_ID}
+```
+
+**Example stacks:**
+
+- `unityplan-pod-dk` (Denmark)
+- `unityplan-pod-no` (Norway)
+- `unityplan-pod-se` (Sweden)
+- `unityplan-pod-eu` (Europe multi-territory)
+
 ```
 
 ## 📦 What Gets Deployed
@@ -114,13 +136,13 @@ docker compose -f docker-compose.dev.yml up -d
 # 3. Start monitoring
 docker compose -f docker-compose.monitoring.yml up -d
 
-# 4. Start territory pods
-docker compose -f docker-compose.pod.yml -p pod-dk --env-file pods/denmark/.env up -d
-docker compose -f docker-compose.pod.yml -p pod-no --env-file pods/norway/.env up -d
-docker compose -f docker-compose.pod.yml -p pod-se --env-file pods/sweden/.env up -d
+# 4. Start territory pods (using env files, project name comes from compose file)
+docker compose -f docker-compose.pod.yml --env-file pods/denmark/.env up -d
+docker compose -f docker-compose.pod.yml --env-file pods/norway/.env up -d
+docker compose -f docker-compose.pod.yml --env-file pods/sweden/.env up -d
 
 # 5. (Optional) Start multi-territory pod
-docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu --env-file pods/europe/.env up -d
+docker compose -f docker-compose.multi-territory-pod.yml --env-file pods/europe/.env up -d
 ```
 
 ## ✅ Verification
@@ -175,10 +197,10 @@ nats pub "test.cross-pod" "Hello from Denmark!"
 ## 🛑 Shutdown
 
 ```bash
-# Stop all pods
-docker compose -f docker-compose.pod.yml -p pod-dk down
-docker compose -f docker-compose.pod.yml -p pod-no down
-docker compose -f docker-compose.pod.yml -p pod-se down
+# Stop all pods (using env files to get correct project names)
+docker compose -f docker-compose.pod.yml --env-file pods/denmark/.env down
+docker compose -f docker-compose.pod.yml --env-file pods/norway/.env down
+docker compose -f docker-compose.pod.yml --env-file pods/sweden/.env down
 
 # Stop monitoring and dev
 docker compose -f docker-compose.monitoring.yml down
@@ -192,16 +214,16 @@ docker network rm unityplan-mesh-network
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| Grafana | http://192.168.60.133:3001 | admin / admin |
-| Prometheus | http://192.168.60.133:9090 | - |
-| Jaeger | http://192.168.60.133:16686 | - |
-| Dev Dashboard | http://192.168.60.133:8888 | - |
-| Adminer | http://192.168.60.133:8080 | - |
-| MailHog | http://192.168.60.133:8025 | - |
-| Redis Commander | http://192.168.60.133:8082 | - |
-| NATS Monitor DK | http://192.168.60.133:8222 | - |
-| NATS Monitor NO | http://192.168.60.133:8223 | - |
-| NATS Monitor SE | http://192.168.60.133:8224 | - |
+| Grafana | <http://192.168.60.133:3001> | admin / admin |
+| Prometheus | <http://192.168.60.133:9090> | - |
+| Jaeger | <http://192.168.60.133:16686> | - |
+| Dev Dashboard | <http://192.168.60.133:8888> | - |
+| Adminer | <http://192.168.60.133:8080> | - |
+| MailHog | <http://192.168.60.133:8025> | - |
+| Redis Commander | <http://192.168.60.133:8082> | - |
+| NATS Monitor DK | <http://192.168.60.133:8222> | - |
+| NATS Monitor NO | <http://192.168.60.133:8223> | - |
+| NATS Monitor SE | <http://192.168.60.133:8224> | - |
 
 ## 📚 Documentation
 
@@ -213,6 +235,7 @@ docker network rm unityplan-mesh-network
 ## 🐛 Troubleshooting
 
 **NATS cluster not forming:**
+
 ```bash
 # Check NATS logs
 docker logs service-nats-dk | grep cluster
@@ -223,6 +246,7 @@ docker exec service-nats-dk ping service-nats-no
 ```
 
 **Prometheus targets down:**
+
 ```bash
 # Check exporter logs
 docker logs monitoring-postgres-exporter-dk
@@ -234,6 +258,7 @@ curl http://192.168.60.133:9121/metrics | head
 ```
 
 **Port conflicts:**
+
 ```bash
 # Check what's using a port
 sudo lsof -i :5432

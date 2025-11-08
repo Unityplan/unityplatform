@@ -263,9 +263,9 @@ fi
 
 echo "View logs:"
 echo "  cd scripts && docker compose -f ../docker-compose.dev.yml logs -f"
-echo "  cd scripts && docker compose -f ../docker-compose.pod.yml -p pod-dk logs -f"
+echo "  cd scripts && docker compose -f ../docker-compose.pod.yml --env-file ../pods/denmark/.env logs -f"
 echo ""
 echo "Stop services:"
 echo "  cd scripts && docker compose -f ../docker-compose.dev.yml down"
-echo "  cd scripts && docker compose -f ../docker-compose.pod.yml -p pod-dk down"
+echo "  cd scripts && docker compose -f ../docker-compose.pod.yml --env-file ../pods/denmark/.env down"
 echo ""
