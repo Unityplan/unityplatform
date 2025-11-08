@@ -6,10 +6,8 @@ use crate::common::*;
 #[actix_web::test]
 async fn test_create_invitation_authenticated() {
     let mut ctx = TestContext::new().await;
-    
 
     let (_user_id, username, password, _email) = ctx.create_user().await;
-    
 
     let app = test::init_service(
         App::new()
@@ -90,9 +88,6 @@ async fn test_create_invitation_authenticated() {
 #[actix_web::test]
 async fn test_create_invitation_unauthenticated() {
     let ctx = TestContext::new().await;
-    
-
-    
 
     let app = test::init_service(
         App::new()
@@ -127,11 +122,8 @@ async fn test_create_invitation_unauthenticated() {
 #[actix_web::test]
 async fn test_list_user_invitations() {
     let mut ctx = TestContext::new().await;
-    
 
-    let (user_id, username, password, _email) =
-        ctx.create_user().await;
-    
+    let (user_id, username, password, _email) = ctx.create_user().await;
 
     let app = test::init_service(
         App::new()
@@ -193,13 +185,10 @@ async fn test_list_user_invitations() {
 #[actix_web::test]
 async fn test_revoke_invitation() {
     let mut ctx = TestContext::new().await;
-    
 
-    let (user_id, username, password, _email) =
-        ctx.create_user().await;
-    
-    let (invitation_id, invitation_token) =
-        ctx.create_invitation_with_user(user_id).await;
+    let (user_id, username, password, _email) = ctx.create_user().await;
+
+    let (invitation_id, invitation_token) = ctx.create_invitation_with_user(user_id).await;
 
     let app = test::init_service(
         App::new()
@@ -251,7 +240,7 @@ async fn test_revoke_invitation() {
 
     // Verify it was revoked (is_active = false means revoked)
     let is_active = sqlx::query_scalar::<_, bool>(
-        "SELECT is_active FROM territory_dk.invitation_tokens WHERE token = $1",
+        "SELECT is_active FROM territory.invitation_tokens WHERE token = $1",
     )
     .bind(&invitation_token)
     .fetch_one(&ctx.pool)
@@ -269,9 +258,7 @@ async fn test_revoke_invitation() {
 #[actix_web::test]
 async fn test_validate_invitation_maxed_out() {
     let mut ctx = TestContext::new().await;
-    
 
-    
     let invitation_token = ctx.create_maxed_invitation().await;
 
     let app = test::init_service(
@@ -301,9 +288,7 @@ async fn test_validate_invitation_maxed_out() {
 #[actix_web::test]
 async fn test_validate_invitation_revoked() {
     let mut ctx = TestContext::new().await;
-    
 
-    
     let invitation_token = ctx.create_revoked_invitation().await;
 
     let app = test::init_service(
@@ -333,15 +318,11 @@ async fn test_validate_invitation_revoked() {
 #[actix_web::test]
 async fn test_invitation_email_mismatch() {
     let mut ctx = TestContext::new().await;
-    
-
-    
 
     // Create invitation for a specific email to test mismatch validation
     let unique_id = uuid::Uuid::new_v4().to_string()[..8].to_string();
     let invited_email = format!("invited_{}@test.dk", unique_id);
-    let invitation_token =
-        ctx.create_invitation_for_email(Some(invited_email)).await;
+    let invitation_token = ctx.create_invitation_for_email(Some(invited_email)).await;
 
     let app = test::init_service(
         App::new()

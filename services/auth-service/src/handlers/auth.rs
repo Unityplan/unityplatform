@@ -15,6 +15,18 @@ struct TerritoryCode {
     code: String,
 }
 
+/// Get schema name for a territory
+/// For single-territory pods: returns "territory"
+/// For multi-territory pods: returns "territory_XX" (e.g., "territory_de")
+fn get_schema_name(_territory_code: &str) -> String {
+    // TODO: Make this configurable via environment variable
+    // For now, use single-territory approach (generic "territory" schema)
+    "territory".to_string()
+    
+    // For multi-territory pods, use:
+    // format!("territory_{}", territory_code.to_lowercase())
+}
+
 /// Register a new user
 pub async fn register(
     req: web::Json<RegisterRequest>,
@@ -50,7 +62,7 @@ pub async fn register(
     eprintln!("DEBUG: Territory found: {}", territory.code);
 
     // Set schema context to territory (dynamic based on territory_code)
-    let schema_name = format!("territory_{}", territory.code.to_lowercase());
+    let schema_name = get_schema_name(&territory.code);
 
     // Validate invitation token
     let invitation = validate_invitation_token(
@@ -221,7 +233,7 @@ pub async fn login(
     .ok_or_else(|| actix_web::error::ErrorBadRequest("Invalid territory code"))?;
 
     // Set schema context to territory (dynamic based on territory_code)
-    let schema_name = format!("territory_{}", territory.code.to_lowercase());
+    let schema_name = get_schema_name(&territory.code);
 
     // Find user by username (not email - privacy-first)
     let user = sqlx::query_as::<_, User>(&format!(
@@ -323,7 +335,7 @@ pub async fn me(
     let auth_user = crate::middleware::get_authenticated_user(&req)?;
 
     // Set schema context to territory
-    let schema_name = format!("territory_{}", auth_user.territory_code.to_lowercase());
+    let schema_name = get_schema_name(&auth_user.territory_code);
 
     // Load full user profile from database
     let user = sqlx::query_as::<_, User>(&format!(
@@ -385,7 +397,7 @@ pub async fn refresh(
     .map_err(actix_web::error::ErrorInternalServerError)?
     .ok_or_else(|| actix_web::error::ErrorBadRequest("Invalid territory code"))?;
 
-    let schema_name = format!("territory_{}", territory.code.to_lowercase());
+    let schema_name = get_schema_name(&territory.code);
 
     // Hash the provided refresh token
     let token_hash = format!("{:x}", sha2::Sha256::digest(req.refresh_token.as_bytes()));

@@ -11,6 +11,18 @@ use sqlx::PgPool;
 use uuid::Uuid;
 use validator::Validate;
 
+/// Get schema name for a territory
+/// For single-territory pods: returns "territory"
+/// For multi-territory pods: returns "territory_XX" (e.g., "territory_de")
+fn get_schema_name(_territory_code: &str) -> String {
+    // TODO: Make this configurable via environment variable
+    // For now, use single-territory approach (generic "territory" schema)
+    "territory".to_string()
+    
+    // For multi-territory pods, use:
+    // format!("territory_{}", territory_code.to_lowercase())
+}
+
 /// Create a new invitation token
 /// POST /api/auth/invitations
 pub async fn create_invitation(
@@ -30,7 +42,7 @@ pub async fn create_invitation(
         .map_err(|e| actix_web::error::ErrorBadRequest(e))?;
 
     // Get territory schema
-    let schema_name = format!("territory_{}", auth_user.territory_code.to_lowercase());
+    let schema_name = get_schema_name(&auth_user.territory_code);
 
     // Create invitation token
     let token = create_invitation_token(
@@ -60,7 +72,7 @@ pub async fn list_invitations(
     let auth_user = get_authenticated_user(&req)?;
 
     // Get territory schema
-    let schema_name = format!("territory_{}", auth_user.territory_code.to_lowercase());
+    let schema_name = get_schema_name(&auth_user.territory_code);
 
     // List user's invitations
     let tokens = list_user_invitations(pool.get_ref(), &schema_name, auth_user.user_id)
@@ -85,7 +97,7 @@ pub async fn revoke_invitation(
     let auth_user = get_authenticated_user(&req)?;
 
     // Get territory schema
-    let schema_name = format!("territory_{}", auth_user.territory_code.to_lowercase());
+    let schema_name = get_schema_name(&auth_user.territory_code);
 
     let token_id = path.into_inner();
 
@@ -113,7 +125,7 @@ pub async fn get_invitation_usage(
     let auth_user = get_authenticated_user(&req)?;
 
     // Get territory schema
-    let schema_name = format!("territory_{}", auth_user.territory_code.to_lowercase());
+    let schema_name = get_schema_name(&auth_user.territory_code);
 
     let token_id = path.into_inner();
 
@@ -140,7 +152,7 @@ pub async fn validate_invitation(
         actix_web::error::ErrorBadRequest("territory_code query parameter is required")
     })?;
 
-    let schema_name = format!("territory_{}", territory_code.to_lowercase());
+    let schema_name = get_schema_name(&territory_code);
 
     // Validate token (without consuming it)
     let invitation =

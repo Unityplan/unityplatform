@@ -11,6 +11,18 @@ use std::{
     rc::Rc,
 };
 
+/// Get schema name for a territory
+/// For single-territory pods: returns "territory"
+/// For multi-territory pods: returns "territory_XX" (e.g., "territory_de")
+fn get_schema_name(_territory_code: &str) -> String {
+    // TODO: Make this configurable via environment variable
+    // For now, use single-territory approach (generic "territory" schema)
+    "territory".to_string()
+    
+    // For multi-territory pods, use:
+    // format!("territory_{}", territory_code.to_lowercase())
+}
+
 /// Authenticated user information extracted from JWT
 #[derive(Debug, Clone)]
 pub struct AuthenticatedUser {
@@ -95,7 +107,7 @@ where
                 .ok_or_else(|| ErrorUnauthorized("Database pool not configured"))?;
 
             // Load user from database (using territory schema)
-            let schema_name = format!("territory_{}", claims.territory_code.to_lowercase());
+            let schema_name = get_schema_name(&claims.territory_code);
             let user_query = format!(
                 r#"
                 SELECT 

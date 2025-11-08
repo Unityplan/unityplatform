@@ -4,6 +4,10 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use uuid::Uuid;
 
+// Territory schema name - configurable for single-territory vs multi-territory pods
+const TERRITORY_SCHEMA: &str = "territory";  // For single-territory pods (default)
+// For multi-territory pods, use: "territory_dk", "territory_no", etc.
+
 /// TestContext tracks all data created during a test and ensures precise cleanup.
 ///
 /// CRITICAL TESTING RULE:
@@ -23,15 +27,15 @@ impl TestContext {
     /// Create new test context and set up test data
     pub async fn new() -> Self {
         dotenvy::dotenv().ok();
-        let database_url = std::env::var("DATABASE_URL")
-            .expect("DATABASE_URL must be set for tests");
+        let database_url =
+            std::env::var("DATABASE_URL").expect("DATABASE_URL must be set for tests");
 
         let pool = sqlx::postgres::PgPoolOptions::new()
             .max_connections(5)
             .connect(&database_url)
             .await
             .expect("Failed to connect to test database");
-        
+
         setup_test_data(&pool).await;
 
         Self {
@@ -42,36 +46,38 @@ impl TestContext {
         }
     }
 
-    /// Create a test user and track its ID for cleanup
+    /// Create a test user and track it for cleanup
     pub async fn create_user(&mut self) -> (Uuid, String, String, Option<String>) {
         let (user_id, username, password, email) =
-            create_test_user_with_id(&self.pool, "territory_dk").await;
-
-        // Track this user for precise cleanup
+            create_test_user_with_id(&self.pool, TERRITORY_SCHEMA).await;
         self.created_users.push(user_id);
-
         (user_id, username, password, email)
     }
 
-    /// Create a test invitation and track its ID for cleanup (NULL email - allows any email)
+    /// Create a simple test invitation (wrapper for convenience)
     pub async fn create_invitation(&mut self) -> String {
-        let (inv_id, token) = create_test_invitation_with_id_for_email(
-            &self.pool,
-            "territory_dk",
-            None, // NULL email - allows any email to use this invitation
-        )
-        .await;
+        self.create_invitation_for_email(None).await
+    }
 
+    /// Create a test invitation for a specific user and track it for cleanup
+    pub async fn create_invitation_for_user(
+        &mut self,
+        user_id: Uuid,
+    ) -> (Uuid, String) {
+        let (inv_id, token) =
+            create_test_invitation_with_id_and_user(&self.pool, TERRITORY_SCHEMA, Some(user_id))
+                .await;
+        
         // Track this invitation for precise cleanup
         self.created_invitations.push(inv_id);
-
-        token
+        
+        (inv_id, token)
     }
 
     /// Create a test invitation with specific email and track its ID
     pub async fn create_invitation_for_email(&mut self, email: Option<String>) -> String {
         let (inv_id, token) =
-            create_test_invitation_with_id_for_email(&self.pool, "territory_dk", email).await;
+            create_test_invitation_with_id_for_email(&self.pool, TERRITORY_SCHEMA, email).await;
 
         // Track this invitation for precise cleanup
         self.created_invitations.push(inv_id);
@@ -82,7 +88,7 @@ impl TestContext {
     /// Create a test invitation with user ownership and track its ID
     pub async fn create_invitation_with_user(&mut self, user_id: Uuid) -> (Uuid, String) {
         let (inv_id, token) =
-            create_test_invitation_with_id_and_user(&self.pool, "territory_dk", Some(user_id))
+            create_test_invitation_with_id_and_user(&self.pool, TERRITORY_SCHEMA, Some(user_id))
                 .await;
 
         // Track this invitation for precise cleanup
@@ -93,7 +99,7 @@ impl TestContext {
 
     /// Create an expired invitation and track its ID
     pub async fn create_expired_invitation(&mut self) -> String {
-        let (inv_id, token) = create_expired_invitation_with_id(&self.pool, "territory_dk").await;
+        let (inv_id, token) = create_expired_invitation_with_id(&self.pool, TERRITORY_SCHEMA).await;
 
         // Track this invitation for precise cleanup
         self.created_invitations.push(inv_id);
@@ -103,7 +109,7 @@ impl TestContext {
 
     /// Create a maxed-out invitation and track its ID
     pub async fn create_maxed_invitation(&mut self) -> String {
-        let (inv_id, token) = create_maxed_invitation_with_id(&self.pool, "territory_dk").await;
+        let (inv_id, token) = create_maxed_invitation_with_id(&self.pool, TERRITORY_SCHEMA).await;
 
         // Track this invitation for precise cleanup
         self.created_invitations.push(inv_id);
@@ -113,7 +119,7 @@ impl TestContext {
 
     /// Create a revoked invitation and track its ID
     pub async fn create_revoked_invitation(&mut self) -> String {
-        let (inv_id, token) = create_revoked_invitation_with_id(&self.pool, "territory_dk").await;
+        let (inv_id, token) = create_revoked_invitation_with_id(&self.pool, TERRITORY_SCHEMA).await;
 
         // Track this invitation for precise cleanup
         self.created_invitations.push(inv_id);
@@ -125,7 +131,7 @@ impl TestContext {
     pub async fn cleanup(self) {
         // 1. Delete invitation uses for tracked users
         for user_id in &self.created_users {
-            sqlx::query("DELETE FROM territory_dk.invitation_uses WHERE used_by_user_id = $1")
+            sqlx::query(&format!("DELETE FROM {}.invitation_uses WHERE used_by_user_id = $1", TERRITORY_SCHEMA))
                 .bind(user_id)
                 .execute(&self.pool)
                 .await
@@ -134,7 +140,7 @@ impl TestContext {
 
         // 2. Delete tracked invitations by exact ID
         for inv_id in &self.created_invitations {
-            sqlx::query("DELETE FROM territory_dk.invitation_tokens WHERE id = $1")
+            sqlx::query(&format!("DELETE FROM {}.invitation_tokens WHERE id = $1", TERRITORY_SCHEMA))
                 .bind(inv_id)
                 .execute(&self.pool)
                 .await
@@ -143,7 +149,7 @@ impl TestContext {
 
         // 3. Delete tracked users by exact ID (cascades to user_identities)
         for user_id in &self.created_users {
-            sqlx::query("DELETE FROM territory_dk.users WHERE id = $1")
+            sqlx::query(&format!("DELETE FROM {}.users WHERE id = $1", TERRITORY_SCHEMA))
                 .bind(user_id)
                 .execute(&self.pool)
                 .await
@@ -151,7 +157,7 @@ impl TestContext {
         }
 
         // 4. Clean up any orphaned global identities
-        sqlx::query("DELETE FROM global.user_identities WHERE LOWER(territory_code) = 'dk' AND territory_user_id NOT IN (SELECT id FROM territory_dk.users)")
+        sqlx::query(&format!("DELETE FROM global.user_identities WHERE LOWER(territory_code) = 'dk' AND territory_user_id NOT IN (SELECT id FROM {}.users)", TERRITORY_SCHEMA))
             .execute(&self.pool)
             .await
             .ok();

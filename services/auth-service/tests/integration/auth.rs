@@ -51,7 +51,7 @@ async fn test_register_success() {
     assert_eq!(status, 201, "Registration should succeed");
 
     let uses = sqlx::query_scalar::<_, i32>(
-        "SELECT current_uses FROM territory_dk.invitation_tokens WHERE token = $1",
+        "SELECT current_uses FROM territory.invitation_tokens WHERE token = $1",
     )
     .bind(&invitation_token)
     .fetch_one(&ctx.pool)

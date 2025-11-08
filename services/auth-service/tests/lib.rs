@@ -38,6 +38,6 @@ async fn test_health_endpoint() {
         resp.status().is_success(),
         "Health endpoint should return success"
     );
-    
+
     ctx.cleanup().await;
 }
