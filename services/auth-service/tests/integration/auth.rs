@@ -415,7 +415,10 @@ async fn test_me_endpoint() {
             .service(
                 web::scope("")
                     .wrap(auth_service::middleware::JwtAuth)
-                    .route("/api/auth/me", web::get().to(auth_service::handlers::auth::me)),
+                    .route(
+                        "/api/auth/me",
+                        web::get().to(auth_service::handlers::auth::me),
+                    ),
             ),
     )
     .await;
@@ -450,14 +453,17 @@ async fn test_me_endpoint() {
     let me_data: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(me_data["id"], user_id.to_string());
     assert_eq!(me_data["username"], username);
-    
+
     // Email is optional - check if it exists in response
     if let Some(email_val) = email {
         assert_eq!(me_data["email"], email_val);
     } else {
-        assert!(me_data["email"].is_null(), "Email should be null when not provided");
+        assert!(
+            me_data["email"].is_null(),
+            "Email should be null when not provided"
+        );
     }
-    
+
     assert_eq!(me_data["territory_code"], "dk");
 
     ctx.cleanup().await;
@@ -474,20 +480,21 @@ async fn test_me_endpoint_unauthenticated() {
             .service(
                 web::scope("")
                     .wrap(auth_service::middleware::JwtAuth)
-                    .route("/api/auth/me", web::get().to(auth_service::handlers::auth::me)),
+                    .route(
+                        "/api/auth/me",
+                        web::get().to(auth_service::handlers::auth::me),
+                    ),
             ),
     )
     .await;
 
     // Call /me without JWT - expect middleware to reject
-    let req = test::TestRequest::get()
-        .uri("/api/auth/me")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/auth/me").to_request();
 
     // The middleware returns an error response, not a service response
     // We need to use try_call_service to handle the error case
     let resp = test::try_call_service(&app, req).await;
-    
+
     match resp {
         Ok(resp) => {
             assert_eq!(resp.status(), 401, "Should reject unauthenticated request");

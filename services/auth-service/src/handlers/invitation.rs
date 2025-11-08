@@ -18,7 +18,7 @@ fn get_schema_name(_territory_code: &str) -> String {
     // TODO: Make this configurable via environment variable
     // For now, use single-territory approach (generic "territory" schema)
     "territory".to_string()
-    
+
     // For multi-territory pods, use:
     // format!("territory_{}", territory_code.to_lowercase())
 }

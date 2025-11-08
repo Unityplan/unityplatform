@@ -56,11 +56,12 @@ impl TestContext {
 
     /// Create a simple test invitation (wrapper for convenience)
     pub async fn create_invitation(&mut self) -> String {
-        let (inv_id, token) = create_test_invitation_with_id_for_email(&self.pool, TERRITORY_SCHEMA, None).await;
-        
+        let (inv_id, token) =
+            create_test_invitation_with_id_for_email(&self.pool, TERRITORY_SCHEMA, None).await;
+
         // Track this invitation for precise cleanup
         self.created_invitations.push(inv_id);
-        
+
         token
     }
 
