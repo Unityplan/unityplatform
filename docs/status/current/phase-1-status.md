@@ -20,11 +20,12 @@ Stage 4:  User Service                       [░░░░░░░░░░] 0%
 Stage 5:  Frontend Auth & Profile            [░░░░░░░░░░] 0%
 Stage 6:  Territory & Badge Services         [░░░░░░░░░░] 0%
 Stage 7:  Course Service (LMS)               [░░░░░░░░░░] 0%
-Stage 8:  Forum Service & IPFS               [░░░░░░░░░░] 0%
+Stage 8:  Matrix Protocol Integration        [░░░░░░░░░░] 0%
 Stage 9:  IPFS Service                       [░░░░░░░░░░] 0%
-Stage 10: Translation & Matrix Services      [░░░░░░░░░░] 0%
-Stage 11: Frontend Course & Forum UI         [░░░░░░░░░░] 0%
-Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
+Stage 10: Forum Service (Matrix-based)       [░░░░░░░░░░] 0%
+Stage 11: Translation Service                [░░░░░░░░░░] 0%
+Stage 12: Frontend Course & Forum UI         [░░░░░░░░░░] 0%
+Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 ```
 
 ---
@@ -508,51 +509,31 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 ---
 
-### Stage 8: Forum Service & IPFS Integration
+### Stage 8: Matrix Protocol Integration
 
 **Status:** ⬜ Not Started  
-**Progress:** 0/17 tasks completed  
+**Progress:** 0/6 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
 **Dependencies:** Stage 7 (Course Service)
 
-#### Step 8.1: Forum Service Scaffolding (0/2)
+#### Step 8.1: Matrix Synapse Setup (0/2)
 
-- ⬜ Create forum-service crate
-- ⬜ Create service structure
+- ⬜ Add Matrix Synapse to docker-compose.yml
+- ⬜ Configure Matrix homeserver for territory
 
-#### Step 8.2: Forum Database Schema (0/1)
+#### Step 8.2: Matrix Gateway Service (0/2)
 
-- ⬜ Add forum tables to territory schema
+- ⬜ Create matrix-gateway crate
+- ⬜ Create service structure with ruma client
 
-#### Step 8.3: Forum Handlers Implementation (0/8)
+#### Step 8.3: Matrix Integration (0/2)
 
-- ⬜ GET /forum/categories - List forum categories
-- ⬜ GET /forum/categories/{slug}/topics - List topics
-- ⬜ POST /forum/topics - Create new topic
-- ⬜ GET /forum/topics/{slug} - Get topic with posts
-- ⬜ POST /forum/topics/{topic_id}/posts - Create post
-- ⬜ PUT /forum/posts/{post_id} - Edit post
-- ⬜ DELETE /forum/posts/{post_id} - Delete post
-- ⬜ POST /forum/posts/{post_id}/reactions - Add reaction
-
-#### Step 8.4: Moderation System (0/4)
-
-- ⬜ POST /forum/moderation/strike - Issue strike
-- ⬜ GET /forum/moderation/queue - Get moderation queue
-- ⬜ POST /forum/posts/{post_id}/flag - Flag post
-- ⬜ POST /forum/topics/{topic_id}/lock - Lock topic
-
-#### Step 8.5: Forum Frontend Pages (0/5)
-
-- ⬜ Create forum category list page
-- ⬜ Create topic list page
-- ⬜ Create topic view page
-- ⬜ Create topic creation form
-- ⬜ Create moderation dashboard
+- ⬜ Register users on Matrix when they register on platform
+- ⬜ Create Matrix credentials and store in database
 
 **Notes:**  
--
+Matrix protocol provides the foundation for federated forums. Each territory runs its own Matrix homeserver for data sovereignty.
 
 **Blockers:**  
 -
@@ -565,7 +546,7 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 **Progress:** 0/8 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
-**Dependencies:** Stage 8 (Forum Service)
+**Dependencies:** Stage 8 (Matrix Protocol)
 
 #### Step 9.1: IPFS Setup (0/2)
 
@@ -584,57 +565,98 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ⬜ POST /ipfs/{cid}/pin - Pin content
 - ⬜ DELETE /ipfs/{cid}/pin - Unpin content
 
-#### Step 9.4: Course Content Integration (0/3)
-
-- ⬜ Update course lesson creation to use IPFS
-- ⬜ Update lesson retrieval to serve from IPFS
-- ⬜ Create content upload UI
-
 **Notes:**  
--
+IPFS provides decentralized content storage for course materials and forum attachments.
 
 **Blockers:**  
 -
 
 ---
 
-### Stage 10: Translation & Matrix Services
+### Stage 10: Forum Service (Matrix-based)
 
 **Status:** ⬜ Not Started  
-**Progress:** 0/5 tasks completed  
+**Progress:** 0/19 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
-**Dependencies:** Stage 9 (IPFS Service)
+**Dependencies:** Stage 8 (Matrix Protocol), Stage 9 (IPFS Service)
 
-#### Step 10.1: Translation Service (Basic) (0/3)
+#### Step 10.1: Forum Service Scaffolding (0/2)
+
+- ⬜ Create forum-service crate
+- ⬜ Create service structure
+
+#### Step 10.2: Forum Database Schema (0/1)
+
+- ⬜ Add forum tables to territory schema (Matrix room references)
+
+#### Step 10.3: Matrix Room Integration (0/2)
+
+- ⬜ Create Matrix room when forum topic is created
+- ⬜ Sync messages bidirectionally between forum and Matrix
+
+#### Step 10.4: Forum Handlers Implementation (0/8)
+
+- ⬜ GET /forum/categories - List forum categories
+- ⬜ GET /forum/categories/{slug}/topics - List topics
+- ⬜ POST /forum/topics - Create new topic (creates Matrix room)
+- ⬜ GET /forum/topics/{slug} - Get topic with posts
+- ⬜ POST /forum/topics/{topic_id}/posts - Create post
+- ⬜ PUT /forum/posts/{post_id} - Edit post
+- ⬜ DELETE /forum/posts/{post_id} - Delete post
+- ⬜ POST /forum/posts/{post_id}/reactions - Add reaction
+
+#### Step 10.5: Moderation System (0/4)
+
+- ⬜ POST /forum/moderation/strike - Issue strike
+- ⬜ GET /forum/moderation/queue - Get moderation queue
+- ⬜ POST /forum/posts/{post_id}/flag - Flag post
+- ⬜ POST /forum/topics/{topic_id}/lock - Lock topic
+
+#### Step 10.6: Forum Testing (0/2)
+
+- ⬜ Unit and integration tests
+- ⬜ Matrix synchronization tests
+
+**Notes:**  
+Forums are built on Matrix protocol. Each forum topic is a Matrix room, enabling federated cross-territory collaboration.
+
+**Blockers:**  
+-
+
+---
+
+### Stage 11: Translation Service
+
+**Status:** ⬜ Not Started  
+**Progress:** 0/3 tasks completed  
+**Started:** N/A  
+**Completed:** N/A  
+**Dependencies:** Stage 10 (Forum Service)
+
+#### Step 11.1: Translation Service Setup (0/3)
 
 - ⬜ Create translation-service crate
 - ⬜ Create service structure
-- ⬜ Implement POST /translate handler with caching
-
-#### Step 10.2: Matrix Gateway (Basic) (0/3)
-
-- ⬜ Add Matrix Synapse to docker-compose.yml
-- ⬜ Create matrix-gateway crate
-- ⬜ Basic Matrix integration (register users, create rooms)
+- ⬜ Implement POST /translate handler with Redis caching
 
 **Notes:**  
--
+Basic translation service with caching for multi-language support.
 
 **Blockers:**  
 -
 
 ---
 
-### Stage 11: Frontend - Course & Forum UI
+### Stage 12: Frontend - Course & Forum UI
 
 **Status:** ⬜ Not Started  
-**Progress:** 0/7 tasks completed  
+**Progress:** 0/10 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
-**Dependencies:** Stage 10 (Translation & Matrix)
+**Dependencies:** Stage 10 (Forum Service), Stage 11 (Translation Service)
 
-#### Step 11.1: Course Pages (0/5)
+#### Step 12.1: Course Pages (0/5)
 
 - ⬜ Create course catalog page
 - ⬜ Create course detail page
@@ -642,7 +664,7 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ⬜ Create quiz page
 - ⬜ Create my learning page
 
-#### Step 11.2: Forum Pages (0/5)
+#### Step 12.2: Forum Pages (0/5)
 
 - ⬜ Forum category list page
 - ⬜ Topic list page
@@ -658,29 +680,29 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 ---
 
-### Stage 12: Testing, Documentation & Deployment
+### Stage 13: Testing, Documentation & Deployment
 
 **Status:** ⬜ Not Started  
 **Progress:** 0/11 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
-**Dependencies:** Stage 11 (Frontend Complete)
+**Dependencies:** Stage 12 (Frontend Complete)
 
-#### Step 12.1: Comprehensive Testing (0/4)
+#### Step 13.1: Comprehensive Testing (0/5)
 
 - ⬜ Unit tests for all services (80%+ coverage)
 - ⬜ Integration tests for API endpoints
 - ⬜ E2E tests for critical user flows
-- ⬜ Load testing (meet performance targets)
+- ⬜ Load testing (consolidated from all stages)
 - ⬜ Security testing
 
-#### Step 12.2: Documentation (0/3)
+#### Step 13.2: Documentation (0/3)
 
 - ⬜ API documentation (OpenAPI/Swagger)
 - ⬜ Developer documentation
 - ⬜ User documentation
 
-#### Step 12.3: Deployment Setup (0/4)
+#### Step 13.3: Deployment Setup (0/3)
 
 - ⬜ Production docker-compose.yml
 - ⬜ CI/CD pipeline (GitHub Actions)
@@ -688,7 +710,7 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ⬜ Backup strategy
 
 **Notes:**  
--
+Load testing consolidated here from individual stages for comprehensive system performance validation.
 
 **Blockers:**  
 -
@@ -737,11 +759,12 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 **Status:** ⬜ Not Started  
 **Criteria:**
 
-- ✅ Forum service operational
+- ✅ Matrix protocol integration complete
+- ✅ Forum service operational (Matrix-based)
 - ✅ IPFS content storage working
 - ✅ 3-strike moderation system working
 - ✅ Users can create topics/posts
-- ✅ Matrix basic integration complete
+- ✅ Cross-territory forum federation via Matrix
 
 ### Milestone 5: MVP Launch Ready
 
