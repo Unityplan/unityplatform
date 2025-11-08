@@ -98,7 +98,7 @@ create_mesh_network() {
 # Start Phase 1 (Forgejo + Registry)
 start_phase1() {
     echo "📦 Starting Phase 1: Forgejo + Docker Registry..."
-    docker compose -f docker-compose.dev.yml up -d forgejo registry
+    docker compose -f ../docker-compose.dev.yml up -d forgejo registry
     
     echo "⏳ Waiting for services to start..."
     sleep 3
@@ -120,7 +120,7 @@ start_phase1() {
 # Start all dev tools
 start_dev_tools() {
     echo "🛠️  Starting All Development Tools..."
-    docker compose -f docker-compose.dev.yml up -d
+    docker compose -f ../docker-compose.dev.yml up -d
     
     echo "⏳ Waiting for services to start..."
     sleep 3
@@ -138,7 +138,7 @@ start_dev_tools() {
 # Start monitoring stack
 start_monitoring() {
     echo "📊 Starting Monitoring Stack..."
-    docker compose -f docker-compose.monitoring.yml up -d
+    docker compose -f ../docker-compose.monitoring.yml up -d
     
     echo "⏳ Waiting for services to start..."
     sleep 5
@@ -161,22 +161,22 @@ start_pod() {
         dk)
             pod_name="Denmark"
             env_file="pods/denmark/.env"
-            compose_file="docker-compose.pod.yml"
+            compose_file="../docker-compose.pod.yml"
             ;;
         no)
             pod_name="Norway"
             env_file="pods/norway/.env"
-            compose_file="docker-compose.pod.yml"
+            compose_file="../docker-compose.pod.yml"
             ;;
         se)
             pod_name="Sweden"
             env_file="pods/sweden/.env"
-            compose_file="docker-compose.pod.yml"
+            compose_file="../docker-compose.pod.yml"
             ;;
         eu)
             pod_name="Europe (Multi-Territory)"
             env_file="pods/europe/.env"
-            compose_file="docker-compose.multi-territory-pod.yml"
+            compose_file="../docker-compose.multi-territory-pod.yml"
             ;;
         *)
             echo "❌ Unknown pod: $pod_id"
@@ -191,7 +191,7 @@ start_pod() {
     fi
     
     echo "🚢 Starting Pod: $pod_name ($pod_id)..."
-    docker compose -f $compose_file -p pod-$pod_id --env-file $env_file up -d
+    docker compose -f $compose_file -p pod-$pod_id --env-file ../$env_file up -d
     
     echo "⏳ Waiting for pod to start..."
     sleep 5
@@ -262,10 +262,10 @@ if [ "$START_ALL_PODS" = true ] || [ "$START_FULL" = true ]; then
 fi
 
 echo "View logs:"
-echo "  docker compose -f docker-compose.dev.yml logs -f"
-echo "  docker compose -f docker-compose.pod.yml -p pod-dk logs -f"
+echo "  cd scripts && docker compose -f ../docker-compose.dev.yml logs -f"
+echo "  cd scripts && docker compose -f ../docker-compose.pod.yml -p pod-dk logs -f"
 echo ""
 echo "Stop services:"
-echo "  docker compose -f docker-compose.dev.yml down"
-echo "  docker compose -f docker-compose.pod.yml -p pod-dk down"
+echo "  cd scripts && docker compose -f ../docker-compose.dev.yml down"
+echo "  cd scripts && docker compose -f ../docker-compose.pod.yml -p pod-dk down"
 echo ""
