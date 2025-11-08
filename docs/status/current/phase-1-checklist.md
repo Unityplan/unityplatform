@@ -740,16 +740,12 @@ Each step must be completed before moving to the next dependent step.
   └─ Zero compiler warnings
   └─ All tests use random data for isolation
 
-⬜ Load testing (deferred to production optimization phase)
-  └─ Login endpoint: Target 100 req/s
-  └─ Refresh endpoint: Target 50 req/s
-  └─ Protected endpoints: Target 200 req/s
-  └─ Note: Not critical for MVP launch
-
 ✅ Manual testing
   └─ API tested via curl during development
   └─ All endpoints verified functional
   └─ Error responses validated
+
+Note: Load testing moved to Stage 12 (Testing & Deployment)
 ```
 
 ---
@@ -2569,11 +2565,19 @@ Platform Security Model:
   └─ Enroll in course → Complete lessons → Earn badge
   └─ Upload content to IPFS → Use in course
 
-☐ Load testing
-  └─ Auth service: 100 req/s
-  └─ Course service: 50 req/s
-  └─ Forum service: 50 req/s
+☐ Load testing (consolidated from all stages)
+  └─ Auth service endpoints:
+     └─ Login endpoint: 100 req/s
+     └─ Refresh endpoint: 50 req/s
+     └─ Protected endpoints: 200 req/s
+  └─ User service endpoints: 100 req/s
+  └─ Territory service endpoints: 50 req/s
+  └─ Badge service endpoints: 50 req/s
+  └─ Course service endpoints: 50 req/s
+  └─ Forum service endpoints: 50 req/s
+  └─ IPFS service endpoints: 30 req/s
   └─ Database performance under load
+  └─ WebSocket gateway: 1000 concurrent connections
 
 ☐ Security testing
   └─ SQL injection prevention

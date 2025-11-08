@@ -262,6 +262,8 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ✅ **Clean test isolation (no wildcards, exact ID tracking)**
 - ✅ **Manual testing completed (all endpoints verified via curl)**
 
+**Note:** Load testing moved to Stage 12 (Testing & Deployment)
+
 **Notes:**  
 
 - ✅ **Stage 3 Complete - Production Ready**
@@ -274,7 +276,7 @@ Stage 12: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ✅ Zero compiler warnings, clean codebase
 - ✅ Token refresh and logout endpoints complete
 - ✅ Platform security model: Invitation-only, no public access, authenticated-only
-- ⬜ Load testing deferred to production optimization phase (not MVP-critical)
+- ✅ Load testing moved to Stage 12 for consolidated performance testing
 
 **Blockers:**  
 
