@@ -1,22 +1,35 @@
 # Rust Backend Development Plan
 
 ## Overview
+
 This document outlines the step-by-step plan for building the UnityPlan backend microservices in Rust, following a test-driven, incremental approach.
+
+## ⚠️ Critical Guideline: Database Queries
+
+**ALWAYS use runtime queries for all services due to multi-pod architecture.**
+
+See: [Database Query Patterns](./database-query-patterns.md) for detailed explanation and examples.
+
+**TL;DR:** Use `sqlx::query()` and `sqlx::query_as::<_, Type>()`, NOT `sqlx::query!()` or `sqlx::query_as!()` macros.
 
 ---
 
 ## Phase 2: Database Schema & Migrations (Week 1-2)
 
 ### 2.1 Database Setup
+
 **Goal:** Set up SQLx migrations and core database schema
 
 **Tasks:**
+
 1. **Initialize SQLx CLI**
+
    ```bash
    cargo install sqlx-cli --no-default-features --features postgres
    ```
 
 2. **Create Migrations Directory**
+
    ```bash
    cd services/shared-lib
    sqlx migrate add initial_schema
@@ -31,6 +44,7 @@ This document outlines the step-by-step plan for building the UnityPlan backend 
    - `sessions` - Active user sessions
 
 4. **User Table Schema**
+
    ```sql
    CREATE TABLE users (
        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -51,6 +65,7 @@ This document outlines the step-by-step plan for building the UnityPlan backend 
    ```
 
 5. **Territory & Role Schema**
+
    ```sql
    CREATE TABLE territories (
        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -86,6 +101,7 @@ This document outlines the step-by-step plan for building the UnityPlan backend 
    ```
 
 6. **Session Management**
+
    ```sql
    CREATE TABLE sessions (
        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -103,12 +119,14 @@ This document outlines the step-by-step plan for building the UnityPlan backend 
    ```
 
 7. **Run Migrations**
+
    ```bash
    export DATABASE_URL=postgres://unityplan:unityplan_dev_password_dk@localhost:5432/unityplan_dk
    sqlx migrate run
    ```
 
 **Deliverables:**
+
 - ✅ SQLx migrations in `services/shared-lib/migrations/`
 - ✅ All core tables created
 - ✅ Indexes and foreign keys configured
@@ -119,22 +137,27 @@ This document outlines the step-by-step plan for building the UnityPlan backend 
 ## Phase 3: Authentication Service (Week 2-3)
 
 ### 3.1 Auth Service Setup
+
 **Goal:** Create standalone authentication microservice
 
 **Tasks:**
+
 1. **Create auth-service Crate**
+
    ```bash
    cd services
    cargo new --bin auth-service
    ```
 
 2. **Add to Workspace**
+
    ```toml
    # services/Cargo.toml
    members = ["shared-lib", "auth-service"]
    ```
 
 3. **Configure Dependencies**
+
    ```toml
    # services/auth-service/Cargo.toml
    [dependencies]
@@ -152,14 +175,17 @@ This document outlines the step-by-step plan for building the UnityPlan backend 
    ```
 
 ### 3.2 Domain Models
+
 **Goal:** Define authentication domain types
 
 **Files to Create:**
+
 - `auth-service/src/models/user.rs`
 - `auth-service/src/models/session.rs`
 - `auth-service/src/models/auth.rs`
 
 **User Model:**
+
 ```rust
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -222,6 +248,7 @@ pub struct UserInfo {
 ```
 
 ### 3.3 Password Hashing Service
+
 **Goal:** Secure password handling with Argon2
 
 **File:** `auth-service/src/services/password.rs`
@@ -260,6 +287,7 @@ impl PasswordService {
 ```
 
 ### 3.4 JWT Token Service
+
 **Goal:** JWT generation and validation
 
 **File:** `auth-service/src/services/jwt.rs`
@@ -319,6 +347,7 @@ impl JwtService {
 ```
 
 ### 3.5 User Repository
+
 **Goal:** Database operations for users
 
 **File:** `auth-service/src/repositories/user_repository.rs`
@@ -397,6 +426,7 @@ impl UserRepository {
 ```
 
 ### 3.6 HTTP Handlers
+
 **Goal:** REST API endpoints
 
 **File:** `auth-service/src/handlers/auth_handlers.rs`
@@ -506,6 +536,7 @@ pub async fn get_current_user(
 ```
 
 ### 3.7 Auth Middleware
+
 **Goal:** JWT validation middleware
 
 **File:** `auth-service/src/middleware/auth_middleware.rs`
@@ -587,6 +618,7 @@ where
 ```
 
 ### 3.8 Main Application
+
 **Goal:** Wire everything together
 
 **File:** `auth-service/src/main.rs`
@@ -654,6 +686,7 @@ async fn main() -> std::io::Result<()> {
 ```
 
 **Deliverables:**
+
 - ✅ auth-service compiles and runs
 - ✅ Register endpoint functional
 - ✅ Login endpoint functional
@@ -665,6 +698,7 @@ async fn main() -> std::io::Result<()> {
 ## Phase 4: Dockerization & Deployment (Week 3)
 
 ### 4.1 Create Dockerfile
+
 **Goal:** Containerize auth-service
 
 **File:** `services/auth-service/Dockerfile`
@@ -700,6 +734,7 @@ CMD ["/app/auth-service"]
 ```
 
 ### 4.2 Add to docker-compose
+
 **Goal:** Deploy to Denmark pod
 
 **Update:** `docker-compose.pod.yml`
@@ -738,9 +773,11 @@ CMD ["/app/auth-service"]
 ```
 
 ### 4.3 Update Pod .env
+
 **File:** `pods/denmark/.env`
 
 Add:
+
 ```bash
 # Auth Service
 AUTH_SERVICE_PORT=8001
@@ -748,12 +785,14 @@ JWT_SECRET=your-super-secret-jwt-key-change-in-production
 ```
 
 ### 4.4 Deploy & Test
+
 ```bash
 cd /home/henrik/code/data/projects/unityplan_platform/workspace
 docker compose -f docker-compose.pod.yml -p pod-dk --env-file pods/denmark/.env up -d --build auth-service
 ```
 
 **Test Registration:**
+
 ```bash
 curl -X POST http://localhost:8001/api/auth/register \
   -H "Content-Type: application/json" \
@@ -766,6 +805,7 @@ curl -X POST http://localhost:8001/api/auth/register \
 ```
 
 **Test Login:**
+
 ```bash
 curl -X POST http://localhost:8001/api/auth/login \
   -H "Content-Type: application/json" \
@@ -780,6 +820,7 @@ curl -X POST http://localhost:8001/api/auth/login \
 ## Testing Strategy
 
 ### Unit Tests
+
 ```rust
 #[cfg(test)]
 mod tests {
@@ -806,6 +847,7 @@ mod tests {
 ```
 
 ### Integration Tests
+
 ```rust
 #[cfg(test)]
 mod integration_tests {
@@ -836,6 +878,7 @@ mod integration_tests {
 ## Metrics & Monitoring
 
 ### Add Prometheus Metrics
+
 **File:** `auth-service/src/metrics.rs`
 
 ```rust
@@ -862,6 +905,7 @@ lazy_static! {
 ```
 
 Add metrics endpoint:
+
 ```rust
 use actix_web::{HttpResponse, web};
 use prometheus::{Encoder, TextEncoder};
@@ -883,23 +927,27 @@ async fn metrics() -> HttpResponse {
 ## Summary Timeline
 
 **Week 1:**
+
 - Database schema design
 - SQLx migrations
 - Initial table creation
 
 **Week 2:**
+
 - Auth service structure
 - Password & JWT services
 - User repository
 - HTTP handlers
 
 **Week 3:**
+
 - Dockerization
 - Deployment to Denmark pod
 - Testing & validation
 - Monitoring setup
 
 **Next Steps:**
+
 - User service (profiles, preferences)
 - Territory service
 - Badge service
