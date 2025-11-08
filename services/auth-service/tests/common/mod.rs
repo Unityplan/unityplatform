@@ -22,7 +22,16 @@ pub struct TestContext {
 impl TestContext {
     /// Create new test context and set up test data
     pub async fn new() -> Self {
-        let pool = get_test_pool().await;
+        dotenvy::dotenv().ok();
+        let database_url = std::env::var("DATABASE_URL")
+            .expect("DATABASE_URL must be set for tests");
+
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(5)
+            .connect(&database_url)
+            .await
+            .expect("Failed to connect to test database");
+        
         setup_test_data(&pool).await;
 
         Self {
@@ -150,24 +159,10 @@ impl TestContext {
 }
 
 // ============================================================================
-// DEPRECATED FUNCTIONS - DO NOT USE IN NEW TESTS
-// These are kept temporarily for reference but should not be used.
-// All new tests MUST use TestContext pattern.
+// Internal helper functions used by TestContext
 // ============================================================================
 
-#[deprecated(note = "Use TestContext::new() instead")]
-pub async fn get_test_pool() -> PgPool {
-    dotenvy::dotenv().ok();
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set for tests");
-
-    sqlx::postgres::PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&database_url)
-        .await
-        .expect("Failed to connect to test database")
-}
-
-pub fn create_token_service() -> Arc<TokenService> {
+fn create_token_service() -> Arc<TokenService> {
     Arc::new(TokenService::new(
         "test_secret_key_for_jwt_tokens_12345",
         900,    // 15 minutes access token
@@ -175,7 +170,7 @@ pub fn create_token_service() -> Arc<TokenService> {
     ))
 }
 
-pub async fn setup_test_data(pool: &PgPool) {
+async fn setup_test_data(pool: &PgPool) {
     // Ensure Denmark territory exists
     sqlx::query(
         r#"
@@ -189,92 +184,12 @@ pub async fn setup_test_data(pool: &PgPool) {
     .expect("Failed to insert test territory");
 }
 
-#[deprecated(note = "DO NOT USE - Uses wildcard cleanup which causes race conditions. Use TestContext::cleanup() instead")]
-pub async fn cleanup_test_data(pool: &PgPool) {
-    // ⚠️ WARNING: This function uses WILDCARD patterns which delete data from ALL tests!
-    // This causes race conditions in parallel test execution.
-    // Use TestContext::cleanup() instead, which tracks and deletes exact IDs only.
-    
-    // 1. Clean up test invitation uses FIRST (before users are deleted)
-    sqlx::query("DELETE FROM territory_dk.invitation_uses WHERE used_by_user_id IN (SELECT id FROM territory_dk.users WHERE email LIKE '%@test.dk' OR username LIKE 'testuser_%' OR username LIKE 'newuser_%')")
-        .execute(pool)
-        .await
-        .ok();
-
-    // 2. Clean up test users (this will cascade to user_identities via FK)
-    // Catches: email patterns, testuser_ prefix (from helpers), newuser_ prefix (from register tests)
-    sqlx::query("DELETE FROM territory_dk.users WHERE email LIKE '%@test.dk' OR username LIKE 'testuser_%' OR username LIKE 'newuser_%'")
-        .execute(pool)
-        .await
-        .ok();
-
-    // 3. Clean up orphaned global identities (case-insensitive territory match)
-    sqlx::query("DELETE FROM global.user_identities WHERE LOWER(territory_code) = 'dk' AND territory_user_id NOT IN (SELECT id FROM territory_dk.users)")
-        .execute(pool)
-        .await
-        .ok();
-
-    // 4. Clean up test invitations LAST (after dependencies are cleaned)
-    // Catches: test_ token prefix, @test.dk emails, invited_ emails
-    sqlx::query("DELETE FROM territory_dk.invitation_tokens WHERE invited_email LIKE '%@test.dk' OR token LIKE 'test_%' OR invited_email LIKE 'invited_%@test.dk'")
-        .execute(pool)
-        .await
-        .ok();
-}
-
 // ============================================================================
-// END DEPRECATED FUNCTIONS
+// Helper functions for creating test data (used by TestContext methods)
 // ============================================================================
-
-/// Create a test invitation token
-pub async fn create_test_invitation(pool: &PgPool, schema: &str) -> String {
-    create_test_invitation_for_email(pool, schema, None).await
-}
-
-/// Create a test invitation token for a specific email (or NULL for any email)
-pub async fn create_test_invitation_for_email(
-    pool: &PgPool,
-    schema: &str,
-    email: Option<String>,
-) -> String {
-    let unique_id = Uuid::new_v4().to_string().replace("-", "");
-    let token = format!("test_invite_{}", unique_id);
-    let expires_at = Utc::now() + Duration::days(7);
-
-    // Use 'group' token type with NULL email to allow any email to register
-    let (token_type, max_uses) = if email.is_none() {
-        ("group", Some(10)) // Group invitation allows multiple uses
-    } else {
-        ("single_use", Some(1))
-    };
-
-    sqlx::query(&format!(
-        r#"
-        INSERT INTO {}.invitation_tokens 
-        (token, token_type, invited_email, max_uses, current_uses, expires_at, is_active)
-        VALUES ($1, $2, $3, $4, 0, $5, true)
-        "#,
-        schema
-    ))
-    .bind(&token)
-    .bind(token_type)
-    .bind(&email)
-    .bind(max_uses)
-    .bind(expires_at)
-    .execute(pool)
-    .await
-    .expect("Failed to create test invitation");
-
-    token
-}
-
-/// Create a test invitation token and return its UUID
-pub async fn create_test_invitation_with_id(pool: &PgPool, schema: &str) -> (Uuid, String) {
-    create_test_invitation_with_id_and_user(pool, schema, None).await
-}
 
 /// Create a test invitation token for specific email and return its UUID
-pub async fn create_test_invitation_with_id_for_email(
+async fn create_test_invitation_with_id_for_email(
     pool: &PgPool,
     schema: &str,
     email: Option<String>,
@@ -312,7 +227,7 @@ pub async fn create_test_invitation_with_id_for_email(
 }
 
 /// Create a test invitation token with optional user_id and return its UUID
-pub async fn create_test_invitation_with_id_and_user(
+async fn create_test_invitation_with_id_and_user(
     pool: &PgPool,
     schema: &str,
     created_by_user_id: Option<Uuid>,
@@ -342,14 +257,8 @@ pub async fn create_test_invitation_with_id_and_user(
     (id, token)
 }
 
-/// Create an expired invitation token
-pub async fn create_expired_invitation(pool: &PgPool, schema: &str) -> String {
-    let (_, token) = create_expired_invitation_with_id(pool, schema).await;
-    token
-}
-
 /// Create an expired invitation token and return its UUID
-pub async fn create_expired_invitation_with_id(pool: &PgPool, schema: &str) -> (Uuid, String) {
+async fn create_expired_invitation_with_id(pool: &PgPool, schema: &str) -> (Uuid, String) {
     let unique_id = Uuid::new_v4().to_string().replace("-", "");
     let token = format!("test_expired_{}", unique_id);
     let expires_at = Utc::now() - Duration::days(1); // Already expired
@@ -373,14 +282,8 @@ pub async fn create_expired_invitation_with_id(pool: &PgPool, schema: &str) -> (
     (id, token)
 }
 
-/// Create a test user and return (username, password, optional email)
-pub async fn create_test_user(pool: &PgPool, schema: &str) -> (String, String, Option<String>) {
-    let (_, username, password, email) = create_test_user_with_id(pool, schema).await;
-    (username, password, email)
-}
-
 /// Create a test user and return (user_id, username, password, optional email)
-pub async fn create_test_user_with_id(
+async fn create_test_user_with_id(
     pool: &PgPool,
     schema: &str,
 ) -> (Uuid, String, String, Option<String>) {
@@ -427,14 +330,8 @@ pub async fn create_test_user_with_id(
     (territory_user_id, username, password.to_string(), email)
 }
 
-/// Create a maxed-out invitation (all uses consumed)
-pub async fn create_maxed_invitation(pool: &PgPool, schema: &str) -> String {
-    let (_, token) = create_maxed_invitation_with_id(pool, schema).await;
-    token
-}
-
 /// Create a maxed-out invitation and return its UUID
-pub async fn create_maxed_invitation_with_id(pool: &PgPool, schema: &str) -> (Uuid, String) {
+async fn create_maxed_invitation_with_id(pool: &PgPool, schema: &str) -> (Uuid, String) {
     let token = format!("test_maxed_{}", Uuid::new_v4().to_string().replace("-", ""));
     let expires_at = Utc::now() + Duration::days(7);
 
@@ -456,14 +353,8 @@ pub async fn create_maxed_invitation_with_id(pool: &PgPool, schema: &str) -> (Uu
     (id, token)
 }
 
-/// Create a revoked invitation token
-pub async fn create_revoked_invitation(pool: &PgPool, schema: &str) -> String {
-    let (_, token) = create_revoked_invitation_with_id(pool, schema).await;
-    token
-}
-
 /// Create a revoked invitation token and return its UUID
-pub async fn create_revoked_invitation_with_id(pool: &PgPool, schema: &str) -> (Uuid, String) {
+async fn create_revoked_invitation_with_id(pool: &PgPool, schema: &str) -> (Uuid, String) {
     let unique_id = Uuid::new_v4().to_string().replace("-", "");
     let token = format!("test_revoked_{}", unique_id);
     let invited_email = format!("revoked_{}@test.dk", &unique_id[..8]);

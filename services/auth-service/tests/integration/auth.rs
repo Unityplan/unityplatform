@@ -65,7 +65,7 @@ async fn test_register_success() {
 
 #[actix_web::test]
 async fn test_register_invalid_invitation() {
-    let mut ctx = TestContext::new().await;
+    let ctx = TestContext::new().await;
 
     let app = test::init_service(
         App::new()
@@ -229,7 +229,7 @@ async fn test_login_wrong_password() {
 
 #[actix_web::test]
 async fn test_login_nonexistent_user() {
-    let mut ctx = TestContext::new().await;
+    let ctx = TestContext::new().await;
 
     let app = test::init_service(
         App::new()
@@ -319,7 +319,7 @@ async fn test_refresh_token_success() {
 
 #[actix_web::test]
 async fn test_refresh_token_invalid() {
-    let mut ctx = TestContext::new().await;
+    let ctx = TestContext::new().await;
 
     let app = test::init_service(
         App::new()

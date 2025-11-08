@@ -89,7 +89,7 @@ async fn test_create_invitation_authenticated() {
 
 #[actix_web::test]
 async fn test_create_invitation_unauthenticated() {
-    let mut ctx = TestContext::new().await;
+    let ctx = TestContext::new().await;
     
 
     
