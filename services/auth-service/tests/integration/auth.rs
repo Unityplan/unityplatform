@@ -396,3 +396,107 @@ async fn test_logout() {
 
     ctx.cleanup().await;
 }
+
+#[actix_web::test]
+async fn test_me_endpoint() {
+    let mut ctx = TestContext::new().await;
+
+    // Create a user and log them in
+    let (user_id, username, password, email) = ctx.create_user().await;
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(ctx.pool.clone()))
+            .app_data(web::Data::from(ctx.token_service.clone()))
+            .route(
+                "/api/auth/login",
+                web::post().to(auth_service::handlers::auth::login),
+            )
+            .service(
+                web::scope("")
+                    .wrap(auth_service::middleware::JwtAuth)
+                    .route("/api/auth/me", web::get().to(auth_service::handlers::auth::me)),
+            ),
+    )
+    .await;
+
+    // Login to get access token
+    let login_req = json!({
+        "username": username,
+        "password": password,
+        "territory_code": "dk"
+    });
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/login")
+        .set_json(&login_req)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200, "Login should succeed");
+
+    let body: serde_json::Value = test::read_body_json(resp).await;
+    let access_token = body["access_token"].as_str().unwrap().to_string();
+
+    // Call /me endpoint with JWT
+    let req = test::TestRequest::get()
+        .uri("/api/auth/me")
+        .insert_header(("Authorization", format!("Bearer {}", access_token)))
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200, "Should get user info");
+
+    let me_data: serde_json::Value = test::read_body_json(resp).await;
+    assert_eq!(me_data["id"], user_id.to_string());
+    assert_eq!(me_data["username"], username);
+    
+    // Email is optional - check if it exists in response
+    if let Some(email_val) = email {
+        assert_eq!(me_data["email"], email_val);
+    } else {
+        assert!(me_data["email"].is_null(), "Email should be null when not provided");
+    }
+    
+    assert_eq!(me_data["territory_code"], "dk");
+
+    ctx.cleanup().await;
+}
+
+#[actix_web::test]
+async fn test_me_endpoint_unauthenticated() {
+    let ctx = TestContext::new().await;
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(ctx.pool.clone()))
+            .app_data(web::Data::from(ctx.token_service.clone()))
+            .service(
+                web::scope("")
+                    .wrap(auth_service::middleware::JwtAuth)
+                    .route("/api/auth/me", web::get().to(auth_service::handlers::auth::me)),
+            ),
+    )
+    .await;
+
+    // Call /me without JWT - expect middleware to reject
+    let req = test::TestRequest::get()
+        .uri("/api/auth/me")
+        .to_request();
+
+    // The middleware returns an error response, not a service response
+    // We need to use try_call_service to handle the error case
+    let resp = test::try_call_service(&app, req).await;
+    
+    match resp {
+        Ok(resp) => {
+            assert_eq!(resp.status(), 401, "Should reject unauthenticated request");
+        }
+        Err(_) => {
+            // If middleware returns an error, that's also expected behavior
+            // The important thing is that the request is rejected
+        }
+    }
+
+    ctx.cleanup().await;
+}

@@ -5,8 +5,8 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 // Territory schema name - configurable for single-territory vs multi-territory pods
-const TERRITORY_SCHEMA: &str = "territory";  // For single-territory pods (default)
-// For multi-territory pods, use: "territory_dk", "territory_no", etc.
+const TERRITORY_SCHEMA: &str = "territory"; // For single-territory pods (default)
+                                            // For multi-territory pods, use: "territory_dk", "territory_no", etc.
 
 /// TestContext tracks all data created during a test and ensures precise cleanup.
 ///
@@ -56,22 +56,12 @@ impl TestContext {
 
     /// Create a simple test invitation (wrapper for convenience)
     pub async fn create_invitation(&mut self) -> String {
-        self.create_invitation_for_email(None).await
-    }
-
-    /// Create a test invitation for a specific user and track it for cleanup
-    pub async fn create_invitation_for_user(
-        &mut self,
-        user_id: Uuid,
-    ) -> (Uuid, String) {
-        let (inv_id, token) =
-            create_test_invitation_with_id_and_user(&self.pool, TERRITORY_SCHEMA, Some(user_id))
-                .await;
+        let (inv_id, token) = create_test_invitation_with_id_for_email(&self.pool, TERRITORY_SCHEMA, None).await;
         
         // Track this invitation for precise cleanup
         self.created_invitations.push(inv_id);
         
-        (inv_id, token)
+        token
     }
 
     /// Create a test invitation with specific email and track its ID
@@ -131,29 +121,38 @@ impl TestContext {
     pub async fn cleanup(self) {
         // 1. Delete invitation uses for tracked users
         for user_id in &self.created_users {
-            sqlx::query(&format!("DELETE FROM {}.invitation_uses WHERE used_by_user_id = $1", TERRITORY_SCHEMA))
-                .bind(user_id)
-                .execute(&self.pool)
-                .await
-                .ok();
+            sqlx::query(&format!(
+                "DELETE FROM {}.invitation_uses WHERE used_by_user_id = $1",
+                TERRITORY_SCHEMA
+            ))
+            .bind(user_id)
+            .execute(&self.pool)
+            .await
+            .ok();
         }
 
         // 2. Delete tracked invitations by exact ID
         for inv_id in &self.created_invitations {
-            sqlx::query(&format!("DELETE FROM {}.invitation_tokens WHERE id = $1", TERRITORY_SCHEMA))
-                .bind(inv_id)
-                .execute(&self.pool)
-                .await
-                .ok();
+            sqlx::query(&format!(
+                "DELETE FROM {}.invitation_tokens WHERE id = $1",
+                TERRITORY_SCHEMA
+            ))
+            .bind(inv_id)
+            .execute(&self.pool)
+            .await
+            .ok();
         }
 
         // 3. Delete tracked users by exact ID (cascades to user_identities)
         for user_id in &self.created_users {
-            sqlx::query(&format!("DELETE FROM {}.users WHERE id = $1", TERRITORY_SCHEMA))
-                .bind(user_id)
-                .execute(&self.pool)
-                .await
-                .ok();
+            sqlx::query(&format!(
+                "DELETE FROM {}.users WHERE id = $1",
+                TERRITORY_SCHEMA
+            ))
+            .bind(user_id)
+            .execute(&self.pool)
+            .await
+            .ok();
         }
 
         // 4. Clean up any orphaned global identities
