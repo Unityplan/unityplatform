@@ -5,16 +5,16 @@ use crate::common::*;
 
 #[actix_web::test]
 async fn test_create_invitation_authenticated() {
-    let mut ctx = TestContext::new().await;
-    
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
 
-    let (_user_id, username, password, _email) = ctx.create_user().await;
-    
+    let (username, password, _email) = create_test_user(&pool, "territory_dk").await;
+    let token_service = create_token_service();
 
     let app = test::init_service(
         App::new()
-            .app_data(web::Data::new(ctx.pool.clone()))
-            .app_data(web::Data::from(ctx.token_service.clone()))
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
             .service(
                 web::scope("/api/auth")
                     .route(
@@ -84,20 +84,20 @@ async fn test_create_invitation_authenticated() {
     let body: serde_json::Value = test::read_body_json(resp).await;
     assert!(body["token"].is_string(), "Should return invitation token");
 
-    ctx.cleanup().await;
+    cleanup_test_data(&pool).await;
 }
 
 #[actix_web::test]
 async fn test_create_invitation_unauthenticated() {
-    let mut ctx = TestContext::new().await;
-    
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
 
-    
+    let token_service = create_token_service();
 
     let app = test::init_service(
         App::new()
-            .app_data(web::Data::new(ctx.pool.clone()))
-            .app_data(web::Data::from(ctx.token_service.clone()))
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
             .route(
                 "/api/auth/invitations",
                 web::post().to(auth_service::handlers::invitation::create_invitation),
@@ -121,22 +121,22 @@ async fn test_create_invitation_unauthenticated() {
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 401, "Should require authentication");
 
-    ctx.cleanup().await;
+    cleanup_test_data(&pool).await;
 }
 
 #[actix_web::test]
 async fn test_list_user_invitations() {
-    let mut ctx = TestContext::new().await;
-    
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
 
     let (user_id, username, password, _email) =
-        ctx.create_user().await;
-    
+        create_test_user_with_id(&pool, "territory_dk").await;
+    let token_service = create_token_service();
 
     let app = test::init_service(
         App::new()
-            .app_data(web::Data::new(ctx.pool.clone()))
-            .app_data(web::Data::from(ctx.token_service.clone()))
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
             .service(
                 web::scope("/api/auth")
                     .route(
@@ -156,8 +156,8 @@ async fn test_list_user_invitations() {
     .await;
 
     // Create some test invitations owned by this user
-    ctx.create_invitation_with_user(user_id).await;
-    ctx.create_invitation_with_user(user_id).await;
+    create_test_invitation_with_id_and_user(&pool, "territory_dk", Some(user_id)).await;
+    create_test_invitation_with_id_and_user(&pool, "territory_dk", Some(user_id)).await;
 
     // Login
     let login_req = json!({
@@ -187,24 +187,24 @@ async fn test_list_user_invitations() {
     let body: serde_json::Value = test::read_body_json(resp).await;
     assert!(body.is_array(), "Should return array of invitations");
 
-    ctx.cleanup().await;
+    cleanup_test_data(&pool).await;
 }
 
 #[actix_web::test]
 async fn test_revoke_invitation() {
-    let mut ctx = TestContext::new().await;
-    
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
 
     let (user_id, username, password, _email) =
-        ctx.create_user().await;
-    
+        create_test_user_with_id(&pool, "territory_dk").await;
+    let token_service = create_token_service();
     let (invitation_id, invitation_token) =
-        ctx.create_invitation_with_user(user_id).await;
+        create_test_invitation_with_id_and_user(&pool, "territory_dk", Some(user_id)).await;
 
     let app = test::init_service(
         App::new()
-            .app_data(web::Data::new(ctx.pool.clone()))
-            .app_data(web::Data::from(ctx.token_service.clone()))
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
             .service(
                 web::scope("/api/auth")
                     .route(
@@ -254,7 +254,7 @@ async fn test_revoke_invitation() {
         "SELECT is_active FROM territory_dk.invitation_tokens WHERE token = $1",
     )
     .bind(&invitation_token)
-    .fetch_one(&ctx.pool)
+    .fetch_one(&pool)
     .await
     .expect("Should fetch revocation status");
 
@@ -263,21 +263,21 @@ async fn test_revoke_invitation() {
         "Invitation should be marked as inactive (revoked)"
     );
 
-    ctx.cleanup().await;
+    cleanup_test_data(&pool).await;
 }
 
 #[actix_web::test]
 async fn test_validate_invitation_maxed_out() {
-    let mut ctx = TestContext::new().await;
-    
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
 
-    
-    let invitation_token = ctx.create_maxed_invitation().await;
+    let token_service = create_token_service();
+    let invitation_token = create_maxed_invitation(&pool, "territory_dk").await;
 
     let app = test::init_service(
         App::new()
-            .app_data(web::Data::new(ctx.pool.clone()))
-            .app_data(web::Data::from(ctx.token_service.clone()))
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
             .route(
                 "/api/auth/invitations/validate/{token}",
                 web::get().to(auth_service::handlers::invitation::validate_invitation),
@@ -295,21 +295,21 @@ async fn test_validate_invitation_maxed_out() {
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 400, "Should reject maxed out invitation");
 
-    ctx.cleanup().await;
+    cleanup_test_data(&pool).await;
 }
 
 #[actix_web::test]
 async fn test_validate_invitation_revoked() {
-    let mut ctx = TestContext::new().await;
-    
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
 
-    
-    let invitation_token = ctx.create_revoked_invitation().await;
+    let token_service = create_token_service();
+    let invitation_token = create_revoked_invitation(&pool, "territory_dk").await;
 
     let app = test::init_service(
         App::new()
-            .app_data(web::Data::new(ctx.pool.clone()))
-            .app_data(web::Data::from(ctx.token_service.clone()))
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
             .route(
                 "/api/auth/invitations/validate/{token}",
                 web::get().to(auth_service::handlers::invitation::validate_invitation),
@@ -327,26 +327,26 @@ async fn test_validate_invitation_revoked() {
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 400, "Should reject revoked invitation");
 
-    ctx.cleanup().await;
+    cleanup_test_data(&pool).await;
 }
 
 #[actix_web::test]
 async fn test_invitation_email_mismatch() {
-    let mut ctx = TestContext::new().await;
-    
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
 
-    
+    let token_service = create_token_service();
 
     // Create invitation for a specific email to test mismatch validation
     let unique_id = uuid::Uuid::new_v4().to_string()[..8].to_string();
     let invited_email = format!("invited_{}@test.dk", unique_id);
     let invitation_token =
-        ctx.create_invitation_for_email(Some(invited_email)).await;
+        create_test_invitation_for_email(&pool, "territory_dk", Some(invited_email)).await;
 
     let app = test::init_service(
         App::new()
-            .app_data(web::Data::new(ctx.pool.clone()))
-            .app_data(web::Data::from(ctx.token_service.clone()))
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
             .route(
                 "/api/auth/register",
                 web::post().to(auth_service::handlers::auth::register),
@@ -373,5 +373,5 @@ async fn test_invitation_email_mismatch() {
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 400, "Should reject email mismatch");
 
-    ctx.cleanup().await;
+    cleanup_test_data(&pool).await;
 }

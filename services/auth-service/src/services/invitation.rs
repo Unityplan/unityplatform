@@ -35,7 +35,7 @@ pub async fn validate_invitation_token(
         r#"
         SELECT 
             id, token, token_type, created_by_user_id,
-            invited_email, community_id, role,
+            invited_email, invited_username, community_id, role,
             max_uses, current_uses,
             expires_at, is_active,
             created_at, updated_at
@@ -198,11 +198,11 @@ pub async fn create_invitation_token(
     let insert_query = format!(
         r#"
         INSERT INTO {}.invitation_tokens 
-            (id, token, token_type, invited_email, max_uses, current_uses, expires_at, is_active, created_by_user_id)
-        VALUES ($1, $2, $3, $4, $5, 0, $6, true, $7)
+            (id, token, token_type, invited_email, invited_username, max_uses, current_uses, expires_at, is_active, created_by_user_id)
+        VALUES ($1, $2, $3, $4, NULL, $5, 0, $6, true, $7)
         RETURNING 
             id, token, token_type, created_by_user_id,
-            invited_email, community_id, role,
+            invited_email, invited_username, community_id, role,
             max_uses, current_uses,
             expires_at, is_active,
             created_at, updated_at
@@ -238,7 +238,7 @@ pub async fn list_user_invitations(
         r#"
         SELECT 
             id, token, token_type, created_by_user_id,
-            invited_email, community_id, role,
+            invited_email, invited_username, community_id, role,
             max_uses, current_uses,
             expires_at, is_active,
             created_at, updated_at

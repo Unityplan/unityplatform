@@ -15,8 +15,10 @@ use std::{
 #[derive(Debug, Clone)]
 pub struct AuthenticatedUser {
     pub user_id: uuid::Uuid,
+    #[allow(dead_code)] // Will be used when implementing user profile endpoints
     pub username: String,
     pub territory_code: String,
+    #[allow(dead_code)] // Will be used when implementing Holochain integration
     pub public_key_hash: String,
 }
 

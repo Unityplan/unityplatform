@@ -14,8 +14,9 @@ pub struct InvitationToken {
     // Creator and context
     pub created_by_user_id: Option<Uuid>, // NULL for bootstrap tokens
 
-    // Restrictions
-    pub invited_email: Option<String>,
+    // Restrictions - optional targeting
+    pub invited_email: Option<String>, // Email-targeted invitation
+    pub invited_username: Option<String>, // Username-targeted invitation
     pub community_id: Option<Uuid>,
     pub role: Option<String>,
     pub max_uses: Option<i32>,
@@ -94,16 +95,17 @@ impl From<InvitationToken> for InvitationResponse {
     }
 }
 
-/// Public invitation validation response (no sensitive data)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InvitationValidationResponse {
-    pub valid: bool,
-    pub token_type: Option<String>,
-    pub email: Option<String>, // Only for single_use tokens
-    pub expires_at: Option<DateTime<Utc>>,
-    pub uses_remaining: Option<i32>,
-    pub error: Option<String>,
-}
+// Unused - commenting out for future use
+// /// Public invitation validation response (no sensitive data)
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct InvitationValidationResponse {
+//     pub valid: bool,
+//     pub token_type: Option<String>,
+//     pub email: Option<String>, // Only for single_use tokens
+//     pub expires_at: Option<DateTime<Utc>>,
+//     pub uses_remaining: Option<i32>,
+//     pub error: Option<String>,
+// }
 
 /// Custom validation for token_type
 fn validate_token_type(token_type: &str) -> Result<(), validator::ValidationError> {

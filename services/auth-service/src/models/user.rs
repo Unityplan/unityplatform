@@ -10,7 +10,7 @@ pub struct User {
     pub id: Uuid,
 
     // Current authentication
-    pub email: String,
+    pub email: Option<String>, // Optional - privacy-first, not required for registration
     #[serde(skip_serializing)]
     pub password_hash: String,
 
@@ -42,32 +42,33 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
 }
 
-/// Public user info (safe to share across territories)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PublicUserInfo {
-    pub username: String,
-    pub display_name: Option<String>,
-    pub avatar_url: Option<String>,
-    pub bio: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub email: Option<String>, // Only if email_visible = true
-}
-
-impl From<User> for PublicUserInfo {
-    fn from(user: User) -> Self {
-        Self {
-            username: user.username,
-            display_name: user.display_name,
-            avatar_url: user.avatar_url,
-            bio: user.bio,
-            email: if user.profile_visibility == Some("public".to_string()) {
-                Some(user.email)
-            } else {
-                None
-            },
-        }
-    }
-}
+// Unused - commenting out for future use
+// /// Public user info (safe to share across territories)
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct PublicUserInfo {
+//     pub username: String,
+//     pub display_name: Option<String>,
+//     pub avatar_url: Option<String>,
+//     pub bio: Option<String>,
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     pub email: Option<String>, // Only if email_visible = true
+// }
+//
+// impl From<User> for PublicUserInfo {
+//     fn from(user: User) -> Self {
+//         Self {
+//             username: user.username,
+//             display_name: user.display_name,
+//             avatar_url: user.avatar_url,
+//             bio: user.bio,
+//             email: if user.profile_visibility == Some("public".to_string()) {
+//                 user.email // Already Option<String>
+//             } else {
+//                 None
+//             },
+//         }
+//     }
+// }
 
 /// User info returned after authentication
 #[derive(Debug, Serialize, Deserialize)]
@@ -85,7 +86,7 @@ impl From<User> for AuthUserInfo {
         Self {
             id: user.id,
             username: user.username,
-            email: Some(user.email),
+            email: user.email, // Already Option<String>
             display_name: user.display_name,
             avatar_url: user.avatar_url,
             is_verified: user.is_verified,

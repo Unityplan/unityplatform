@@ -1,6 +1,7 @@
 # Testing Best Practices - Auth Service
 
 ## Overview
+
 This document outlines critical testing principles discovered during auth-service development, particularly regarding integration testing with middleware.
 
 **Last Updated:** 2025-11-08  
@@ -13,6 +14,7 @@ This document outlines critical testing principles discovered during auth-servic
 ### The Middleware Problem
 
 **❌ WRONG - Testing Without Middleware:**
+
 ```rust
 // This tests a configuration that doesn't exist in production
 let app = test::init_service(
@@ -26,6 +28,7 @@ let app = test::init_service(
 ```
 
 **Issues:**
+
 - No JWT middleware runs
 - Authentication flow is bypassed
 - `get_authenticated_user(&req)` fails with 401
@@ -33,6 +36,7 @@ let app = test::init_service(
 - Tests don't validate security model
 
 **✅ CORRECT - Testing With Middleware:**
+
 ```rust
 // This mirrors the exact production configuration
 let app = test::init_service(
@@ -53,6 +57,7 @@ let app = test::init_service(
 ```
 
 **Benefits:**
+
 - JWT validation runs like production
 - Invalid/expired tokens are rejected
 - Request extensions properly populated
@@ -73,6 +78,7 @@ let app = test::init_service(
    - Loads user from database
    - Fetches public_key_hash from global.user_identities
 3. **Middleware populates request extensions:**
+
    ```rust
    req.extensions_mut().insert(AuthenticatedUser {
        user_id: user.id,
@@ -81,7 +87,9 @@ let app = test::init_service(
        public_key_hash,
    });
    ```
+
 4. **Handler executes:**
+
    ```rust
    pub async fn create_invitation(req: HttpRequest, ...) -> Result<HttpResponse> {
        let auth_user = get_authenticated_user(&req)?;  // ✅ Data is there
@@ -92,6 +100,7 @@ let app = test::init_service(
 ### Test Flow (With Middleware)
 
 Same as production! The test:
+
 1. Logs in to get a real JWT token
 2. Sends request with `Authorization: Bearer <token>` header
 3. Middleware validates token and populates request
@@ -101,6 +110,7 @@ Same as production! The test:
 ### Test Flow (Without Middleware)
 
 **Broken flow:**
+
 1. Test sends request with bearer token
 2. No middleware runs - request goes directly to handler
 3. Handler calls `get_authenticated_user(&req)`
@@ -182,6 +192,7 @@ let app = test::init_service(
 Auth service uses a dual-schema pattern:
 
 **Global Schema (`global`):**
+
 - `territories` - Territory definitions
 - `user_identities` - Cross-territory user identity
   - `public_key_hash` - User's cryptographic identity
@@ -191,6 +202,7 @@ Auth service uses a dual-schema pattern:
   - `user_id` FK → `global.user_identities.id`
 
 **Territory Schemas (`territory_dk`, `territory_no`, etc.):**
+
 - `users` - Territory-specific user data
   - Profile information
   - Authentication credentials
@@ -201,17 +213,20 @@ Auth service uses a dual-schema pattern:
 ### Handler Pattern
 
 **Registration Flow:**
+
 1. Create user in territory schema
 2. Create identity in global schema with `public_key_hash`
 3. Create session in global.sessions
 
 **Login Flow:**
+
 1. Validate credentials against territory user
 2. Fetch `public_key_hash` from global.user_identities
 3. Generate JWT with both territory and global data
 4. Store session in global.sessions
 
 **Token Refresh:**
+
 1. Validate refresh token from global.sessions
 2. Fetch user from global.user_identities
 3. Load territory user data
@@ -330,9 +345,165 @@ async fn cleanup_test_data(pool: &PgPool) {
 
 ---
 
+## 🚨 CRITICAL: Test Data Tracking and Cleanup
+
+**Updated:** 2025-11-08 - **MANDATORY for all new tests**
+
+### The ONE RULE: Never Use Wildcard Cleanup
+
+❌ **FORBIDDEN - Causes Race Conditions:**
+
+```rust
+// DELETE ALL test data (affects other parallel tests!)
+sqlx::query("DELETE FROM users WHERE email LIKE '%@test.dk'")
+    .execute(pool)
+    .await;
+```
+
+✅ **MANDATORY - Track and Delete Exact Data:**
+
+```rust
+// DELETE ONLY data this specific test created
+sqlx::query("DELETE FROM users WHERE id = $1")
+    .bind(user_id)  // Exact ID we tracked
+    .execute(pool)
+    .await;
+```
+
+### Why This Matters
+
+**Problem**: Wildcard patterns in cleanup delete data from ALL running tests:
+
+```
+Timeline (Parallel Execution):
+──────────────────────────────────────────────────────────
+0.0s   Test A: Creates user_a (email: uuid-123@test.dk)
+0.1s   Test B: Creates user_b (email: uuid-456@test.dk)
+0.2s   Test A: Finishes, runs cleanup
+       → DELETE FROM users WHERE email LIKE '%@test.dk'
+       → Deletes BOTH user_a AND user_b! ❌
+0.3s   Test B: Tries to use user_b → FAILS (deleted!)
+```
+
+**Solution**: Track exact IDs and delete only your test's data:
+
+```
+Timeline (With Tracking):
+──────────────────────────────────────────────────────────
+0.0s   Test A: Creates user_a, tracks uuid-123
+0.1s   Test B: Creates user_b, tracks uuid-456
+0.2s   Test A: Finishes, cleanup
+       → DELETE FROM users WHERE id = 'uuid-123'
+       → Deletes ONLY user_a ✅
+0.3s   Test B: Uses user_b → WORKS! ✅
+```
+
+### Mandatory Pattern: TestContext
+
+**ALL tests MUST use TestContext:**
+
+```rust
+#[actix_web::test]
+async fn test_login() {
+    // ✅ CORRECT: Use TestContext
+    let mut ctx = TestContext::new().await;
+    
+    // Create data - automatically tracked
+    let (_user_id, username, password, _) = ctx.create_user().await;
+    
+    // ... test logic ...
+    
+    // Cleanup ONLY this test's data
+    ctx.cleanup().await;
+}
+```
+
+### TestContext API
+
+| Method | Purpose | Returns |
+|--------|---------|---------|
+| `TestContext::new()` | Initialize with pool and token service | `TestContext` |
+| `ctx.create_user()` | Create and track user | `(user_id, username, password, email)` |
+| `ctx.create_invitation()` | Create invitation (any email) | `token` |
+| `ctx.create_invitation_for_email(email)` | For specific email | `token` |
+| `ctx.create_invitation_with_user(user_id)` | Owned by user | `(inv_id, token)` |
+| `ctx.create_expired_invitation()` | Expired invitation | `token` |
+| `ctx.create_maxed_invitation()` | Maxed-out invitation | `token` |
+| `ctx.create_revoked_invitation()` | Revoked invitation | `token` |
+| `ctx.cleanup()` | Delete tracked data only | `()` |
+
+### Performance Impact
+
+| Mode | Time | Pass Rate | Usage |
+|------|------|-----------|-------|
+| **Sequential** (`--test-threads=1`) | 13s | 100% | Old approach with wildcards |
+| **Parallel** (default) | 4s ⚡ | 100% ✅ | With TestContext |
+
+**Result: 3x faster with TestContext + parallel execution!**
+
+### Common Mistakes
+
+❌ **Mistake 1**: Bypassing TestContext
+
+```rust
+// ❌ WRONG: Not tracked!
+let pool = ctx.pool.clone();
+let user = create_test_user(&pool, "territory_dk").await;
+```
+
+```rust
+// ✅ CORRECT: Tracked!
+let user = ctx.create_user().await;
+```
+
+❌ **Mistake 2**: Not mutable
+
+```rust
+// ❌ WRONG: Compile error
+let ctx = TestContext::new().await;
+ctx.create_user().await;
+```
+
+```rust
+// ✅ CORRECT
+let mut ctx = TestContext::new().await;
+ctx.create_user().await;
+```
+
+❌ **Mistake 3**: No cleanup
+
+```rust
+// ❌ WRONG: Orphaned data!
+let mut ctx = TestContext::new().await;
+// ... test ...
+// No ctx.cleanup()!
+```
+
+```rust
+// ✅ CORRECT
+let mut ctx = TestContext::new().await;
+// ... test ...
+ctx.cleanup().await;
+```
+
+### Code Review Checklist
+
+Before merging tests:
+
+- [ ] Uses `TestContext::new()` (not `get_test_pool()`)
+- [ ] All data created via `ctx.create_*()` methods
+- [ ] Calls `ctx.cleanup().await` at end
+- [ ] NO direct calls to `create_test_user(&pool, ...)`
+- [ ] NO wildcard patterns (`LIKE '%@test.dk'`)
+- [ ] Passes `cargo test --test lib` (parallel)
+- [ ] Passes 5 consecutive runs (no flakiness)
+
+---
+
 ## References
 
 - **Production Config:** `services/auth-service/src/main.rs`
 - **Middleware Implementation:** `services/auth-service/src/middleware/auth.rs`
 - **Test Examples:** `services/auth-service/tests/integration/`
+- **TestContext Implementation:** `services/auth-service/tests/common/mod.rs`
 - **Database Schema:** `services/shared-lib/migrations/`

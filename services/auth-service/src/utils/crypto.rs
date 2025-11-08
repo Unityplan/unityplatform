@@ -1,21 +1,22 @@
-use sha2::{Digest, Sha256};
+// Unused - Database trigger now generates public_key_hash
+// use sha2::{Digest, Sha256};
 
-/// Generate public_key_hash from user credentials
-/// This is a temporary solution until we have WebAuthn/Holochain
-/// Format: SHA256(email || username || salt)
-pub fn generate_public_key_hash(email: &str, username: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(email.as_bytes());
-    hasher.update(b"::"); // Separator
-    hasher.update(username.as_bytes());
-    hasher.update(b"::unityplan"); // Platform salt
-
-    format!("{:x}", hasher.finalize())
-}
+// /// Generate public_key_hash from user credentials
+// /// This is a temporary solution until we have WebAuthn/Holochain
+// /// Format: SHA256(email || username || salt)
+// pub fn generate_public_key_hash(email: &str, username: &str) -> String {
+//     let mut hasher = Sha256::new();
+//     hasher.update(email.as_bytes());
+//     hasher.update(b"::"); // Separator
+//     hasher.update(username.as_bytes());
+//     hasher.update(b"::unityplan"); // Platform salt
+//
+//     format!("{:x}", hasher.finalize())
+// }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
 
     #[test]
     fn test_generate_public_key_hash() {

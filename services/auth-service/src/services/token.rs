@@ -8,7 +8,8 @@ use uuid::Uuid;
 pub struct TokenService {
     encoding_key: EncodingKey,
     decoding_key: DecodingKey,
-    access_token_ttl: i64,  // seconds
+    access_token_ttl: i64, // seconds
+    #[allow(dead_code)] // Used for future refresh token implementation
     refresh_token_ttl: i64, // seconds
 }
 

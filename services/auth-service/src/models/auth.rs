@@ -5,7 +5,7 @@ use validator::Validate;
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct RegisterRequest {
     #[validate(email(message = "Invalid email format"))]
-    pub email: String,
+    pub email: Option<String>, // Optional - privacy-first design
 
     #[validate(length(min = 3, max = 50, message = "Username must be 3-50 characters"))]
     pub username: String,
@@ -19,14 +19,14 @@ pub struct RegisterRequest {
     pub territory_code: String,
 
     #[validate(length(min = 10, max = 100, message = "Invitation token is required"))]
-    pub invitation_token: String, // ⭐ NEW - REQUIRED
+    pub invitation_token: String, // ⭐ REQUIRED
 }
 
 /// Login request
 #[derive(Debug, Deserialize, Validate)]
 pub struct LoginRequest {
-    #[validate(email(message = "Invalid email format"))]
-    pub email: String,
+    #[validate(length(min = 3, max = 50, message = "Username must be 3-50 characters"))]
+    pub username: String, // Login by username (not email - privacy-first)
 
     #[validate(length(min = 8, message = "Password must be at least 8 characters"))]
     pub password: String,

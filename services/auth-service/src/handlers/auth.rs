@@ -1,7 +1,6 @@
 use crate::{
     models::{user::User, AuthResponse, AuthUserInfo, LoginRequest, RegisterRequest},
     services::{use_invitation_token, validate_invitation_token, PasswordService, TokenService},
-    utils::crypto::generate_public_key_hash,
 };
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
@@ -58,49 +57,50 @@ pub async fn register(
         pool.get_ref(),
         &schema_name,
         &req.invitation_token,
-        Some(&req.email),
+        req.email.as_deref(), // Pass Option<&str>
     )
     .await
     .map_err(actix_web::error::ErrorBadRequest)?;
 
-    // Check if email already exists (dynamic schema)
-    let existing_email = sqlx::query(&format!(
-        "SELECT id FROM {}.users WHERE email = $1",
-        schema_name
-    ))
-    .bind(&req.email)
-    .fetch_optional(pool.get_ref())
+    // Check if username is globally unique (across ALL territories/pods)
+    let username_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(SELECT 1 FROM global.user_identities WHERE LOWER(username) = LOWER($1))",
+    )
+    .bind(&req.username.to_lowercase())
+    .fetch_one(pool.get_ref())
     .await
     .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    if existing_email.is_some() {
+    if username_exists {
         return Err(actix_web::error::ErrorBadRequest(
-            "Email already registered",
+            "Username already taken globally. Please choose another username.",
         ));
     }
 
-    // Check if username already exists (dynamic schema)
-    let existing_username = sqlx::query(&format!(
-        "SELECT id FROM {}.users WHERE username = $1",
-        schema_name
-    ))
-    .bind(&req.username)
-    .fetch_optional(pool.get_ref())
-    .await
-    .map_err(actix_web::error::ErrorInternalServerError)?;
+    // Check if email already exists in territory (only if email provided)
+    if let Some(ref email) = req.email {
+        let existing_email = sqlx::query(&format!(
+            "SELECT id FROM {}.users WHERE email = $1",
+            schema_name
+        ))
+        .bind(email)
+        .fetch_optional(pool.get_ref())
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    if existing_username.is_some() {
-        return Err(actix_web::error::ErrorBadRequest("Username already taken"));
+        if existing_email.is_some() {
+            return Err(actix_web::error::ErrorBadRequest(
+                "Email already registered in this territory",
+            ));
+        }
     }
 
     // Hash password
     let password_hash = PasswordService::hash_password(&req.password)
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    // Generate public_key_hash for global identity
-    let public_key_hash = generate_public_key_hash(&req.email, &req.username);
-
-    // Create user (dynamic schema)
+    // Create user in territory schema
+    // Note: Database trigger will automatically create global.user_identities entry
     let user = sqlx::query_as::<_, User>(&format!(
         r#"
         INSERT INTO {}.users (
@@ -129,30 +129,34 @@ pub async fn register(
     })?;
 
     eprintln!(
-        "DEBUG: User created with ID: {}, now creating global identity",
+        "DEBUG: User created with ID: {}, fetching global identity created by trigger",
         user.id
     );
 
-    // Create global user identity with public_key_hash and get the identity ID
-    let global_identity_id: Uuid = sqlx::query_scalar(
+    // Fetch global identity ID (created automatically by database trigger)
+    let global_identity: (Uuid, String) = sqlx::query_as(
         r#"
-        INSERT INTO global.user_identities (public_key_hash, territory_code, territory_user_id)
-        VALUES ($1, $2, $3)
-        RETURNING id
+        SELECT id, public_key_hash 
+        FROM global.user_identities 
+        WHERE territory_code = $1 AND territory_user_id = $2
         "#,
     )
-    .bind(&public_key_hash)
     .bind(&req.territory_code)
     .bind(user.id)
     .fetch_one(pool.get_ref())
     .await
     .map_err(|e| {
-        eprintln!("DEBUG: Failed to create global identity: {:?}", e);
-        actix_web::error::ErrorInternalServerError(format!("Failed to create user: {}", e))
+        eprintln!("DEBUG: Failed to fetch global identity: {:?}", e);
+        actix_web::error::ErrorInternalServerError(format!(
+            "Failed to fetch global identity: {}",
+            e
+        ))
     })?;
 
+    let (global_identity_id, public_key_hash) = global_identity;
+
     eprintln!(
-        "DEBUG: Global identity created successfully with ID: {}",
+        "DEBUG: Global identity fetched successfully with ID: {}",
         global_identity_id
     );
 
@@ -219,7 +223,7 @@ pub async fn login(
     // Set schema context to territory (dynamic based on territory_code)
     let schema_name = format!("territory_{}", territory.code.to_lowercase());
 
-    // Find user by email (dynamic schema)
+    // Find user by username (not email - privacy-first)
     let user = sqlx::query_as::<_, User>(&format!(
         r#"
         SELECT 
@@ -229,11 +233,11 @@ pub async fn login(
             is_verified, is_active, last_login_at,
             invited_by_user_id, invitation_by_token_id,
             created_at, updated_at
-        FROM {}.users WHERE email = $1
+        FROM {}.users WHERE username = $1
         "#,
         schema_name
     ))
-    .bind(&req.email)
+    .bind(&req.username)
     .fetch_optional(pool.get_ref())
     .await
     .map_err(actix_web::error::ErrorInternalServerError)?
