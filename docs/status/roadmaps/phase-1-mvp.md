@@ -438,111 +438,11 @@ Deliverables:
 ✓ Tests and documentation
 ```
 
-### Week 11-12: Forum Service
-
-```
-┌─────────────────────────────────────────────────────────┐
-│ Forum Service                                           │
-├─────────────────────────────────────────────────────────┤
-│ Core Features:                                          │
-│ ☐ Forum Structure Management                            │
-│   • Create categories                                   │
-│   • Create subcategories                                │
-│   • Multi-level forums (global/territory/community)     │
-│   • Badge-gated access                                  │
-│   • Visibility controls                                 │
-│                                                          │
-│ ☐ Topic Management                                      │
-│   • Create topics (with permission check)               │
-│   • Edit own topics                                     │
-│   • Close topics (moderators)                           │
-│   • Pin topics                                          │
-│   • Tags and categories                                 │
-│                                                          │
-│ ☐ Comments & Replies                                    │
-│   • Post comments                                       │
-│   • Threaded replies                                    │
-│   • Edit own comments                                   │
-│   • Flag inappropriate content                          │
-│                                                          │
-│ ☐ Moderation System                                     │
-│   • Flag comments                                       │
-│   • Issue warnings (3-strike system)                    │
-│   • Close topics                                        │
-│   • Escalate to admins                                  │
-│   • Moderation log (audit trail)                        │
-│                                                          │
-│ ☐ Voting System                                         │
-│   • Upvote/downvote comments                            │
-│   • Vote tracking                                       │
-│   • Sort by votes                                       │
-└─────────────────────────────────────────────────────────┘
-
-Schema:
-CREATE TABLE forums (
-    id UUID PRIMARY KEY,
-    name VARCHAR(255),
-    description TEXT,
-    level VARCHAR(20),
-    level_id UUID,
-    required_badges JSONB,
-    parent_id UUID REFERENCES forums(id),
-    status VARCHAR(20) -- open, closed
-);
-
-CREATE TABLE forum_topics (
-    id UUID PRIMARY KEY,
-    forum_id UUID REFERENCES forums(id),
-    title VARCHAR(255),
-    created_by UUID,
-    created_at TIMESTAMPTZ,
-    status VARCHAR(20), -- open, closed, pinned
-    view_count INT,
-    comment_count INT
-);
-
-CREATE TABLE forum_comments (
-    id UUID PRIMARY KEY,
-    topic_id UUID REFERENCES forum_topics(id),
-    parent_id UUID REFERENCES forum_comments(id),
-    content TEXT,
-    created_by UUID,
-    created_at TIMESTAMPTZ,
-    edited_at TIMESTAMPTZ,
-    flags INT DEFAULT 0,
-    votes INT DEFAULT 0
-);
-
-CREATE TABLE moderation_actions (
-    id UUID PRIMARY KEY,
-    moderator_id UUID,
-    target_user_id UUID,
-    action_type VARCHAR(50), -- warn, restrict, escalate
-    reason TEXT,
-    created_at TIMESTAMPTZ
-);
-
-API Endpoints:
-GET    /api/forums
-GET    /api/forums/:id/topics
-POST   /api/forums/:id/topics (with badge check)
-GET    /api/topics/:id/comments
-POST   /api/topics/:id/comments
-POST   /api/comments/:id/flag
-POST   /api/moderation/warn
-
-Deliverables:
-✓ Forum service with badge-based access
-✓ Moderation system
-✓ 3-strike warning implementation
-✓ Tests and documentation
-```
-
 ---
 
-## Month 5-6: Learning & Communication
+## Month 5-6: Infrastructure & Storage
 
-### Week 13-14: IPFS Integration
+### Week 11-12: IPFS Integration
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -568,30 +468,205 @@ Deliverables:
 │                                                          │
 │ ☐ Pin Management                                        │
 │   • Pin important files                                 │
-│   • Unpin old/unused files                              │
-│   • Monitor storage usage                               │
+│   • Unpin unused files                                  │
+│   • Garbage collection policy                           │
 └─────────────────────────────────────────────────────────┘
 
-Supported File Types:
-• Images: JPEG, PNG, GIF, WebP (max 10MB)
-• Documents: PDF, DOCX, TXT (max 50MB)
-• Videos: MP4, WebM (max 500MB)
-• Archives: ZIP (max 100MB)
+Schema:
+CREATE TABLE ipfs_content (
+    id UUID PRIMARY KEY,
+    cid TEXT UNIQUE NOT NULL,
+    filename VARCHAR(255),
+    content_type VARCHAR(100),
+    size BIGINT,
+    uploaded_by UUID,
+    uploaded_at TIMESTAMPTZ,
+    context VARCHAR(50), -- course_lesson, forum_attachment, avatar
+    context_id UUID,
+    pinned BOOLEAN DEFAULT true
+);
 
 API Endpoints:
 POST   /api/ipfs/upload
 GET    /api/ipfs/:cid
-GET    /api/ipfs/:cid/metadata
 DELETE /api/ipfs/:cid (unpin)
 
 Deliverables:
-✓ IPFS node deployment
-✓ Upload/download API
-✓ Integration with User, Course, Forum services
-✓ Storage monitoring dashboard
+✓ IPFS node deployed
+✓ File upload/retrieval API
+✓ Pin management
+✓ Integration with Course service
 ```
 
-### Week 15-16: Translation Service (Basic)
+### Week 13-14: Matrix Protocol Integration
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Matrix Homeserver Setup (Foundation for Forums)        │
+├─────────────────────────────────────────────────────────┤
+│ Core Features:                                          │
+│ ☐ Matrix Synapse Deployment                             │
+│   • Deploy Synapse server                               │
+│   • PostgreSQL database for Matrix                      │
+│   • Configure federation                                │
+│   • SSL/TLS setup                                       │
+│                                                          │
+│ ☐ Matrix Gateway Service                                │
+│   • Rust service using ruma crate                       │
+│   • User registration sync                              │
+│   • Room creation for forum topics                      │
+│   • Message routing                                     │
+│                                                          │
+│ ☐ User Integration                                      │
+│   • Auto-register users on Matrix                       │
+│   • Store Matrix credentials                            │
+│   • Sync user profiles                                  │
+│   • Access token management                             │
+│                                                          │
+│ ☐ Basic Direct Messages                                 │
+│   • 1-on-1 encrypted chats                              │
+│   • User presence                                       │
+│   • Typing indicators                                   │
+└─────────────────────────────────────────────────────────┘
+
+Matrix Synapse Configuration:
+server_name: "matrix.unityplan.org"
+database:
+  name: psycopg2
+  args:
+    database: matrix_db
+
+Schema:
+CREATE TABLE global.matrix_users (
+    user_id UUID PRIMARY KEY REFERENCES global.users(id),
+    matrix_username VARCHAR(255) UNIQUE NOT NULL,
+    access_token TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+Deliverables:
+✓ Matrix Synapse server deployed
+✓ Matrix Gateway service
+✓ User auto-registration
+✓ Basic DM functionality
+```
+
+### Week 15-16: Forum Service (Matrix-based)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Forum Service (Built on Matrix Protocol)               │
+┌─────────────────────────────────────────────────────────┐
+│ Forum Service (Built on Matrix Protocol)               │
+├─────────────────────────────────────────────────────────┤
+│ Core Features:                                          │
+│ ☐ Forum Structure Management                            │
+│   • Create categories                                   │
+│   • Create subcategories                                │
+│   • Multi-level forums (global/territory/community)     │
+│   • Badge-gated access                                  │
+│   • Visibility controls                                 │
+│                                                          │
+│ ☐ Topic Management with Matrix Integration              │
+│   • Create topics (with permission check)               │
+│   • Auto-create Matrix room for each topic              │
+│   • Matrix room ID storage                              │
+│   • Edit own topics                                     │
+│   • Close topics (moderators)                           │
+│   • Pin topics                                          │
+│   • Tags and categories                                 │
+│                                                          │
+│ ☐ Comments & Replies (Matrix-synced)                    │
+│   • Post comments → Matrix messages                     │
+│   • Matrix messages → Forum comments                    │
+│   • Bidirectional sync                                  │
+│   • Threaded replies                                    │
+│   • Edit own comments (sync edits)                      │
+│   • Flag inappropriate content                          │
+│                                                          │
+│ ☐ Moderation System                                     │
+│   • Flag comments                                       │
+│   • Issue warnings (3-strike system)                    │
+│   • Close topics                                        │
+│   • Escalate to admins                                  │
+│   • Moderation log (audit trail)                        │
+│                                                          │
+│ ☐ Voting System                                         │
+│   • Upvote/downvote comments                            │
+│   • Vote tracking                                       │
+│   • Sort by votes                                       │
+└─────────────────────────────────────────────────────────┘
+
+Note: Forums use Matrix protocol for federation
+- Each forum topic = Matrix room
+- Comments synced bidirectionally
+- Cross-territory collaboration via Matrix federation
+- Data sovereignty: each territory runs own Matrix server
+
+Schema:
+CREATE TABLE forums (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255),
+    description TEXT,
+    level VARCHAR(20),
+    level_id UUID,
+    required_badges JSONB,
+    parent_id UUID REFERENCES forums(id),
+    status VARCHAR(20) -- open, closed
+);
+
+CREATE TABLE forum_topics (
+    id UUID PRIMARY KEY,
+    forum_id UUID REFERENCES forums(id),
+    title VARCHAR(255),
+    created_by UUID,
+    created_at TIMESTAMPTZ,
+    status VARCHAR(20), -- open, closed, pinned
+    view_count INT,
+    comment_count INT,
+    matrix_room_id TEXT UNIQUE -- Matrix room for this topic
+);
+
+CREATE TABLE forum_comments (
+    id UUID PRIMARY KEY,
+    topic_id UUID REFERENCES forum_topics(id),
+    parent_id UUID REFERENCES forum_comments(id),
+    content TEXT,
+    created_by UUID,
+    created_at TIMESTAMPTZ,
+    edited_at TIMESTAMPTZ,
+    flags INT DEFAULT 0,
+    votes INT DEFAULT 0,
+    matrix_event_id TEXT UNIQUE -- Matrix message ID
+);
+
+CREATE TABLE moderation_actions (
+    id UUID PRIMARY KEY,
+    moderator_id UUID,
+    target_user_id UUID,
+    action_type VARCHAR(50), -- warn, restrict, escalate
+    reason TEXT,
+    created_at TIMESTAMPTZ
+);
+
+API Endpoints:
+GET    /api/forums
+GET    /api/forums/:id/topics
+POST   /api/forums/:id/topics (creates topic + Matrix room)
+GET    /api/topics/:id/comments
+POST   /api/topics/:id/comments (creates comment + Matrix message)
+POST   /api/comments/:id/flag
+POST   /api/moderation/warn
+
+Deliverables:
+✓ Forum service with Matrix integration
+✓ Bidirectional Forum ↔ Matrix sync
+✓ Badge-based access control
+✓ Moderation system with 3-strike warnings
+✓ Tests and documentation
+```
+
+### Week 17-18: Translation Service (Basic)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -653,52 +728,7 @@ Deliverables:
 
 ---
 
-## Month 7-8: Integration & Testing
-
-### Week 17-18: Matrix Protocol Integration
-
-```
-┌─────────────────────────────────────────────────────────┐
-│ Matrix Homeserver Setup                                 │
-├─────────────────────────────────────────────────────────┤
-│ Core Features:                                          │
-│ ☐ Matrix Synapse Deployment                             │
-│   • Deploy Synapse server                               │
-│   • PostgreSQL database for Matrix                      │
-│   • Configure federation                                │
-│   • SSL/TLS setup                                       │
-│                                                          │
-│ ☐ Matrix Gateway Service                                │
-│   • Rust service using ruma crate                       │
-│   • User registration sync                              │
-│   • Room creation for forum topics                      │
-│   • Message routing                                     │
-│                                                          │
-│ ☐ Forum-Matrix Integration                              │
-│   • Create Matrix room when forum topic created         │
-│   • Sync comments to Matrix messages                    │
-│   • Sync Matrix messages to forum comments              │
-│   • Bidirectional updates                               │
-│                                                          │
-│ ☐ Basic Direct Messages                                 │
-│   • 1-on-1 encrypted chats                              │
-│   • User presence                                       │
-│   • Typing indicators                                   │
-└─────────────────────────────────────────────────────────┘
-
-Matrix Synapse Configuration:
-server_name: "matrix.unityplan.org"
-database:
-  name: psycopg2
-  args:
-    database: matrix_db
-
-Deliverables:
-✓ Matrix Synapse server deployed
-✓ Matrix Gateway service
-✓ Forum-Matrix bidirectional sync
-✓ Basic DM functionality
-```
+## Month 7-8: Frontend & Testing
 
 ### Week 19-20: Frontend Development
 
