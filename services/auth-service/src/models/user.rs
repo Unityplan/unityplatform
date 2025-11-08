@@ -9,13 +9,10 @@ use uuid::Uuid;
 pub struct User {
     pub id: Uuid,
 
-    // Cryptographic identity (for cross-territory coordination)
-    pub public_key_hash: Option<String>,
-
     // Current authentication
-    pub email: Option<String>,
+    pub email: String,
     #[serde(skip_serializing)]
-    pub password_hash: Option<String>,
+    pub password_hash: String,
 
     // Profile data (stays in territory)
     pub username: String,
@@ -23,11 +20,13 @@ pub struct User {
     pub display_name: Option<String>,
     pub avatar_url: Option<String>,
     pub bio: Option<String>,
+    pub date_of_birth: Option<chrono::NaiveDate>,
+    pub phone: Option<String>,
 
     // Privacy controls
-    pub email_visible: bool,
-    pub profile_public: bool,
-    pub data_export_requested: bool,
+    pub profile_visibility: Option<String>, // 'public', 'community', 'private'
+    pub email_notifications: bool,
+    pub push_notifications: bool,
 
     // Status
     pub is_verified: bool,
@@ -35,7 +34,8 @@ pub struct User {
     pub last_login_at: Option<DateTime<Utc>>,
 
     // Invitation tracking
-    pub invited_by_token_id: Option<Uuid>,
+    pub invited_by_user_id: Option<Uuid>,
+    pub invitation_by_token_id: Option<Uuid>,
 
     // Timestamps
     pub created_at: DateTime<Utc>,
@@ -60,7 +60,11 @@ impl From<User> for PublicUserInfo {
             display_name: user.display_name,
             avatar_url: user.avatar_url,
             bio: user.bio,
-            email: if user.email_visible { user.email } else { None },
+            email: if user.profile_visibility == Some("public".to_string()) {
+                Some(user.email)
+            } else {
+                None
+            },
         }
     }
 }
@@ -81,7 +85,7 @@ impl From<User> for AuthUserInfo {
         Self {
             id: user.id,
             username: user.username,
-            email: user.email,
+            email: Some(user.email),
             display_name: user.display_name,
             avatar_url: user.avatar_url,
             is_verified: user.is_verified,

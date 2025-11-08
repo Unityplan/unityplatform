@@ -1,0 +1,431 @@
+use actix_web::{test, web, App};
+use serde_json::json;
+
+use crate::common::*;
+
+#[actix_web::test]
+async fn test_register_success() {
+    let pool = get_test_pool().await;
+    cleanup_test_data(&pool).await;
+    setup_test_data(&pool).await;
+
+    let token_service = create_token_service();
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
+            .route(
+                "/api/auth/register",
+                web::post().to(auth_service::handlers::auth::register),
+            ),
+    )
+    .await;
+
+    let invitation_token = create_test_invitation(&pool, "territory_dk").await;
+
+    let register_req = json!({
+        "email": "newuser@test.dk",
+        "username": "newuser_test",
+        "password": "StrongPassword123!",
+        "full_name": "Test User",
+        "territory_code": "dk",
+        "invitation_token": invitation_token
+    });
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/register")
+        .set_json(&register_req)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    let status = resp.status();
+
+    if status != 201 {
+        use actix_web::body::MessageBody;
+        let body_bytes = resp.into_body().try_into_bytes().unwrap();
+        let body_str = String::from_utf8_lossy(&body_bytes);
+        eprintln!("Response status: {}", status);
+        eprintln!("Response body: {}", body_str);
+        panic!("Registration failed");
+    }
+
+    assert_eq!(status, 201, "Registration should succeed");
+
+    let uses = sqlx::query_scalar::<_, i32>(
+        "SELECT current_uses FROM territory_dk.invitation_tokens WHERE token = $1",
+    )
+    .bind(&invitation_token)
+    .fetch_one(&pool)
+    .await
+    .expect("Should fetch invitation use count");
+
+    assert_eq!(uses, 1, "Invitation should be marked as used");
+
+    cleanup_test_data(&pool).await;
+}
+
+#[actix_web::test]
+async fn test_register_invalid_invitation() {
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
+
+    let token_service = create_token_service();
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
+            .route(
+                "/api/auth/register",
+                web::post().to(auth_service::handlers::auth::register),
+            ),
+    )
+    .await;
+
+    let register_req = json!({
+        "email": "newuser@test.dk",
+        "username": "newuser_invalid",
+        "password": "StrongPassword123!",
+        "full_name": "Test User",
+        "territory_code": "dk",
+        "invitation_token": "invalid_token_12345"
+    });
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/register")
+        .set_json(&register_req)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(
+        resp.status(),
+        400,
+        "Registration should fail with invalid invitation"
+    );
+
+    cleanup_test_data(&pool).await;
+}
+
+#[actix_web::test]
+async fn test_register_expired_invitation() {
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
+
+    let token_service = create_token_service();
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
+            .route(
+                "/api/auth/register",
+                web::post().to(auth_service::handlers::auth::register),
+            ),
+    )
+    .await;
+
+    let invitation_token = create_expired_invitation(&pool, "territory_dk").await;
+
+    let register_req = json!({
+        "email": "newuser@test.dk",
+        "username": "newuser_expired",
+        "password": "StrongPassword123!",
+        "full_name": "Test User",
+        "territory_code": "dk",
+        "invitation_token": invitation_token
+    });
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/register")
+        .set_json(&register_req)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(
+        resp.status(),
+        400,
+        "Registration should fail with expired invitation"
+    );
+
+    cleanup_test_data(&pool).await;
+}
+
+#[actix_web::test]
+async fn test_login_success() {
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
+
+    let (email, password) = create_test_user(&pool, "territory_dk").await;
+    let token_service = create_token_service();
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
+            .route(
+                "/api/auth/login",
+                web::post().to(auth_service::handlers::auth::login),
+            ),
+    )
+    .await;
+
+    let login_req = json!({
+        "email": email,
+        "password": password,
+        "territory_code": "dk"
+    });
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/login")
+        .set_json(&login_req)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    let status = resp.status();
+
+    if status != 200 {
+        use actix_web::body::MessageBody;
+        let body_bytes = resp.into_body().try_into_bytes().unwrap();
+        let body_str = String::from_utf8_lossy(&body_bytes);
+        eprintln!("Login failed - Status: {}", status);
+        eprintln!("Response body: {}", body_str);
+        panic!("Login failed");
+    }
+
+    assert_eq!(status, 200, "Login should succeed");
+
+    let body: serde_json::Value = test::read_body_json(resp).await;
+    assert!(
+        body["access_token"].is_string(),
+        "Should return access token"
+    );
+    assert!(
+        body["refresh_token"].is_string(),
+        "Should return refresh token"
+    );
+
+    cleanup_test_data(&pool).await;
+}
+
+#[actix_web::test]
+async fn test_login_wrong_password() {
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
+
+    let (email, _) = create_test_user(&pool, "territory_dk").await;
+    let token_service = create_token_service();
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
+            .route(
+                "/api/auth/login",
+                web::post().to(auth_service::handlers::auth::login),
+            ),
+    )
+    .await;
+
+    let login_req = json!({
+        "email": email,
+        "password": "WrongPassword123!",
+        "territory_code": "dk"
+    });
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/login")
+        .set_json(&login_req)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 401, "Login should fail with wrong password");
+
+    cleanup_test_data(&pool).await;
+}
+
+#[actix_web::test]
+async fn test_login_nonexistent_user() {
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
+
+    let token_service = create_token_service();
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
+            .route(
+                "/api/auth/login",
+                web::post().to(auth_service::handlers::auth::login),
+            ),
+    )
+    .await;
+
+    let login_req = json!({
+        "email": "nonexistent@test.dk",
+        "password": "Password123!",
+        "territory_code": "dk"
+    });
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/login")
+        .set_json(&login_req)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 401, "Login should fail for nonexistent user");
+
+    cleanup_test_data(&pool).await;
+}
+
+#[actix_web::test]
+async fn test_refresh_token_success() {
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
+
+    let (email, password) = create_test_user(&pool, "territory_dk").await;
+    let token_service = create_token_service();
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
+            .route(
+                "/api/auth/login",
+                web::post().to(auth_service::handlers::auth::login),
+            )
+            .route(
+                "/api/auth/refresh",
+                web::post().to(auth_service::handlers::auth::refresh),
+            ),
+    )
+    .await;
+
+    let login_req = json!({
+        "email": email,
+        "password": password,
+        "territory_code": "dk"
+    });
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/login")
+        .set_json(&login_req)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    let body: serde_json::Value = test::read_body_json(resp).await;
+    let refresh_token = body["refresh_token"].as_str().unwrap();
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/refresh")
+        .set_json(&json!({
+            "refresh_token": refresh_token,
+            "territory_code": "dk"
+        }))
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+
+    if resp.status() != 200 {
+        let body_bytes = test::read_body(resp).await;
+        let body_str = String::from_utf8_lossy(&body_bytes);
+        eprintln!("Refresh token error response: {}", body_str);
+        panic!("Token refresh failed with status != 200");
+    }
+
+    assert_eq!(resp.status(), 200, "Token refresh should succeed");
+
+    let body: serde_json::Value = test::read_body_json(resp).await;
+    assert!(
+        body["access_token"].is_string(),
+        "Should return new access token"
+    );
+
+    cleanup_test_data(&pool).await;
+}
+
+#[actix_web::test]
+async fn test_refresh_token_invalid() {
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
+
+    let token_service = create_token_service();
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
+            .route(
+                "/api/auth/refresh",
+                web::post().to(auth_service::handlers::auth::refresh),
+            ),
+    )
+    .await;
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/refresh")
+        .set_json(&json!({
+            "refresh_token": "invalid.token.here",
+            "territory_code": "dk"
+        }))
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(
+        resp.status(),
+        401,
+        "Token refresh should fail with invalid token"
+    );
+
+    cleanup_test_data(&pool).await;
+}
+
+#[actix_web::test]
+async fn test_logout() {
+    let pool = get_test_pool().await;
+    setup_test_data(&pool).await;
+
+    let (email, password) = create_test_user(&pool, "territory_dk").await;
+    let token_service = create_token_service();
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::from(token_service.clone()))
+            .route(
+                "/api/auth/login",
+                web::post().to(auth_service::handlers::auth::login),
+            )
+            .route(
+                "/api/auth/logout",
+                web::post().to(auth_service::handlers::auth::logout),
+            ),
+    )
+    .await;
+
+    let login_req = json!({
+        "email": email,
+        "password": password,
+        "territory_code": "dk"
+    });
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/login")
+        .set_json(&login_req)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    let body: serde_json::Value = test::read_body_json(resp).await;
+    let refresh_token = body["refresh_token"].as_str().unwrap();
+
+    let req = test::TestRequest::post()
+        .uri("/api/auth/logout")
+        .set_json(&json!({ "refresh_token": refresh_token }))
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200, "Logout should succeed");
+
+    cleanup_test_data(&pool).await;
+}

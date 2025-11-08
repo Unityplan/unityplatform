@@ -97,11 +97,11 @@ where
             let user_query = format!(
                 r#"
                 SELECT 
-                    id, public_key_hash, email, password_hash, username, 
-                    full_name, display_name, avatar_url, bio,
-                    email_visible, profile_public, data_export_requested,
+                    id, email, password_hash, username, 
+                    full_name, display_name, avatar_url, bio, date_of_birth, phone,
+                    profile_visibility, email_notifications, push_notifications,
                     is_verified, is_active, last_login_at,
-                    invited_by_token_id,
+                    invited_by_user_id, invitation_by_token_id,
                     created_at, updated_at
                 FROM {}.users 
                 WHERE id = $1 AND is_active = true
@@ -119,12 +119,25 @@ where
                 })?
                 .ok_or_else(|| ErrorUnauthorized("User not found or inactive"))?;
 
+            // Get public_key_hash from global.user_identities
+            let public_key_hash: String = sqlx::query_scalar(
+                "SELECT public_key_hash FROM global.user_identities WHERE territory_code = $1 AND territory_user_id = $2"
+            )
+            .bind(&claims.territory_code)
+            .bind(user.id)
+            .fetch_one(pool.get_ref())
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to fetch public_key_hash: {:?}", e);
+                ErrorUnauthorized("Public key not found")
+            })?;
+
             // Store authenticated user in request extensions
             req.extensions_mut().insert(AuthenticatedUser {
                 user_id: user.id,
                 username: user.username,
                 territory_code: claims.territory_code,
-                public_key_hash: user.public_key_hash.unwrap_or_default(),
+                public_key_hash,
             });
 
             // Continue with request

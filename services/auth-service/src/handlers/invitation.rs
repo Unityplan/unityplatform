@@ -157,9 +157,9 @@ pub async fn validate_invitation(
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "valid": true,
         "token_type": invitation.token_type,
-        "email": invitation.email,
+        "email": invitation.invited_email,
         "expires_at": invitation.expires_at,
-        "remaining_uses": invitation.max_uses - invitation.used_count,
+        "remaining_uses": invitation.max_uses.map(|max| max - invitation.current_uses),
     })))
 }
 

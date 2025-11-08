@@ -11,21 +11,19 @@ pub struct InvitationToken {
     pub token: String,
     pub token_type: String, // "single_use" or "group"
 
-    // Restrictions
-    pub email: Option<String>,
-    pub max_uses: i32,
-    pub used_count: i32,
-
-    // Metadata
+    // Creator and context
     pub created_by_user_id: Option<Uuid>, // NULL for bootstrap tokens
-    pub purpose: Option<String>,
-    pub metadata: Option<serde_json::Value>,
+
+    // Restrictions
+    pub invited_email: Option<String>,
+    pub community_id: Option<Uuid>,
+    pub role: Option<String>,
+    pub max_uses: Option<i32>,
+    pub current_uses: i32,
 
     // Lifecycle
-    pub expires_at: DateTime<Utc>,
+    pub expires_at: Option<DateTime<Utc>>,
     pub is_active: bool,
-    pub revoked_at: Option<DateTime<Utc>>,
-    pub revoked_by_user_id: Option<Uuid>,
 
     // Timestamps
     pub created_at: DateTime<Utc>,
@@ -36,11 +34,11 @@ pub struct InvitationToken {
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct InvitationUse {
     pub id: Uuid,
-    pub invitation_token_id: Uuid,
-    pub user_id: Uuid,
-    pub used_at: DateTime<Utc>,
+    pub token_id: Uuid,
+    pub used_by_user_id: Uuid,
     pub ip_address: Option<String>,
     pub user_agent: Option<String>,
+    pub used_at: DateTime<Utc>,
 }
 
 /// Request to create a new invitation token
@@ -73,11 +71,10 @@ pub struct InvitationResponse {
     pub token: String,
     pub token_type: String,
     pub email: Option<String>,
-    pub max_uses: i32,
-    pub used_count: i32,
-    pub expires_at: DateTime<Utc>,
+    pub max_uses: Option<i32>,
+    pub current_uses: i32,
+    pub expires_at: Option<DateTime<Utc>>,
     pub is_active: bool,
-    pub purpose: Option<String>,
     pub created_at: DateTime<Utc>,
 }
 
@@ -87,12 +84,11 @@ impl From<InvitationToken> for InvitationResponse {
             id: token.id,
             token: token.token,
             token_type: token.token_type,
-            email: token.email,
+            email: token.invited_email,
             max_uses: token.max_uses,
-            used_count: token.used_count,
+            current_uses: token.current_uses,
             expires_at: token.expires_at,
             is_active: token.is_active,
-            purpose: token.purpose,
             created_at: token.created_at,
         }
     }

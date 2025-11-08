@@ -57,7 +57,8 @@ regex = "1"
 lazy_static = "1.4"
 
 [dev-dependencies]
-# Testing utilities are available by default in actix-web
+# Testing utilities
+actix-http = "3"
 
 [lib]
 name = "auth_service"

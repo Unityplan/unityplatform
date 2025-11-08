@@ -34,9 +34,10 @@ pub async fn validate_invitation_token(
     let query = format!(
         r#"
         SELECT 
-            id, token, token_type, email, max_uses, used_count,
-            created_by_user_id, purpose, metadata,
-            expires_at, is_active, revoked_at, revoked_by_user_id,
+            id, token, token_type, created_by_user_id,
+            invited_email, community_id, role,
+            max_uses, current_uses,
+            expires_at, is_active,
             created_at, updated_at
         FROM {}.invitation_tokens
         WHERE token = $1
@@ -58,22 +59,26 @@ pub async fn validate_invitation_token(
     }
 
     // Check if token has expired
-    if chrono::Utc::now() > token_record.expires_at {
-        return Err(AppError::Validation(
-            "This invitation token has expired".to_string(),
-        ));
+    if let Some(expires_at) = token_record.expires_at {
+        if chrono::Utc::now() > expires_at {
+            return Err(AppError::Validation(
+                "This invitation token has expired".to_string(),
+            ));
+        }
     }
 
     // Check if token has available uses
-    if token_record.used_count >= token_record.max_uses {
-        return Err(AppError::Validation(
-            "This invitation token has reached its maximum number of uses".to_string(),
-        ));
+    if let Some(max_uses) = token_record.max_uses {
+        if token_record.current_uses >= max_uses {
+            return Err(AppError::Validation(
+                "This invitation token has reached its maximum number of uses".to_string(),
+            ));
+        }
     }
 
     // For single_use tokens, verify email matches if provided
     if token_record.token_type == "single_use" {
-        if let Some(token_email) = &token_record.email {
+        if let Some(token_email) = &token_record.invited_email {
             if let Some(user_email) = email {
                 if token_email.to_lowercase() != user_email.to_lowercase() {
                     return Err(AppError::Validation(
@@ -102,14 +107,14 @@ pub async fn use_invitation_token(
     user_id: Uuid,
     ip_address: Option<String>,
 ) -> Result<(), AppError> {
-    // Increment used_count
+    // Increment current_uses
     let update_query = format!(
         r#"
         UPDATE {}.invitation_tokens
         SET 
-            used_count = used_count + 1,
+            current_uses = current_uses + 1,
             is_active = CASE 
-                WHEN used_count + 1 >= max_uses THEN false
+                WHEN max_uses IS NOT NULL AND current_uses + 1 >= max_uses THEN false
                 ELSE is_active
             END,
             updated_at = CURRENT_TIMESTAMP
@@ -128,8 +133,8 @@ pub async fn use_invitation_token(
     // Create audit record
     let audit_query = format!(
         r#"
-        INSERT INTO {}.invitation_uses (id, invitation_token_id, user_id, used_at, ip_address)
-        VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
+        INSERT INTO {}.invitation_uses (id, token_id, used_by_user_id, used_at, ip_address)
+        VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4::inet)
         "#,
         schema_name
     );
@@ -176,7 +181,7 @@ pub async fn create_invitation_token(
     email: Option<String>,
     max_uses: i32,
     expires_in_days: Option<i64>,
-    purpose: Option<String>,
+    _purpose: Option<String>, // Deprecated - kept for API compatibility
     created_by: Option<Uuid>, // None for bootstrap tokens
 ) -> Result<InvitationToken, AppError> {
     // Generate token
@@ -193,12 +198,13 @@ pub async fn create_invitation_token(
     let insert_query = format!(
         r#"
         INSERT INTO {}.invitation_tokens 
-            (id, token, token_type, email, max_uses, used_count, expires_at, is_active, created_by_user_id, purpose)
-        VALUES ($1, $2, $3, $4, $5, 0, $6, true, $7, $8)
+            (id, token, token_type, invited_email, max_uses, current_uses, expires_at, is_active, created_by_user_id)
+        VALUES ($1, $2, $3, $4, $5, 0, $6, true, $7)
         RETURNING 
-            id, token, token_type, email, max_uses, used_count,
-            created_by_user_id, purpose, metadata,
-            expires_at, is_active, revoked_at, revoked_by_user_id,
+            id, token, token_type, created_by_user_id,
+            invited_email, community_id, role,
+            max_uses, current_uses,
+            expires_at, is_active,
             created_at, updated_at
         "#,
         schema_name
@@ -209,10 +215,9 @@ pub async fn create_invitation_token(
         .bind(&token)
         .bind(token_type)
         .bind(email)
-        .bind(max_uses)
+        .bind(Some(max_uses))
         .bind(expires_at)
         .bind(created_by)
-        .bind(purpose)
         .fetch_one(pool)
         .await
         .map_err(|e| AppError::Internal(format!("Failed to create invitation token: {}", e)))?;
@@ -232,9 +237,10 @@ pub async fn list_user_invitations(
     let query = format!(
         r#"
         SELECT 
-            id, token, token_type, email, max_uses, used_count,
-            created_by_user_id, purpose, metadata,
-            expires_at, is_active, revoked_at, revoked_by_user_id,
+            id, token, token_type, created_by_user_id,
+            invited_email, community_id, role,
+            max_uses, current_uses,
+            expires_at, is_active,
             created_at, updated_at
         FROM {}.invitation_tokens
         WHERE created_by_user_id = $1
@@ -301,9 +307,9 @@ pub async fn get_invitation_uses(
 ) -> Result<Vec<InvitationUse>, AppError> {
     let query = format!(
         r#"
-        SELECT id, invitation_token_id, user_id, used_at, ip_address, user_agent
+        SELECT id, token_id, used_by_user_id, ip_address, user_agent, used_at
         FROM {}.invitation_uses
-        WHERE invitation_token_id = $1
+        WHERE token_id = $1
         ORDER BY used_at DESC
         "#,
         schema_name
