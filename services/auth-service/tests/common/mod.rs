@@ -149,6 +149,13 @@ impl TestContext {
     }
 }
 
+// ============================================================================
+// DEPRECATED FUNCTIONS - DO NOT USE IN NEW TESTS
+// These are kept temporarily for reference but should not be used.
+// All new tests MUST use TestContext pattern.
+// ============================================================================
+
+#[deprecated(note = "Use TestContext::new() instead")]
 pub async fn get_test_pool() -> PgPool {
     dotenvy::dotenv().ok();
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set for tests");
@@ -182,7 +189,12 @@ pub async fn setup_test_data(pool: &PgPool) {
     .expect("Failed to insert test territory");
 }
 
+#[deprecated(note = "DO NOT USE - Uses wildcard cleanup which causes race conditions. Use TestContext::cleanup() instead")]
 pub async fn cleanup_test_data(pool: &PgPool) {
+    // ⚠️ WARNING: This function uses WILDCARD patterns which delete data from ALL tests!
+    // This causes race conditions in parallel test execution.
+    // Use TestContext::cleanup() instead, which tracks and deletes exact IDs only.
+    
     // 1. Clean up test invitation uses FIRST (before users are deleted)
     sqlx::query("DELETE FROM territory_dk.invitation_uses WHERE used_by_user_id IN (SELECT id FROM territory_dk.users WHERE email LIKE '%@test.dk' OR username LIKE 'testuser_%' OR username LIKE 'newuser_%')")
         .execute(pool)
@@ -209,6 +221,10 @@ pub async fn cleanup_test_data(pool: &PgPool) {
         .await
         .ok();
 }
+
+// ============================================================================
+// END DEPRECATED FUNCTIONS
+// ============================================================================
 
 /// Create a test invitation token
 pub async fn create_test_invitation(pool: &PgPool, schema: &str) -> String {

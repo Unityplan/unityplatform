@@ -18,13 +18,12 @@ use actix_web::{test, web, App};
 /// Health check test to verify basic service functionality
 #[actix_web::test]
 async fn test_health_endpoint() {
-    let pool = common::get_test_pool().await;
-    let token_service = common::create_token_service();
+    let ctx = common::TestContext::new().await;
 
     let app = test::init_service(
         App::new()
-            .app_data(web::Data::new(pool.clone()))
-            .app_data(web::Data::from(token_service.clone()))
+            .app_data(web::Data::new(ctx.pool.clone()))
+            .app_data(web::Data::from(ctx.token_service.clone()))
             .route(
                 "/health",
                 web::get().to(auth_service::handlers::auth::health),
@@ -39,4 +38,6 @@ async fn test_health_endpoint() {
         resp.status().is_success(),
         "Health endpoint should return success"
     );
+    
+    ctx.cleanup().await;
 }

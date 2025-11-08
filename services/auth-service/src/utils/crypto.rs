@@ -16,21 +16,7 @@
 
 #[cfg(test)]
 mod tests {
-    // use super::*;
-
-    #[test]
-    fn test_generate_public_key_hash() {
-        let hash1 = generate_public_key_hash("test@example.com", "testuser");
-        let hash2 = generate_public_key_hash("test@example.com", "testuser");
-        let hash3 = generate_public_key_hash("different@example.com", "testuser");
-
-        // Same input = same hash
-        assert_eq!(hash1, hash2);
-
-        // Different input = different hash
-        assert_ne!(hash1, hash3);
-
-        // Hash is 64 characters (SHA256 hex)
-        assert_eq!(hash1.len(), 64);
-    }
+    // Tests removed - generate_public_key_hash() is now handled by database trigger
+    // See: services/shared-lib/migrations/20251108000001_identity_system_update.up.sql
+    // Function: create_global_user_identity()
 }
