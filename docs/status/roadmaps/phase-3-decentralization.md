@@ -1,5 +1,7 @@
 # Phase 3: Full Decentralization Roadmap
 
+**Last Updated:** November 8, 2025
+
 ## 🎯 Phase Overview
 
 **Timeline**: 12-18 months  

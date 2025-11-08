@@ -1,5 +1,7 @@
 # Phase 1: MVP Implementation Roadmap
 
+**Last Updated:** November 8, 2025
+
 ## 🎯 Phase Overview
 
 **Timeline**: 6-9 months  
@@ -56,38 +58,40 @@ Deliverables:
 │ Database Schema Creation                                │
 ├─────────────────────────────────────────────────────────┤
 │ ✅ Design territory schema architecture                 │
-│   • global schema (replicated across territories)       │
-│   • territory_{CODE} schema (isolated per territory)    │
+│   • global schema (identity/federation layer)           │
+│   • territory schema (isolated per territory)           │
 │   • Territory ID Format standard (countries, First      │
 │     Nations, communities)                                │
 │                                                          │
-│ ☐ Design global schema tables                           │
+│ ✅ Design global schema tables                          │
 │   • territories table (DK, NO, SE, DE, FR, ES, etc.)    │
-│   • users table (global authentication)                 │
-│   • audit_logs table                                     │
+│   • user_identities (cryptographic hash only)           │
+│   • sessions (refresh tokens)                           │
+│   • audit_log, territory_managers, role_assignments     │
 │                                                          │
-│ ☐ Design public schema (shared data)                    │
-│   • badge_definitions table                              │
-│   • translations table                                   │
-│   • tool_types table                                     │
+│ ✅ Design territory schema template                     │
+│   • users (all personal data - data sovereignty)        │
+│   • invitation_tokens, invitation_uses                  │
+│   • communities, settings                               │
+│   • Trigger: sync_global_user_identity()                │
 │                                                          │
-│ ☐ Design territory schema template                      │
-│   • user_profiles                                        │
-│   • user_badges                                          │
-│   • courses                                              │
-│   • forums, communities, posts                           │
+│ ✅ Create migration scripts with SQLx                   │
+│   • 20251108000001_global_schema.up.sql                 │
+│   • 20251108000002_territory_schema.up.sql              │
+│   • 20251108000003_seed_data_dk.up.sql                  │
 │                                                          │
-│ ☐ Create migration scripts with SQLx                    │
-│ ☐ Multi-territory PostgreSQL init script                │
+│ ✅ Deploy to Denmark pod                                │
+│   • Schema separation complete (Nov 8, 2025)            │
+│   • Generic "territory" schema for single-pod           │
+│   • Prepared for multi-territory deployment             │
 └─────────────────────────────────────────────────────────┘
 
 Deliverables:
-✅ Territory ID Format standard (project_docs/9-territory-management-standard.md)
+✅ Territory ID Format standard (architecture/territory-management-standard.md)
 ✅ Multi-pod architecture with data isolation
-✅ PostgreSQL init scripts for DK, NO, SE
-✅ Multi-territory init script (DE, FR, ES on Europe pod)
-☐ migrations/ directory with SQLx migrations
-☐ Database schema documentation with ERDs
+✅ PostgreSQL with global + territory schemas
+✅ services/shared-lib/migrations/ directory with SQLx migrations
+✅ Database schema fully implemented and tested
 ```
 
 ### Week 3-4: Authentication Service
@@ -98,65 +102,84 @@ Deliverables:
 │ Authentication Service (Rust + actix-web)               │
 ├─────────────────────────────────────────────────────────┤
 │ Core Features:                                          │
-│ ☐ User registration                                     │
-│   • Email validation                                     │
-│   • Password hashing (argon2)                           │
-│   • User creation in global.users                       │
+│ ✅ User registration (with invitation system)           │
+│   • Invitation token validation (required)              │
+│   • Password hashing (bcrypt, cost: 12)                 │
+│   • User creation in territory.users                    │
+│   • Global identity sync via trigger                    │
 │                                                          │
-│ ☐ Login/Logout                                          │
-│   • Credentials validation                              │
+│ ✅ Login/Logout                                         │
+│   • Username/password validation                        │
 │   • JWT token generation (RS256)                        │
 │   • Refresh token rotation                              │
-│   • Session management                                  │
+│   • Session management in global.sessions               │
 │                                                          │
-│ ☐ OpenID Connect (OIDC) Integration                     │
+│ ✅ Invitation System                                    │
+│   • Bootstrap script for initial admin invitations      │
+│   • Single-use and group invitation tokens              │
+│   • Email-specific and open invitations                 │
+│   • Usage tracking and audit trail                      │
+│   • Revocation support                                  │
+│                                                          │
+│ ✅ JWT Middleware                                       │
+│   • JWT validation middleware (JwtAuth)                 │
+│   • Territory extraction from token                     │
+│   • User authentication for protected routes            │
+│                                                          │
+│ ☐ OpenID Connect (OIDC) Integration (Future)            │
 │   • Support for Keycloak                                │
 │   • OAuth 2.0 flow                                      │
 │   • Token validation                                    │
 │   • User profile sync                                   │
-│                                                          │
-│ ☐ Middleware                                            │
-│   • JWT validation middleware                           │
-│   • Territory extraction from token                     │
-│   • Rate limiting                                       │
 └─────────────────────────────────────────────────────────┘
 
-API Endpoints:
-POST   /api/auth/register
-POST   /api/auth/login
-POST   /api/auth/logout
-POST   /api/auth/refresh
-GET    /api/auth/validate
-POST   /api/auth/oidc/callback
+API Endpoints: ✅ ALL IMPLEMENTED
+POST   /api/auth/register     ✅ With invitation validation
+POST   /api/auth/login        ✅ Username/password auth
+POST   /api/auth/logout       ✅ Session cleanup
+POST   /api/auth/refresh      ✅ Token rotation
+GET    /api/auth/me           ✅ User profile
+GET    /api/auth/health       ✅ Health check
+
+POST   /api/invitations       ✅ Create invitation (authenticated)
+GET    /api/invitations       ✅ List user's invitations
+POST   /api/invitations/:id/revoke  ✅ Revoke invitation
+GET    /api/invitations/:token/validate  ✅ Validate token
+GET    /api/invitations/:id/usage  ✅ Get usage stats
 
 Dependencies:
-• actix-web 4.x
-• jsonwebtoken 9.x
-• openidconnect 3.x
-• argon2
-• sqlx 0.7
+✅ actix-web 4.x
+✅ jsonwebtoken 9.x
+✅ bcrypt
+✅ sqlx 0.8
+✅ uuid
 
 Deliverables:
-✓ Working auth service
-✓ Unit tests (>80% coverage)
-✓ Integration tests
-✓ API documentation (OpenAPI/Swagger)
+✅ Working auth service (services/auth-service/)
+✅ Unit tests (7 tests - password, JWT, invitations)
+✅ Integration tests (19 tests - 100% pass rate)
+✅ All endpoints tested with zero warnings
+✅ Invitation bootstrap script (scripts/create-bootstrap-invitation.sh)
 ```
 
 #### Testing & Documentation
 ```
 Tests to implement:
-☐ Unit tests for password hashing
-☐ Unit tests for JWT generation/validation
-☐ Integration tests for registration flow
-☐ Integration tests for login flow
-☐ Integration tests for OIDC flow
-☐ Load tests (100 concurrent users)
+✅ Unit tests for password hashing
+✅ Unit tests for JWT generation/validation
+✅ Unit tests for invitation token generation
+✅ Integration tests for registration flow (with invitations)
+✅ Integration tests for login flow
+✅ Integration tests for refresh/logout
+✅ Integration tests for /me endpoint
+✅ Integration tests for invitation CRUD
+☐ Load tests (100 req/s for login)
 
 Documentation:
-☐ API endpoint documentation
-☐ Authentication flow diagrams
-☐ Security considerations document
+✅ Database schema with separated global/territory schemas
+✅ Authentication flow (invitation-based registration)
+✅ Security considerations (bcrypt, JWT, token rotation)
+☐ API endpoint documentation (OpenAPI/Swagger)
 ☐ Setup instructions for OIDC providers
 ```
 
