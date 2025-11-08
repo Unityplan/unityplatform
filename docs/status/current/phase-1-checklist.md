@@ -1954,10 +1954,219 @@ Platform Security Model:
 - ✅ Code of Conduct course seeded
 - ✅ Badge auto-award on course completion
 
-**Next Stage:** Forum Service, IPFS Service, and remaining services
-## STAGE 8: Forum Service & IPFS Integration
+**Next Stage:** Matrix Protocol Integration (foundation for forums)
+## STAGE 8: Matrix Protocol Integration
 
-### Step 8.1: Forum Service Scaffolding
+### Step 8.1: Matrix Synapse Setup
+```
+☐ Add Matrix Synapse to docker-compose.yml
+  
+  matrix-synapse:
+    image: matrixdotorg/synapse:latest
+    ports:
+      - "8008:8008"  # Client API
+      - "8448:8448"  # Federation API
+    volumes:
+      - ./docker/matrix-data:/data
+    environment:
+      - SYNAPSE_SERVER_NAME=${TERRITORY_CODE}.unityplan.org
+      - SYNAPSE_REPORT_STATS=no
+    networks:
+      - pod-net
+      - mesh-network  # For cross-territory federation
+
+☐ Configure Matrix homeserver for territory
+  └─ Generate homeserver.yaml configuration
+  └─ Set up federation keys
+  └─ Configure database connection (PostgreSQL)
+  └─ Enable registration (application service only)
+  └─ Configure TURN server for WebRTC (future)
+```
+
+### Step 8.2: Matrix Gateway Service
+```
+☐ Create matrix-gateway crate
+  └─ cargo new services/matrix-gateway --bin
+  
+  └─ Dependencies:
+     ruma = "0.10"              # Matrix protocol types
+     ruma-client = "0.12"       # Matrix client
+     tokio-tungstenite = "0.21" # WebSocket support
+     sqlx = "0.8"               # Database access
+
+☐ Create service structure
+  /services/matrix-gateway/src
+    ├── main.rs
+    ├── config.rs
+    ├── handlers/
+    │   ├── mod.rs
+    │   ├── registration.rs    # Register users on Matrix
+    │   └── rooms.rs           # Room management
+    ├── models/
+    │   ├── mod.rs
+    │   └── matrix_user.rs
+    └── services/
+        ├── mod.rs
+        └── matrix_client.rs   # Matrix API client wrapper
+```
+
+### Step 8.3: Matrix Integration
+```
+☐ Register users on Matrix when they register on platform
+  Implementation:
+  └─ Listen to user.created NATS event
+  └─ Generate Matrix user ID (@username:territory.unityplan.org)
+  └─ Register user via Matrix admin API
+  └─ Generate access token
+  └─ Store Matrix credentials in global.matrix_users table
+  └─ Publish matrix.user.registered event
+
+☐ Create Matrix credentials storage
+  └─ Add global.matrix_users table:
+     CREATE TABLE global.matrix_users (
+       user_id UUID PRIMARY KEY REFERENCES territory.users(id),
+       matrix_user_id TEXT NOT NULL,  -- @user:server
+       access_token TEXT NOT NULL,     -- Encrypted
+       device_id TEXT,
+       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+     );
+```
+
+---
+
+## STAGE 9: IPFS Service
+
+### Step 9.1: IPFS Setup
+```
+☐ Add IPFS to docker-compose.yml
+  
+  ipfs:
+    image: ipfs/kubo:latest
+    ports:
+      - "5001:5001"  # API
+      - "8080:8080"  # Gateway
+    volumes:
+      - ./docker/ipfs-data:/data/ipfs
+    environment:
+      - IPFS_PROFILE=server
+    networks:
+      - pod-net
+
+☐ Initialize and configure IPFS
+  └─ docker-compose up -d ipfs
+  └─ Configure CORS for API access
+  └─ Set up API authentication
+  └─ Configure garbage collection
+  └─ Test upload/download
+```
+
+### Step 9.2: IPFS Service Scaffolding
+```
+☐ Create ipfs-service crate
+  └─ cargo new services/ipfs-service --bin
+  
+  └─ Dependencies:
+     ipfs-api-backend-hyper = "0.6"
+     futures = "0.3"
+     actix-multipart = "0.6"
+
+☐ Create service structure
+  /services/ipfs-service/src
+    ├── main.rs
+    ├── config.rs
+    ├── handlers/
+    │   ├── mod.rs
+    │   └── upload.rs
+    ├── models/
+    │   ├── mod.rs
+    │   └── ipfs_content.rs
+    └── services/
+        ├── mod.rs
+        └── ipfs_client.rs
+```
+
+### Step 9.3: IPFS Handlers
+```
+☐ POST /ipfs/upload - Upload file to IPFS
+  Headers:
+    Authorization: Bearer {token}
+    Content-Type: multipart/form-data
+  
+  Request: Form with 'file' field
+  
+  Implementation:
+  └─ Validate file size (<100MB for courses, <10MB for avatars)
+  └─ Validate file type based on context
+  └─ Upload to IPFS node
+  └─ Get CID (Content Identifier)
+  └─ Pin file to prevent garbage collection
+  └─ Store metadata in territory.ipfs_content table
+  └─ Publish ipfs.content.uploaded event
+  └─ Return CID and gateway URL
+  
+  Response:
+  {
+    "cid": "Qm...",
+    "url": "http://localhost:8080/ipfs/Qm...",
+    "size": 1024567,
+    "filename": "document.pdf",
+    "content_type": "application/pdf"
+  }
+
+☐ GET /ipfs/{cid} - Retrieve file metadata
+  Response:
+  {
+    "cid": "Qm...",
+    "size": 1024567,
+    "pinned": true,
+    "uploaded_by": "uuid",
+    "uploaded_at": "...",
+    "content_type": "application/pdf"
+  }
+
+☐ POST /ipfs/{cid}/pin - Pin content
+  Headers: Authorization: Bearer {token}
+  
+  Implementation:
+  └─ Verify permissions (admin or uploader)
+  └─ Pin to local IPFS node
+  └─ Update pinned status in database
+  └─ Return success
+
+☐ DELETE /ipfs/{cid}/pin - Unpin content
+  Implementation:
+  └─ Verify permissions
+  └─ Unpin from IPFS node (allows garbage collection)
+  └─ Update database
+  └─ Return success
+```
+
+### Step 9.4: IPFS Database Schema
+```
+☐ Add IPFS content tracking table
+  CREATE TABLE {schema}.ipfs_content (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cid TEXT NOT NULL UNIQUE,
+    filename TEXT,
+    content_type TEXT,
+    size_bytes BIGINT NOT NULL,
+    uploaded_by UUID NOT NULL REFERENCES {schema}.users(id),
+    uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    pinned BOOLEAN DEFAULT TRUE,
+    context VARCHAR(50),  -- 'course_lesson', 'forum_attachment', 'avatar'
+    reference_id UUID,    -- ID of the related entity
+    deleted_at TIMESTAMPTZ
+  );
+  
+  CREATE INDEX idx_ipfs_cid ON {schema}.ipfs_content(cid);
+  CREATE INDEX idx_ipfs_uploaded_by ON {schema}.ipfs_content(uploaded_by);
+```
+
+---
+
+## STAGE 10: Forum Service (Matrix-based)
+
+### Step 10.1: Forum Service Scaffolding
 ```
 ☐ Create forum-service crate
   └─ cargo new services/forum-service --bin
@@ -1980,12 +2189,13 @@ Platform Security Model:
     └── services/
         ├── mod.rs
         ├── forum_service.rs
-        └── moderation_service.rs
+        ├── moderation_service.rs
+        └── matrix_sync.rs      # NEW: Matrix synchronization
 ```
 
-### Step 8.2: Forum Database Schema
+### Step 10.2: Forum Database Schema
 ```
-☐ Add forum tables to territory schema
+☐ Add forum tables to territory schema (with Matrix room references)
   
   -- Forum categories
   CREATE TABLE {schema}.forum_categories (
@@ -1997,12 +2207,13 @@ Platform Security Model:
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
   
-  -- Forum topics (threads)
+  -- Forum topics (threads) - LINKED TO MATRIX ROOMS
   CREATE TABLE {schema}.forum_topics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     category_id UUID NOT NULL REFERENCES {schema}.forum_categories(id),
     title VARCHAR(500) NOT NULL,
     slug VARCHAR(500) UNIQUE NOT NULL,
+    matrix_room_id TEXT,              -- NEW: !roomid:server.org
     created_by UUID NOT NULL REFERENCES {schema}.users(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -2014,14 +2225,15 @@ Platform Security Model:
   );
   
   CREATE INDEX idx_topics_category ON {schema}.forum_topics(category_id, last_post_at DESC);
-  CREATE INDEX idx_topics_created_by ON {schema}.forum_topics(created_by);
+  CREATE INDEX idx_topics_matrix_room ON {schema}.forum_topics(matrix_room_id);
   
-  -- Forum posts
+  -- Forum posts - SYNCED WITH MATRIX MESSAGES
   CREATE TABLE {schema}.forum_posts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     topic_id UUID NOT NULL REFERENCES {schema}.forum_topics(id) ON DELETE CASCADE,
     parent_post_id UUID REFERENCES {schema}.forum_posts(id),
     content TEXT NOT NULL,
+    matrix_event_id TEXT,             -- NEW: $eventid from Matrix
     created_by UUID NOT NULL REFERENCES {schema}.users(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -2032,19 +2244,17 @@ Platform Security Model:
   );
   
   CREATE INDEX idx_posts_topic ON {schema}.forum_posts(topic_id, created_at);
-  CREATE INDEX idx_posts_created_by ON {schema}.forum_posts(created_by);
+  CREATE INDEX idx_posts_matrix_event ON {schema}.forum_posts(matrix_event_id);
   
   -- Post reactions
   CREATE TABLE {schema}.post_reactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     post_id UUID NOT NULL REFERENCES {schema}.forum_posts(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES {schema}.users(id) ON DELETE CASCADE,
-    reaction_type VARCHAR(20) NOT NULL, -- like, love, laugh, sad, angry
+    reaction_type VARCHAR(20) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(post_id, user_id, reaction_type)
   );
-  
-  CREATE INDEX idx_reactions_post ON {schema}.post_reactions(post_id);
   
   -- User strikes (3-strike system)
   CREATE TABLE {schema}.user_strikes (
@@ -2059,378 +2269,111 @@ Platform Security Model:
     is_active BOOLEAN DEFAULT TRUE
   );
   
-  CREATE INDEX idx_strikes_user ON {schema}.user_strikes(user_id, is_active);
-  
   -- Moderation log
   CREATE TABLE {schema}.moderation_actions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    action_type VARCHAR(50) NOT NULL, -- delete_post, lock_topic, issue_strike, ban_user
-    target_type VARCHAR(50) NOT NULL, -- post, topic, user
+    action_type VARCHAR(50) NOT NULL,
+    target_type VARCHAR(50) NOT NULL,
     target_id UUID NOT NULL,
     moderator_id UUID NOT NULL REFERENCES {schema}.users(id),
     reason TEXT NOT NULL,
     metadata JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
-  
-  CREATE INDEX idx_moderation_target ON {schema}.moderation_actions(target_type, target_id);
 
 ☐ Run migration
 ```
 
-### Step 8.3: Forum Handlers Implementation
+### Step 10.3: Matrix Room Integration
+```
+☐ Create Matrix room when forum topic is created
+  Implementation:
+  └─ When POST /forum/topics creates a topic:
+     1. Create topic in database
+     2. Call Matrix API to create room
+     3. Set room name to topic title
+     4. Set room topic/description
+     5. Configure room power levels (moderators)
+     6. Store Matrix room_id in forum_topics.matrix_room_id
+     7. Invite topic creator to room
+     8. Return topic info with Matrix room reference
+
+☐ Sync messages bidirectionally between forum and Matrix
+  Implementation:
+  
+  Forum → Matrix:
+  └─ When user creates forum post via POST /forum/topics/{id}/posts:
+     1. Create post in database
+     2. Send message to Matrix room (m.room.message event)
+     3. Store Matrix event_id in forum_posts.matrix_event_id
+     4. Return post info
+  
+  Matrix → Forum:
+  └─ Set up Matrix sync listener:
+     1. Monitor Matrix rooms for new messages
+     2. When message received in tracked room:
+        - Find corresponding forum topic
+        - Create forum post in database
+        - Store event_id for deduplication
+        - Publish forum.post.created event
+     3. Handle message edits (m.room.message with m.replace)
+     4. Handle message deletions (m.room.redaction)
+```
+
+### Step 10.4: Forum Handlers Implementation
 ```
 ☐ GET /forum/categories - List forum categories
-  Response:
-  {
-    "categories": [
-      {
-        "id": "uuid",
-        "name": "General Discussion",
-        "description": "General topics",
-        "slug": "general",
-        "topics_count": 142,
-        "posts_count": 1523,
-        "latest_post": {...}
-      }
-    ]
-  }
-
-☐ GET /forum/categories/{slug}/topics - List topics in category
-  Query params: ?page=1&sort=latest
+☐ GET /forum/categories/{slug}/topics - List topics
+☐ POST /forum/topics - Create new topic (creates Matrix room)
   
-  Response:
-  {
-    "topics": [
-      {
-        "id": "uuid",
-        "title": "Welcome to UnityPlan",
-        "slug": "welcome-to-unityplan",
-        "created_by": {...user},
-        "created_at": "...",
-        "last_post_at": "...",
-        "posts_count": 23,
-        "view_count": 142,
-        "is_pinned": true,
-        "is_locked": false
-      }
-    ]
-  }
-
-☐ POST /forum/topics - Create new topic
-  Headers: Authorization: Bearer {token}
-  
-  Request:
-  {
-    "category_id": "uuid",
-    "title": "How do I get started?",
-    "content": "I'm new here and..."
-  }
-  
-  Implementation:
-  └─ Check user has "create_topic" permission (Code of Conduct badge)
-  └─ Validate title and content
-  └─ Generate slug from title
-  └─ Create topic
-  └─ Create first post
-  └─ Publish topic.created event
-  └─ Return topic info
-  
-  Error if no permission:
-  {
-    "error": "permission_denied",
-    "message": "You need the Code of Conduct badge to create topics",
-    "required_badge": "code_of_conduct"
-  }
+  Additional logic:
+  └─ After creating topic in DB
+  └─ Create Matrix room via matrix-gateway
+  └─ Store room_id in topic record
+  └─ Invite creator to Matrix room
 
 ☐ GET /forum/topics/{slug} - Get topic with posts
-  Query params: ?page=1
+☐ POST /forum/topics/{topic_id}/posts - Create post (syncs to Matrix)
   
-  Implementation:
-  └─ Get topic info
-  └─ Increment view_count
-  └─ Get posts (paginated, 20 per page)
-  └─ Include user info for each post
-  └─ Include reaction counts
-  └─ Return topic + posts
+  Additional logic:
+  └─ After creating post in DB
+  └─ Send message to Matrix room
+  └─ Store Matrix event_id
 
-☐ POST /forum/topics/{topic_id}/posts - Create post (reply)
-  Headers: Authorization: Bearer {token}
-  
-  Request:
-  {
-    "content": "Great question! Here's how...",
-    "parent_post_id": "uuid" // optional, for threading
-  }
-  
-  Implementation:
-  └─ Check "create_post" permission
-  └─ Check topic not locked
-  └─ Validate content
-  └─ Create post
-  └─ Update topic.last_post_at
-  └─ Publish post.created event
-  └─ Return post info
-
-☐ PUT /forum/posts/{post_id} - Edit post
-  Headers: Authorization: Bearer {token}
-  
-  Request:
-  {
-    "content": "Updated content..."
-  }
-  
-  Implementation:
-  └─ Verify post ownership or moderator role
-  └─ Update content
-  └─ Set edited_at timestamp
-  └─ Return updated post
-
-☐ DELETE /forum/posts/{post_id} - Delete post
-  Headers: Authorization: Bearer {token}
-  
-  Implementation:
-  └─ Verify ownership or moderator role
-  └─ Soft delete (set is_deleted = true)
-  └─ Log moderation action if moderator
-  └─ Return success
-
+☐ PUT /forum/posts/{post_id} - Edit post (syncs to Matrix)
+☐ DELETE /forum/posts/{post_id} - Delete post (syncs to Matrix)
 ☐ POST /forum/posts/{post_id}/reactions - Add reaction
-  Headers: Authorization: Bearer {token}
-  
-  Request:
-  {
-    "reaction_type": "like"
-  }
-  
-  Implementation:
-  └─ Validate reaction type
-  └─ Insert or update reaction
-  └─ Return reaction counts
 ```
 
-### Step 8.4: Moderation System
+### Step 10.5: Moderation System
 ```
-☐ POST /forum/moderation/strike - Issue strike to user
-  Headers: Authorization: Bearer {token}
-  
-  Request:
-  {
-    "user_id": "uuid",
-    "reason": "Violated community guidelines",
-    "related_post_id": "uuid"
-  }
-  
-  Implementation:
-  └─ Verify moderator permission
-  └─ Count user's active strikes
-  └─ Insert new strike (strike_number = count + 1)
-  └─ Set expiration (90 days from now)
-  └─ Log moderation action
-  └─ Send notification to user
-  └─ If strike_number == 3:
-     └─ Revoke Code of Conduct badge
-     └─ Publish moderation.violation event
-     └─ Remove forum permissions
-  └─ Return strike info
-
+☐ POST /forum/moderation/strike - Issue strike
 ☐ GET /forum/moderation/queue - Get moderation queue
-  Headers: Authorization: Bearer {token} (moderator)
-  
-  Response:
-  {
-    "flagged_posts": [
-      {
-        "post": {...},
-        "flags_count": 5,
-        "flag_reasons": ["spam", "harassment"],
-        "flagged_at": "..."
-      }
-    ]
-  }
-
-☐ POST /forum/posts/{post_id}/flag - Flag post for moderation
-  Headers: Authorization: Bearer {token}
-  
-  Request:
-  {
-    "reason": "spam"  // spam, harassment, offtopic, misinformation
-  }
-  
-  Implementation:
-  └─ Record flag
-  └─ If flags > threshold: add to moderation queue
-  └─ Notify moderators
-
-☐ POST /forum/topics/{topic_id}/lock - Lock topic
-  Headers: Authorization: Bearer {token} (moderator)
-  
-  Implementation:
-  └─ Set is_locked = true
-  └─ Log moderation action
-  └─ Prevent new posts
+☐ POST /forum/posts/{post_id}/flag - Flag post
+☐ POST /forum/topics/{topic_id}/lock - Lock topic (locks Matrix room)
 ```
 
-### Step 8.5: Forum Frontend Pages
+### Step 10.6: Forum Testing
 ```
-☐ Create forum category list page
-  └─ Show all categories
-  └─ Category stats
-  └─ Latest posts preview
+☐ Unit and integration tests
+  └─ Topic creation and listing
+  └─ Post creation and retrieval
+  └─ Moderation system
+  └─ Permission enforcement
 
-☐ Create topic list page
-  └─ Filter by category
-  └─ Sort options (latest, popular, oldest)
-  └─ Pinned topics at top
-  └─ Pagination
-
-☐ Create topic view page
-  └─ Topic title and first post
-  └─ All replies (threaded or flat)
-  └─ Pagination
-  └─ Reply editor (if have permission)
-  └─ Reaction buttons
-  └─ Report button
-  └─ Moderation tools (if moderator)
-
-☐ Create topic creation form
-  └─ Category selector
-  └─ Title input
-  └─ Rich text editor
-  └─ Preview mode
-  └─ Check permission before showing
-
-☐ Create moderation dashboard (moderators only)
-  └─ Flagged posts queue
-  └─ Recent moderation actions
-  └─ User strike management
-  └─ Quick action buttons
+☐ Matrix synchronization tests
+  └─ Forum post creates Matrix message
+  └─ Matrix message creates forum post
+  └─ Edit synchronization
+  └─ Delete synchronization
+  └─ Room creation on topic creation
 ```
 
 ---
 
-## STAGE 9: IPFS Service
+## STAGE 11: Translation Service
 
-### Step 9.1: IPFS Setup
-```
-☐ Add IPFS to docker-compose.yml
-  
-  ipfs:
-    image: ipfs/kubo:latest
-    ports:
-      - "5001:5001"  # API
-      - "8080:8080"  # Gateway
-    volumes:
-      - ./docker/ipfs-data:/data/ipfs
-    environment:
-      - IPFS_PROFILE=server
-
-☐ Initialize IPFS
-  └─ docker-compose up -d ipfs
-  └─ Configure IPFS (CORS, API access)
-  └─ Test upload/download
-```
-
-### Step 9.2: IPFS Service Scaffolding
-```
-☐ Create ipfs-service crate
-  └─ cargo new services/ipfs-service --bin
-  
-  └─ Dependencies:
-     ipfs-api-backend-hyper = "0.6"
-     futures = "0.3"
-
-☐ Create service structure
-  /services/ipfs-service/src
-    ├── main.rs
-    ├── config.rs
-    ├── handlers/
-    │   ├── mod.rs
-    │   └── upload.rs
-    ├── models/
-    │   └── mod.rs
-    └── services/
-        ├── mod.rs
-        └── ipfs_client.rs
-```
-
-### Step 9.3: IPFS Handlers
-```
-☐ POST /ipfs/upload - Upload file to IPFS
-  Headers:
-    Authorization: Bearer {token}
-    Content-Type: multipart/form-data
-  
-  Request: Form with 'file' field
-  
-  Implementation:
-  └─ Validate file size (<100MB)
-  └─ Validate file type (based on use case)
-  └─ Upload to IPFS
-  └─ Get CID (Content Identifier)
-  └─ Optionally pin file
-  └─ Store metadata in database
-  └─ Return CID and gateway URL
-  
-  Response:
-  {
-    "cid": "Qm...",
-    "url": "http://localhost:8080/ipfs/Qm...",
-    "size": 1024567,
-    "filename": "document.pdf"
-  }
-
-☐ GET /ipfs/{cid} - Retrieve file metadata
-  Response:
-  {
-    "cid": "Qm...",
-    "size": 1024567,
-    "pinned": true,
-    "uploaded_by": "uuid",
-    "uploaded_at": "..."
-  }
-
-☐ POST /ipfs/{cid}/pin - Pin content (prevent garbage collection)
-  Headers: Authorization: Bearer {token}
-  
-  Implementation:
-  └─ Verify permissions (admin or uploader)
-  └─ Pin to local IPFS node
-  └─ Update database
-  └─ Return success
-
-☐ DELETE /ipfs/{cid}/pin - Unpin content
-  Implementation:
-  └─ Verify permissions
-  └─ Unpin from IPFS node
-  └─ Update database
-  └─ Return success
-```
-
-### Step 9.4: Course Content Integration
-```
-☐ Update course lesson creation to use IPFS
-  └─ Upload lesson content to IPFS
-  └─ Store CID in lessons.ipfs_cid
-  └─ Generate gateway URL for content_url
-  
-☐ Update lesson retrieval to serve from IPFS
-  └─ Get CID from database
-  └─ Return IPFS gateway URL
-  └─ Or proxy content through service
-
-☐ Create content upload UI
-  └─ Drag-and-drop file upload
-  └─ Progress indicator
-  └─ Preview uploaded content
-  └─ Display CID and URLs
-```
-
----
-
-## STAGE 10: Translation & Matrix Services
-
-### Step 10.1: Translation Service (Basic)
+### Step 11.1: Translation Service Setup
 ```
 ☐ Create translation-service crate
   └─ cargo new services/translation-service --bin
@@ -2459,7 +2402,7 @@ Platform Security Model:
   }
   
   Implementation:
-  └─ Check Redis cache first
+  └─ Check Redis cache first (key: sha256(text+source+target))
   └─ If not cached: call external API (LibreTranslate or Google)
   └─ Cache result (90-day TTL)
   └─ Return translation
@@ -2473,39 +2416,11 @@ Platform Security Model:
   }
 ```
 
-### Step 10.2: Matrix Gateway (Basic)
-```
-☐ Add Matrix Synapse to docker-compose.yml
-  
-  matrix-synapse:
-    image: matrixdotorg/synapse:latest
-    ports:
-      - "8008:8008"
-    volumes:
-      - ./docker/matrix-data:/data
-    environment:
-      - SYNAPSE_SERVER_NAME=localhost
-      - SYNAPSE_REPORT_STATS=no
-
-☐ Create matrix-gateway crate
-  └─ cargo new services/matrix-gateway --bin
-  
-  └─ Dependencies:
-     ruma = "0.10"
-     tokio-tungstenite = "0.21"  # WebSocket
-
-☐ Basic Matrix integration
-  └─ Register users on Matrix when they register
-  └─ Create Matrix room for each forum topic
-  └─ Sync messages between forum and Matrix
-  └─ (Full implementation in later stages)
-```
-
 ---
 
-## STAGE 11: Frontend - Course & Forum UI
+## STAGE 12: Frontend - Course & Forum UI
 
-### Step 11.1: Course Pages
+### Step 12.1: Course Pages
 ```
 ☐ Create course catalog page
   └─ List all published courses
@@ -2518,45 +2433,69 @@ Platform Security Model:
   └─ Lesson list with progress
   └─ Enroll button
   └─ Start/continue learning button
-  └─ Prerequisites display
 
 ☐ Create lesson viewer page
-  └─ Lesson content display
-  └─ Video player (if video lesson)
-  └─ Text content rendering
-  └─ Next/previous lesson navigation
-  └─ Mark complete button
-  └─ Progress bar
+  └─ Display lesson content (from IPFS or embedded)
+  └─ Navigation (previous/next lesson)
+  └─ Mark as complete button
+  └─ Progress tracking
 
 ☐ Create quiz page
-  └─ Display questions
-  └─ Answer selection
-  └─ Submit button
-  └─ Results display
-  └─ Retry option (if failed)
-  └─ Show correct answers
+  └─ Display quiz questions
+  └─ Submit answers
+  └─ Show results and feedback
+  └─ Retry option
 
 ☐ Create my learning page
-  └─ Enrolled courses
-  └─ Progress overview
-  └─ Completed courses
-  └─ Recommended courses
+  └─ List enrolled courses
+  └─ Show progress for each
+  └─ Continue learning buttons
+  └─ Completed courses section
 ```
 
-### Step 11.2: Forum Pages (described earlier)
+### Step 12.2: Forum Pages
 ```
-☐ Forum category list
-☐ Topic list
-☐ Topic view with posts
-☐ Create topic form
-☐ Moderation dashboard
+☐ Create forum category list page
+  └─ Show all categories
+  └─ Category stats (topics, posts)
+  └─ Latest posts preview
+
+☐ Create topic list page
+  └─ Filter by category
+  └─ Sort options (latest, popular, oldest)
+  └─ Pinned topics at top
+  └─ Pagination
+
+☐ Create topic view with posts page
+  └─ Topic title and first post
+  └─ All replies (threaded or flat)
+  └─ Pagination
+  └─ Reply editor (if have permission)
+  └─ Reaction buttons
+  └─ Report button
+  └─ Moderation tools (if moderator)
+  └─ Matrix room integration indicator
+
+☐ Create topic creation form
+  └─ Category selector
+  └─ Title input
+  └─ Rich text editor
+  └─ Preview mode
+  └─ Check permission before showing
+  └─ Note about Matrix room creation
+
+☐ Create moderation dashboard (moderators only)
+  └─ Flagged posts queue
+  └─ Recent moderation actions
+  └─ User strike management
+  └─ Quick action buttons
 ```
 
 ---
 
-## STAGE 12: Testing, Documentation & Deployment
+## STAGE 13: Testing, Documentation & Deployment
 
-### Step 12.1: Comprehensive Testing
+### Step 13.1: Comprehensive Testing
 ```
 ☐ Unit tests for all services (80%+ coverage)
 ☐ Integration tests for API endpoints
@@ -2587,7 +2526,7 @@ Platform Security Model:
   └─ Permission enforcement
 ```
 
-### Step 12.2: Documentation
+### Step 13.2: Documentation
 ```
 ☐ API documentation (OpenAPI/Swagger)
   └─ Generate from code
@@ -2597,90 +2536,64 @@ Platform Security Model:
 ☐ Developer documentation
   └─ Setup instructions
   └─ Architecture overview
-  └─ Service interactions
-  └─ Database schema diagrams
-  └─ Contribution guidelines
+  └─ Service integration guides
+  └─ Database schema documentation
+  └─ Matrix integration guide
 
 ☐ User documentation
-  └─ Getting started guide
-  └─ Feature tutorials
+  └─ User guides
   └─ FAQ
-  └─ Video walkthroughs
+  └─ Video tutorials
+  └─ Community guidelines
 ```
 
-### Step 12.3: Deployment Setup
+### Step 13.3: Deployment Setup
 ```
 ☐ Production docker-compose.yml
-  └─ Environment-specific configs
-  └─ Secrets management
+  └─ Production-ready configurations
+  └─ Environment variable management
+  └─ Volume mounting
+  └─ Network isolation
   └─ Resource limits
-  └─ Health checks
-  └─ Restart policies
 
 ☐ CI/CD pipeline (GitHub Actions)
   └─ Run tests on PR
   └─ Build Docker images
+  └─ Push to registry
   └─ Deploy to staging
   └─ Deploy to production (manual approval)
 
-☐ Monitoring setup
-  └─ Prometheus metrics collection
-  └─ Grafana dashboards
-  └─ Alert rules
-  └─ Log aggregation
+☐ Monitoring setup (Prometheus, Grafana)
+  └─ Service health dashboards
+  └─ Performance metrics
+  └─ Error rate tracking
+  └─ Alerting rules
 
 ☐ Backup strategy
-  └─ Database backups (daily)
-  └─ IPFS content backups
-  └─ Configuration backups
-  └─ Restore procedures
+  └─ Database backup automation
+  └─ IPFS content backup
+  └─ Matrix homeserver backup
+  └─ Configuration backup
+  └─ Restore procedures documented
 ```
 
 ---
 
-## Phase 1 Complete Checklist
-
+**MVP Release Checklist:**
 ```
-Infrastructure:
-☐ Docker infrastructure running
-☐ PostgreSQL with TimescaleDB
-☐ NATS message bus
-☐ Redis caching
-☐ IPFS node
-☐ Matrix Synapse
-
-Backend Services:
-☐ Auth Service (login, register, JWT)
-☐ User Service (profiles, privacy, connections)
-☐ Territory Service (territory management)
-☐ Badge Service (badges, permissions, auto-award)
-☐ Course Service (courses, lessons, quizzes)
-☐ Forum Service (topics, posts, moderation)
-☐ IPFS Service (file upload/storage)
-☐ Translation Service (basic caching)
-☐ Matrix Gateway (basic integration)
-
-Frontend:
-☐ Authentication pages (login, register)
-☐ Profile pages (view, edit)
-☐ Course catalog and viewer
-☐ Forum (categories, topics, posts)
-☐ Protected routes
-☐ Responsive design
-☐ Error handling
-
-Features Complete:
+Core Features:
 ☐ User registration and authentication
-☐ JWT-based auth with refresh tokens
+☐ Invitation system working
 ☐ Multi-territory support
 ☐ User profiles with privacy settings
 ☐ Badge system with permission enforcement
 ☐ Code of Conduct course and badge
 ☐ Course enrollment and completion
-☐ Forum with 3-strike moderation
+☐ Forum with Matrix integration
+☐ 3-strike moderation system
 ☐ IPFS content storage
 ☐ Basic translation caching
-☐ Matrix room creation
+☐ Matrix room federation
 
 Testing:
 ☐ Unit tests (>80% coverage)
