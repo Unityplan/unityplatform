@@ -26,6 +26,7 @@
 ### Week 1-2: Infrastructure Setup
 
 #### DevOps & Infrastructure
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ Infrastructure Bootstrap                                │
@@ -36,8 +37,8 @@
 │ ✅ Set up Traefik reverse proxy                         │
 │ ✅ Create multi-pod architecture (DK, NO, SE, EU)       │
 │ ✅ Set up monitoring (Prometheus + Grafana)             │
-│ ☐ Set up Forgejo (version control + MCP)                │
-│ ☐ Set up Docker Registry (local image storage)          │
+│ ✅ Set up Forgejo (version control + MCP)               │
+│ ✅ Set up Docker Registry (local image storage)         │
 │ ☐ Configure SSL/TLS certificates (Let's Encrypt)        │
 └─────────────────────────────────────────────────────────┘
 
@@ -48,11 +49,12 @@ Deliverables:
 ✅ docker-compose.multi-territory-pod.yml (shared infrastructure)
 ✅ Multi-pod deployment scripts
 ✅ NATS clustering guide
-☐ Forgejo with MCP integration (docs/forgejo-mcp-setup.md)
-☐ Docker Registry for local builds
+✅ Forgejo with MCP integration (guides/operations/forgejo-mcp-setup.md)
+✅ Docker Registry for local builds
 ```
 
 #### Database Schema Design
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ Database Schema Creation                                │
@@ -97,6 +99,7 @@ Deliverables:
 ### Week 3-4: Authentication Service
 
 #### Auth Service Implementation
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ Authentication Service (Rust + actix-web)               │
@@ -163,6 +166,7 @@ Deliverables:
 ```
 
 #### Testing & Documentation
+
 ```
 Tests to implement:
 ✅ Unit tests for password hashing
@@ -188,6 +192,7 @@ Documentation:
 ## Week 5-6: User Service & Territory Management
 
 ### User Service
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ User Service (Rust + actix-web)                         │
@@ -240,6 +245,7 @@ Deliverables:
 ```
 
 ### Territory Service
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ Territory Service (Rust + actix-web)                    │
@@ -284,6 +290,7 @@ Deliverables:
 ## Week 7-8: Badge System
 
 ### Badge Service Implementation
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ Badge Service (Rust + actix-web)                        │
@@ -974,6 +981,7 @@ Deliverables:
 ## Success Metrics
 
 ### Technical Metrics
+
 ```
 Performance:
 ✓ API response time: <200ms (p95)
@@ -989,6 +997,7 @@ Scalability:
 ```
 
 ### User Metrics
+
 ```
 Engagement:
 ✓ Code of Conduct completion: 100% of active users
@@ -1004,6 +1013,7 @@ Content:
 ```
 
 ### Business Metrics
+
 ```
 Adoption:
 ✓ 3-5 territories onboarded
@@ -1018,6 +1028,7 @@ Adoption:
 ## Risk Mitigation
 
 ### Technical Risks
+
 ```
 Risk: Database performance issues with multi-schema
 Mitigation:
@@ -1040,6 +1051,7 @@ Mitigation:
 ```
 
 ### Project Risks
+
 ```
 Risk: Scope creep
 Mitigation:
