@@ -268,7 +268,27 @@ impl UserService {
         follower_id: Uuid,
         following_id: Uuid,
     ) -> Result<UserConnection, sqlx::Error> {
-        let connection = sqlx::query_as::<_, UserConnection>(
+        // Check if either user has blocked the other
+        let block_exists = sqlx::query_scalar::<_, bool>(
+            r#"
+            SELECT EXISTS(
+                SELECT 1 FROM territory.user_blocks
+                WHERE (blocker_id = $1 AND blocked_id = $2)
+                   OR (blocker_id = $2 AND blocked_id = $1)
+            )
+            "#,
+        )
+        .bind(follower_id)
+        .bind(following_id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        if block_exists {
+            return Err(sqlx::Error::RowNotFound);
+        }
+
+        // First try to insert
+        let result = sqlx::query_as::<_, UserConnection>(
             r#"
             INSERT INTO territory.user_connections (follower_id, following_id)
             VALUES ($1, $2)
@@ -278,10 +298,26 @@ impl UserService {
         )
         .bind(follower_id)
         .bind(following_id)
-        .fetch_one(&self.pool)
+        .fetch_optional(&self.pool)
         .await?;
 
-        Ok(connection)
+        // If insert was skipped (conflict), fetch existing connection
+        match result {
+            Some(conn) => Ok(conn),
+            None => {
+                sqlx::query_as::<_, UserConnection>(
+                    r#"
+                    SELECT follower_id, following_id, created_at
+                    FROM territory.user_connections
+                    WHERE follower_id = $1 AND following_id = $2
+                    "#,
+                )
+                .bind(follower_id)
+                .bind(following_id)
+                .fetch_one(&self.pool)
+                .await
+            }
+        }
     }
 
     /// Unfollow a user

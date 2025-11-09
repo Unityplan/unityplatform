@@ -3,6 +3,14 @@ name = "user-service"
 version = "0.1.0-alpha.1"
 edition = "2021"
 
+[lib]
+name = "user_service"
+path = "src/lib.rs"
+
+[[bin]]
+name = "user-service"
+path = "src/main.rs"
+
 [dependencies]
 # Shared library
 shared-lib = { path = "../shared-lib" }
@@ -40,3 +48,4 @@ futures-util = "0.3"
 
 [dev-dependencies]
 actix-rt = "2.9"
+tempfile = "3.8"
