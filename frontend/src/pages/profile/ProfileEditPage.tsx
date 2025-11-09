@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuthStore } from '@/stores/authStore';
 import {
-    getFullProfile,
+    getUserProfile,
     updateProfile,
     uploadAvatar,
     deleteAvatar,
@@ -58,7 +58,7 @@ export function ProfileEditPage() {
                 setIsLoading(true);
                 setError('');
 
-                const profileData = await getFullProfile(user.id);
+                const profileData = await getUserProfile(user.id);
 
                 setProfile(profileData);
 

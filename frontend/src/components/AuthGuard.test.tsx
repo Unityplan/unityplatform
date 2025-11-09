@@ -3,55 +3,55 @@ import { renderWithProviders, screen, mockAuthState, clearAuthState } from '@/te
 import { AuthGuard } from './AuthGuard';
 
 describe('AuthGuard', () => {
-  beforeEach(() => {
-    clearAuthState();
-  });
+    beforeEach(() => {
+        clearAuthState();
+    });
 
-  it('renders children when user is authenticated', () => {
-    mockAuthState();
-    
-    renderWithProviders(
-      <AuthGuard>
-        <div>Protected Content</div>
-      </AuthGuard>
-    );
+    it('renders children when user is authenticated', () => {
+        mockAuthState();
 
-    expect(screen.getByText('Protected Content')).toBeInTheDocument();
-  });
+        renderWithProviders(
+            <AuthGuard>
+                <div>Protected Content</div>
+            </AuthGuard>
+        );
 
-  it('returns null when user is not authenticated', () => {
-    const { container } = renderWithProviders(
-      <AuthGuard>
-        <div>Protected Content</div>
-      </AuthGuard>
-    );
+        expect(screen.getByText('Protected Content')).toBeInTheDocument();
+    });
 
-    expect(container.firstChild).toBeNull();
-  });
+    it('returns null when user is not authenticated', () => {
+        const { container } = renderWithProviders(
+            <AuthGuard>
+                <div>Protected Content</div>
+            </AuthGuard>
+        );
 
-  it('does not render children when user is null', () => {
-    // Set auth state with null user
-    localStorage.setItem(
-      'auth-storage',
-      JSON.stringify({
-        state: {
-          user: null,
-          accessToken: 'token',
-          refreshToken: 'refresh',
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-        },
-        version: 0,
-      })
-    );
+        expect(container.firstChild).toBeNull();
+    });
 
-    const { container } = renderWithProviders(
-      <AuthGuard>
-        <div>Protected Content</div>
-      </AuthGuard>
-    );
+    it('does not render children when user is null', () => {
+        // Set auth state with null user
+        localStorage.setItem(
+            'auth-storage',
+            JSON.stringify({
+                state: {
+                    user: null,
+                    accessToken: 'token',
+                    refreshToken: 'refresh',
+                    isAuthenticated: false,
+                    isLoading: false,
+                    error: null,
+                },
+                version: 0,
+            })
+        );
 
-    expect(container.firstChild).toBeNull();
-  });
+        const { container } = renderWithProviders(
+            <AuthGuard>
+                <div>Protected Content</div>
+            </AuthGuard>
+        );
+
+        expect(container.firstChild).toBeNull();
+    });
 });

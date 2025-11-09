@@ -132,16 +132,6 @@ export async function deleteAvatar(userId: string): Promise<void> {
 }
 
 /**
- * Delete user avatar
- * 
- * @param userId - User ID
- * @returns Updated profile without avatar
- */
-export async function deleteAvatar(userId: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/avatars/${userId}`);
-}
-
-/**
  * Follow a user
  * 
  * @param userId - User ID
@@ -224,19 +214,6 @@ export async function unblockUser(userId: string, targetId: string): Promise<voi
 export async function getBlockedUsers(userId: string): Promise<UserConnection[]> {
   const response = await apiClient.get(`${USER_BASE_URL}/api/v1/connections/blocked`, {
     params: { user_id: userId },
-  });
-  return response.data;
-}
-
-/**
- * Get list of blocked users
- * 
- * @param territoryCode - Territory code
- * @returns List of blocked user IDs
- */
-export async function getBlockedUsers(territoryCode: string): Promise<string[]> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/users/blocks`, {
-    params: { territory_code: territoryCode },
   });
   return response.data;
 }
