@@ -21,7 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Axios API client with automatic token refresh interceptor
   - Auth API functions: register, login, logout, refreshToken, getCurrentUser, validateInvitation
   - User API functions: profile, avatar, privacy, connections, blocks (11 endpoints)
-  - LoginPage component with react-hook-form + zod validation
+  - **LoginPage**: Username/email + password + territory, show/hide password
+  - **RegisterPage**: Two-step flow (validate invitation → registration form with strong password validation)
+  - **PasswordResetPage**: Two-step flow (request reset email → reset with token)
+  - **ProfileViewPage**: Display user profile with avatar, bio, metadata, join date, territory
+  - **ProfileEditPage**: Edit profile info, upload avatar, manage privacy settings (profile visibility, show_email, show_location, show_connections, allow_messages_from)
+  - Temporary routing in App.tsx for testing (will be replaced with TanStack Router)
   - Type-safe error handling with helper functions
   - Environment configuration (.env.development, .env.production)
   - Path aliases (@/ → src/) configured in tsconfig
@@ -51,8 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Frontend Configuration Verified** (November 9, 2025)
-  - TailwindCSS v4: Verified against official docs (https://tailwindcss.com/docs/installation/using-vite)
-  - shadcn/ui: Verified against official docs (https://ui.shadcn.com/docs/installation/vite)
+  - TailwindCSS v4: Verified against official docs (<https://tailwindcss.com/docs/installation/using-vite>)
+  - shadcn/ui: Verified against official docs (<https://ui.shadcn.com/docs/installation/vite>)
   - Path aliases configured in both tsconfig.json and tsconfig.app.json
   - OKLCH color theming with CSS variables (not JavaScript config)
   - @import "tailwindcss" syntax (not @tailwind directives)
@@ -84,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Invitation audit trail: Changed ip_address column from inet to text for flexibility
 
 ### Planned
+
 - Authentication service refresh/logout endpoints (POST /auth/refresh, POST /auth/logout)
 - Get current user endpoint (GET /auth/me)
 - **Badge-based invitations** - Attach badges to invitation tokens for auto-granting:
@@ -95,6 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontend application (Vite + React)
 
 ### Next Milestone: 0.1.0-alpha.2
+
 - Complete auth-service core features (refresh, logout, me endpoints)
 - Integration tests for invitation system
 - API documentation (OpenAPI/Swagger)
@@ -104,6 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0-alpha.1] - 2025-11-06
 
 ### Changed
+
 - **CRITICAL:** User data sovereignty architecture correction
   - Moved user personal data from `global.users` to `territory_*.users`
   - Created `global.user_identities` with cryptographic hashes only
@@ -113,17 +121,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated copilot instructions with natural ecosystem metaphor
 
 ### Added
+
 - Natural ecosystem metaphor documentation in project overview
 - Migration 20251106000001: User data sovereignty
 - Database triggers for automatic identity sync
 - Support for future WebAuthn/Holochain authentication
 
 ### Infrastructure
+
 - Database schema restructured for data sovereignty
 - Territory schemas now contain ALL user personal data
 - Global schema only coordinates via cryptographic identifiers
 
 ### Security
+
 - Enhanced privacy: personal data never leaves territory
 - GDPR compliance: data stays in user-selected territory
 - Future-proof: compatible with Holochain agent identities
@@ -131,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Release Stage:** Alpha (Infrastructure foundation, no working services yet)
 
 ### Added
+
 - Multi-pod infrastructure architecture
 - Denmark pod (pod-dk) deployment with PostgreSQL, NATS, Redis, IPFS
 - Monitoring stack (Prometheus, Grafana, Jaeger)
@@ -148,10 +160,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Grafana dashboards (Pod Overview, Multi-Pod Overview)
 
 ### Changed
+
 - Documentation reorganized from multiple folders into consolidated docs/ structure
 - Territory management follows ISO 3166-1 Alpha-2 standard (DK, NO, SE)
 
 ### Infrastructure
+
 - PostgreSQL 16 with TimescaleDB
 - NATS 2.10 with JetStream
 - Redis 7 with persistence
@@ -161,6 +175,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Jaeger for distributed tracing
 
 ### Security
+
 - Schema-based multi-tenant isolation
 - Network segmentation (global-net, mesh-network, pod-net)
 
@@ -178,5 +193,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-**Platform Repository:** https://github.com/unityplan/platform  
-**Documentation:** https://docs.unityplan.org
+**Platform Repository:** <https://github.com/unityplan/platform>  
+**Documentation:** <https://docs.unityplan.org>

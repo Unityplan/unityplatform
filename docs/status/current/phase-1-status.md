@@ -3,22 +3,22 @@
 **Last Updated:** November 9, 2025  
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
-**Progress:** 46% (Stages 1-4: 100%, Stage 5: 60%, Stages 6-13: 0%)  
+**Progress:** 48% (Stages 1-4: 100%, Stage 5: 85%, Stages 6-13: 0%)  
 **Release Stage:** Alpha (0.1.0-alpha.1)  
-**Recent Update:** Frontend auth infrastructure complete (Steps 5.1-5.3 done, LoginPage created)
+**Recent Update:** Frontend auth and profile pages complete (Steps 5.1-5.5 done, 17/20 tasks)
 
 ---
 
 ## 📊 Overall Progress
 
 ```
-[████████░░░░░░░░░░░░] 46% Complete (Stages 1-4: 100%, Stage 5: 60%, Stages 6-13: 0%)
+[█████████░░░░░░░░░░░] 48% Complete (Stages 1-4: 100%, Stage 5: 85%, Stages 6-13: 0%)
 
 Stage 1:  Foundation & Infrastructure        [██████████] 100%
 Stage 2:  Database Schema & Migrations       [██████████] 100%
 Stage 3:  Authentication Service             [██████████] 100%
 Stage 4:  User Service                       [██████████] 100%
-Stage 5:  Frontend Auth & Profile            [██████░░░░] 60%
+Stage 5:  Frontend Auth & Profile            [████████░░] 85%
 Stage 6:  Territory & Badge Services         [░░░░░░░░░░] 0%
 Stage 7:  Course Service (LMS)               [░░░░░░░░░░] 0%
 Stage 8:  Matrix Protocol Integration        [░░░░░░░░░░] 0%
@@ -37,11 +37,11 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 **Sprint Goal:** Build authentication and profile management frontend  
 **Sprint Dates:** November 9, 2025  
 **Team Members:** Henrik  
-**Status:** 🚧 In Progress (60% complete)
+**Status:** 🚧 In Progress (85% complete)
 
 ### Active Tasks
 
-- 🚧 Step 5.4: Auth Pages (LoginPage created, RegisterPage and ResetPassword pending)
+- 🚧 Step 5.6: Protected Routes (TanStack Router setup)
 
 ### Completed This Sprint
 
@@ -55,6 +55,11 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ✅ Auth API functions (register, login, logout, refresh, getCurrentUser, validateInvitation)
 - ✅ User API functions (profile, avatar, privacy, connections, blocks)
 - ✅ LoginPage component created with react-hook-form + zod validation
+- ✅ RegisterPage component created with two-step invitation + registration flow
+- ✅ PasswordResetPage component created with two-step request + reset flow
+- ✅ ProfileViewPage component created with user info display
+- ✅ ProfileEditPage component created with profile + avatar + privacy settings editing
+- ✅ Temporary routing added to App.tsx for all auth and profile pages
 - ✅ All frontend dependencies installed (416 packages, 0 vulnerabilities)
 
 ### Completed Previously (Sprints 1-4)
