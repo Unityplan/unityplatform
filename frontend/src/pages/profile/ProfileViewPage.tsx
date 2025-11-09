@@ -4,6 +4,9 @@ import { getUserProfile } from '@/api/users';
 import type { UserProfile } from '@/api/users';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SidebarLayout, SidebarLayoutContent } from '@/components/layouts/SidebarLayout';
+import { Breadcrumbs, BreadcrumbHome, BreadcrumbSeparator, Breadcrumb } from '@/components/ui/breadcrumbs';
+import { dashboardNavigation } from '@/config/navigation';
 
 export function ProfileViewPage() {
     const { user } = useAuthStore();
@@ -38,40 +41,73 @@ export function ProfileViewPage() {
 
     if (isLoading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-background">
-                <div className="text-muted-foreground">Loading profile...</div>
-            </div>
+            <SidebarLayout sections={dashboardNavigation}>
+                <SidebarLayoutContent
+                    breadcrumbs={
+                        <Breadcrumbs>
+                            <BreadcrumbHome />
+                            <BreadcrumbSeparator />
+                            <Breadcrumb>Profile</Breadcrumb>
+                        </Breadcrumbs>
+                    }
+                >
+                    <div className="flex min-h-[50vh] items-center justify-center">
+                        <div className="text-muted-foreground">Loading profile...</div>
+                    </div>
+                </SidebarLayoutContent>
+            </SidebarLayout>
         );
     }
 
     if (error || !profile) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-background p-4">
-                <Card className="w-full max-w-md">
-                    <CardHeader>
-                        <CardTitle>Error</CardTitle>
-                        <CardDescription>{error || 'Profile not found'}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Button onClick={() => window.location.href = '/login'}>
-                            Go to Login
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
+            <SidebarLayout sections={dashboardNavigation}>
+                <SidebarLayoutContent
+                    breadcrumbs={
+                        <Breadcrumbs>
+                            <BreadcrumbHome />
+                            <BreadcrumbSeparator />
+                            <Breadcrumb>Profile</Breadcrumb>
+                        </Breadcrumbs>
+                    }
+                >
+                    <div className="flex min-h-[50vh] items-center justify-center p-4">
+                        <Card className="w-full max-w-md">
+                            <CardHeader>
+                                <CardTitle>Error</CardTitle>
+                                <CardDescription>{error || 'Profile not found'}</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Button onClick={() => window.location.href = '/login'}>
+                                    Go to Login
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </SidebarLayoutContent>
+            </SidebarLayout>
         );
     }
 
     return (
-        <div className="min-h-screen bg-background p-4">
-            <div className="mx-auto max-w-4xl space-y-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <h1 className="text-3xl font-bold">Profile</h1>
-                    <Button onClick={() => window.location.href = '/profile/edit'}>
-                        Edit Profile
-                    </Button>
-                </div>
+        <SidebarLayout sections={dashboardNavigation}>
+            <SidebarLayoutContent
+                breadcrumbs={
+                    <Breadcrumbs>
+                        <BreadcrumbHome />
+                        <BreadcrumbSeparator />
+                        <Breadcrumb>Profile</Breadcrumb>
+                    </Breadcrumbs>
+                }
+            >
+                <div className="space-y-6 py-6">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-3xl font-bold">Profile</h1>
+                        <Button onClick={() => window.location.href = '/profile/edit'}>
+                            Edit Profile
+                        </Button>
+                    </div>
 
                 {/* Profile Card */}
                 <Card>
@@ -184,7 +220,8 @@ export function ProfileViewPage() {
                         </Button>
                     </CardContent>
                 </Card>
-            </div>
-        </div>
+                </div>
+            </SidebarLayoutContent>
+        </SidebarLayout>
     );
 }

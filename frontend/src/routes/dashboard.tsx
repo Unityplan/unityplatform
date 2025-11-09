@@ -3,6 +3,9 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SidebarLayout, SidebarLayoutContent } from '@/components/layouts/SidebarLayout';
+import { Breadcrumbs, BreadcrumbHome, BreadcrumbSeparator, Breadcrumb } from '@/components/ui/breadcrumbs';
+import { dashboardNavigation } from '@/config/navigation';
 
 export const Route = createFileRoute('/dashboard')({
     component: Dashboard,
@@ -13,17 +16,21 @@ function Dashboard() {
 
     return (
         <AuthGuard>
-            <div className="min-h-screen bg-background p-4">
-                <div className="mx-auto max-w-6xl space-y-6">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold">Dashboard</h1>
-                            <p className="text-muted-foreground">Welcome back, {user?.username}!</p>
-                        </div>
-                        <Button onClick={() => window.location.href = '/profile'}>
-                            View Profile
-                        </Button>
+            <SidebarLayout sections={dashboardNavigation}>
+                <SidebarLayoutContent
+                    breadcrumbs={
+                        <Breadcrumbs>
+                            <BreadcrumbHome />
+                            <BreadcrumbSeparator />
+                            <Breadcrumb>Dashboard</Breadcrumb>
+                        </Breadcrumbs>
+                    }
+                >
+                    <div className="space-y-6 py-6">
+                    {/* Welcome Header */}
+                    <div>
+                        <h1 className="text-3xl font-bold">Dashboard</h1>
+                        <p className="text-muted-foreground">Welcome back, {user?.username}!</p>
                     </div>
 
                     {/* Quick Stats */}
@@ -117,8 +124,9 @@ function Dashboard() {
                             </p>
                         </CardContent>
                     </Card>
-                </div>
-            </div>
+                    </div>
+                </SidebarLayoutContent>
+            </SidebarLayout>
         </AuthGuard>
     );
 }

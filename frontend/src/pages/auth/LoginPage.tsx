@@ -14,6 +14,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { CenteredLayout } from '@/components/layouts/CenteredLayout';
+import { Logo } from '@/components/ui/logo';
 
 // Login form validation schema
 const loginSchema = z.object({
@@ -57,7 +59,10 @@ export function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <CenteredLayout>
+            <div className="mb-8 flex justify-center">
+                <Logo className="text-gray-950 dark:text-white" />
+            </div>
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle>Welcome Back</CardTitle>
@@ -163,6 +168,6 @@ export function LoginPage() {
                     </div>
                 </CardFooter>
             </Card>
-        </div>
+        </CenteredLayout>
     );
 }
