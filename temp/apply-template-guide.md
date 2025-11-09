@@ -33,6 +33,7 @@ This guide provides a step-by-step process to port the compass-ts template's des
 ## Phase 1: Preparation & Setup
 
 ### Step 1.1: Git Commit Current State
+
 ```bash
 cd /home/henrik/projects/unityplan_platform/workspace
 git add .
@@ -45,6 +46,7 @@ git push origin main
 ```
 
 ### Step 1.2: Install Required Dependencies
+
 ```bash
 cd frontend
 
@@ -57,6 +59,7 @@ npm install geist@latest
 ```
 
 ### Step 1.3: Create Directory Structure
+
 ```bash
 # Create new directories for template components
 mkdir -p src/components/layouts
@@ -76,11 +79,13 @@ mkdir -p public/fonts
 Copy from: `temp/compass-ts/src/app/typography.css`
 
 **Adaptations needed**:
+
 - Replace `var(--color-gray-700)` with your theme colors from `index.css`
 - Adjust spacing to use your existing spacing scale
 - Keep the `.prose` class structure (excellent for content pages)
 
 **Action**:
+
 1. Create `frontend/src/styles/typography.css`
 2. Copy content from template
 3. Update color variables to match your theme:
@@ -94,6 +99,7 @@ Copy from: `temp/compass-ts/src/app/typography.css`
 **File**: `frontend/src/index.css`
 
 **Add after TailwindCSS import**:
+
 ```css
 @import "tailwindcss";
 @import "./styles/typography.css";
@@ -118,22 +124,26 @@ Copy from: `temp/compass-ts/src/app/typography.css`
 ### Step 2.3: Download & Add Fonts
 
 **Fonts used in template**:
+
 - Inter Variable (primary sans-serif)
 - Geist Mono (code/monospace)
 
 **Option A: Use geist npm package** (Recommended)
+
 ```bash
 npm install geist
 ```
 
 Then import in `main.tsx`:
+
 ```tsx
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 ```
 
 **Option B: Download Inter Variable manually**
-1. Download from Google Fonts: https://fonts.google.com/specimen/Inter
+
+1. Download from Google Fonts: <https://fonts.google.com/specimen/Inter>
 2. Place `.woff2` files in `public/fonts/`
 3. Add `@font-face` declarations to CSS
 
@@ -172,12 +182,15 @@ export function BaseLayout({ children, className }: BaseLayoutProps) {
 **Source**: `temp/compass-ts/src/components/navbar.tsx`
 
 **Adaptations**:
+
 1. Replace `@headlessui/react` Dialog with Radix Dialog:
+
    ```tsx
    import * as Dialog from '@radix-ui/react-dialog';
    ```
 
 2. Replace Next.js `Link` with TanStack Router `Link`:
+
    ```tsx
    import { Link } from '@tanstack/react-router';
    ```
@@ -190,6 +203,7 @@ export function BaseLayout({ children, className }: BaseLayoutProps) {
    - etc.
 
 **Steps**:
+
 1. Copy `navbar.tsx` → `frontend/src/components/layouts/Navbar.tsx`
 2. Update imports (Dialog, Link, icons)
 3. Update navigation structure to match your app
@@ -238,8 +252,10 @@ export function CenteredLayout({
 **Usage**: Perfect for dashboard, profile, settings pages
 
 **Major Adaptations**:
+
 1. Replace Dialog with Radix UI Dialog
 2. Replace `usePathname()` with TanStack Router:
+
    ```tsx
    import { useMatchRoute, Link } from '@tanstack/react-router';
    
@@ -248,6 +264,7 @@ export function CenteredLayout({
    ```
 
 3. Update navigation structure to match your app modules:
+
    ```tsx
    const modules = [
      {
@@ -262,6 +279,7 @@ export function CenteredLayout({
    ```
 
 **Steps**:
+
 1. Copy `sidebar-layout.tsx` → `frontend/src/components/layouts/SidebarLayout.tsx`
 2. Replace Headless UI Dialog with Radix Dialog
 3. Update routing logic for TanStack Router
@@ -347,6 +365,7 @@ Copy all icon components - they're framework-agnostic SVG components.
 **File**: `frontend/src/pages/auth/LoginPage.tsx`
 
 **Wrap with CenteredLayout**:
+
 ```tsx
 import { CenteredLayout } from '@/components/layouts/CenteredLayout';
 
@@ -364,6 +383,7 @@ export function LoginPage() {
 **File**: `frontend/src/pages/dashboard/DashboardPage.tsx` (create if needed)
 
 **Wrap with SidebarLayout**:
+
 ```tsx
 import { SidebarLayout } from '@/components/layouts/SidebarLayout';
 
@@ -389,7 +409,8 @@ export function DashboardPage() {
 
 ### Step 5.3: Update Profile Pages
 
-**Files**: 
+**Files**:
+
 - `frontend/src/pages/profile/ProfileViewPage.tsx`
 - `frontend/src/pages/profile/ProfileEditPage.tsx`
 
@@ -413,12 +434,14 @@ export function DashboardPage() {
 ### Step 6.1: Visual Testing Checklist
 
 Test each page:
+
 - [ ] Login page (CenteredLayout)
 - [ ] Dashboard (SidebarLayout)
 - [ ] Profile view (SidebarLayout)
 - [ ] Profile edit (SidebarLayout)
 
 Test responsive behavior:
+
 - [ ] Mobile menu (< 768px)
 - [ ] Sidebar toggle (desktop)
 - [ ] Typography scales correctly
@@ -431,6 +454,7 @@ npm test -- --run
 ```
 
 Ensure no regressions:
+
 - [ ] All previous tests still pass
 - [ ] No new console errors
 - [ ] Layouts render correctly
@@ -438,6 +462,7 @@ Ensure no regressions:
 ### Step 6.3: Browser Testing
 
 Test in:
+
 - [ ] Chrome/Edge
 - [ ] Firefox
 - [ ] Safari (if available)
@@ -450,6 +475,7 @@ Test in:
 ### Step 7.1: Remove Unused Code
 
 If replacing existing layouts:
+
 - Remove old layout components
 - Update all route imports
 - Clean up unused CSS
@@ -457,6 +483,7 @@ If replacing existing layouts:
 ### Step 7.2: Update Documentation
 
 Update `frontend/README.md`:
+
 ```markdown
 ## Design System
 
@@ -516,13 +543,17 @@ git push origin main
 ## Troubleshooting
 
 ### Issue: Dialog not rendering
+
 **Solution**: Check Radix Dialog is properly installed and imported:
+
 ```tsx
 import * as Dialog from '@radix-ui/react-dialog';
 ```
 
 ### Issue: Fonts not loading
+
 **Solution**: Verify font files are in `public/fonts/` and CSS paths are correct:
+
 ```css
 @font-face {
   font-family: 'Inter Variable';
@@ -531,13 +562,16 @@ import * as Dialog from '@radix-ui/react-dialog';
 ```
 
 ### Issue: Routes not matching
+
 **Solution**: Update TanStack Router match logic:
+
 ```tsx
 const matchRoute = useMatchRoute();
 const isActive = matchRoute({ to: '/dashboard' });
 ```
 
 ### Issue: Dark mode not working
+
 **Solution**: Ensure dark mode class is on `<html>` element (check your theme setup)
 
 ---
