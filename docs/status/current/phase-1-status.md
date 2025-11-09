@@ -4,7 +4,8 @@
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
 **Progress:** 41% (Stages 1-4: 100%, Stages 5-13: 0%)  
-**Release Stage:** Alpha (0.1.0-alpha.1)
+**Release Stage:** Alpha (0.1.0-alpha.1)  
+**Recent Update:** Frontend stack updated to React 18.x + TanStack Query v5
 
 ---
 
