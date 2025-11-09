@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Validation schemas
@@ -335,104 +334,6 @@ export function ProfileEditPage() {
                             </div>
                         </CardContent>
                     </Card>
-
-                    {/* Privacy Settings Section */}
-                    {privacy && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Privacy Settings</CardTitle>
-                                <CardDescription>Control who can see your information</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {/* Profile Visibility */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="profile_visibility">Profile Visibility</Label>
-                                    <select
-                                        id="profile_visibility"
-                                        value={privacy.profile_visibility}
-                                        onChange={(e) =>
-                                            setPrivacy({
-                                                ...privacy,
-                                                profile_visibility: e.target.value as 'public' | 'followers_only' | 'private',
-                                            })
-                                        }
-                                        disabled={isSaving}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                                    >
-                                        <option value="public">Public - Anyone can view</option>
-                                        <option value="followers_only">Followers Only - Only followers can view</option>
-                                        <option value="private">Private - Only you can view</option>
-                                    </select>
-                                </div>
-
-                                {/* Privacy Toggles */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="show_email"
-                                            checked={privacy.show_email}
-                                            onCheckedChange={(checked) =>
-                                                setPrivacy({ ...privacy, show_email: checked as boolean })
-                                            }
-                                            disabled={isSaving}
-                                        />
-                                        <Label htmlFor="show_email" className="cursor-pointer">
-                                            Show email address on profile
-                                        </Label>
-                                    </div>
-
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="show_location"
-                                            checked={privacy.show_location}
-                                            onCheckedChange={(checked) =>
-                                                setPrivacy({ ...privacy, show_location: checked as boolean })
-                                            }
-                                            disabled={isSaving}
-                                        />
-                                        <Label htmlFor="show_location" className="cursor-pointer">
-                                            Show location on profile
-                                        </Label>
-                                    </div>
-
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="show_connections"
-                                            checked={privacy.show_connections}
-                                            onCheckedChange={(checked) =>
-                                                setPrivacy({ ...privacy, show_connections: checked as boolean })
-                                            }
-                                            disabled={isSaving}
-                                        />
-                                        <Label htmlFor="show_connections" className="cursor-pointer">
-                                            Show connections/followers on profile
-                                        </Label>
-                                    </div>
-
-                                    {/* Allow Messages From */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="allow_messages_from">Who can send you messages</Label>
-                                        <select
-                                            id="allow_messages_from"
-                                            value={privacy.allow_messages_from}
-                                            onChange={(e) =>
-                                                setPrivacy({
-                                                    ...privacy,
-                                                    allow_messages_from: e.target.value as 'everyone' | 'followers_only' | 'nobody',
-                                                })
-                                            }
-                                            disabled={isSaving}
-                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                                        >
-                                            <option value="everyone">Everyone</option>
-                                            <option value="followers_only">Followers Only</option>
-                                            <option value="nobody">Nobody</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
 
                     {/* Action Buttons */}
                     <div className="flex gap-4">

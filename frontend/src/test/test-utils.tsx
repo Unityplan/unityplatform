@@ -1,8 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import { render, type RenderOptions } from '@testing-library/react';
-import { createMemoryHistory, createRouter } from '@tanstack/react-router';
+import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { routeTree } from '@/routeTree.gen';
+import { useAuthStore } from '@/stores/authStore';
 
 // Create test query client
 export const createTestQueryClient = () =>
@@ -58,6 +59,37 @@ export function renderWithProviders(
     };
 }
 
+// Custom render with router (for components that use useRouter)
+export function renderWithRouter(
+    ui: ReactElement,
+    options?: { initialPath?: string } & Omit<RenderOptions, 'wrapper'>
+) {
+    const { initialPath = '/', ...renderOptions } = options || {};
+    const testQueryClient = createTestQueryClient();
+    const testRouter = createTestRouter(initialPath);
+
+    function Wrapper({ children }: WrapperProps) {
+        return (
+            <QueryClientProvider client={testQueryClient}>
+                {
+                    // RouterProvider's types don't accept children in this lib version for tests.
+                    // Use a type-ignore here so we can mount children under the router context.
+                }
+                {/* @ts-expect-error - allow children under RouterProvider for test rendering */}
+                <RouterProvider router={testRouter}>
+                    {children}
+                </RouterProvider>
+            </QueryClientProvider>
+        );
+    }
+
+    return {
+        ...render(ui, { wrapper: Wrapper, ...renderOptions }),
+        queryClient: testQueryClient,
+        router: testRouter,
+    };
+}
+
 // Mock user for testing
 export const mockUser = {
     id: '0e8fefa6-3570-482c-b89d-c2ca8c96c873',
@@ -93,6 +125,23 @@ export function mockAuthState() {
     };
 
     localStorage.setItem('auth-storage', JSON.stringify(authState));
+
+    // Also directly set the zustand auth store to ensure synchronous test state
+    try {
+        const store = useAuthStore.getState();
+        if (store.setUser) {
+            const setter = store.setUser as (u: typeof mockUser) => void;
+            setter(mockUser);
+        }
+        if (store.setTokens) {
+            const tokenSetter = store.setTokens as (a: string, r: string) => void;
+            tokenSetter(mockTokens.access_token, mockTokens.refresh_token);
+        }
+    } catch (e) {
+        // If store isn't ready in this environment, ignore - localStorage still helps
+        // but prefer direct store update for deterministic test behavior
+        console.warn('mockAuthState: unable to set zustand store directly', e);
+    }
 }
 
 // Helper to clear auth state
