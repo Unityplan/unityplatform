@@ -3,13 +3,13 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { ProfileEditPage } from '@/pages/profile/ProfileEditPage';
 
 export const Route = createFileRoute('/profile/edit')({
-  component: ProfileEdit,
+    component: ProfileEdit,
 });
 
 function ProfileEdit() {
-  return (
-    <AuthGuard>
-      <ProfileEditPage />
-    </AuthGuard>
-  );
+    return (
+        <AuthGuard>
+            <ProfileEditPage />
+        </AuthGuard>
+    );
 }

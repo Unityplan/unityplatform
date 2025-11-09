@@ -1,16 +1,56 @@
 # UnityPlan Scripts
 
+## 🚀 Quick Start Development Scripts (RECOMMENDED)
+
+### Start All Development Services
+
+```bash
+./scripts/start-dev-services.sh
+```
+
+**Starts**: Docker infrastructure + auth-service + user-service + frontend  
+**One command** to start everything you need for frontend development!
+
+### Stop All Services
+
+```bash
+./scripts/stop-dev-services.sh
+```
+
+### Restart All Services
+
+```bash
+./scripts/restart-dev-services.sh
+```
+
+### Check Service Status
+
+```bash
+./scripts/dev-status.sh
+```
+
+### Service URLs
+
+- Frontend: <http://localhost:5173>
+- Auth Service: <http://localhost:8001>
+- User Service: <http://localhost:8002>
+- Adminer (DB UI): <http://localhost:8080>
+
+---
+
 ## Active Scripts (New Architecture)
 
 ### Development
 
 **`start-dev.sh`** - Start Phase 1 development environment
+
 - Starts: Forgejo + Docker Registry
 - Purpose: Minimal setup for MVP development
 - Usage: `./scripts/start-dev.sh`
 - Help: `./scripts/start-dev.sh --help`
 
 **`start-architecture.sh`** - Flexible startup with options
+
 - Starts: Specific components or full stack
 - Purpose: Development, monitoring, pods, or everything
 - Usage: `./scripts/start-architecture.sh [OPTIONS]`
@@ -24,6 +64,7 @@
   - `./scripts/start-architecture.sh --full`
 
 **`stop-architecture.sh`** - Stop services
+
 - Stops: Specific components or everything
 - Purpose: Clean shutdown with optional data removal
 - Usage: `./scripts/stop-architecture.sh [OPTIONS]`
@@ -37,12 +78,14 @@
 ### Multi-Pod Deployment
 
 **`deploy-multi-pod.sh`** - Deploy all production pods
+
 - Deploys: Denmark (DK), Norway (NO), Sweden (SE), Europe (EU) pods
 - Purpose: Multi-pod production deployment
 - Usage: `./scripts/deploy-multi-pod.sh [--clean]`
 - Help: `./scripts/deploy-multi-pod.sh --help`
 
 **`verify-multi-pod.sh`** - Verify multi-pod deployment
+
 - Checks: All pod services, health, connectivity
 - Purpose: Validate multi-pod setup
 - Usage: `./scripts/verify-multi-pod.sh`
@@ -147,10 +190,12 @@ docker volume rm pod-dk-postgres-data
 The old monolithic `docker-compose.yml` has been archived as `docker-compose.monolith.yml.old`.
 
 **What changed:**
+
 - ❌ Old: Single `docker-compose.yml` with everything
 - ✅ New: Split into 4 files (dev, monitoring, pod, multi-territory-pod)
 
 **Why:**
+
 - Better separation of concerns
 - Per-pod deployment (multi-tenant)
 - Easier to scale (add new territories)

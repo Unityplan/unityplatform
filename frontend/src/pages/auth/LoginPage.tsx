@@ -17,7 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 
 // Login form validation schema
 const loginSchema = z.object({
-    email: z.string().min(1, 'Username or email is required'),
+    username: z.string().min(3, 'Username is required (3-50 characters)'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     territory_code: z.string().min(2, 'Please select a territory'),
 });
@@ -39,7 +39,7 @@ export function LoginPage() {
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
-            email: '',
+            username: '',
             password: '',
             territory_code: 'dk', // Default to Denmark
         },
@@ -92,17 +92,17 @@ export function LoginPage() {
                                 )}
                             />
 
-                            {/* Username or Email Field */}
+                            {/* Username Field */}
                             <FormField
                                 control={form.control}
-                                name="email"
+                                name="username"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Username or Email</FormLabel>
+                                        <FormLabel>Username</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="text"
-                                                placeholder="username or email@example.com"
+                                                placeholder="Enter your username"
                                                 autoComplete="username"
                                                 {...field}
                                             />

@@ -3,13 +3,13 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { ProfileViewPage } from '@/pages/profile/ProfileViewPage';
 
 export const Route = createFileRoute('/profile')({
-  component: Profile,
+    component: Profile,
 });
 
 function Profile() {
-  return (
-    <AuthGuard>
-      <ProfileViewPage />
-    </AuthGuard>
-  );
+    return (
+        <AuthGuard>
+            <ProfileViewPage />
+        </AuthGuard>
+    );
 }

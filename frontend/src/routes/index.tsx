@@ -2,16 +2,16 @@ import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { useAuthStore } from '@/stores/authStore';
 
 export const Route = createFileRoute('/')({
-  component: Index,
+    component: Index,
 });
 
 function Index() {
-  const { isAuthenticated } = useAuthStore();
+    const { isAuthenticated } = useAuthStore();
 
-  // Redirect to dashboard if authenticated, otherwise to login
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" />;
-  }
+    // Redirect to dashboard if authenticated, otherwise to login
+    if (isAuthenticated) {
+        return <Navigate to="/dashboard" />;
+    }
 
-  return <Navigate to="/login" />;
+    return <Navigate to="/login" />;
 }

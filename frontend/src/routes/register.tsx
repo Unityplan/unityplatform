@@ -4,19 +4,19 @@ import { useAuthStore } from '@/stores/authStore';
 import { useEffect } from 'react';
 
 export const Route = createFileRoute('/register')({
-  component: Register,
+    component: Register,
 });
 
 function Register() {
-  const { isAuthenticated } = useAuthStore();
-  const navigate = useNavigate();
+    const { isAuthenticated } = useAuthStore();
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    // Redirect to dashboard if already authenticated
-    if (isAuthenticated) {
-      navigate({ to: '/dashboard' });
-    }
-  }, [isAuthenticated, navigate]);
+    useEffect(() => {
+        // Redirect to dashboard if already authenticated
+        if (isAuthenticated) {
+            navigate({ to: '/dashboard' });
+        }
+    }, [isAuthenticated, navigate]);
 
-  return <RegisterPage />;
+    return <RegisterPage />;
 }

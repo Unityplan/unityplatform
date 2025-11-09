@@ -30,7 +30,9 @@ fi
 DB_CONTAINER="service-postgres-${TERRITORY_CODE}"
 DB_NAME="unityplan_${TERRITORY_CODE}"
 DB_USER="unityplan"
-SCHEMA_NAME="territory_${TERRITORY_CODE}"
+# For single-territory pods, use generic "territory" schema
+# For multi-territory pods, use "territory_XX" schema
+SCHEMA_NAME="territory"
 
 echo -e "${BLUE}Creating bootstrap invitation token...${NC}"
 echo "Territory: ${TERRITORY_CODE}"
@@ -52,13 +54,12 @@ INSERT INTO ${SCHEMA_NAME}.invitation_tokens (
     id,
     token,
     token_type,
-    email,
+    invited_email,
     max_uses,
-    used_count,
+    current_uses,
     expires_at,
     is_active,
-    created_by_user_id,
-    purpose
+    created_by_user_id
 ) VALUES (
     gen_random_uuid(),
     '${TOKEN}',
@@ -68,17 +69,16 @@ INSERT INTO ${SCHEMA_NAME}.invitation_tokens (
     0,
     '${EXPIRES_AT}'::timestamptz,
     true,
-    NULL,
-    'Bootstrap invitation for initial territory administrator'
+    NULL
 );
 
 -- Verify insertion
 SELECT 
     token,
     token_type,
-    email,
+    invited_email,
     expires_at,
-    purpose
+    is_active
 FROM ${SCHEMA_NAME}.invitation_tokens 
 WHERE token = '${TOKEN}';
 SQL

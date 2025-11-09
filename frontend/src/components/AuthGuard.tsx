@@ -3,7 +3,7 @@ import { useRouter } from '@tanstack/react-router';
 import { useAuthStore } from '@/stores/authStore';
 
 interface AuthGuardProps {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }
 
 /**
@@ -11,24 +11,24 @@ interface AuthGuardProps {
  * Redirects to /login if user is not authenticated.
  */
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { isAuthenticated, user } = useAuthStore();
-  const router = useRouter();
+    const { isAuthenticated, user } = useAuthStore();
+    const router = useRouter();
 
-  useEffect(() => {
+    useEffect(() => {
+        if (!isAuthenticated || !user) {
+            // Store the current path to redirect back after login
+            const currentPath = window.location.pathname;
+            router.navigate({
+                to: '/login',
+                search: { redirect: currentPath },
+            });
+        }
+    }, [isAuthenticated, user, router]);
+
+    // Don't render children if not authenticated
     if (!isAuthenticated || !user) {
-      // Store the current path to redirect back after login
-      const currentPath = window.location.pathname;
-      router.navigate({
-        to: '/login',
-        search: { redirect: currentPath },
-      });
+        return null;
     }
-  }, [isAuthenticated, user, router]);
 
-  // Don't render children if not authenticated
-  if (!isAuthenticated || !user) {
-    return null;
-  }
-
-  return <>{children}</>;
+    return <>{children}</>;
 }

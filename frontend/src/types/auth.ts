@@ -9,7 +9,7 @@ export interface User {
 }
 
 export interface LoginRequest {
-  email: string;
+  username: string;  // Login by username (privacy-first)
   password: string;
   territory_code: string;
 }

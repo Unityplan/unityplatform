@@ -4,6 +4,7 @@ mod models;
 mod services;
 mod utils;
 
+use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, App, HttpServer};
 use anyhow::Result;
 use services::TokenService;
@@ -19,6 +20,7 @@ struct Config {
     refresh_token_ttl: i64, // seconds (default: 7 days)
     server_host: String,
     server_port: u16,
+    cors_allowed_origins: Vec<String>, // CORS allowed origins
 }
 
 impl Config {
@@ -43,6 +45,12 @@ impl Config {
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(8001),
+            cors_allowed_origins: std::env::var("CORS_ALLOWED_ORIGINS")
+                .unwrap_or_else(|_| "http://localhost:5173,http://localhost:3000".to_string())
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect(),
         })
     }
 }
@@ -94,14 +102,33 @@ async fn main() -> Result<()> {
     let bind_addr = format!("{}:{}", config.server_host, config.server_port);
     tracing::info!("Starting HTTP server on {}", bind_addr);
 
+    // Clone config for use in HttpServer closure
+    let cors_origins = config.cors_allowed_origins.clone();
+
     // Start HTTP server
     HttpServer::new(move || {
+        // Configure CORS with origins from config
+        let mut cors = Cors::default();
+        for origin in &cors_origins {
+            cors = cors.allowed_origin(origin);
+        }
+        let cors = cors
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+            .allowed_headers(vec![
+                actix_web::http::header::AUTHORIZATION,
+                actix_web::http::header::ACCEPT,
+                actix_web::http::header::CONTENT_TYPE,
+            ])
+            .supports_credentials()
+            .max_age(3600);
+
         App::new()
+            .wrap(cors)
             .wrap(Logger::default())
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::from(token_service.clone()))
             .service(
-                web::scope("/api/auth")
+                web::scope("/api/v1/auth")
                     // Public auth endpoints
                     .route("/register", web::post().to(handlers::register))
                     .route("/login", web::post().to(handlers::login))
