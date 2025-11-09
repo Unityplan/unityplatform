@@ -8,7 +8,7 @@ import './App.css'
 
 function App() {
   const [page, setPage] = useState<'login' | 'register' | 'reset-password' | 'profile' | 'profile-edit'>('login')
-  
+
   // Simple navigation for testing (will be replaced with proper routing later)
   if (typeof window !== 'undefined') {
     const path = window.location.pathname

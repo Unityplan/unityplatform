@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
@@ -33,28 +33,28 @@ const TERRITORIES = [
 ];
 
 export function LoginPage() {
-  const { login, isLoading, error } = useAuthStore();
-  const [showPassword, setShowPassword] = useState(false);
+    const { login, isLoading, error } = useAuthStore();
+    const [showPassword, setShowPassword] = useState(false);
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      territory_code: 'dk', // Default to Denmark
-    },
-  });
+    const form = useForm<LoginFormValues>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: '',
+            password: '',
+            territory_code: 'dk', // Default to Denmark
+        },
+    });
 
-  const onSubmit = async (data: LoginFormValues) => {
-    try {
-      await login(data);
-      // TODO: Redirect to dashboard once routing is set up
-      console.log('Login successful!');
-    } catch (err) {
-      // Error is already handled by the store
-      console.error('Login failed:', err);
-    }
-  };
+    const onSubmit = async (data: LoginFormValues) => {
+        try {
+            await login(data);
+            // TODO: Redirect to dashboard once routing is set up
+            console.log('Login successful!');
+        } catch (err) {
+            // Error is already handled by the store
+            console.error('Login failed:', err);
+        }
+    };
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">

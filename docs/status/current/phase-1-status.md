@@ -3,22 +3,22 @@
 **Last Updated:** November 9, 2025  
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
-**Progress:** 48% (Stages 1-4: 100%, Stage 5: 85%, Stages 6-13: 0%)  
+**Progress:** 49% (Stages 1-4: 100%, Stage 5: 95%, Stages 6-13: 0%)  
 **Release Stage:** Alpha (0.1.0-alpha.1)  
-**Recent Update:** Frontend auth and profile pages complete (Steps 5.1-5.5 done, 17/20 tasks)
+**Recent Update:** TanStack Router setup complete with protected routes (Steps 5.1-5.6 done, 19/20 tasks)
 
 ---
 
 ## 📊 Overall Progress
 
 ```
-[█████████░░░░░░░░░░░] 48% Complete (Stages 1-4: 100%, Stage 5: 85%, Stages 6-13: 0%)
+[█████████░░░░░░░░░░░] 49% Complete (Stages 1-4: 100%, Stage 5: 95%, Stages 6-13: 0%)
 
 Stage 1:  Foundation & Infrastructure        [██████████] 100%
 Stage 2:  Database Schema & Migrations       [██████████] 100%
 Stage 3:  Authentication Service             [██████████] 100%
 Stage 4:  User Service                       [██████████] 100%
-Stage 5:  Frontend Auth & Profile            [████████░░] 85%
+Stage 5:  Frontend Auth & Profile            [█████████░] 95%
 Stage 6:  Territory & Badge Services         [░░░░░░░░░░] 0%
 Stage 7:  Course Service (LMS)               [░░░░░░░░░░] 0%
 Stage 8:  Matrix Protocol Integration        [░░░░░░░░░░] 0%
@@ -37,11 +37,11 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 **Sprint Goal:** Build authentication and profile management frontend  
 **Sprint Dates:** November 9, 2025  
 **Team Members:** Henrik  
-**Status:** 🚧 In Progress (85% complete)
+**Status:** 🚧 In Progress (95% complete)
 
 ### Active Tasks
 
-- 🚧 Step 5.6: Protected Routes (TanStack Router setup)
+- 🚧 Step 5.7: UI Components (Avatar, UserCard, ProfileHeader, PrivacySettingsForm)
 
 ### Completed This Sprint
 
@@ -59,8 +59,12 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ✅ PasswordResetPage component created with two-step request + reset flow
 - ✅ ProfileViewPage component created with user info display
 - ✅ ProfileEditPage component created with profile + avatar + privacy settings editing
-- ✅ Temporary routing added to App.tsx for all auth and profile pages
-- ✅ All frontend dependencies installed (416 packages, 0 vulnerabilities)
+- ✅ TanStack Router setup with file-based routing
+- ✅ AuthGuard component for protecting routes
+- ✅ Dashboard route created (protected)
+- ✅ All routes configured with automatic generation
+- ✅ Router devtools installed for development
+- ✅ 460 packages installed, 0 vulnerabilities
 
 ### Completed Previously (Sprints 1-4)
 
@@ -425,20 +429,21 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ✅ Create user API client (src/api/users.ts) with 11 endpoints
 - ✅ Create API client with token refresh interceptor (src/lib/api-client.ts)
 
-#### Step 5.4: Auth Pages (1/3) 🚧
+#### Step 5.4: Auth Pages (3/3) ✅
 
 - ✅ Create login page (LoginPage.tsx with react-hook-form + zod)
-- ⬜ Create register page
-- ⬜ Create password reset page
+- ✅ Create register page (RegisterPage.tsx with two-step invitation validation)
+- ✅ Create password reset page (PasswordResetPage.tsx with two-step flow)
 
-#### Step 5.5: Profile Pages (0/2)
+#### Step 5.5: Profile Pages (2/2) ✅
 
-- ⬜ Create profile view page
-- ⬜ Create profile edit page
+- ✅ Create profile view page (ProfileViewPage.tsx)
+- ✅ Create profile edit page (ProfileEditPage.tsx)
 
-#### Step 5.6: Protected Routes (0/2)
+#### Step 5.6: Protected Routes (2/2) ✅
 
-- ⬜ Create route guard component
+- ✅ Create route guard component (AuthGuard.tsx)
+- ✅ Configure router with protected routes (TanStack Router)
 - ⬜ Configure router with protected routes
 
 #### Step 5.7: UI Components (0/4)
@@ -456,16 +461,23 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 **Notes:**  
 
-- Frontend scaffolding complete (416 packages, 0 vulnerabilities)
+- Frontend scaffolding complete (460 packages, 0 vulnerabilities)
 - Dev server running on port 5173 (avoids conflicts with Forgejo:3000, Grafana:3001)
 - TailwindCSS v4 configured with OKLCH color theming (verified against official docs)
 - shadcn/ui components installed and configured (verified against official docs)
 - Path aliases working correctly (@/ → src/)
 - TypeScript compilation: 0 errors
 - Comprehensive frontend documentation created (TAILWIND-V4-MIGRATION.md)
-- All configuration files verified: vite.config.ts, tsconfig.json, tsconfig.app.json, postcss.config.js, components.json
+- All configuration files verified: vite.config.ts, tsconfig.json, tsconfig.app.json, postcss.config.js, components.json, tsr.config.json
 - Auth infrastructure complete: stores, API clients, token management
-- LoginPage created with validation, territory selection, show/hide password
+- All auth pages complete: LoginPage, RegisterPage, PasswordResetPage
+- All profile pages complete: ProfileViewPage, ProfileEditPage
+- **TanStack Router configured**: File-based routing with automatic route generation
+  - Routes: /, /login, /register, /reset-password, /dashboard, /profile, /profile/edit
+  - Protected routes use AuthGuard component
+  - Auto-generated routeTree.gen.ts from src/routes/
+  - @tanstack/router-plugin integrated with Vite
+  - Router devtools enabled in development mode
 
 **Blockers:**
 

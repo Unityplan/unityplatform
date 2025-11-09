@@ -26,11 +26,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **PasswordResetPage**: Two-step flow (request reset email → reset with token)
   - **ProfileViewPage**: Display user profile with avatar, bio, metadata, join date, territory
   - **ProfileEditPage**: Edit profile info, upload avatar, manage privacy settings (profile visibility, show_email, show_location, show_connections, allow_messages_from)
-  - Temporary routing in App.tsx for testing (will be replaced with TanStack Router)
+  - **TanStack Router Setup**: File-based routing with automatic route generation
+    - Protected routes with AuthGuard component
+    - Routes: /, /login, /register, /reset-password, /dashboard (protected), /profile (protected), /profile/edit (protected)
+    - Auto-generated routeTree.gen.ts from src/routes/
+    - @tanstack/router-plugin for Vite integration
+    - Router devtools in development mode
   - Type-safe error handling with helper functions
   - Environment configuration (.env.development, .env.production)
   - Path aliases (@/ → src/) configured in tsconfig
-  - 416 packages installed, 0 vulnerabilities
+  - 460 packages installed, 0 vulnerabilities
   - Comprehensive documentation: TAILWIND-V4-MIGRATION.md
 - **Invitation System** - Complete invitation-only registration system
   - Database migration 20251106000003: `invitation_tokens` and `invitation_uses` tables
