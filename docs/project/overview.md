@@ -4972,28 +4972,42 @@ async fn send_daily_notification_digests() {
 #### **Current: Web Frontend**
 
 **Technology Stack:**
-- **React 19**: Component-based UI with modern hooks, concurrent rendering
-- **Vite**: Lightning-fast dev server, optimized production builds
+- **React 18.x**: Stable component-based UI with concurrent rendering, production-ready ecosystem
+- **Vite 5.x**: Lightning-fast dev server, optimized production builds
 - **TailwindCSS 4.1.16**: Utility-first styling, responsive design system
-- **ShadCN 3.5.0**: Accessible component library with theming support
+- **shadcn/ui 3.5.0**: Accessible component library with theming support
 - **TanStack Router 1.134.10**: Type-safe client-side routing with data loading
+- **TanStack Query v5**: Async data fetching, caching, and background refetching
+- **Zustand**: Lightweight state management (auth/UI state only)
 - **TypeScript**: Full type safety across codebase
+
+**Stack Rationale:**
+- React 18 chosen over React 19 for stable ecosystem during MVP phase
+- TanStack Query offloads data fetching from manual state management
+- Future-proof for Tauri migration (~1 year timeline)
 
 **Key Frontend Features:**
 
 ```typescript
-// Badge-aware UI components
+// Badge-aware UI components with TanStack Query
 function CourseCatalog() {
-  const { userBadges } = useUserBadges();
-  const { courses } = useCourses();
+  const { data: userBadges } = useQuery({
+    queryKey: ['user', 'badges'],
+    queryFn: fetchUserBadges,
+  });
+  
+  const { data: courses } = useQuery({
+    queryKey: ['courses'],
+    queryFn: fetchCourses,
+  });
   
   // Filter courses by badge requirements
-  const availableCourses = courses.filter(course =>
-    course.prerequisiteBadges.every(badge => userBadges.includes(badge))
+  const availableCourses = courses?.filter(course =>
+    course.prerequisiteBadges.every(badge => userBadges?.includes(badge))
   );
   
-  const lockedCourses = courses.filter(course =>
-    !course.prerequisiteBadges.every(badge => userBadges.includes(badge))
+  const lockedCourses = courses?.filter(course =>
+    !course.prerequisiteBadges.every(badge => userBadges?.includes(badge))
   );
   
   return (

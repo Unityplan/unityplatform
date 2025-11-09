@@ -53,10 +53,20 @@
 
 | Component | Version | Status | Last Updated | Framework |
 |-----------|---------|--------|--------------|-----------|
-| **Web App** | - | ⬜ Not Started | - | Vite + React 19 |
-| **UI Library** | - | ⬜ Not Started | - | ShadCN + TailwindCSS 4 |
-| **Routing** | - | ⬜ Not Started | - | TanStack Router |
+| **Web App** | - | ⬜ Not Started | - | Vite 5.x + React 18.x |
+| **UI Library** | - | ⬜ Not Started | - | shadcn/ui 3.5 + TailwindCSS 4.1 |
+| **Routing** | - | ⬜ Not Started | - | TanStack Router 1.134 |
+| **Data Layer** | - | ⬜ Not Started | - | TanStack Query v5 |
+| **State Management** | - | ⬜ Not Started | - | Zustand (auth/UI only) |
+| **Forms** | - | ⬜ Not Started | - | react-hook-form + zod |
+| **Testing** | - | ⬜ Not Started | - | Vitest + Testing Library |
 | **Matrix Client** | - | ⬜ Not Started | - | matrix-js-sdk |
+
+**Stack Rationale:**
+- React 18 chosen over React 19 for stable ecosystem during MVP phase
+- TanStack Query offloads data fetching from manual state management
+- Future-proof for Tauri migration (~1 year timeline)
+- All dependencies fully optimized for React 18
 
 ---
 

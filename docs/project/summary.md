@@ -64,11 +64,17 @@ Unlike traditional hierarchical systems, UnityPlan implements an **inverted pyra
 - **Containerization**: Docker + Docker Compose
 
 ### Frontend (Modern Web)
-- **Framework**: React 19 + Vite
-- **Styling**: TailwindCSS 4.1 + ShadCN 3.5
+- **Framework**: React 18.x + Vite 5.x (stable, production-ready)
+- **Styling**: TailwindCSS 4.1 + shadcn/ui 3.5
 - **Routing**: TanStack Router 1.134
+- **Data Layer**: TanStack Query v5 (caching, refetching)
+- **State**: Zustand (auth/UI state only)
+- **Forms**: react-hook-form + zod validation
 - **Language**: TypeScript for type safety
 - **Matrix SDK**: `matrix-js-sdk` for federated communication
+- **Testing**: Vitest (unit), Playwright (E2E)
+
+**Stack Rationale**: React 18 chosen for stable ecosystem; TanStack Query offloads data fetching from state management; future-proof for Tauri migration.
 
 ### Communication & Storage
 - **Matrix Protocol**: Decentralized forums and collaboration (via `ruma`)

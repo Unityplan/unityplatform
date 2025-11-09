@@ -319,13 +319,29 @@ let config = Config::builder()
 
 ## Frontend Technologies
 
+> **Architecture Decision**: Production-grade SPA stack optimized for 2025
+> 
+> **Why React 18 (not React 19)**:
+> - Fully stable ecosystem with all dependencies optimized for React 18
+> - React 19's biggest gains (Server Components, Actions) are for SSR, not pure SPAs
+> - Defers upgrade until Tauri mobile/desktop phase (incremental migration path)
+> - Avoids bleeding-edge instability during MVP development
+>
+> **Future-Proofing for Tauri** (~1 year timeline):
+> - Current stack will mostly just work — React + Vite officially supported in Tauri templates
+> - Routing: Only needs `createHashHistory()` instead of browser history (file-based URLs)
+> - Styling: Tailwind + shadcn work perfectly (CSS-based, not DOM-dependent)
+> - Storage: Zustand's localStorage can swap to Tauri's secure storage APIs
+> - Data Layer: TanStack Query is runtime-agnostic (browser vs. desktop webview)
+
 ### Build Tool & Dev Server
 
 #### **Vite 5.x**
 ```json
 {
   "devDependencies": {
-    "vite": "^5.0.0"
+    "vite": "^5.0.0",
+    "rollup-plugin-visualizer": "^5.12.0"
   }
 }
 ```
@@ -337,33 +353,67 @@ let config = Config::builder()
   - Optimized bundling with Rollup
   - Plugin ecosystem
   - CSS code splitting
+  - Code splitting via dynamic imports
 - **Benefits**:
   - Sub-second dev server startup
   - Instant hot reload
   - Tree-shaking for smaller bundles
   - Built-in TypeScript support
+- **Performance**: Works perfectly with React 18, Tailwind, and TypeScript
+- **Tooling**: Add bundle analyzer early to monitor dependency bloat
+
+**Build Configuration**:
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    visualizer({ open: true, gzipSize: true })
+  ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'router': ['@tanstack/react-router'],
+          'query': ['@tanstack/react-query']
+        }
+      }
+    }
+  }
+});
+```
 
 ---
 
 ### UI Framework
 
-#### **React 19**
+#### **React 18.x**
 ```json
 {
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
   }
 }
 ```
 
-- **Purpose**: Component-based UI development
-- **Key Features** (React 19):
-  - **Server Components**: Better performance
-  - **Actions**: Built-in form handling
-  - **use() hook**: Better async handling
-  - **Automatic batching**: Performance improvements
-  - **Improved hydration**: Faster page loads
+- **Purpose**: Component-based UI development with stable, production-ready ecosystem
+- **Why React 18**:
+  - **Library Ecosystem**: Every dependency fully stable and optimized for React 18
+  - **Fewer Breaking Edges**: React 19 features (`use`, Actions, form features) not needed for pure SPA
+  - **SSR Not in Play Yet**: React 19's biggest gains don't apply to client-only apps
+  - **Upgrade Path**: Incremental migration to React 19 during Tauri phase (when SSR may be needed)
+- **Key Features**:
+  - **Concurrent Rendering**: Automatic batching, transitions, Suspense
+  - **Hooks**: useState, useEffect, useContext, useReducer, useMemo, useCallback
+  - **React 18 Specific**: useTransition, useDeferredValue, useId
+  - **Automatic Batching**: Multiple state updates grouped for performance
+  - **Streaming SSR** (future): Ready when needed for Tauri/Next.js migration
 
 **Component Pattern**:
 ```tsx
@@ -387,9 +437,94 @@ export function CourseCard({ courseId }: { courseId: string }) {
 
 ---
 
+### Data Layer & Caching
+
+#### **TanStack Query v5.x**
+```json
+{
+  "dependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "@tanstack/react-query-devtools": "^5.0.0"
+  }
+}
+```
+
+- **Purpose**: Async data fetching, caching, and background refetching
+- **Why TanStack Query**:
+  - **Standardized Data Fetching**: Eliminates custom useEffect + useState patterns
+  - **Automatic Caching**: Reduces backend load and improves UX
+  - **Background Refetching**: Keeps data fresh without user intervention
+  - **Optimistic Updates**: Instant UI updates with automatic rollback on error
+  - **Request Deduplication**: Multiple components requesting same data only make one network call
+  - **Simplified Global State**: Offloads data fetching from Zustand (use Zustand only for UI state)
+- **Features**:
+  - Automatic background refetching
+  - Query invalidation and refetching
+  - Parallel and dependent queries
+  - Infinite scroll queries
+  - Mutations with optimistic updates
+  - Pagination support
+  - DevTools for debugging
+- **Integration**: Designed for co-usage with TanStack Router
+
+**Query Pattern**:
+```tsx
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+// Fetch data
+function useCourse(courseId: string) {
+  return useQuery({
+    queryKey: ['course', courseId],
+    queryFn: () => fetchCourse(courseId),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+// Mutate data
+function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: updateProfile,
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+}
+
+// Usage in component
+function CourseDetail({ courseId }: { courseId: string }) {
+  const { data: course, isLoading, error } = useCourse(courseId);
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  
+  return <div>{course.title}</div>;
+}
+```
+
+**DevTools Integration**:
+```tsx
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <YourApp />
+      {process.env.NODE_ENV === 'development' && (
+        <ReactQueryDevtools initialIsOpen={false} />
+      )}
+    </QueryClientProvider>
+  );
+}
+```
+
+---
+
 ### Routing
 
-#### **TanStack Router 1.134.x**
+#### **TanStack Router v1.13x**
 ```json
 {
   "dependencies": {
@@ -398,22 +533,29 @@ export function CourseCard({ courseId }: { courseId: string }) {
 }
 ```
 
-- **Purpose**: Type-safe client-side routing
+- **Purpose**: Type-safe client-side routing with seamless TanStack Query integration
 - **Features**:
   - Full TypeScript support
-  - Code splitting by route
+  - Code splitting by route with lazy loading
   - Search param validation
   - Loaders and actions
   - Nested layouts
   - Route guards
+  - Co-designed with TanStack Query
 - **Benefits**:
   - Catch routing errors at compile time
   - Automatic loading states
+  - Robust nested routing
   - Better DevX than React Router
 
-**Route Definition**:
+**Route Definition with Lazy Loading**:
 ```tsx
 import { createFileRoute } from '@tanstack/react-router';
+import { lazy } from 'react';
+
+// Lazy load components for code splitting
+const CourseDetail = lazy(() => import('./pages/CourseDetail'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 
 export const Route = createFileRoute('/courses/$courseId')({
   loader: async ({ params }) => {
@@ -423,11 +565,25 @@ export const Route = createFileRoute('/courses/$courseId')({
 });
 ```
 
+**Route Guards (Protected Routes)**:
+```tsx
+import { redirect } from '@tanstack/react-router';
+
+export const Route = createFileRoute('/dashboard')({
+  beforeLoad: async ({ context }) => {
+    if (!context.auth.isAuthenticated) {
+      throw redirect({ to: '/login' });
+    }
+  },
+  component: Dashboard,
+});
+```
+
 ---
 
 ### Styling
 
-#### **TailwindCSS 4.1.x**
+#### **TailwindCSS 4.x**
 ```json
 {
   "devDependencies": {
@@ -439,28 +595,43 @@ export const Route = createFileRoute('/courses/$courseId')({
 - **Purpose**: Utility-first CSS framework
 - **Features**:
   - JIT (Just-In-Time) compilation
-  - Custom design system
+  - Custom design system with CSS variables for theming
   - Responsive utilities
   - Dark mode support
   - Plugin ecosystem
+  - Improved build performance in v4
 - **Benefits**:
   - Rapid prototyping
   - Consistent design language
   - Minimal CSS bundle size
   - No naming conflicts
+- **Theming Strategy**: Define `theme.config.ts` early for Tauri migration (dark/light/system)
 
 **Usage Example**:
 ```tsx
-<div className="flex items-center gap-4 rounded-lg bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+<div className="flex items-center gap-4 rounded-lg bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:bg-gray-800">
   <img src={avatar} className="h-12 w-12 rounded-full" />
   <div className="flex-1">
-    <h3 className="text-lg font-semibold text-gray-900">{name}</h3>
-    <p className="text-sm text-gray-600">{role}</p>
+    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{name}</h3>
+    <p className="text-sm text-gray-600 dark:text-gray-400">{role}</p>
   </div>
 </div>
 ```
 
-#### **ShadCN UI 3.5.x**
+**Theme Configuration**:
+```typescript
+// theme.config.ts
+export const theme = {
+  colors: {
+    primary: 'var(--color-primary)',
+    secondary: 'var(--color-secondary)',
+    background: 'var(--color-background)',
+    foreground: 'var(--color-foreground)',
+  },
+};
+```
+
+#### **shadcn/ui 3.5.x**
 ```json
 {
   "dependencies": {
@@ -469,18 +640,25 @@ export const Route = createFileRoute('/courses/$courseId')({
 }
 ```
 
-- **Purpose**: Headless component library
+- **Purpose**: Headless, accessible component library with prebuilt primitives
+- **Why shadcn/ui**:
+  - **Not an npm package**: Copy-paste components into your codebase (full ownership)
+  - **Built on Radix UI**: WAI-ARIA compliant, keyboard navigation, focus management
+  - **Tailwind Integration**: Fully customizable with Tailwind classes
+  - **Theme System**: Built-in dark mode and CSS variable-based theming
+  - **Production-Grade**: Well-maintained, extensive component library
 - **Features**:
   - Fully accessible (WAI-ARIA)
   - Customizable with Tailwind
-  - Copy-paste components (not npm package)
   - Dark mode built-in
-  - Theme system
+  - Theme system with CSS variables
+  - TypeScript support
 - **Components**: 
   - Buttons, Inputs, Modals, Dropdowns
   - Data Tables, Calendars, Popovers
   - Toast notifications, Tooltips
   - Command palette, Context menus
+  - Forms with react-hook-form integration
 
 **Component Example**:
 ```tsx
@@ -495,8 +673,152 @@ export function Dashboard() {
       </CardHeader>
       <CardContent>
         <Button variant="default">Continue Learning</Button>
+        <Button variant="outline">View Profile</Button>
       </CardContent>
     </Card>
+  );
+}
+```
+
+---
+
+### State Management
+
+#### **Zustand (Local/Auth State Only)**
+```json
+{
+  "dependencies": {
+    "zustand": "^4.5.0"
+  }
+}
+```
+
+- **Purpose**: Lightweight state management for session, auth, and ephemeral UI state
+- **Separation of Concerns**:
+  - **Zustand**: Session/auth tokens, drawer toggles, theme mode, UI-only state
+  - **TanStack Query**: All data fetching, caching, and server state
+  - **Local Component State**: Component-specific UI state (useState)
+- **Why This Split**:
+  - Avoids unnecessary global state pollution
+  - TanStack Query handles data caching better than manual state management
+  - Zustand stays simple and focused
+- **Features**:
+  - Minimal boilerplate
+  - No Provider wrapper needed
+  - Persist to localStorage
+  - TypeScript support
+  - DevTools integration
+
+**Auth Store Pattern**:
+```typescript
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+interface AuthState {
+  token: string | null;
+  userId: string | null;
+  isAuthenticated: boolean;
+  login: (token: string, userId: string) => void;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      userId: null,
+      isAuthenticated: false,
+      login: (token, userId) => set({ token, userId, isAuthenticated: true }),
+      logout: () => set({ token: null, userId: null, isAuthenticated: false }),
+    }),
+    {
+      name: 'auth-storage',
+    }
+  )
+);
+```
+
+**UI State Example**:
+```typescript
+interface UIState {
+  sidebarOpen: boolean;
+  theme: 'light' | 'dark' | 'system';
+  toggleSidebar: () => void;
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+}
+
+export const useUIStore = create<UIState>((set) => ({
+  sidebarOpen: false,
+  theme: 'system',
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  setTheme: (theme) => set({ theme }),
+}));
+```
+
+---
+
+### Forms & Validation
+
+#### **react-hook-form + zod**
+```json
+{
+  "dependencies": {
+    "react-hook-form": "^7.51.0",
+    "zod": "^3.22.0",
+    "@hookform/resolvers": "^3.3.0"
+  }
+}
+```
+
+- **Purpose**: Type-safe form handling with validation
+- **Why This Combo**:
+  - **Best Practice**: Industry standard for React forms
+  - **shadcn Integration**: Works seamlessly with shadcn UI components
+  - **Static Typing**: Zod schemas provide TypeScript types
+  - **Unification Potential**: Can share schemas between frontend and backend (tRPC, Fastify+zod)
+- **Features**:
+  - Minimal re-renders
+  - Built-in validation
+  - Error handling
+  - Field arrays and nested forms
+  - Async validation
+
+**Form Pattern**:
+```tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
+
+export function LoginForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  });
+  
+  const onSubmit = (data: LoginForm) => {
+    console.log(data);
+  };
+  
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <Input {...register('email')} placeholder="Email" />
+        {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+      </div>
+      <div>
+        <Input {...register('password')} type="password" placeholder="Password" />
+        {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+      </div>
+      <Button type="submit">Login</Button>
+    </form>
   );
 }
 ```
@@ -515,6 +837,11 @@ export function Dashboard() {
 ```
 
 - **Purpose**: Static type checking for JavaScript
+- **Why Essential**: 
+  - Improves safety, refactoring capabilities, and scalability
+  - Self-documenting code with type annotations
+  - Catch errors before runtime
+  - Better IDE autocomplete and IntelliSense
 - **Configuration**:
   - Strict mode enabled
   - Path aliases (@/ for src/)
@@ -549,6 +876,122 @@ async function fetchCourse(id: string): Promise<Course> {
   return response.json();
 }
 ```
+
+---
+
+### Testing & Quality
+
+#### **Vitest (Unit Tests)**
+```json
+{
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.0.0"
+  }
+}
+```
+
+- **Purpose**: Unit and component testing
+- **Features**:
+  - Native Vite integration
+  - Fast test execution
+  - Jest-compatible API
+  - Component testing with Testing Library
+
+#### **Playwright or Cypress (E2E Tests)**
+```json
+{
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
+```
+
+- **Purpose**: End-to-end testing of user flows
+- **Use Cases**: 
+  - Login/registration flows
+  - Profile editing
+  - Course enrollment
+  - Forum interactions
+
+#### **ESLint + Prettier**
+```json
+{
+  "devDependencies": {
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0"
+  }
+}
+```
+
+- **Purpose**: Code quality and formatting
+- **Configuration**: TypeScript strict mode enabled
+- **Benefits**: Consistent code style, catch common errors
+
+---
+
+### Build Optimization
+
+#### **Code Splitting & Lazy Loading**
+```tsx
+import { lazy, Suspense } from 'react';
+
+// Lazy load route components
+const Home = lazy(() => import('./pages/Home'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+
+// Use with Suspense
+function App() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </Suspense>
+  );
+}
+```
+
+#### **Bundle Analysis**
+```json
+{
+  "devDependencies": {
+    "rollup-plugin-visualizer": "^5.12.0"
+  }
+}
+```
+
+- **Purpose**: Monitor dependency bloat and bundle size
+- **Strategy**: Add early in development, review regularly
+- **Target**: Keep initial bundle < 200KB gzipped
+
+---
+
+### Optional Enhancements (When Ready)
+
+#### **tRPC or Hono RPC**
+- **Purpose**: Type-safe client-server communication
+- **When**: If backend moves to TypeScript or needs RPC
+- **Benefits**: End-to-end type safety from backend to frontend
+
+#### **Jotai or Recoil**
+- **Purpose**: Fine-grained reactivity for complex shared state
+- **When**: If Zustand becomes insufficient for state complexity
+- **Current Status**: Zustand likely sufficient for MVP
+
+#### **Vite PWA Plugin**
+- **Purpose**: Offline-capable Progressive Web App
+- **When**: Before Tauri migration for offline support
+- **Benefits**: Service worker, offline caching, install prompt
+
+#### **Framer Motion or Motion One**
+- **Purpose**: Micro-interactions and animations
+- **When**: After MVP, for polish and delight
+- **Integration**: Works nicely with shadcn components
 
 ---
 

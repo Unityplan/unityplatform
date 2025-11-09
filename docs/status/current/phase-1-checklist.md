@@ -152,20 +152,25 @@ Each step must be completed before moving to the next dependent step.
   └─ cd frontend
   └─ npm create vite@latest . -- --template react-ts
   └─ Install dependencies:
-     - React 19
+     - React 18.x (stable ecosystem, production-ready)
      - TailwindCSS 4.1
-     - @shadcn/ui 3.5
+     - shadcn/ui 3.5
      - @tanstack/router 1.134
-     - @tanstack/react-query (for API calls)
+     - @tanstack/react-query v5 (data fetching, caching)
+     - @tanstack/react-query-devtools (development)
      - axios (HTTP client)
-     - zustand (state management)
+     - zustand (auth/UI state only)
+     - react-hook-form + zod (forms & validation)
+     - vitest (unit tests)
+     - @testing-library/react (component tests)
 
 ☐ Configure TailwindCSS
   └─ npx tailwindcss init -p
   └─ Configure tailwind.config.js
   └─ Add to src/index.css
+  └─ Set up CSS variables for theming (dark/light/system)
 
-☐ Set up ShadCN UI
+☐ Set up shadcn/ui
   └─ npx shadcn-ui@latest init
   └─ Configure components.json
   └─ Install base components:
@@ -178,9 +183,16 @@ Each step must be completed before moving to the next dependent step.
 
 ☐ Configure TanStack Router
   └─ Create router configuration
-  └─ Set up route tree
+  └─ Set up route tree with lazy loading
   └─ Create layout components
   └─ Configure route loaders
+  └─ Set up route guards for protected routes
+
+☐ Set up TanStack Query
+  └─ Create QueryClient configuration
+  └─ Add QueryClientProvider to root
+  └─ Configure React Query DevTools
+  └─ Set up default query options (staleTime, cacheTime)
 
 ☐ Create API client setup
   └─ src/lib/api-client.ts
@@ -188,6 +200,20 @@ Each step must be completed before moving to the next dependent step.
      └─ Request interceptor (add auth token)
      └─ Response interceptor (error handling)
      └─ Refresh token logic
+  └─ src/lib/queries/ (TanStack Query hooks)
+     └─ useAuth.ts
+     └─ useUser.ts
+     └─ useCourses.ts
+
+☐ Create state management
+  └─ src/stores/authStore.ts (Zustand)
+     └─ Login/logout actions
+     └─ Token management
+     └─ Persist to localStorage
+  └─ src/stores/uiStore.ts (Zustand)
+     └─ Theme mode (light/dark/system)
+     └─ Sidebar state
+     └─ Other UI-only state
 
 ☐ Create environment configuration
   └─ .env.development
@@ -197,6 +223,12 @@ Each step must be completed before moving to the next dependent step.
   └─ .env.production
      VITE_API_URL=https://api.unityplan.org
      VITE_WS_URL=wss://api.unityplan.org
+
+☐ Set up testing infrastructure
+  └─ Configure Vitest
+  └─ Set up Testing Library
+  └─ Create test utilities and helpers
+  └─ Add example component test
 
 ☐ Set up project structure
   /frontend/src
