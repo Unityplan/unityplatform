@@ -8,5 +8,12 @@
   "[sql]": {
     "editor.defaultFormatter": "mtxr.sqltools",
     "editor.formatOnSave": false
+  },
+  "github.copilot.chat.mcp.enabled": true,
+  "github.copilot.chat.mcp.servers": {
+    "shadcn-ui": {
+      "command": "npx",
+      "args": ["-y", "@shadcn/mcp"]
+    }
   }
 }
