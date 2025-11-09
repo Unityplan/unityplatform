@@ -1,3 +1,3 @@
-mod profile;
-mod connections;
 mod blocks;
+mod connections;
+mod profile;

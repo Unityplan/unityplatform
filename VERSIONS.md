@@ -44,6 +44,7 @@
 **Current Schema Version:** `20251105000001`  
 **Database:** PostgreSQL 16 with TimescaleDB  
 **Schemas:**
+
 - `global` - Cross-territory data (users, territories, sessions, audit)
 - `territory_dk` - Denmark-specific data (communities, members, settings)
 
@@ -63,6 +64,7 @@
 | **Matrix Client** | - | ⬜ Not Started | - | matrix-js-sdk |
 
 **Stack Rationale:**
+
 - React 18 chosen over React 19 for stable ecosystem during MVP phase
 - TanStack Query offloads data fetching from manual state management
 - Future-proof for Tauri migration (~1 year timeline)
@@ -141,9 +143,11 @@
 ## 🔄 Version History
 
 ### Platform v0.1.0-alpha.1 - November 5, 2025
+
 **Status:** Alpha (Early Development - Infrastructure Only)
 
 **Completed:**
+
 - ✅ Multi-pod infrastructure deployed
 - ✅ Monitoring stack operational (Prometheus, Grafana, Jaeger)
 - ✅ Database schema with multi-territory support
@@ -152,9 +156,11 @@
 - ✅ Documentation reorganized
 
 **In Progress:**
+
 - 🟡 Authentication service implementation
 
 **Planned:**
+
 - ⬜ User service
 - ⬜ Territory service
 - ⬜ Frontend application
@@ -174,6 +180,7 @@ All services follow **MAJOR.MINOR.PATCH** versioning:
 ### Git Tags
 
 Services are tagged independently:
+
 ```bash
 git tag shared-lib-v0.1.0
 git tag auth-service-v0.1.0
@@ -183,6 +190,7 @@ git tag platform-v0.1.0
 ### Database Migrations
 
 Migrations use timestamp-based versioning:
+
 ```
 YYYYMMDDHHMMSS_description.up.sql
 YYYYMMDDHHMMSS_description.down.sql
@@ -191,6 +199,7 @@ YYYYMMDDHHMMSS_description.down.sql
 ### API Versioning
 
 APIs are versioned in URLs:
+
 ```
 /api/v1/auth/login
 /api/v1/users/me

@@ -32,8 +32,9 @@ UnityPlan is built on a **microservices architecture** with a clear separation b
 ### Core Language & Runtime
 
 #### **Rust 1.91.0**
+
 - **Why**: Memory safety, zero-cost abstractions, fearless concurrency
-- **Benefits**: 
+- **Benefits**:
   - No garbage collection overhead
   - Compile-time error prevention
   - Native performance comparable to C/C++
@@ -45,6 +46,7 @@ UnityPlan is built on a **microservices architecture** with a clear separation b
 ### Web Framework & APIs
 
 #### **actix-web 4.x**
+
 ```toml
 actix-web = "4.5"
 actix-rt = "2.9"
@@ -58,13 +60,14 @@ actix-rt = "2.9"
   - Route guards and extractors
   - Built-in compression and CORS
 - **Performance**: One of the fastest web frameworks (any language)
-- **Use Cases**: 
+- **Use Cases**:
   - REST API endpoints
   - Request routing and validation
   - Authentication middleware
   - Rate limiting
 
 **Example Service Structure**:
+
 ```rust
 use actix_web::{web, App, HttpServer};
 
@@ -88,6 +91,7 @@ async fn main() -> std::io::Result<()> {
 ### WebSocket Communication
 
 #### **tokio-tungstenite**
+
 ```toml
 tokio-tungstenite = "0.21"
 tokio = { version = "1.35", features = ["full"] }
@@ -106,6 +110,7 @@ tokio = { version = "1.35", features = ["full"] }
   - Dashboard metrics streaming
 
 **Connection Pattern**:
+
 ```rust
 async fn handle_websocket(ws: WebSocket, state: AppState) {
     let (mut tx, mut rx) = ws.split();
@@ -123,6 +128,7 @@ async fn handle_websocket(ws: WebSocket, state: AppState) {
 ### Database Layer
 
 #### **SQLx 0.7.x**
+
 ```toml
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json"] }
 ```
@@ -134,13 +140,14 @@ sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "uuid"
   - Migrations support
   - Transaction management
   - Type-safe query results
-- **Why not an ORM**: 
+- **Why not an ORM**:
   - Full SQL control for complex queries
   - No runtime query generation overhead
   - Explicit database operations
   - Better performance profiling
 
 **Query Example**:
+
 ```rust
 // Compile-time verified!
 let user = sqlx::query_as!(
@@ -157,6 +164,7 @@ let user = sqlx::query_as!(
 ```
 
 #### **TimescaleDB (PostgreSQL Extension)**
+
 ```yaml
 postgres:
   image: timescale/timescaledb:latest-pg16
@@ -175,6 +183,7 @@ postgres:
   - Audit trails
 
 **Schema Design**:
+
 ```sql
 -- Hypertable for events
 CREATE TABLE user_events (
@@ -192,6 +201,7 @@ SELECT create_hypertable('user_events', 'time');
 ### Multi-Tenancy
 
 #### **PostgreSQL Schema Isolation**
+
 - **Strategy**: Separate schema per territory
 - **Benefits**:
   - Data isolation at database level
@@ -200,6 +210,7 @@ SELECT create_hypertable('user_events', 'time');
   - Easier compliance (GDPR, data residency)
 
 **Implementation**:
+
 ```rust
 // Connection pool per territory
 pub struct TenantPool {
@@ -215,6 +226,7 @@ impl TenantPool {
 ```
 
 **Schema Pattern**:
+
 ```
 database: unityplan
 ├── schema: territory_dk (Denmark)
@@ -236,6 +248,7 @@ database: unityplan
 ### Message Queue & Event Bus
 
 #### **NATS 2.x**
+
 ```toml
 async-nats = "0.33"
 ```
@@ -255,6 +268,7 @@ async-nats = "0.33"
   - Webhook delivery
 
 **Event Pattern**:
+
 ```rust
 // Publisher
 nats.publish(
@@ -279,6 +293,7 @@ while let Some(msg) = sub.next().await {
 ### Configuration Management
 
 #### **config + dotenvy**
+
 ```toml
 config = "0.14"
 dotenvy = "0.15"
@@ -293,6 +308,7 @@ serde = { version = "1.0", features = ["derive"] }
   - Type-safe config structs
 
 **Configuration Pattern**:
+
 ```rust
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
@@ -320,14 +336,16 @@ let config = Config::builder()
 ## Frontend Technologies
 
 > **Architecture Decision**: Production-grade SPA stack optimized for 2025
-> 
+>
 > **Why React 18 (not React 19)**:
+>
 > - Fully stable ecosystem with all dependencies optimized for React 18
 > - React 19's biggest gains (Server Components, Actions) are for SSR, not pure SPAs
 > - Defers upgrade until Tauri mobile/desktop phase (incremental migration path)
 > - Avoids bleeding-edge instability during MVP development
 >
 > **Future-Proofing for Tauri** (~1 year timeline):
+>
 > - Current stack will mostly just work — React + Vite officially supported in Tauri templates
 > - Routing: Only needs `createHashHistory()` instead of browser history (file-based URLs)
 > - Styling: Tailwind + shadcn work perfectly (CSS-based, not DOM-dependent)
@@ -337,6 +355,7 @@ let config = Config::builder()
 ### Build Tool & Dev Server
 
 #### **Vite 5.x**
+
 ```json
 {
   "devDependencies": {
@@ -363,6 +382,7 @@ let config = Config::builder()
 - **Tooling**: Add bundle analyzer early to monitor dependency bloat
 
 **Build Configuration**:
+
 ```typescript
 // vite.config.ts
 import { defineConfig } from 'vite';
@@ -393,6 +413,7 @@ export default defineConfig({
 ### UI Framework
 
 #### **React 18.x**
+
 ```json
 {
   "dependencies": {
@@ -416,6 +437,7 @@ export default defineConfig({
   - **Streaming SSR** (future): Ready when needed for Tauri/Next.js migration
 
 **Component Pattern**:
+
 ```tsx
 import { useState, useEffect } from 'react';
 
@@ -440,6 +462,7 @@ export function CourseCard({ courseId }: { courseId: string }) {
 ### Data Layer & Caching
 
 #### **TanStack Query v5.x**
+
 ```json
 {
   "dependencies": {
@@ -468,6 +491,7 @@ export function CourseCard({ courseId }: { courseId: string }) {
 - **Integration**: Designed for co-usage with TanStack Router
 
 **Query Pattern**:
+
 ```tsx
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -505,6 +529,7 @@ function CourseDetail({ courseId }: { courseId: string }) {
 ```
 
 **DevTools Integration**:
+
 ```tsx
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
@@ -525,6 +550,7 @@ function App() {
 ### Routing
 
 #### **TanStack Router v1.13x**
+
 ```json
 {
   "dependencies": {
@@ -549,6 +575,7 @@ function App() {
   - Better DevX than React Router
 
 **Route Definition with Lazy Loading**:
+
 ```tsx
 import { createFileRoute } from '@tanstack/react-router';
 import { lazy } from 'react';
@@ -566,6 +593,7 @@ export const Route = createFileRoute('/courses/$courseId')({
 ```
 
 **Route Guards (Protected Routes)**:
+
 ```tsx
 import { redirect } from '@tanstack/react-router';
 
@@ -584,6 +612,7 @@ export const Route = createFileRoute('/dashboard')({
 ### Styling
 
 #### **TailwindCSS 4.x**
+
 ```json
 {
   "devDependencies": {
@@ -608,6 +637,7 @@ export const Route = createFileRoute('/dashboard')({
 - **Theming Strategy**: Define `theme.config.ts` early for Tauri migration (dark/light/system)
 
 **Usage Example**:
+
 ```tsx
 <div className="flex items-center gap-4 rounded-lg bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:bg-gray-800">
   <img src={avatar} className="h-12 w-12 rounded-full" />
@@ -619,6 +649,7 @@ export const Route = createFileRoute('/dashboard')({
 ```
 
 **Theme Configuration**:
+
 ```typescript
 // theme.config.ts
 export const theme = {
@@ -632,6 +663,7 @@ export const theme = {
 ```
 
 #### **shadcn/ui 3.5.x**
+
 ```json
 {
   "dependencies": {
@@ -653,7 +685,7 @@ export const theme = {
   - Dark mode built-in
   - Theme system with CSS variables
   - TypeScript support
-- **Components**: 
+- **Components**:
   - Buttons, Inputs, Modals, Dropdowns
   - Data Tables, Calendars, Popovers
   - Toast notifications, Tooltips
@@ -661,6 +693,7 @@ export const theme = {
   - Forms with react-hook-form integration
 
 **Component Example**:
+
 ```tsx
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -685,6 +718,7 @@ export function Dashboard() {
 ### State Management
 
 #### **Zustand (Local/Auth State Only)**
+
 ```json
 {
   "dependencies": {
@@ -710,6 +744,7 @@ export function Dashboard() {
   - DevTools integration
 
 **Auth Store Pattern**:
+
 ```typescript
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -739,6 +774,7 @@ export const useAuthStore = create<AuthState>()(
 ```
 
 **UI State Example**:
+
 ```typescript
 interface UIState {
   sidebarOpen: boolean;
@@ -760,6 +796,7 @@ export const useUIStore = create<UIState>((set) => ({
 ### Forms & Validation
 
 #### **react-hook-form + zod**
+
 ```json
 {
   "dependencies": {
@@ -784,6 +821,7 @@ export const useUIStore = create<UIState>((set) => ({
   - Async validation
 
 **Form Pattern**:
+
 ```tsx
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -828,6 +866,7 @@ export function LoginForm() {
 ### Type Safety
 
 #### **TypeScript (Latest)**
+
 ```json
 {
   "devDependencies": {
@@ -837,7 +876,7 @@ export function LoginForm() {
 ```
 
 - **Purpose**: Static type checking for JavaScript
-- **Why Essential**: 
+- **Why Essential**:
   - Improves safety, refactoring capabilities, and scalability
   - Self-documenting code with type annotations
   - Catch errors before runtime
@@ -854,6 +893,7 @@ export function LoginForm() {
   - Self-documenting code
 
 **Type Pattern**:
+
 ```typescript
 // API response types
 interface Course {
@@ -882,6 +922,7 @@ async function fetchCourse(id: string): Promise<Course> {
 ### Testing & Quality
 
 #### **Vitest (Unit Tests)**
+
 ```json
 {
   "devDependencies": {
@@ -900,6 +941,7 @@ async function fetchCourse(id: string): Promise<Course> {
   - Component testing with Testing Library
 
 #### **Playwright or Cypress (E2E Tests)**
+
 ```json
 {
   "devDependencies": {
@@ -909,13 +951,14 @@ async function fetchCourse(id: string): Promise<Course> {
 ```
 
 - **Purpose**: End-to-end testing of user flows
-- **Use Cases**: 
+- **Use Cases**:
   - Login/registration flows
   - Profile editing
   - Course enrollment
   - Forum interactions
 
 #### **ESLint + Prettier**
+
 ```json
 {
   "devDependencies": {
@@ -936,6 +979,7 @@ async function fetchCourse(id: string): Promise<Course> {
 ### Build Optimization
 
 #### **Code Splitting & Lazy Loading**
+
 ```tsx
 import { lazy, Suspense } from 'react';
 
@@ -957,6 +1001,7 @@ function App() {
 ```
 
 #### **Bundle Analysis**
+
 ```json
 {
   "devDependencies": {
@@ -974,21 +1019,25 @@ function App() {
 ### Optional Enhancements (When Ready)
 
 #### **tRPC or Hono RPC**
+
 - **Purpose**: Type-safe client-server communication
 - **When**: If backend moves to TypeScript or needs RPC
 - **Benefits**: End-to-end type safety from backend to frontend
 
 #### **Jotai or Recoil**
+
 - **Purpose**: Fine-grained reactivity for complex shared state
 - **When**: If Zustand becomes insufficient for state complexity
 - **Current Status**: Zustand likely sufficient for MVP
 
 #### **Vite PWA Plugin**
+
 - **Purpose**: Offline-capable Progressive Web App
 - **When**: Before Tauri migration for offline support
 - **Benefits**: Service worker, offline caching, install prompt
 
 #### **Framer Motion or Motion One**
+
 - **Purpose**: Micro-interactions and animations
 - **When**: After MVP, for polish and delight
 - **Integration**: Works nicely with shadcn components
@@ -1000,6 +1049,7 @@ function App() {
 ### Matrix Protocol
 
 #### **Ruma (Rust)**
+
 ```toml
 ruma = { version = "0.9", features = ["client-api", "federation-api"] }
 ruma-client = "0.12"
@@ -1018,6 +1068,7 @@ ruma-client = "0.12"
   - Event streaming
 
 #### **matrix-js-sdk (Frontend)**
+
 ```json
 {
   "dependencies": {
@@ -1040,6 +1091,7 @@ ruma-client = "0.12"
   - User directory
 
 **Matrix Integration Example**:
+
 ```typescript
 import { createClient } from 'matrix-js-sdk';
 
@@ -1082,6 +1134,7 @@ client.on('Room.timeline', (event) => {
 ### Primary Database
 
 #### **PostgreSQL 16**
+
 ```yaml
 services:
   postgres:
@@ -1104,6 +1157,7 @@ services:
 ### Time-Series Data
 
 #### **TimescaleDB**
+
 - Built on PostgreSQL 16
 - Automatic time-based partitioning
 - Compression (90%+ savings)
@@ -1113,6 +1167,7 @@ services:
 ### Decentralized Storage
 
 #### **IPFS (InterPlanetary File System)**
+
 ```toml
 ipfs-api = "0.17"
 ```
@@ -1131,6 +1186,7 @@ ipfs-api = "0.17"
   - Backup storage
 
 **IPFS Integration**:
+
 ```rust
 use ipfs_api::IpfsClient;
 
@@ -1153,6 +1209,7 @@ async fn download_file(client: &IpfsClient, cid: &str) -> Result<Vec<u8>> {
 ### Containerization
 
 #### **Docker**
+
 ```yaml
 version: '3.8'
 ```
@@ -1165,6 +1222,7 @@ version: '3.8'
   - Multi-stage builds for optimization
 
 **Rust Service Dockerfile**:
+
 ```dockerfile
 # Build stage
 FROM rust:1.91-alpine AS builder
@@ -1182,6 +1240,7 @@ CMD ["service"]
 ```
 
 #### **Docker Compose**
+
 - **Purpose**: Multi-container orchestration
 - **Features**:
   - Service dependencies
@@ -1195,6 +1254,7 @@ CMD ["service"]
 ### Service Mesh
 
 #### **Traefik (Primary Option)**
+
 ```yaml
 services:
   traefik:
@@ -1210,6 +1270,7 @@ services:
   - Metrics export
 
 #### **Linkerd (Alternative/Future)**
+
 - **Purpose**: Service mesh with mTLS
 - **Features**:
   - Zero-trust security between services
@@ -1223,6 +1284,7 @@ services:
 ### CI/CD
 
 #### **GitHub Actions**
+
 ```yaml
 name: CI/CD
 on: [push, pull_request]
@@ -1237,6 +1299,7 @@ on: [push, pull_request]
   - **Security**: Dependency scanning, SAST
 
 **Example Workflow**:
+
 ```yaml
 jobs:
   test:
@@ -1266,6 +1329,7 @@ jobs:
 ### Authentication
 
 #### **OpenID Connect (OIDC)**
+
 ```toml
 openidconnect = "3.5"
 jsonwebtoken = "9.2"
@@ -1284,6 +1348,7 @@ jsonwebtoken = "9.2"
   - Custom implementations
 
 **OIDC Flow**:
+
 ```rust
 use openidconnect::{
     core::CoreClient,
@@ -1316,6 +1381,7 @@ let token_response = client
 ### Session Management
 
 #### **JWT (JSON Web Tokens)**
+
 - **Purpose**: Stateless authentication
 - **Claims**:
   - `sub`: User ID
@@ -1332,11 +1398,13 @@ let token_response = client
 ### Encryption
 
 #### **TLS/mTLS**
+
 - **TLS 1.3**: All external communication
 - **mTLS**: Service-to-service authentication
 - **Certificate Management**: Let's Encrypt + cert-manager
 
 #### **End-to-End Encryption**
+
 - **Matrix E2E**: Olm/Megolm for message encryption
 - **libsodium**: Additional crypto primitives
 - **User Control**: Users hold encryption keys
@@ -1348,6 +1416,7 @@ let token_response = client
 ### Logging
 
 #### **tracing + tracing-subscriber**
+
 ```toml
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
@@ -1363,6 +1432,7 @@ tracing-opentelemetry = "0.22"
   - Integration with OpenTelemetry
 
 **Logging Pattern**:
+
 ```rust
 use tracing::{info, error, instrument};
 
@@ -1386,6 +1456,7 @@ async fn create_user(db: &PgPool, username: String) -> Result<User> {
 ### Metrics
 
 #### **OpenTelemetry + Prometheus**
+
 ```toml
 opentelemetry = "0.21"
 opentelemetry-prometheus = "0.14"
@@ -1401,6 +1472,7 @@ opentelemetry-prometheus = "0.14"
 ### Distributed Tracing
 
 #### **Jaeger**
+
 - **Purpose**: Request flow visualization across services
 - **Features**:
   - End-to-end request tracing
@@ -1415,6 +1487,7 @@ opentelemetry-prometheus = "0.14"
 ### Full Decentralization
 
 #### **Holochain**
+
 ```toml
 # Future dependency
 hdk = "0.3"  # Holochain Development Kit
@@ -1430,6 +1503,7 @@ hdk = "0.3"  # Holochain Development Kit
   - Offline-first by default
 
 **Planned Migration**:
+
 1. **Phase 1**: User profiles as Holochain entries
 2. **Phase 2**: Badges and credentials on-chain
 3. **Phase 3**: Learning progress tracking
@@ -1437,6 +1511,7 @@ hdk = "0.3"  # Holochain Development Kit
 5. **Phase 5**: Sunset centralized services
 
 #### **Holochain Client (Frontend)**
+
 ```typescript
 import { AppWebsocket } from '@holochain/client';
 
@@ -1459,6 +1534,7 @@ await client.callZome({
 ### Cross-Platform Applications
 
 #### **Tauri**
+
 ```toml
 [dependencies]
 tauri = "2.0"
@@ -1471,11 +1547,12 @@ tauri = "2.0"
   - Rust backend, web frontend
   - System tray support
   - Auto-updates
-- **Platforms**: 
+- **Platforms**:
   - macOS, Windows, Linux
   - iOS, Android (via Tauri Mobile)
 
 **Use Cases**:
+
 - Offline-first desktop app
 - Native notifications
 - System integration (calendars, contacts)
@@ -1489,6 +1566,7 @@ tauri = "2.0"
 ### Language Tools
 
 #### **Rust Toolchain**
+
 - **rustc**: Rust compiler
 - **cargo**: Package manager and build tool
 - **clippy**: Linting and code suggestions
@@ -1496,6 +1574,7 @@ tauri = "2.0"
 - **rust-analyzer**: LSP for IDE integration
 
 #### **Node.js Ecosystem**
+
 - **pnpm**: Fast, disk-efficient package manager
 - **ESLint**: JavaScript/TypeScript linting
 - **Prettier**: Code formatting
@@ -1504,6 +1583,7 @@ tauri = "2.0"
 ### Testing
 
 #### **Backend Testing**
+
 ```toml
 [dev-dependencies]
 tokio-test = "0.4"
@@ -1516,6 +1596,7 @@ mockall = "0.12"
 - **Property Testing**: proptest for generative tests
 
 #### **Frontend Testing**
+
 ```json
 {
   "devDependencies": {
@@ -1533,6 +1614,7 @@ mockall = "0.12"
 ### Development Environment
 
 #### **VS Code Extensions**
+
 - **rust-analyzer**: Rust language support
 - **Error Lens**: Inline error display
 - **GitLens**: Git integration
@@ -1540,6 +1622,7 @@ mockall = "0.12"
 - **ESLint/Prettier**: Code quality
 
 #### **Docker Development**
+
 - **Dev Containers**: Consistent dev environment
 - **docker-compose.dev.yml**: Development orchestration
 - **Hot reload**: Volume mounts for live updates

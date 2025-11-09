@@ -39,13 +39,9 @@ impl TestContext {
     }
 
     /// Create a test user and track it for cleanup
-    pub async fn create_user(
-        &mut self,
-        username: &str,
-        email: &str,
-    ) -> Uuid {
+    pub async fn create_user(&mut self, username: &str, email: &str) -> Uuid {
         let user_id = Uuid::new_v4();
-        
+
         // Make username unique by appending part of UUID to avoid collisions in parallel tests
         let unique_username = format!("{}_{}", username, &user_id.to_string()[..8]);
         let unique_email = if email.contains('@') {
@@ -54,7 +50,7 @@ impl TestContext {
         } else {
             email.to_string()
         };
-        
+
         sqlx::query(&format!(
             r#"
             INSERT INTO {}.users (id, username, email, password_hash)
@@ -69,10 +65,10 @@ impl TestContext {
         .execute(&self.pool)
         .await
         .expect("Failed to create test user");
-        
+
         // Track for cleanup
         self.tracked_user_ids.push(user_id);
-        
+
         user_id
     }
 

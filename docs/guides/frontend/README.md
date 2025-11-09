@@ -6,11 +6,70 @@ React 18 single-page application (SPA) with Vite, TanStack Router/Query, Zustand
 
 ---
 
+## ⚠️ CRITICAL VERSION COMPATIBILITY
+
+**TailwindCSS v4 & shadcn/ui Version Breaking Changes**
+
+Our frontend uses **TailwindCSS v4.1.17** and the latest **shadcn/ui**, which have **breaking changes** from previous versions:
+
+### TailwindCSS v4 Changes (NOT Backward Compatible)
+
+- ❌ **NO MORE** `tailwind.config.js` file
+- ✅ **CSS-based configuration** using `@import "tailwindcss"` and `@theme {}` blocks
+- ✅ **OKLCH color format** (not hex or RGB) - example: `oklch(0.985 0 0)`
+- ✅ **Vite plugin** required: `@tailwindcss/vite` (not `@tailwindcss/postcss@3`)
+- ✅ **CSS variable theming** via `:root` and `.dark` pseudo-classes
+
+### shadcn/ui Latest Version Changes
+
+- ✅ **CSS variables approach** (no utility classes fallback in older docs)
+- ✅ **OKLCH colors only** in theming system
+- ✅ **@theme inline** directive for exposing CSS variables to Tailwind
+- ✅ **components.json** configuration file required
+
+### Official Documentation
+
+- **TailwindCSS v4:** <https://tailwindcss.com/docs> (v4 docs)
+- **shadcn/ui Vite Setup:** <https://ui.shadcn.com/docs/installation/vite>
+- **shadcn/ui Theming:** <https://ui.shadcn.com/docs/theming>
+
+### DO NOT Use Old Documentation
+
+- ❌ TailwindCSS v3 documentation (outdated config format)
+- ❌ shadcn/ui examples using hex colors or utility classes
+- ❌ Stack Overflow answers from before 2024 (likely v3)
+
+**Always verify against official v4 documentation when troubleshooting!**
+
+**📖 For complete migration guide, see:** [TailwindCSS v4 Migration Guide](./TAILWIND-V4-MIGRATION.md)
+
+---
+
 ## 📚 Guides in This Section
+
+### [TailwindCSS v4 Migration Guide](./TAILWIND-V4-MIGRATION.md) 🔥 READ FIRST FOR STYLING
+
+**CRITICAL:** Complete guide to TailwindCSS v4 breaking changes and OKLCH color format.
+
+**Contents:**
+
+- Breaking changes summary (v3 vs v4 comparison table)
+- OKLCH color format (syntax, examples, conversion tools)
+- Configuration files (vite.config.ts, postcss.config.js, index.css)
+- shadcn/ui integration (components.json, theming)
+- Common migration issues (with solutions)
+- Official resources and tools
+- Verification checklist
+
+**Use when:** Working with TailwindCSS, shadcn/ui, theming, or encountering styling issues. Read this before asking "why doesn't my Tailwind config work?"
+
+---
 
 ### [Development Guide](./development-guide.md) ⭐ START HERE
 
 Complete guide for setting up and building the frontend application.
+
+```
 
 **Contents:**
 
@@ -109,8 +168,13 @@ npm install
 # Start development server
 npm run dev
 
-# Application runs on http://localhost:3000
+# Application runs on http://localhost:5173
 ```
+
+**Port Info:** Frontend uses port 5173 (Vite default) to avoid conflicts with infrastructure:
+
+- Port 3000: Forgejo (Git server)
+- Port 3001: Grafana (monitoring)
 
 ### Development Commands
 
@@ -379,11 +443,14 @@ npm install
 ### Vite Dev Server Won't Start
 
 ```bash
-# Check port 3000 is free
-lsof -i :3000
+# Check port 5173 is free (Vite default)
+lsof -i :5173
 # Kill if needed
 kill -9 <PID>
+# Or let Vite auto-select next available port
 ```
+
+**Remember:** Ports 3000-3001 are used by infrastructure (Forgejo, Grafana). Frontend uses 5173.
 
 ### API Calls Fail with CORS
 

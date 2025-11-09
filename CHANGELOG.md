@@ -10,6 +10,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+- **Frontend Auth & Profile UI** (Sprint 5 - In Progress)
+  - React 19.1.1 + Vite 7.2.2 + TypeScript 5.x project scaffolding
+  - TailwindCSS v4.1.17 with @tailwindcss/vite plugin (CSS-based config)
+  - shadcn/ui components (button, input, card, form, label, checkbox, select)
+  - Zustand 5.0.8 state management with localStorage persistence
+  - Auth store with login, register, logout, token refresh actions
+  - UI store with theme management (light/dark/system)
+  - Axios API client with automatic token refresh interceptor
+  - Auth API functions: register, login, logout, refreshToken, getCurrentUser, validateInvitation
+  - User API functions: profile, avatar, privacy, connections, blocks (11 endpoints)
+  - LoginPage component with react-hook-form + zod validation
+  - Type-safe error handling with helper functions
+  - Environment configuration (.env.development, .env.production)
+  - Path aliases (@/ → src/) configured in tsconfig
+  - 416 packages installed, 0 vulnerabilities
+  - Comprehensive documentation: TAILWIND-V4-MIGRATION.md
 - **Invitation System** - Complete invitation-only registration system
   - Database migration 20251106000003: `invitation_tokens` and `invitation_uses` tables
   - Two token types: `single_use` (email-specific) and `group` (multi-use)
@@ -32,6 +49,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dynamic schema routing for multi-territory support
 
 ### Changed
+
+- **Frontend Configuration Verified** (November 9, 2025)
+  - TailwindCSS v4: Verified against official docs (https://tailwindcss.com/docs/installation/using-vite)
+  - shadcn/ui: Verified against official docs (https://ui.shadcn.com/docs/installation/vite)
+  - Path aliases configured in both tsconfig.json and tsconfig.app.json
+  - OKLCH color theming with CSS variables (not JavaScript config)
+  - @import "tailwindcss" syntax (not @tailwind directives)
+  - TypeScript compilation: 0 errors
 - **BREAKING:** User registration now requires invitation token
   - `RegisterRequest` now includes mandatory `invitation_token` field
   - All registrations must use a valid invitation token
@@ -43,6 +68,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Trade-off: Less compile-time safety, more runtime flexibility
 
 ### Fixed
+
+- **Frontend Path Alias Configuration** (November 9, 2025)
+  - Added compilerOptions to tsconfig.json (was missing baseUrl and paths)
+  - shadcn components now correctly installed in src/components/ui/ (not @/components/ui/)
+  - Missing dependencies installed: clsx, tailwind-merge, class-variance-authority, lucide-react
 - **CRITICAL:** Removed hardcoded territory_dk from auth-service
   - Service now works universally for all territories (DK, NO, SE, etc.)
   - Dynamic schema selection based on territory_code in requests

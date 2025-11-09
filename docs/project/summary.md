@@ -9,6 +9,7 @@ UnityPlan is a **decentralized global communication and learning platform** desi
 ## 🌐 Vision
 
 A **user-sovereignty-first digital ecosystem** where:
+
 - Individual users own their personal data
 - Countries/territories manage their own autonomous infrastructure
 - Global communication happens through federated systems (Matrix Protocol)
@@ -54,6 +55,7 @@ Unlike traditional hierarchical systems, UnityPlan implements an **inverted pyra
 ## 🛠️ Technology Stack
 
 ### Backend (Rust Microservices)
+
 - **HTTP API**: `actix-web` for REST endpoints
 - **WebSocket**: `tokio-tungstenite` for real-time communication
 - **Database**: `sqlx` + TimescaleDB for time-series data
@@ -64,6 +66,7 @@ Unlike traditional hierarchical systems, UnityPlan implements an **inverted pyra
 - **Containerization**: Docker + Docker Compose
 
 ### Frontend (Modern Web)
+
 - **Framework**: React 18.x + Vite 5.x (stable, production-ready)
 - **Styling**: TailwindCSS 4.1 + shadcn/ui 3.5
 - **Routing**: TanStack Router 1.134
@@ -77,11 +80,13 @@ Unlike traditional hierarchical systems, UnityPlan implements an **inverted pyra
 **Stack Rationale**: React 18 chosen for stable ecosystem; TanStack Query offloads data fetching from state management; future-proof for Tauri migration.
 
 ### Communication & Storage
+
 - **Matrix Protocol**: Decentralized forums and collaboration (via `ruma`)
 - **IPFS**: Decentralized file storage (`ipfs-api`)
 - **Service Mesh**: Traefik/Linkerd with mTLS for zero-trust security
 
 ### Future Technologies
+
 - **Holochain**: Full decentralization and cryptographic data ownership
 - **Tauri**: Cross-platform desktop and mobile applications
 
@@ -90,11 +95,13 @@ Unlike traditional hierarchical systems, UnityPlan implements an **inverted pyra
 ## 🌍 Territory System
 
 **Territories** are autonomous organizational units that can be:
+
 - **Countries**: Sovereign nations (Denmark, Canada, Kenya)
 - **First Nations**: Indigenous territories (Navajo Nation, Sámi)
 - **Autonomous Regions**: Self-governing areas within larger nations
 
 Each territory has full control over:
+
 - User invitations and management
 - Local curriculum and content
 - Language preferences and translations
@@ -108,12 +115,14 @@ Each territory has full control over:
 Access to courses, forums, and administrative functions is earned through **badges** (primarily via course completion):
 
 ### Permission Flow
+
 1. **Foundation**: All users must accept Code of Conduct
 2. **Learning Path**: Complete courses → earn badges
 3. **Progressive Access**: Badges unlock forums, content, and roles
 4. **Verifiable Credentials**: Achievements are cryptographically signed (future)
 
 ### Role Hierarchy (Inverted Pyramid)
+
 - **Users** (Top): Most power, own data, control access
 - **Communities**: Local learning circles and teams
 - **Territories**: National/regional administrators
@@ -124,29 +133,34 @@ Access to courses, forums, and administrative functions is earned through **badg
 ## 🔑 Key Features
 
 ### 1. Multilingual Communication
+
 - Users write in their native language
 - Real-time translation displays content in recipient's preferred language
 - Preserves original text for accuracy verification
 
 ### 2. Federated Forums (Matrix Protocol)
+
 - Decentralized chat rooms and forums
 - Bridge to external Matrix communities
 - End-to-end encrypted personal/group chats
 - No central server dependency
 
 ### 3. Learning Management System (LMS)
+
 - Progressive course unlocking
 - Verifiable achievement tracking
 - Multi-territory curriculum support
 - Offline-first learning capabilities
 
 ### 4. User Sovereignty
+
 - Personal data ownership
 - Granular privacy controls
 - Portable identity across territories
 - Cryptographic proof of credentials (future)
 
 ### 5. Offline-First Design
+
 - Sync when connected
 - Continue learning without internet
 - Queue actions for later submission
@@ -157,6 +171,7 @@ Access to courses, forums, and administrative functions is earned through **badg
 ## 🚀 Development Phases
 
 ### Phase 1: MVP (Current)
+
 - Rust microservices architecture
 - React frontend with core UI
 - PostgreSQL multi-tenant database
@@ -165,6 +180,7 @@ Access to courses, forums, and administrative functions is earned through **badg
 - Simple badge system
 
 ### Phase 2: Federation
+
 - Full Matrix protocol integration
 - IPFS file storage
 - Enhanced translation services
@@ -172,6 +188,7 @@ Access to courses, forums, and administrative functions is earned through **badg
 - Advanced LMS features
 
 ### Phase 3: Full Decentralization (Future)
+
 - Holochain DNA modules
 - Cryptographic credentials
 - Peer-to-peer data ownership
@@ -216,7 +233,8 @@ Access to courses, forums, and administrative functions is earned through **badg
 ## 📝 Project Status
 
 **Current**: Initial architecture and planning phase  
-**Next Steps**: 
+**Next Steps**:
+
 - Complete microservices scaffolding
 - Implement authentication service
 - Build React component library

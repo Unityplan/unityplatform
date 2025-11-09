@@ -11,6 +11,7 @@
 UnityPlan's frontend is built on a **production-grade, future-ready SPA stack** optimized for 2025:
 
 **Core Stack:**
+
 - **Vite 5.x** (build tool)
 - **React 18.x** (UI framework) - *NOT React 19*
 - **TailwindCSS 4.x + shadcn/ui 3.5** (styling)
@@ -98,6 +99,7 @@ UnityPlan's frontend is built on a **production-grade, future-ready SPA stack** 
 - **Bleeding-edge instability**: React 19 too new for MVP phase
 
 **React 18 provides:**
+
 - ✅ Fully stable ecosystem (all dependencies optimized)
 - ✅ Fewer breaking edges during development
 - ✅ Proven production deployments
@@ -287,6 +289,7 @@ export const Route = createFileRoute('/courses/$courseId')({
 ```
 
 **Benefits:**
+
 - Initial bundle < 200KB
 - Fast first page load
 - Subsequent routes load on-demand
@@ -502,6 +505,7 @@ export default defineConfig({
 ```
 
 **Target Bundle Sizes:**
+
 - Initial bundle: < 200KB gzipped
 - Route chunks: < 50KB gzipped each
 - Vendor chunks: Cached separately, loaded once
@@ -515,6 +519,7 @@ export default defineConfig({
 **Steps:**
 
 1. **Upgrade React** (1-2 days)
+
    ```bash
    npm install react@19 react-dom@19
    ```
@@ -565,6 +570,7 @@ export default defineConfig({
 ### Strategic Decision
 
 **React 18 over React 19:**
+
 - React 19's benefits (Server Components, Actions) don't apply to pure SPAs
 - Stable ecosystem reduces risk during MVP phase
 - Incremental upgrade path when needed
@@ -575,6 +581,7 @@ export default defineConfig({
 **Approved By:** Architecture Team  
 **Next Review:** After MVP completion (Phase 1 end)  
 **Related Documents:**
+
 - [Technology Stack](tech-stack.md)
 - [Phase 1 Checklist](../status/current/phase-1-checklist.md)
 - [Versioning Strategy](../guides/development/versioning-strategy.md)

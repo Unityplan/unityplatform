@@ -14,18 +14,19 @@ We are designing a **decentralized digital ecosystem** that allows users across 
 
 Each country manages its **own local infrastructure** (for sovereignty and scalability), while individual users own their **personal data** through distributed technologies like **Holochain (future)**.
 
-Global interaction: 
- - Personal P2P and small group chats with direct E2E encrypted chats. 
- - Forums build with Matrix protocol for collaboration with bridge through **Matrix federation**
- - User permissions evolve dynamically based on **verified learning achievements** earned through a decentralized network of LMS servers.
- - All content is **multilingual**, with real-time translation enabling seamless global communication.
- - The system is designed to be **offline-first**, allowing users to continue learning and communicating even with intermittent connectivity.
- - The platform emphasizes **transparency, verifiability, and user sovereignty** through cryptographic credentials and decentralized identity (if possible, else later enforced with Holochain).
- - The architecture supports **federated country nodes**, enabling local autonomy while fostering global collaboration.
- - The platform is built with **modern frontend technologies** (React, Shadcn, Tailwind) for a smooth user experience, while the backend leverages **Rust microservices** for performance and security.
- - In the future, we aim to migrate key components to **Holochain DNA modules** to achieve full decentralization and user data ownership. With Tauri for cross-platform desktop/mobile apps.
- - While we wait for Holochain we can still integrate mobile app with Tauri besides the web frontend.
- - We will use ipfs for file storage to prepare for future decentralization.
+Global interaction:
+
+- Personal P2P and small group chats with direct E2E encrypted chats.
+- Forums build with Matrix protocol for collaboration with bridge through **Matrix federation**
+- User permissions evolve dynamically based on **verified learning achievements** earned through a decentralized network of LMS servers.
+- All content is **multilingual**, with real-time translation enabling seamless global communication.
+- The system is designed to be **offline-first**, allowing users to continue learning and communicating even with intermittent connectivity.
+- The platform emphasizes **transparency, verifiability, and user sovereignty** through cryptographic credentials and decentralized identity (if possible, else later enforced with Holochain).
+- The architecture supports **federated country nodes**, enabling local autonomy while fostering global collaboration.
+- The platform is built with **modern frontend technologies** (React, Shadcn, Tailwind) for a smooth user experience, while the backend leverages **Rust microservices** for performance and security.
+- In the future, we aim to migrate key components to **Holochain DNA modules** to achieve full decentralization and user data ownership. With Tauri for cross-platform desktop/mobile apps.
+- While we wait for Holochain we can still integrate mobile app with Tauri besides the web frontend.
+- We will use ipfs for file storage to prepare for future decentralization.
 
 ---
 
@@ -40,8 +41,8 @@ Global interaction:
 | **Transparency & verifiability**   | Achievements, roles, and credentials are verifiable (cryptographically if possible or else this is a future feature with Holochain)  |
 | **Federated global collaboration** | Local autonomy + global interoperability + possibility to work with external groups (Matrix bridges)                                 |
 
-
 ## 🛠️ Key Technologies
+
 | Technology            | Purpose                                                |
 | --------------------- | ------------------------------------------------------ |
 | Docker                | Containerization and deployment                        |
@@ -51,8 +52,6 @@ Global interaction:
 | IPFS                  | Decentralized file storage                             |
 | Tauri (Future)        | Cross-platform desktop and mobile applications         |
 | Holochain (future)    | Decentralized data ownership and application logic     |
-
-
 
 ---
 
@@ -99,6 +98,7 @@ To understand how this inverted pyramid functions as a living system, imagine th
 **♻️ Energy Cycle**: Implementation of knowledge learned from teachings manifests in communities and guilds (flowers and leaves) as shared energy returned to the soil - enriching the entire ecosystem and making all flowers grow bigger and stronger together.
 
 This organic model emphasizes:
+
 - **Interconnection**: Like a forest, all parts support each other
 - **Sovereignty**: Each pod can grow independently while benefiting from the network
 - **Wisdom Flow**: Knowledge circulates like nutrients through the mycorrhizal network
@@ -108,11 +108,13 @@ This organic model emphasizes:
 ### Territory Definition
 
 **Territories** include:
+
 - **Countries**: Sovereign nations (e.g., Denmark, Canada, Kenya)
 - **First Nations**: Indigenous territories with self-governance (e.g., Navajo Nation, Sámi territories)
 - **Autonomous Regions**: Self-governing regions within larger nations
 
 Each territory operates with **full autonomy** over:
+
 - User management and invitations
 - Local content and curriculum
 - Language preferences and translations
@@ -167,6 +169,7 @@ Format prioritizes First Nation name, followed by FN marker, followed by country
 | `SAMI-FN-NO` | Sámi people | Norway (geographic) | `None` | Independent (also in SE, FI, RU) |
 
 **Sovereignty Principles**:
+
 - ✅ First Nation name comes **first** (respects sovereignty)
 - ✅ `FN` marker clearly identifies as First Nation
 - ✅ Country code provides **geographic context** (prevents name collisions)
@@ -175,12 +178,14 @@ Format prioritizes First Nation name, followed by FN marker, followed by country
 - ✅ Self-identification respected (registered name is authoritative)
 
 **Why Keep Country Code?**
+
 1. **Prevents name collisions**: `EAGLE-FN-CA` vs `EAGLE-FN-US` are distinct
 2. **Geographic context**: Helps users understand location
 3. **No power implication**: Code is metadata, NOT hierarchy
 4. **Practical**: Matches how First Nations often identify themselves internationally
 
 **What This Means for Governance**:
+
 - TeacherRegistrar for `CA` **CANNOT** manage `HAIDA-FN-CA` (separate hierarchies)
 - TeacherRegistrar for `HAIDA-FN-CA` **CANNOT** manage `CA` (separate hierarchies)
 - Each is sovereign within their own hierarchy
@@ -212,6 +217,7 @@ Communities are nested within countries or First Nations:
 ### Territory Autonomy & Data Architecture
 
 Each territory operates with **full autonomy** over:
+
 - User management and invitations
 - Local content and curriculum
 - Language preferences and translations
@@ -227,6 +233,7 @@ The platform uses a **badge-based permission system** where access to courses, f
 #### 🎯 **Core Permission Principle: Badge-Based Access**
 
 **Badges are the primary permission mechanism:**
+
 - Users earn badges by completing courses
 - Badges unlock access to:
   - Advanced courses (prerequisite chains)
@@ -255,6 +262,7 @@ The platform uses a **badge-based permission system** where access to courses, f
   - Participate in community activities they belong to
 
 **Enforcement:**
+
 - Users cannot take any courses or participate in forums without current Code of Conduct badge
 - Badge expiration sends notifications 30, 14, and 7 days before expiry
 - Expired badge locks user out of courses/forums or any other future extention, until renewal
@@ -266,9 +274,11 @@ The platform uses a **badge-based permission system** where access to courses, f
 Global roles manage platform-wide infrastructure, content templates, and standards that territories can adopt or customize.
 
 ##### **1.1 Platform Administrator**
+
 **Purpose:** System maintenance and oversight with minimal intervention in content/governance
 
 **Permissions:**
+
 - ✅ **Read access** to all data across the entire platform (for analysis and troubleshooting)
 - ✅ **Maintenance operations**: Server management, database optimization, security updates
 - ✅ **Monitoring**: Analytics, performance metrics, system health
@@ -276,10 +286,12 @@ Global roles manage platform-wide infrastructure, content templates, and standar
 - ❌ **Cannot modify** user content, courses, or governance decisions without explicit authorization
 
 **Accountability:**
+
 - All administrative actions logged in immutable audit trail
 - Cannot override territory sovereignty or user data ownership
 
 ##### **1.2 Infrastructure & DevOps Roles**
+
 - **Database Administrator**: Database maintenance, backups, performance tuning
 - **Security Engineer**: Security audits, vulnerability management, incident response
 - **DevOps Engineer**: CI/CD pipelines, container orchestration, deployment automation
@@ -290,15 +302,18 @@ Global roles manage platform-wide infrastructure, content templates, and standar
 - **Permissions**: Similar to Platform Administrator with focus on infrastructure tasks
 
 ##### **1.3 Global LMS Content Creators**
+
 **Purpose:** Create foundational course templates that territories can use, customize, or ignore
 
 **Permissions:**
+
 - ✅ Create, edit, or replace courses in the **global course library**
 - ✅ Define which badges courses award upon completion
 - ✅ Set course prerequisites and learning paths
 - ❌ Cannot force territories to use global courses
 
 **Course Update Policies:**
+
 - **Edit existing course**: Previous participants receive notification to retake (optional)
 - **Replace course**: Previous participants **must retake** within timeframe defined in course settings
   - If not retaken: User loses associated certification/badge/permissions
@@ -306,6 +321,7 @@ Global roles manage platform-wide infrastructure, content templates, and standar
   - Automated reminders sent at intervals
 
 **Territory Autonomy:**
+
 - Global courses are **optional templates** - territories can choose to:
   - Use global course as-is
   - Customize/adapt for local context
@@ -314,9 +330,11 @@ Global roles manage platform-wide infrastructure, content templates, and standar
 - Changes about hiding global courses require **100% unanimous vote** among all users with this role at that level
 
 ##### **1.4 Global Forum Structure Creators**
+
 **Purpose:** Design foundational forum categories and structure
 
 **Permissions:**
+
 - ✅ Create new forum categories and subcategories
 - ✅ Edit forum descriptions and rules
 - ✅ Close forums (make read-only) - **nothing is ever deleted** for transparency
@@ -324,22 +342,27 @@ Global roles manage platform-wide infrastructure, content templates, and standar
 - ❌ Cannot delete forums or forum content
 
 **Territory Autonomy:**
+
 - Territories can hide, customize, or create alternatives to global forum structure
 - Requires **100% unanimous vote** among forum structure creators, at that level
 
 ##### **1.5 Global Forum Topic Creators**
+
 **Purpose:** Create discussion topics in global forums
 
 **Permissions:**
+
 - ✅ Create new forum topics
 - ✅ Edit their own topics
 - ✅ Set topic-specific rules or badge requirements
 - ❌ Standard users can only **comment** on topics, not create topics (at global level)
 
 ##### **1.6 Global Forum Moderators**
+
 **Purpose:** Maintain forum quality and enforce Code of Conduct
 
 **Permissions:**
+
 - ✅ Moderate comments (flag, warn, but not delete)
 - ✅ Issue warnings to users violating Code of Conduct
 - ✅ Escalate severe violations to Platform Administrators
@@ -347,6 +370,7 @@ Global roles manage platform-wide infrastructure, content templates, and standar
 - ❌ Cannot delete content (transparency principle)
 
 **Warning System:**
+
 - First warning: User notified, comment flagged
 - Second warning: Temporary forum access restriction (e.g., 7 days)
 - Third warning: Case escalated to Territory Manager or Platform Admin
@@ -360,9 +384,11 @@ Global roles manage platform-wide infrastructure, content templates, and standar
 Territory roles manage Country/First Nation-specific content, communities, and governance.
 
 ##### **2.1 Territory Manager**
+
 **Purpose:** Bridge global coordination with local autonomy; manage territory infrastructure and users
 
 **Permissions:**
+
 - ✅ **Multi-Territory Management**: Can manage multiple territories (especially during initial rollout)
 - ✅ **User Invitations**: Invite and onboard new users to their territories
 - ✅ **Settings Configuration**: Configure language, preferred translation language, timezone, localization
@@ -373,19 +399,23 @@ Territory roles manage Country/First Nation-specific content, communities, and g
 - ✅ **Territory-Specific Content**: Create courses and forums specific to their territory
 
 **Authority Limitation:**
+
 - Territory Managers have full permissions **until** another user with the same role is assigned above them
 - Once a higher-level manager exists, permissions become delegated/shared
 
 ##### **2.2 Territory LMS Content Creator**
+
 - Same permissions as Global LMS Content Creator, but scoped to their territory
 - Can customize global courses for local context
 - Course changes require unanimous vote if multiple creators exist
 
 ##### **2.3 Territory Forum Structure Creator**
+
 - Same permissions as Global Forum Structure Creator, scoped to territory
 - Can hide/show global forums or create territory-specific forums
 
 ##### **2.4 Territory Forum Moderator**
+
 - Moderates territory-specific forums
 - Same powers as Global Forum Moderators, scoped to territory
 
@@ -396,7 +426,9 @@ Territory roles manage Country/First Nation-specific content, communities, and g
 Communities are smaller groups within territories (learning circles, teams, local chapters, guilds).
 
 ##### **3.1 Community Manager**
+
 **Permissions:**
+
 - ✅ Manage specific communities within a territory
 - ✅ Moderate discussions and forums within their community (if no other Community Forum Moderator exists)
 - ✅ Assign learning paths to community members (if learning circles or guilds)
@@ -405,11 +437,13 @@ Communities are smaller groups within territories (learning circles, teams, loca
 - ✅ Invite users to join the community
 
 **Authority in Inverted Pyramid:**
+
 - Community Managers have **higher authority** than Territory Managers (communities are above territories in the pyramid structure)
 - Territory Managers **cannot override** Community Manager decisions within that community - but the territory manager will work as community managers until a community manager is elected or assigned.
 - Community self-governance is paramount - only community members can elect/remove their managers
 
 **Democratic Election:**
+
 - Community Managers are assigned by a territory manager or the community manager below this community
  or **elected by community members** via unanimous vote (100% agreement)
 - Any community member can nominate themselves or another member
@@ -417,17 +451,21 @@ Communities are smaller groups within territories (learning circles, teams, loca
 - Community can also vote to remove a Community Manager (100% agreement, excluding the manager being voted on)
 
 ##### **3.2 Community LMS Content Creator**
+
 - Create and manage courses for their community
 - Can customize territory or global courses for community needs
 
 **Democratic Election:**
+
 - Elected by community members via unanimous vote
 - Can be removed by community vote (100% agreement, excluding the creator)
 
 ##### **3.3 Community Forum Moderator**
+
 - Moderate community-specific forums and discussions
 
 **Democratic Election:**
+
 - Elected by community members via unanimous vote
 - Can be removed by community vote (100% agreement, excluding the moderator)
 
@@ -664,6 +702,7 @@ async fn propose_remove_community_role(
 7. **Abstention = No**: Not voting counts as voting "no" (ensures active participation)
 
 **Benefits:**
+
 - ✅ **Community Self-Governance**: Communities control their own leadership
 - ✅ **Accountability**: Role holders can be removed if community loses confidence
 - ✅ **Democratic Legitimacy**: 100% agreement ensures strong mandate
@@ -679,7 +718,9 @@ User roles determine what actions they can take based on badges earned by partic
 and by that everthing is available to everybody as long as they have the willingness to learn to recieve the badges.
 
 ##### **4.1 Standard User/Learner**
+
 **Baseline permissions (with Code of Conduct badge):**
+
 - ✅ Enroll in and complete courses (based on badges/prerequisites)
 - ✅ **Comment** on forum topics (cannot create topics at at any level without specific badge allowing it)
 - ✅ View and edit their own profile
@@ -688,23 +729,30 @@ and by that everthing is available to everybody as long as they have the willing
 - ✅ Participate in community activities (based on community membership)
 
 **Without Code of Conduct badge:**
+
 - ❌ No course access
 - ❌ No forum participation
 - ✅ Can only view/edit profile and delete account
 - ✅ Can take Code of Conduct course to regain full access
 
 ##### **4.2 Teacher/Instructor**
+
 **Earned via badge (e.g., "Certified Instructor" badge):**
+
 - ✅ Teach courses within their community
 
 ##### **4.3 LMS Content Creator**
+
 **Earned via badge (e.g., "Content Contributor" badge):**
+
 - ✅ Contribute learning materials (videos, documents, interactive content)
 - ✅ Submit content for review and inclusion in courses
 - ✅ Earn attribution for contributed content
 
 ##### **4.4 Community Forum Topic Creator**
+
 **Earned via badge at community level:**
+
 - ✅ Create new discussion topics in community forums.
 
 ---
@@ -714,16 +762,19 @@ and by that everthing is available to everybody as long as they have the willing
 **For roles that can modify shared resources (courses, forums):**
 
 **Change Authority:**
+
 - If **only one user** has a role at a given level → they have full authority
 - If **multiple users** have the same role at the same level → changes require **100% unanimous vote**
 
 **Voting applies to:**
+
 - Hiding or showing global content at territory/community level
 - Editing existing courses or forums
 - Changing course prerequisites or badge assignments
 - Major structural changes to learning paths
 
 **Implementation:**
+
 - Proposed changes enter a voting period (e.g., 7-14 days)
 - All users with that role at that level are notified
 - Must achieve 100% agreement to proceed
@@ -735,20 +786,25 @@ and by that everthing is available to everybody as long as they have the willing
 #### 🎓 **Badge System & Course Prerequisites**
 
 **Badge Acquisition:**
+
 1. **Primary method**: Complete a course that awards the badge
 2. **Secondary method**: Manually assigned by authorized user (Territory Manager, Community Manager, etc.)
 3. **Annual renewal**: Some badges (Code of Conduct) require periodic re-certification
 
 **Prerequisites & Course Chains:**
+
 - Courses can require specific badges before enrollment
 - Courses can be linked in prerequisite chains:
+
   ```
   Code of Conduct → Basic Communication → Advanced Collaboration → Moderator Training
   ```
+
 - Users cannot skip prerequisite courses
 - Losing a prerequisite badge (e.g., due to course replacement) may lock access to other courses or forums
 
 **Badge-Gated Forums:**
+
 - Forums can require specific badges for access
 - Example: "Advanced Instructors" forum requires "Certified Instructor" badge
 - Prevents topic/comment access without proper credentials
@@ -783,6 +839,7 @@ and by that everthing is available to everybody as long as they have the willing
 ```
 
 **Key Principles:**
+
 1. **Badge-based access** drives all permissions
 2. **Code of Conduct is mandatory** and renewed annually
 3. **Nothing is deleted** - only closed/archived for transparency
@@ -802,6 +859,7 @@ and by that everthing is available to everybody as long as they have the willing
 Schema-based multi-tenancy is the **best practice** for your use case because it provides:
 
 1. **Easy Future Migration**: Each territory's data lives in its own PostgreSQL schema, making it trivial to migrate to dedicated servers later
+
    ```bash
    # Export single territory
    pg_dump --schema=territory_canada mydb > canada.sql
@@ -881,6 +939,7 @@ territory_{id}:
 ```
 
 **Key Schema Features:**
+
 - `user_profiles` stores comprehensive profile data (display name, avatar, bio, location, birthdate)
 - `user_languages` tracks language proficiency levels (spoken/written/listening/reading)
 - `user_social_links` unlimited social media links with 30+ predefined types (LinkedIn, GitHub, Twitter, etc.)
@@ -908,18 +967,21 @@ territory_{id}:
 #### **Infrastructure Evolution Path**
 
 **Phase 1: Initial Rollout (3-5 Territories)**
+
 - Single PostgreSQL server with multiple schemas
 - All territories share infrastructure
 - Territory Managers manage 1-3 territories each
 - Deploy in one geographic location
 
 **Phase 2: Regional Expansion (10-20 Territories)**
+
 - 1 server per continent (Americas, Europe, Asia-Pacific, Africa)
 - Migrate territory schemas to regional servers based on user location
 - Reduced latency for regional users
 - Territory Managers still can manage multiple territories
 
 **Phase 3: Territory Autonomy (50+ Territories)**
+
 - Large territories get dedicated servers
 - Smaller territories remain on shared regional infrastructure
 - Full data sovereignty for territories that want it
@@ -1067,6 +1129,7 @@ The badge system is the **cornerstone of platform permissions**, controlling acc
 #### **Badge Architecture**
 
 **Badge Definition:**
+
 ```rust
 struct Badge {
     id: Uuid,
@@ -1107,12 +1170,14 @@ enum Scope {
 #### **Code of Conduct Badge (Mandatory Foundation)**
 
 **Special Status:**
+
 - **Required** for all platform participation beyond profile management
 - **Annual renewal** - expires every 365 days
 - **Automated notifications**: 30, 14, 7 days before expiration
 - **Automatic lockout**: Upon expiration, user loses all participation permissions
 
 **Implementation:**
+
 ```rust
 async fn check_code_of_conduct_status(user_id: Uuid) -> Result<BadgeStatus> {
     let badge = user_badges
@@ -1136,6 +1201,7 @@ async fn check_code_of_conduct_status(user_id: Uuid) -> Result<BadgeStatus> {
 ```
 
 **User Experience Without Code of Conduct Badge:**
+
 - ❌ Cannot enroll in any courses
 - ❌ Cannot view or comment on forums
 - ❌ Cannot join communities
@@ -1146,6 +1212,7 @@ async fn check_code_of_conduct_status(user_id: Uuid) -> Result<BadgeStatus> {
 #### **Badge Acquisition Methods**
 
 1. **Course Completion (Primary)**
+
    ```rust
    async fn complete_course(user_id: Uuid, course_id: Uuid) -> Result<Vec<Badge>> {
        let course = courses.find(course_id)?;
@@ -1176,6 +1243,7 @@ async fn check_code_of_conduct_status(user_id: Uuid) -> Result<BadgeStatus> {
 #### **Course Prerequisites & Badge Chains**
 
 **Prerequisite Enforcement:**
+
 ```rust
 async fn check_enrollment_eligibility(user_id: Uuid, course_id: Uuid) -> Result<bool> {
     let course = courses.find(course_id)?;
@@ -1201,6 +1269,7 @@ async fn check_enrollment_eligibility(user_id: Uuid, course_id: Uuid) -> Result<
 ```
 
 **Example Learning Path:**
+
 ```
 1. Code of Conduct (mandatory, annual)
    ↓
@@ -1267,6 +1336,7 @@ async fn check_forum_access(user_id: Uuid, forum_id: Uuid, action: ForumAction) 
 #### **Badge Expiration & Renewal**
 
 **Annual Renewal System:**
+
 ```rust
 // Background job runs daily
 async fn check_badge_expirations() {
@@ -1303,6 +1373,7 @@ async fn check_badge_expirations() {
 ```
 
 **Impact of Badge Loss:**
+
 - User loses associated permissions immediately
 - Access to badge-gated forums removed
 - Cannot enroll in courses requiring that badge
@@ -1318,6 +1389,7 @@ The category system organizes courses and forums into intuitive groupings with *
 #### **Category Architecture**
 
 **Category Types:**
+
 ```rust
 struct Category {
     id: Uuid,
@@ -1345,6 +1417,7 @@ enum ResourceType {
 ```
 
 **Hierarchical Categories Example:**
+
 ```
 Science & Technology (requires: Science Explorer badge)
 ├─ Physics
@@ -1365,17 +1438,20 @@ Science & Technology (requires: Science Explorer badge)
 Users browse content with **three visibility states**:
 
 **1. Accessible Content (Full Color)**
+
 - User has all required badges
 - Click to view/enter forum or enroll in course
 - Shows: Title, description, member count, activity level
 
 **2. Locked Content (Greyed-Out Silhouette)**
+
 - User missing required badges
 - Displayed as semi-transparent "silhouette" with lock icon
 - Shows: Title (partial), estimated unlock time, lock icon
 - Click to view **detailed roadmap**
 
 **3. Hidden Content (Not Shown)**
+
 - Content hidden at user's territory/community level
 - Does NOT appear in category listings
 - Exception: Can be discovered via search with "show hidden" filter
@@ -1434,6 +1510,7 @@ When a user clicks on locked content, they see a **detailed roadmap** to unlock 
 #### **Implementation**
 
 **Category View Generation:**
+
 ```rust
 async fn get_user_category_view(user_id: Uuid, scope: Scope) -> Result<Vec<CategoryView>> {
     let user_badges = get_user_badges(user_id).await?;
@@ -1570,6 +1647,7 @@ async fn generate_access_roadmap(user_id: Uuid, resource: &Resource) -> Result<A
 ```
 
 **Benefits:**
+
 - ✅ **Intuitive Discovery**: Browse by interest areas, not just lists
 - ✅ **Clear Progression**: Visual roadmaps show exactly how to unlock content
 - ✅ **Motivation**: See progress bars and achievable goals
@@ -1582,6 +1660,7 @@ async fn generate_access_roadmap(user_id: Uuid, resource: &Resource) -> Result<A
 ### 3. **Decentralized Communication System**
 
 #### **Personal & Small Group Chat (E2E Encrypted)**
+
 - Direct peer-to-peer messaging with end-to-end encryption
 - Small group chats (2-10 participants) for private collaboration
 - WebSocket gateway (`tokio-tungstenite`) for real-time message delivery
@@ -1593,6 +1672,7 @@ async fn generate_access_roadmap(user_id: Uuid, resource: &Resource) -> Result<A
 Matrix protocol enables **federated, decentralized forums** with hierarchical permissions tied to the badge system and cross-territory data sovereignty.
 
 **Forum Hierarchy & Scope:**
+
 ```
 Global Forums (optional templates)
   ├─ Territory Forums (can customize or hide global)
@@ -1611,6 +1691,7 @@ Each territory operates its own **Matrix homeserver**, ensuring user data stays 
 - **Seamless Experience**: Users access global forums through their local Matrix server without knowing about cross-territory mechanics
 
 **Example Flow:**
+
 1. User in Denmark creates topic in Global Forum → stored on Denmark's Matrix server
 2. User in Canada views same topic → Denmark's server federates content to Canada's server (read-only)
 3. User in Kenya replies → reply stored on Kenya's Matrix server
@@ -1629,6 +1710,7 @@ Forums created at lower levels (global/territory) can be **hidden** at higher le
   - Unhiding cascades up hierarchy until reaching the level where forum was created
 
 **Example Hiding Scenario:**
+
 ```
 Global Forum: "Advanced Political Theory"
   ├─ Territory A: Visible (users can participate)
@@ -1653,9 +1735,10 @@ Global Forum: "Advanced Political Theory"
    - Encourages learning progression
 
 **Key Features:**
+
 - **Badge-Gated Access**: Forums require specific badges (e.g., "Advanced Learner" forum requires completion of prerequisite courses)
 - **Category Tagging**: Forums grouped by categories tied to badge permissions (see Category System below)
-- **Hierarchical Permissions**: 
+- **Hierarchical Permissions**:
   - Global/Territory: Only Forum Topic Creators role can create topics; all users can comment
   - Community: Community members with appropriate badges can create topics
 - **Matrix Federation**: Enables cross-territory collaboration while maintaining data sovereignty
@@ -1683,6 +1766,7 @@ Global Forum: "Advanced Political Theory"
 Forums support various topic types that act as **collaboration tools**, organized by category:
 
 **Governance & Decision-Making:**
+
 1. **Discussion**: Standard threaded conversations
 2. **Voting**: Democratic decision-making with vote tallying
 3. **Proposals/RFC**: Formal proposals for community/territory decisions with structured format (rationale, impact analysis, voting period)
@@ -1722,9 +1806,11 @@ Forums support various topic types that act as **collaboration tools**, organize
 27. **Challenges/Competitions**: Learning challenges, skill competitions with leaderboards
 
 **Future Extensions:**
+
 - **Marketplace/Exchange**: Barter services, trade resources within community (will be a separate extension like LMS and Forum)
 
 **Matrix Room Mapping:**
+
 ```rust
 struct ForumMatrixRoom {
     forum_id: Uuid,
@@ -1835,6 +1921,7 @@ async fn issue_warning(
 Forums and courses are organized by **category tags** that work with badge permissions to create intuitive discovery and progression paths.
 
 **Category Structure:**
+
 ```rust
 struct Category {
     id: Uuid,
@@ -1870,8 +1957,9 @@ Users see categorized content with **visual progression indicators**:
    - Forums/courses user doesn't have badges for yet
    - Shown as "greyed out silhouettes" with lock icon
    - Click to see **roadmap** for how to gain access
-   
+
 3. **Roadmap View** (prerequisite chain):
+
    ```
    🔒 Advanced Quantum Physics Forum
    
@@ -1892,12 +1980,14 @@ Users see categorized content with **visual progression indicators**:
    ```
 
 **Category Permissions:**
+
 - Categories themselves can require badges
 - Users without category badge see category as greyed-out
 - All nested content appears locked until category badge is earned
 - Encourages structured learning progression
 
 **Implementation:**
+
 ```rust
 async fn get_user_category_view(user_id: Uuid) -> Result<Vec<CategoryView>> {
     let user_badges = get_user_badges(user_id).await?;
@@ -1998,6 +2088,7 @@ The LMS implements a **federated, badge-driven learning architecture** where cou
 #### **Course Hierarchy & Autonomy**
 
 **Multi-Level Course Structure:**
+
 ```
 Global Course Library (optional templates)
   ├─ Territory Courses (can customize, hide, or create new)
@@ -2006,6 +2097,7 @@ Global Course Library (optional templates)
 ```
 
 **Course Organization:**
+
 - **Category Tags**: Courses grouped by subject area (Science, Leadership, Arts, etc.)
 - **Learning Paths**: Curated sequences of courses within categories
 - **Prerequisite Chains**: Badge dependencies create natural progression
@@ -2013,6 +2105,7 @@ Global Course Library (optional templates)
 - **Roadmaps**: Click locked course to see detailed unlock path
 
 **Territory Autonomy Implementation:**
+
 ```rust
 struct CourseVisibility {
     course_id: Uuid,
@@ -2082,12 +2175,14 @@ async fn propose_course_change(
 #### **Course Edit vs. Replace Policies**
 
 **Course Edit (Minor Changes):**
+
 - Typo fixes, clarifications, additional examples
 - Previous completers receive **optional** notification to review changes
 - Badge/certification remains valid
 - No mandatory retake required
 
 **Course Replace (Major Changes):**
+
 - Curriculum overhaul, new learning objectives, different badge requirements
 - Previous completers **must retake** within configured timeframe
 - If not retaken by deadline: Badge revoked, permissions lost
@@ -2156,6 +2251,7 @@ async fn check_retake_deadlines() {
 #### **Federated Course Network**
 
 **Cross-Territory Course Sharing:**
+
 - Territories can **share courses** with other territories (with attribution)
 - Courses can be **remixed** and localized while maintaining version link
 - **Content versioning** tracks course evolution and attribution
@@ -2178,6 +2274,7 @@ struct CourseSharing {
 Courses are structured as **collections of content items** organized into sections, supporting multiple content types for rich, engaging learning experiences.
 
 **Course Architecture:**
+
 ```rust
 struct Course {
     id: Uuid,
@@ -3234,6 +3331,7 @@ struct SubtitleTrack {
 ```
 
 **Course Progression & Completion Tracking:**
+
 ```rust
 struct UserCourseEnrollment {
     id: Uuid,
@@ -3361,6 +3459,7 @@ async fn create_course_forum(course_id: Uuid) -> Result<Uuid> {
 ```
 
 **Forum Integration Benefits:**
+
 - Students can ask questions about specific content items
 - Instructors can post announcements
 - Peer-to-peer learning and support
@@ -3370,6 +3469,7 @@ async fn create_course_forum(course_id: Uuid) -> Result<Uuid> {
 #### **Achievement & Credential System**
 
 **Badge Awards Upon Completion:**
+
 ```rust
 async fn complete_course_and_award_badges(
     user_id: Uuid,
@@ -3430,6 +3530,7 @@ async fn complete_course_and_award_badges(
 ```
 
 **Cross-Territory Credential Recognition:**
+
 - Badges earned in one territory are **globally recognized**
 - Verifiable Credentials (future) use cryptographic signatures
 - Integration with external standards: **Open Badges 2.0/3.0**, **W3C Verifiable Credentials**
@@ -3462,6 +3563,7 @@ async fn recommend_next_courses(user_id: Uuid) -> Result<Vec<Course>> {
 ```
 
 **Analytics Dashboard:**
+
 - **For Learners**: Progress tracking, badge collection, recommended next steps
 - **For Educators**: Course completion rates, struggle points, engagement metrics
 - **For Territory Managers**: Territory-wide learning trends, popular courses, achievement statistics
@@ -3478,11 +3580,13 @@ async fn recommend_next_courses(user_id: Uuid) -> Result<Vec<Course>> {
 
 **Territory Language Preferences:**
 Each territory configures:
+
 - **Primary Language**: Default language for territory
 - **Preferred Translation Language**: Automatic translation target for incoming content
 - **Supported Languages**: Additional languages available to users in that territory
 
 **Implementation:**
+
 ```rust
 async fn translate_forum_message(
     message: &str,
@@ -3517,6 +3621,7 @@ async fn translate_forum_message(
 #### **Current Implementation**
 
 **OpenID Connect (OIDC) Single Sign-On:**
+
 ```rust
 struct AuthenticationFlow {
     // User authenticates once via OIDC provider
@@ -3553,6 +3658,7 @@ async fn check_permission(token: &JWTToken, required_permission: Permission) -> 
 ```
 
 **Multi-Factor Authentication (MFA):**
+
 - TOTP (Time-based One-Time Password) support
 - WebAuthn for passwordless authentication
 - Backup codes for account recovery
@@ -3560,6 +3666,7 @@ async fn check_permission(token: &JWTToken, required_permission: Permission) -> 
 
 **Cross-Server SSO:**
 When territories are on different servers, SSO still works:
+
 - Central OIDC provider issues tokens valid across all servers
 - API Gateway validates tokens and routes to appropriate territory server
 - User maintains single session across all territories they manage
@@ -3567,12 +3674,14 @@ When territories are on different servers, SSO still works:
 #### **Future Holochain Integration**
 
 **Self-Sovereign Identity (SSI):**
+
 - Users control their own identity without central authority
 - Decentralized Identifiers (DIDs) replace centralized user IDs
 - Verifiable Credentials for badges and achievements
 - Privacy-preserving selective disclosure (prove you have a badge without revealing identity)
 
 **Migration Path:**
+
 ```rust
 // Hybrid mode: Support both centralized and decentralized identity
 enum UserIdentity {
@@ -3595,6 +3704,7 @@ enum UserIdentity {
 #### **User Profile System**
 
 **Profile Data Structure:**
+
 ```rust
 struct UserProfile {
     // Core Identity
@@ -3934,6 +4044,7 @@ enum FeedAlgorithm {
 ```
 
 **Privacy Preset Configurations:**
+
 ```rust
 impl PrivacyPreset {
     fn get_default_visibility(&self) -> HashMap<ProfileField, ProfileVisibility> {
@@ -4017,6 +4128,7 @@ impl PrivacyPreset {
 ```
 
 **Peer-to-Peer Encrypted Communication (Non-Matrix):**
+
 ```rust
 // For small group direct messaging (2-10 users) with end-to-end encryption
 struct P2PConversation {
@@ -4078,6 +4190,7 @@ async fn send_p2p_message(
 ```
 
 **Daily Project Updates & Personal Sharing:**
+
 ```rust
 struct ProjectUpdate {
     id: Uuid,
@@ -4189,6 +4302,7 @@ async fn create_project_update(
 #### **Future Holochain Integration**
 
 **Profile DNA (holochain-open-dev/profiles):**
+
 ```rust
 // Integration with holochain-open-dev/profiles
 // https://github.com/holochain-open-dev/profiles
@@ -4275,6 +4389,7 @@ For small group encrypted messaging (2-10 users) outside of Matrix, the platform
 #### **Signal Protocol Key Server**
 
 **Pre-Key Distribution & Management:**
+
 ```rust
 // Signal Protocol requires a key server for initial handshake
 struct SignalKeyServer {
@@ -4319,6 +4434,7 @@ async fn fetch_pre_key_bundle(target_user_id: Uuid, device_id: u32) -> Result<Pr
 ```
 
 **Session Management:**
+
 ```rust
 struct SessionStore {
     // Stores Double Ratchet state per conversation
@@ -4376,6 +4492,7 @@ async fn establish_p2p_session(
 ```
 
 **Rust Dependencies:**
+
 ```toml
 [dependencies]
 libsignal-protocol = "0.1"  # Signal Protocol implementation
@@ -4386,6 +4503,7 @@ ed25519-dalek = "2.0"       # Signature verification
 #### **WebRTC Signaling & NAT Traversal Infrastructure**
 
 **STUN Servers (NAT Discovery):**
+
 ```rust
 struct StunServerConfig {
     // Public STUN servers for discovering public IP/port
@@ -4411,6 +4529,7 @@ fn default_stun_config() -> StunServerConfig {
 ```
 
 **TURN Servers (Relay for Restricted NATs):**
+
 ```rust
 struct TurnServerConfig {
     // Self-hosted TURN servers for relaying when direct P2P fails
@@ -4468,6 +4587,7 @@ services:
 ```
 
 **WebRTC Signaling Server:**
+
 ```rust
 // Signaling server for WebRTC offer/answer exchange
 struct SignalingServer {
@@ -4554,6 +4674,7 @@ async fn handle_signaling_message(
 ```
 
 **Client-Side WebRTC Setup:**
+
 ```typescript
 // Frontend: Establish P2P connection with WebRTC
 async function establishP2PConnection(
@@ -4623,6 +4744,7 @@ async function establishP2PConnection(
 #### **Infrastructure Requirements Summary**
 
 **Per-Territory Deployment:**
+
 ```yaml
 # Signal Protocol Key Server
 signal-key-server:
@@ -4656,12 +4778,14 @@ stun-servers:
 ```
 
 **Bandwidth Considerations:**
+
 - **Direct P2P (80-90% of connections)**: No server bandwidth used
 - **TURN Relay (10-20% of connections)**: Server relays encrypted messages
 - **Estimate**: 100 concurrent TURN-relayed conversations = ~50 Mbps
 - **Optimization**: Deploy regional TURN servers to reduce latency
 
 **Benefits of P2P Infrastructure:**
+
 1. **Privacy**: Messages don't touch servers (when direct P2P works)
 2. **Scalability**: Server load doesn't grow with message volume
 3. **Low Latency**: Direct peer-to-peer connection
@@ -4669,6 +4793,7 @@ stun-servers:
 5. **Small Groups**: Perfect for 2-10 user conversations without Matrix overhead
 
 **Fallback Strategy:**
+
 - If P2P connection fails after 10 seconds, offer to continue via Matrix (federated but server-based)
 - User can choose privacy (P2P but may fail) vs reliability (Matrix always works)
 
@@ -4719,6 +4844,7 @@ async fn upload_course_material(
 ```
 
 **Benefits:**
+
 - **Deduplication**: Same file uploaded multiple times only stored once
 - **Integrity**: Content hash guarantees file hasn't been tampered with
 - **Resilience**: Files pinned on multiple nodes survive individual node failures
@@ -4727,6 +4853,7 @@ async fn upload_course_material(
 - **Future Decentralization**: Seamless transition when migrating to Holochain
 
 **Content Types:**
+
 - Course videos, PDFs, presentations
 - User-uploaded assignments and projects
 - Forum attachments
@@ -4740,6 +4867,7 @@ async fn upload_course_material(
 #### **Message Bus (NATS) for Event Distribution**
 
 **Event Types:**
+
 ```rust
 enum PlatformEvent {
     // Badge events
@@ -4805,6 +4933,7 @@ async fn subscribe_to_events() {
 #### **Immutable Audit Trail**
 
 **All significant actions logged permanently:**
+
 ```rust
 struct AuditEntry {
     id: Uuid,
@@ -4849,12 +4978,14 @@ async fn log_audit_event(event: AuditEntry) -> Result<()> {
 ```
 
 **Transparency Features:**
+
 - **Public Audit Log**: Certain events (role assignments, course changes, voting outcomes) are publicly viewable
 - **User Access**: Users can view audit log entries related to their own account
 - **Territory Transparency**: Territory Managers can view all actions within their territories
 - **Immutability**: Records cannot be modified or deleted, ensuring accountability
 
 **Future: Cryptographically Signed Events (Holochain):**
+
 - Each event signed with actor's private key
 - Hash chain links events for tamper detection
 - Distributed verification across nodes
@@ -4958,6 +5089,7 @@ async fn send_daily_notification_digests() {
 ```
 
 **Automation Categories:**
+
 1. **Badge Management**: Expiration checks, renewal reminders, permission updates
 2. **Course Management**: Retake deadlines, completion certificates, recommendation updates
 3. **Governance**: Vote deadline enforcement, proposal execution, notification distribution
@@ -4972,6 +5104,7 @@ async fn send_daily_notification_digests() {
 #### **Current: Web Frontend**
 
 **Technology Stack:**
+
 - **React 18.x**: Stable component-based UI with concurrent rendering, production-ready ecosystem
 - **Vite 5.x**: Lightning-fast dev server, optimized production builds
 - **TailwindCSS 4.1.16**: Utility-first styling, responsive design system
@@ -4982,6 +5115,7 @@ async fn send_daily_notification_digests() {
 - **TypeScript**: Full type safety across codebase
 
 **Stack Rationale:**
+
 - React 18 chosen over React 19 for stable ecosystem during MVP phase
 - TanStack Query offloads data fetching from manual state management
 - Future-proof for Tauri migration (~1 year timeline)
@@ -5051,6 +5185,7 @@ function CodeOfConductBanner() {
 ```
 
 **Progressive Web App (PWA):**
+
 - Offline-first architecture with service workers
 - Local caching of courses for offline learning
 - Background sync for course progress
@@ -5059,6 +5194,7 @@ function CodeOfConductBanner() {
 #### **Future: Tauri Desktop & Mobile**
 
 **Cross-Platform Native Applications:**
+
 - **Platforms**: Windows, macOS, Linux (desktop), iOS, Android (mobile)
 - **Benefits**:
   - Smaller bundle size vs Electron (~600KB vs ~150MB)
@@ -5067,6 +5203,7 @@ function CodeOfConductBanner() {
   - Offline-first with local database (SQLite)
 
 **Offline Learning Capabilities:**
+
 ```rust
 // Tauri backend - download courses for offline access
 #[tauri::command]
@@ -5107,6 +5244,7 @@ async fn sync_offline_progress() -> Result<(), String> {
 #### **Full Decentralization Roadmap**
 
 **Phase 1: Hybrid Mode (Years 1-2)**
+
 - Maintain current Rust microservices backend
 - Add Holochain nodes for specific use cases:
   - Personal learning portfolios (user-owned data)
@@ -5114,12 +5252,14 @@ async fn sync_offline_progress() -> Result<(), String> {
   - Community governance voting (transparent, tamper-proof)
 
 **Phase 2: Gradual Migration (Years 2-4)**
+
 - Migrate frontend API calls to Holochain DNA functions
 - User authentication transitions to Decentralized Identifiers (DIDs)
 - Course materials stored on IPFS, referenced in Holochain
 - Territory autonomy increases as local Holochain conductors deployed
 
 **Phase 3: Full Decentralization (Year 4+)**
+
 - All application logic in Holochain DNA modules
 - No centralized servers required (optional caching/gateway nodes)
 - Users run their own Holochain conductor (desktop/mobile app)
@@ -5130,24 +5270,28 @@ async fn sync_offline_progress() -> Result<(), String> {
 The platform will leverage existing **holochain-open-dev** community modules to accelerate development and ensure interoperability:
 
 **1. Profiles Module ([holochain-open-dev/profiles](https://github.com/holochain-open-dev/profiles)):**
+
 - User profile management (nickname, avatar, custom fields)
 - Decentralized identity and profile discovery
 - Integrates with our UserProfile system for migration
 - Already designed in Section 6 (User Profile System)
 
 **2. Peer Status Module ([holochain-open-dev/peer-status](https://github.com/holochain-open-dev/peer-status)):**
+
 - Agent online/offline/busy status tracking
 - Real-time presence indicators
 - Integration with P2P messaging (Section 6b)
 - Supports peer discovery for direct connections
 
 **3. Notifications Module ([holochain-open-dev/notifications](https://github.com/holochain-open-dev/notifications)):**
+
 - External notification management (email, SMS, WhatsApp)
 - Integrates with our NotificationSettings (Section 6)
 - Supports notification preferences and quiet hours
 - Handles both in-app and external notifications
 
 **4. File Storage Module ([holochain-open-dev/file-storage](https://github.com/holochain-open-dev/file-storage)):**
+
 - Store and retrieve files in Holochain DHT
 - Complements IPFS for small files and user-generated content
 - Integration path: IPFS for large course materials, Holochain for user files
@@ -5310,6 +5454,7 @@ pub fn verify_badge(query: BadgeQuery) -> ExternResult<Vec<Badge>> {
 #### **Migration Path from Current Architecture**
 
 **Database → Holochain:**
+
 ```
 PostgreSQL Schemas → Holochain DNA Modules
   territory_{id} → Territory DNA instance
@@ -5318,6 +5463,7 @@ PostgreSQL Schemas → Holochain DNA Modules
 ```
 
 **Authentication:**
+
 ```
 OIDC + JWT → Decentralized Identifiers (DIDs)
   Centralized IdP → Self-sovereign identity
@@ -5325,6 +5471,7 @@ OIDC + JWT → Decentralized Identifiers (DIDs)
 ```
 
 **File Storage:**
+
 ```
 IPFS (current) → IPFS (unchanged)
   Already decentralized, seamless integration
@@ -5332,6 +5479,7 @@ IPFS (current) → IPFS (unchanged)
 ```
 
 **Event Bus:**
+
 ```
 NATS (current) → Holochain Signals
   Centralized pub/sub → P2P gossiping
@@ -5349,6 +5497,7 @@ The platform is designed with a modular architecture allowing separate extension
 #### **Core Extensions (Separate Modules)**
 
 **1. Learning Management System (LMS)** - ✅ Currently Designed
+
 - 40+ content types (video, interactive, VR/AR, code exercises, etc.)
 - Course/section/content hierarchy
 - Certification and badge awards
@@ -5356,6 +5505,7 @@ The platform is designed with a modular architecture allowing separate extension
 - Offline-first learning mode
 
 **2. Communication & Forums** - ✅ Currently Designed
+
 - Matrix-based federated forums
 - 27 topic collaboration tool types
 - Cross-territory federation
@@ -5363,6 +5513,7 @@ The platform is designed with a modular architecture allowing separate extension
 - Category-based discovery
 
 **3. Marketplace & Resource Exchange** - 🔮 Future Extension
+
 - Barter and trade services within communities
 - Physical/digital resource sharing
 - Time banking system
@@ -5373,6 +5524,7 @@ The platform is designed with a modular architecture allowing separate extension
 - Integration with local economies
 
 **4. Community Resource Management** - 🔮 Future Extension
+
 - Physical space booking (meeting rooms, maker spaces, equipment)
 - Tool library management
 - Vehicle/equipment sharing
@@ -5380,6 +5532,7 @@ The platform is designed with a modular architecture allowing separate extension
 - Inventory tracking for shared resources
 
 **5. Healthcare & Wellness** - 🔮 Future Extension
+
 - Peer support groups
 - Mental health resources
 - Traditional knowledge sharing
@@ -5387,6 +5540,7 @@ The platform is designed with a modular architecture allowing separate extension
 - Health data sovereignty
 
 **6. Cultural Preservation** - 🔮 Future Extension
+
 - Language learning and preservation
 - Traditional arts and crafts documentation
 - Oral history archival
@@ -5394,6 +5548,7 @@ The platform is designed with a modular architecture allowing separate extension
 - Elder knowledge repository
 
 Each extension follows the platform's core principles:
+
 - Badge-based access control
 - Democratic governance (100% unanimous voting)
 - Data sovereignty at territory level
@@ -5406,6 +5561,7 @@ Each extension follows the platform's core principles:
 ## 🎯 Implementation Summary
 
 This platform combines:
+
 - **Badge-driven permissions** for granular, learner-centric access control
 - **Category-based discovery** with visual roadmaps showing unlock paths for locked content
 - **Cross-territory federation** where users interact via local Matrix servers while seeing global content

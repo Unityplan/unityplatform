@@ -13,7 +13,10 @@
   "github.copilot.chat.mcp.servers": {
     "shadcn-ui": {
       "command": "npx",
-      "args": ["-y", "@shadcn/mcp"]
+      "args": [
+        "-y",
+        "@shadcn/mcp"
+      ]
     }
   }
 }

@@ -8,6 +8,45 @@ Complete guide for building the UnityPlan React frontend application.
 
 ---
 
+## ⚠️ CRITICAL: Version Compatibility Warning
+
+### TailwindCSS v4 & shadcn/ui Breaking Changes
+
+**Our versions are NOT backward compatible with previous versions!**
+
+We use:
+
+- **TailwindCSS v4.1.17** (breaking changes from v3)
+- **shadcn/ui latest** (OKLCH colors only, new theming system)
+
+### Key Differences from Older Documentation
+
+| Aspect | ❌ OLD (v3) | ✅ NEW (v4 - WE USE THIS) |
+|--------|-------------|---------------------------|
+| **Config File** | `tailwind.config.js` | **NO CONFIG FILE** - CSS-based |
+| **CSS Import** | `@tailwind base; @tailwind components;` | `@import "tailwindcss";` |
+| **Theming** | `@theme { }` in config | `@theme { }` in CSS + `:root` variables |
+| **Colors** | Hex/RGB (`#646cff`) | **OKLCH** (`oklch(0.985 0 0)`) |
+| **Vite Plugin** | `@tailwindcss/postcss@3` | `@tailwindcss/vite` |
+| **Variable Exposure** | Manual | `@theme inline { }` directive |
+
+### Official Documentation (ALWAYS CHECK THESE)
+
+- **TailwindCSS v4:** <https://tailwindcss.com/docs>
+- **shadcn/ui Vite:** <https://ui.shadcn.com/docs/installation/vite>
+- **shadcn/ui Theming:** <https://ui.shadcn.com/docs/theming>
+
+### DO NOT Use
+
+- ❌ TailwindCSS v3 documentation
+- ❌ Old Stack Overflow answers (pre-2024)
+- ❌ ChatGPT/AI suggestions without verification
+- ❌ shadcn examples with hex colors
+
+**If something doesn't work, verify against official v4 docs first!**
+
+---
+
 ## 📋 Table of Contents
 
 - [Quick Start](#quick-start)
@@ -41,8 +80,10 @@ npm install
 # Start development server
 npm run dev
 
-# Application runs on http://localhost:3000
+# Application runs on http://localhost:5173
 ```
+
+**Note:** Port 5173 is Vite's default. We use this to avoid conflicts with infrastructure services (Forgejo on 3000, Grafana on 3001).
 
 ---
 
@@ -74,12 +115,14 @@ npm install axios
 npm install react-hook-form @hookform/resolvers zod
 ```
 
-### Step 3: Install UI Dependencies
+### Step 3: Install UI Dependencies (TailwindCSS v4)
 
 ```bash
-# TailwindCSS
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
+# TailwindCSS v4 with Vite plugin
+npm install -D tailwindcss @tailwindcss/vite
+
+# IMPORTANT: NO `npx tailwindcss init` needed for v4!
+# Configuration is done in CSS files, not JS config
 ```
 
 ### Step 4: Install Testing Dependencies
@@ -99,8 +142,8 @@ npx shadcn@latest init
 Follow prompts:
 
 - Style: Default
-- Base color: Slate
-- CSS variables: Yes
+- Base color: Neutral (uses OKLCH colors)
+- CSS variables: Yes (required for v4)
 - React Server Components: No
 - TypeScript: Yes
 - Path aliases: @/*→ ./src/*
@@ -118,17 +161,12 @@ npx shadcn@latest add button input card form label select checkbox textarea avat
 ### Daily Development
 
 ```bash
-# 1. Start backend services (if not running)
-cd ..
-docker compose -f docker-compose.dev.yml up -d
-
-# 2. Start frontend dev server
-cd frontend
+# 1. Start dev server
 npm run dev
 
-# 3. Open browser to http://localhost:3000
+# 2. Server starts on http://localhost:5173
 
-# 4. Make changes - HMR (Hot Module Replacement) updates automatically
+# 3. Open browser to http://localhost:5173
 ```
 
 ### Development Commands
@@ -235,8 +273,8 @@ frontend/
 ├── .env.development      # Development environment variables
 ├── .env.production       # Production environment variables
 ├── package.json          # Dependencies and scripts
-├── vite.config.ts        # Vite configuration
-├── tailwind.config.js    # TailwindCSS configuration
+├── vite.config.ts        # Vite configuration (includes TailwindCSS v4 plugin)
+├── postcss.config.js     # PostCSS configuration (for TailwindCSS v4)
 ├── tsconfig.json         # TypeScript configuration
 └── vitest.config.ts      # Vitest test configuration
 ```
@@ -245,22 +283,23 @@ frontend/
 
 ## Configuration Files
 
-### vite.config.ts
+### vite.config.ts (TailwindCSS v4)
 
 ```typescript
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
 import path from 'path';
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()], // TailwindCSS v4 Vite plugin
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
   server: {
-    port: 3000,
+    port: 5173, // Vite default - avoids conflicts with Forgejo (3000) and Grafana (3001)
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
@@ -271,40 +310,74 @@ export default defineConfig({
 });
 ```
 
-### tailwind.config.js
+### postcss.config.js (TailwindCSS v4)
 
 ```javascript
-/** @type {import('tailwindcss').Config} */
+// PostCSS configuration for TailwindCSS v4
 export default {
-  darkMode: ['class'],
-  content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
-  ],
-  theme: {
-    extend: {
-      colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
-        // ... more theme colors
-      },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
-      },
-    },
+  plugins: {
+    '@tailwindcss/postcss': {},
   },
-  plugins: [require('tailwindcss-animate')],
 };
 ```
+
+### src/index.css (TailwindCSS v4 Theming)
+
+```css
+/* Import TailwindCSS v4 - replaces old @tailwind directives */
+@import "tailwindcss";
+
+/* Define theme CSS variables using OKLCH color format */
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  /* Add more variables as needed */
+}
+
+/* Dark mode theme */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  /* Add more dark mode variables as needed */
+}
+
+/* Expose CSS variables to TailwindCSS using @theme inline */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  /* Add more color mappings as needed */
+}
+```
+
+**IMPORTANT:** TailwindCSS v4 does NOT use `tailwind.config.js`! All configuration is in CSS files using `@theme` blocks and CSS variables in OKLCH format.
 
 ### tsconfig.json
 
@@ -616,12 +689,16 @@ npm install
 **Vite dev server won't start:**
 
 ```bash
-# Check port 3000
-lsof -i :3000
+# Check port 5173 (Vite default)
+lsof -i :5173
 
 # Kill process if needed
 kill -9 <PID>
+
+# Or let Vite auto-select next available port
 ```
+
+**Note:** Infrastructure services reserve ports 3000 (Forgejo), 3001 (Grafana), 8080 (auth-service), 8081 (user-service). Frontend uses 5173 to avoid conflicts.
 
 **API calls fail with CORS:**
 

@@ -100,17 +100,24 @@ This workspace contains a microservices platform with:
 
 ### Frontend Technology Stack
 
-| Technology                    | Version             | Function                          |
-| ----------------------------- | ------------------- | --------------------------------- |
-| **Vite**                      | latest              | Dev server and bundler            |
-| **React**                     | 19                  | Component-based UI                |
-| **TailwindCSS**               | 4.1.16              | Utility-first styling             |
-| **ShadCN**                    | 3.5.0               | Prebuilt components, theme system |
-| **TanStack Router**           | 1.134.10            | Client-side routing               |
-| **TypeScript**                | latest              | Type-safe frontend logic          |
-| **Matrix SDK**                | `matrix-js-sdk`     | Matrix protocol integration       |
-| **Holochain Client (future)** | `@holochain/client` | Holochain DNA module interaction  |
-| **Tauri (future)**            | latest              | Mobile application packaging      |
+| Technology                    | Version             | Function                                                 |
+| ----------------------------- | ------------------- | -------------------------------------------------------- |
+| **Vite**                      | 5.x                 | Dev server and bundler                                   |
+| **React**                     | 18.x                | Component-based UI (stable ecosystem, Tauri-ready)       |
+| **TailwindCSS**               | 4.1.16              | Utility-first styling                                    |
+| **shadcn/ui**                 | 3.5.0               | Accessible component library with theming                |
+| **TanStack Router**           | 1.134.10            | Type-safe client-side routing                            |
+| **TanStack Query**            | v5                  | Data fetching, caching, background refetching            |
+| **Zustand**                   | latest              | State management (auth/UI state only, NOT data fetching) |
+| **react-hook-form + zod**     | latest              | Form handling and validation                             |
+| **TypeScript**                | latest              | Type-safe frontend logic                                 |
+| **Vitest**                    | latest              | Unit testing (Vite-native)                               |
+| **Testing Library**           | latest              | Component testing                                        |
+| **Matrix SDK**                | `matrix-js-sdk`     | Matrix protocol integration                              |
+| **Holochain Client (future)** | `@holochain/client` | Holochain DNA module interaction                         |
+| **Tauri (future)**            | latest              | Cross-platform desktop/mobile packaging                  |
+
+**Stack Rationale:** React 18 chosen over React 19 for stable ecosystem during MVP phase. TanStack Query handles all server data fetching/caching. Zustand used only for auth tokens and UI state. See `docs/architecture/frontend-stack-rationale.md` for detailed decision rationale.
 
 ## Project Power/Permission Structure
 

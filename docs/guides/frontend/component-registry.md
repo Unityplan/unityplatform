@@ -22,6 +22,7 @@ Guide for managing UI components in UnityPlan frontend.
 We use **shadcn/ui** - a collection of re-usable components that you copy into your project.
 
 **Philosophy:**
+
 - ✅ Copy components into your codebase (you own the code)
 - ✅ Customize freely without forking
 - ✅ Built on Radix UI primitives
@@ -29,6 +30,7 @@ We use **shadcn/ui** - a collection of re-usable components that you copy into y
 - ✅ Fully accessible (ARIA)
 
 **Why shadcn/ui?**
+
 - Full control over component code
 - No package version conflicts
 - Easy to customize for our needs
@@ -42,6 +44,7 @@ We use **shadcn/ui** - a collection of re-usable components that you copy into y
 The shadcn/ui Model Context Protocol (MCP) server is now configured in VS Code.
 
 **What it provides:**
+
 - Component browsing directly in GitHub Copilot Chat
 - Installation commands
 - Component documentation
@@ -50,6 +53,7 @@ The shadcn/ui Model Context Protocol (MCP) server is now configured in VS Code.
 **How to use:**
 
 1. **In Copilot Chat, ask about shadcn components:**
+
    ```
    @shadcn-ui Show me available button components
    @shadcn-ui How do I install the dialog component?
@@ -57,6 +61,7 @@ The shadcn/ui Model Context Protocol (MCP) server is now configured in VS Code.
    ```
 
 2. **Install components:**
+
    ```bash
    # The MCP will suggest commands like:
    npx shadcn@latest add button
@@ -70,6 +75,7 @@ The shadcn/ui Model Context Protocol (MCP) server is now configured in VS Code.
    - See variant options
 
 **Configuration (already set in `.vscode/settings.json`):**
+
 ```json
 {
   "github.copilot.chat.mcp.enabled": true,
@@ -107,16 +113,19 @@ frontend/src/
 ### Component Categories
 
 **1. Base UI Components (`components/ui/`)**
+
 - From shadcn/ui
 - Low-level, reusable
 - Examples: Button, Input, Card, Dialog
 
 **2. Custom Components (`components/`)**
+
 - Built using base UI components
 - Business logic specific
 - Examples: UserCard, ProfileHeader, PostCard
 
 **3. Page Components (`pages/`)**
+
 - Full page layouts
 - Compose multiple components
 - Examples: LoginPage, ProfilePage
@@ -171,12 +180,14 @@ export function UserCard({ user }) {
 ### When to Consider a Local Registry
 
 **Consider if:**
+
 - ✅ We have 20+ custom components used across multiple projects
 - ✅ We need version control for internal components
 - ✅ Multiple teams need shared component library
 - ✅ We want to publish components internally
 
 **Don't need if:**
+
 - ❌ Only one frontend project (current state)
 - ❌ Components are project-specific
 - ❌ Team is small (< 5 developers)
@@ -186,17 +197,20 @@ export function UserCard({ user }) {
 #### Option 1: Internal npm Registry (Verdaccio)
 
 **Pros:**
+
 - Standard npm workflow
 - Version management
 - Private packages
 - Easy to set up
 
 **Cons:**
+
 - Requires hosting
 - Package management overhead
 - May be overkill for small team
 
 **Setup:**
+
 ```bash
 # Install Verdaccio
 npm install -g verdaccio
@@ -211,11 +225,13 @@ npm set registry http://localhost:4873/
 #### Option 2: Git Submodules
 
 **Pros:**
+
 - No additional infrastructure
 - Version control built-in
 - Simple for small teams
 
 **Cons:**
+
 - Submodule management complexity
 - Not ideal for frequent changes
 - Manual synchronization
@@ -223,17 +239,20 @@ npm set registry http://localhost:4873/
 #### Option 3: Monorepo with Turborepo/Nx
 
 **Pros:**
+
 - Single repo for all projects
 - Shared components automatically synced
 - Great developer experience
 - Built-in caching and build optimization
 
 **Cons:**
+
 - Larger repo size
 - Requires different CI/CD setup
 - More complex initial setup
 
 **Example structure:**
+
 ```
 unityplan-monorepo/
 ├── apps/
@@ -250,12 +269,14 @@ unityplan-monorepo/
 ### Recommendation for Now
 
 **Stick with shadcn/ui approach:**
+
 1. We have only one frontend project
 2. Team is small
 3. Can easily copy components between projects if needed later
 4. shadcn/ui provides excellent foundation
 
 **When to revisit:**
+
 - When we start a second frontend project (mobile app, admin dashboard)
 - When we have 30+ custom components to share
 - When we have 5+ frontend developers
@@ -265,6 +286,7 @@ unityplan-monorepo/
 If we decide to create a local registry later:
 
 **Step 1:** Extract custom components to separate package
+
 ```bash
 # Create packages/ui
 mkdir -p packages/ui/src/components
@@ -272,6 +294,7 @@ mv frontend/src/components/UserCard.tsx packages/ui/src/components/
 ```
 
 **Step 2:** Set up build process
+
 ```json
 // packages/ui/package.json
 {
@@ -286,6 +309,7 @@ mv frontend/src/components/UserCard.tsx packages/ui/src/components/
 ```
 
 **Step 3:** Publish to internal registry or use as local package
+
 ```bash
 # Publish to Verdaccio
 npm publish --registry http://localhost:4873/
@@ -301,6 +325,7 @@ npm install ../packages/ui
 ### Component Guidelines
 
 **Do:**
+
 - ✅ Keep components focused (single responsibility)
 - ✅ Use TypeScript for all components
 - ✅ Document props with JSDoc
@@ -308,6 +333,7 @@ npm install ../packages/ui
 - ✅ Write tests for custom components
 
 **Don't:**
+
 - ❌ Mix business logic in UI components
 - ❌ Create overly generic "god components"
 - ❌ Skip TypeScript types
