@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
-import { getUserProfile } from '@/api/users';
+import { getFullProfile } from '@/api/users';
 import type { UserProfile } from '@/api/users';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +22,8 @@ export function ProfileViewPage() {
             try {
                 setIsLoading(true);
                 setError('');
-                const profileData = await getUserProfile(user.username, user.territory_code);
+                // Get full profile for current user
+                const profileData = await getFullProfile(user.id);
                 setProfile(profileData);
             } catch (err) {
                 setError('Failed to load profile');

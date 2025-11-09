@@ -1,43 +1,63 @@
 import apiClient from '@/lib/api-client';
 
-const USER_BASE_URL = import.meta.env.VITE_USER_SERVICE_URL || 'http://localhost:8081';
+const USER_BASE_URL = import.meta.env.VITE_USER_SERVICE_URL || 'http://localhost:8002';
 
 export interface UserProfile {
   user_id: string;
   username: string;
-  full_name: string | null;
-  bio: string | null;
-  location: string | null;
-  website: string | null;
-  avatar_url: string | null;
-  banner_url: string | null;
-  created_at: string;
-  updated_at: string;
+  email?: string | null;
+  full_name?: string | null;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+  about?: string | null;
+  interests?: string[] | null;
+  skills?: string[] | null;
+  languages?: string[] | null;
+  location?: string | null;
+  website_url?: string | null;
+  github_url?: string | null;
+  linkedin_url?: string | null;
+  twitter_handle?: string | null;
+  theme?: string | null;
+  privacy?: PrivacySettings;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface UpdateProfileRequest {
   full_name?: string | null;
+  display_name?: string | null;
   bio?: string | null;
+  about?: string | null;
+  interests?: string[] | null;
+  skills?: string[] | null;
+  languages?: string[] | null;
   location?: string | null;
-  website?: string | null;
+  website_url?: string | null;
+  github_url?: string | null;
+  linkedin_url?: string | null;
+  twitter_handle?: string | null;
+  theme?: string | null;
+  privacy?: Partial<PrivacySettings>;
 }
 
 export interface PrivacySettings {
-  user_id: string;
-  profile_visibility: 'public' | 'followers_only' | 'private';
+  profile_visibility: 'public' | 'connections_only' | 'private';
   show_email: boolean;
+  show_full_name: boolean;
   show_location: boolean;
   show_connections: boolean;
-  allow_messages_from: 'everyone' | 'followers_only' | 'nobody';
-  updated_at: string;
+  allow_messages_from: 'everyone' | 'connections_only' | 'nobody';
 }
 
 export interface UpdatePrivacySettingsRequest {
-  profile_visibility?: 'public' | 'followers_only' | 'private';
+  profile_visibility?: 'public' | 'connections_only' | 'private';
   show_email?: boolean;
+  show_full_name?: boolean;
   show_location?: boolean;
   show_connections?: boolean;
-  allow_messages_from?: 'everyone' | 'followers_only' | 'nobody';
+  allow_messages_from?: 'everyone' | 'connections_only' | 'nobody';
 }
 
 export interface UserConnection {
@@ -49,130 +69,111 @@ export interface UserConnection {
 }
 
 /**
- * Get user profile by username
+ * Get user profile by user ID
  * 
- * @param username - Username to fetch profile for
- * @param territoryCode - Territory code
+ * @param userId - User ID to fetch profile for
  * @returns User profile
  */
-export async function getUserProfile(username: string, territoryCode: string): Promise<UserProfile> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/users/${username}`, {
-    params: { territory_code: territoryCode },
-  });
-  return response.data;
+export async function getUserProfile(userId: string): Promise<UserProfile> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/profiles/${userId}`);
+  return response.data.data; // Backend wraps in ApiResponse
+}
+
+/**
+ * Get full profile (own profile with all details)
+ * 
+ * @param userId - User ID to fetch full profile for
+ * @returns Full user profile
+ */
+export async function getFullProfile(userId: string): Promise<UserProfile> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/profiles/${userId}/full`);
+  return response.data.data;
 }
 
 /**
  * Update current user's profile
  * 
+ * @param userId - User ID
  * @param data - Profile data to update
- * @param territoryCode - Territory code
  * @returns Updated profile
  */
-export async function updateProfile(data: UpdateProfileRequest, territoryCode: string): Promise<UserProfile> {
-  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/users/profile`, data, {
-    params: { territory_code: territoryCode },
-  });
-  return response.data;
+export async function updateProfile(userId: string, data: UpdateProfileRequest): Promise<UserProfile> {
+  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/profiles/${userId}`, data);
+  return response.data.data;
 }
 
 /**
  * Upload user avatar
  * 
+ * @param userId - User ID
  * @param file - Image file to upload
- * @param territoryCode - Territory code
  * @returns Updated profile with new avatar URL
  */
-export async function uploadAvatar(file: File, territoryCode: string): Promise<UserProfile> {
+export async function uploadAvatar(userId: string, file: File): Promise<UserProfile> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await apiClient.post(`${USER_BASE_URL}/api/v1/users/avatar`, formData, {
-    params: { territory_code: territoryCode },
+  const response = await apiClient.post(`${USER_BASE_URL}/api/v1/avatars/${userId}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
   });
-  return response.data;
+  return response.data.data;
 }
 
 /**
  * Delete user avatar
  * 
- * @param territoryCode - Territory code
+ * @param userId - User ID
  * @returns Updated profile without avatar
  */
-export async function deleteAvatar(territoryCode: string): Promise<UserProfile> {
-  const response = await apiClient.delete(`${USER_BASE_URL}/api/v1/users/avatar`, {
-    params: { territory_code: territoryCode },
-  });
-  return response.data;
+export async function deleteAvatar(userId: string): Promise<void> {
+  await apiClient.delete(`${USER_BASE_URL}/api/v1/avatars/${userId}`);
 }
 
 /**
- * Get user's privacy settings
+ * Delete user avatar
  * 
- * @param territoryCode - Territory code
- * @returns Privacy settings
+ * @param userId - User ID
+ * @returns Updated profile without avatar
  */
-export async function getPrivacySettings(territoryCode: string): Promise<PrivacySettings> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/users/privacy`, {
-    params: { territory_code: territoryCode },
-  });
-  return response.data;
-}
-
-/**
- * Update user's privacy settings
- * 
- * @param data - Privacy settings to update
- * @param territoryCode - Territory code
- * @returns Updated privacy settings
- */
-export async function updatePrivacySettings(
-  data: UpdatePrivacySettingsRequest,
-  territoryCode: string
-): Promise<PrivacySettings> {
-  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/users/privacy`, data, {
-    params: { territory_code: territoryCode },
-  });
-  return response.data;
+export async function deleteAvatar(userId: string): Promise<void> {
+  await apiClient.delete(`${USER_BASE_URL}/api/v1/avatars/${userId}`);
 }
 
 /**
  * Follow a user
  * 
- * @param username - Username to follow
- * @param territoryCode - Territory code
+ * @param userId - User ID
+ * @param targetId - Target user ID to follow
  */
-export async function followUser(username: string, territoryCode: string): Promise<void> {
-  await apiClient.post(`${USER_BASE_URL}/api/v1/users/${username}/follow`, null, {
-    params: { territory_code: territoryCode },
+export async function followUser(userId: string, targetId: string): Promise<void> {
+  await apiClient.post(`${USER_BASE_URL}/api/v1/connections/follow/${targetId}`, null, {
+    params: { user_id: userId },
   });
 }
 
 /**
  * Unfollow a user
  * 
- * @param username - Username to unfollow
- * @param territoryCode - Territory code
+ * @param userId - User ID  
+ * @param targetId - Target user ID to unfollow
  */
-export async function unfollowUser(username: string, territoryCode: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/users/${username}/follow`, {
-    params: { territory_code: territoryCode },
+export async function unfollowUser(userId: string, targetId: string): Promise<void> {
+  await apiClient.delete(`${USER_BASE_URL}/api/v1/connections/follow/${targetId}`, {
+    params: { user_id: userId },
   });
 }
 
 /**
  * Get user's followers
  * 
- * @param username - Username to get followers for
- * @param territoryCode - Territory code
+ * @param userId - User ID to get followers for
  * @returns List of follower connections
  */
-export async function getFollowers(username: string, territoryCode: string): Promise<UserConnection[]> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/users/${username}/followers`, {
-    params: { territory_code: territoryCode },
+export async function getFollowers(userId: string): Promise<UserConnection[]> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/connections/followers`, {
+    params: { user_id: userId },
   });
   return response.data;
 }
@@ -180,13 +181,12 @@ export async function getFollowers(username: string, territoryCode: string): Pro
 /**
  * Get users that the user is following
  * 
- * @param username - Username to get following list for
- * @param territoryCode - Territory code
+ * @param userId - User ID to get following list for
  * @returns List of following connections
  */
-export async function getFollowing(username: string, territoryCode: string): Promise<UserConnection[]> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/users/${username}/following`, {
-    params: { territory_code: territoryCode },
+export async function getFollowing(userId: string): Promise<UserConnection[]> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/connections/following`, {
+    params: { user_id: userId },
   });
   return response.data;
 }
@@ -194,25 +194,38 @@ export async function getFollowing(username: string, territoryCode: string): Pro
 /**
  * Block a user
  * 
- * @param username - Username to block
- * @param territoryCode - Territory code
+ * @param userId - User ID
+ * @param targetId - Target user ID to block
  */
-export async function blockUser(username: string, territoryCode: string): Promise<void> {
-  await apiClient.post(`${USER_BASE_URL}/api/v1/users/${username}/block`, null, {
-    params: { territory_code: territoryCode },
+export async function blockUser(userId: string, targetId: string): Promise<void> {
+  await apiClient.post(`${USER_BASE_URL}/api/v1/connections/block/${targetId}`, null, {
+    params: { user_id: userId },
   });
 }
 
 /**
  * Unblock a user
  * 
- * @param username - Username to unblock
- * @param territoryCode - Territory code
+ * @param userId - User ID
+ * @param targetId - Target user ID to unblock
  */
-export async function unblockUser(username: string, territoryCode: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/users/${username}/block`, {
-    params: { territory_code: territoryCode },
+export async function unblockUser(userId: string, targetId: string): Promise<void> {
+  await apiClient.delete(`${USER_BASE_URL}/api/v1/connections/block/${targetId}`, {
+    params: { user_id: userId },
   });
+}
+
+/**
+ * Get list of blocked users
+ * 
+ * @param userId - User ID
+ * @returns List of blocked users
+ */
+export async function getBlockedUsers(userId: string): Promise<UserConnection[]> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/connections/blocked`, {
+    params: { user_id: userId },
+  });
+  return response.data;
 }
 
 /**

@@ -4,16 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuthStore } from '@/stores/authStore';
 import {
-    getUserProfile,
+    getFullProfile,
     updateProfile,
     uploadAvatar,
     deleteAvatar,
-    getPrivacySettings,
-    updatePrivacySettings,
     type UserProfile,
-    type PrivacySettings,
-    type UpdateProfileRequest,
-    type UpdatePrivacySettingsRequest,
 } from '@/api/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +29,6 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export function ProfileEditPage() {
     const { user } = useAuthStore();
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [privacy, setPrivacy] = useState<PrivacySettings | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string>('');
@@ -64,20 +58,16 @@ export function ProfileEditPage() {
                 setIsLoading(true);
                 setError('');
 
-                const [profileData, privacyData] = await Promise.all([
-                    getUserProfile(user.username, user.territory_code),
-                    getPrivacySettings(user.territory_code),
-                ]);
+                const profileData = await getFullProfile(user.id);
 
                 setProfile(profileData);
-                setPrivacy(privacyData);
 
                 // Set form default values
                 reset({
                     full_name: profileData.full_name || '',
                     bio: profileData.bio || '',
                     location: profileData.location || '',
-                    website: profileData.website || '',
+                    website: profileData.website_url || '',
                 });
 
                 if (profileData.avatar_url) {
@@ -114,7 +104,7 @@ export function ProfileEditPage() {
         try {
             setIsSaving(true);
             setError('');
-            await deleteAvatar(user.territory_code);
+            await deleteAvatar(user.id);
             setAvatarFile(null);
             setAvatarPreview('');
             setSuccess('Avatar deleted successfully');
@@ -136,33 +126,21 @@ export function ProfileEditPage() {
             setSuccess('');
 
             // Update profile info
-            await updateProfile({
+            await updateProfile(user.id, {
                 full_name: data.full_name || null,
                 bio: data.bio || null,
                 location: data.location || null,
-                website: data.website || null,
-            }, user.territory_code);
+                website_url: data.website || null,
+            });
 
             // Upload avatar if changed
             if (avatarFile) {
-                await uploadAvatar(avatarFile, user.territory_code);
-            }
-
-            // Update privacy settings if changed
-            if (privacy) {
-                await updatePrivacySettings({
-                    profile_visibility: privacy.profile_visibility,
-                    show_email: privacy.show_email,
-                    show_location: privacy.show_location,
-                    show_connections: privacy.show_connections,
-                    allow_messages_from: privacy.allow_messages_from,
-                }, user.territory_code);
+                await uploadAvatar(user.id, avatarFile);
             }
 
             setSuccess('Profile updated successfully');
 
             // Reload user data
-            // TODO: Implement proper user data refresh
             setTimeout(() => {
                 window.location.href = '/profile';
             }, 1500);
