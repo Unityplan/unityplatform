@@ -26,12 +26,21 @@ import {
 import { Link, useRouter } from '@tanstack/react-router';
 import { Home } from 'lucide-react';
 
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
+
 // Validation schemas
 const profileSchema = z.object({
     full_name: z.string().max(255, 'Name must be 255 characters or less').optional(),
+    display_name: z.string().max(255, 'Display name must be 255 characters or less').optional(),
     bio: z.string().max(500, 'Bio must be 500 characters or less').optional(),
+    about: z.string().max(2000, 'About must be 2000 characters or less').optional(),
     location: z.string().max(255, 'Location must be 255 characters or less').optional(),
     website: z.string().url('Must be a valid URL').max(255).optional().or(z.literal('')),
+    github_url: z.string().url('Must be a valid URL').max(255).optional().or(z.literal('')),
+    linkedin_url: z.string().url('Must be a valid URL').max(255).optional().or(z.literal('')),
+    twitter_handle: z.string().max(50, 'Twitter handle must be 50 characters or less').optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;

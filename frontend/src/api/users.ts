@@ -15,10 +15,14 @@ export interface UserProfile {
   skills?: string[] | null;
   languages?: string[] | null;
   location?: string | null;
+  
+  // @deprecated - Use profile_links instead. Will be removed in next version.
+  // See: docs/architecture/profile-links-system.md
   website_url?: string | null;
   github_url?: string | null;
   linkedin_url?: string | null;
   twitter_handle?: string | null;
+  
   theme?: string | null;
   privacy?: PrivacySettings;
   created_at?: string;
@@ -34,12 +38,48 @@ export interface UpdateProfileRequest {
   skills?: string[] | null;
   languages?: string[] | null;
   location?: string | null;
+  
+  // @deprecated - Use profile links API instead
   website_url?: string | null;
   github_url?: string | null;
   linkedin_url?: string | null;
   twitter_handle?: string | null;
+  
   theme?: string | null;
   privacy?: Partial<PrivacySettings>;
+}
+
+// Profile Links - New flexible system for external links
+export interface ProfileLink {
+  id: string;
+  user_id: string;
+  label: string;
+  url: string;
+  icon?: string | null;
+  display_order: number;
+  is_visible: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateProfileLinkRequest {
+  label: string;
+  url: string;
+  icon?: string | null;
+  display_order?: number;
+  is_visible?: boolean;
+}
+
+export interface UpdateProfileLinkRequest {
+  label?: string;
+  url?: string;
+  icon?: string | null;
+  display_order?: number;
+  is_visible?: boolean;
+}
+
+export interface ReorderLinksRequest {
+  link_ids: string[];
 }
 
 export interface PrivacySettings {
@@ -216,4 +256,68 @@ export async function getBlockedUsers(userId: string): Promise<UserConnection[]>
     params: { user_id: userId },
   });
   return response.data;
+}
+
+// ============================================================================
+// Profile Links API
+// ============================================================================
+
+/**
+ * Get user's profile links
+ * 
+ * @param userId - User ID to get links for
+ * @returns List of profile links
+ */
+export async function getProfileLinks(userId: string): Promise<ProfileLink[]> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/profiles/${userId}/links`);
+  return response.data.data;
+}
+
+/**
+ * Create a new profile link
+ * 
+ * @param userId - User ID
+ * @param data - Link data to create
+ * @returns Created profile link
+ */
+export async function createProfileLink(userId: string, data: CreateProfileLinkRequest): Promise<ProfileLink> {
+  const response = await apiClient.post(`${USER_BASE_URL}/api/v1/profiles/${userId}/links`, data);
+  return response.data.data;
+}
+
+/**
+ * Update a profile link
+ * 
+ * @param userId - User ID
+ * @param linkId - Link ID to update
+ * @param data - Link data to update
+ * @returns Updated profile link
+ */
+export async function updateProfileLink(
+  userId: string,
+  linkId: string,
+  data: UpdateProfileLinkRequest
+): Promise<ProfileLink> {
+  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/profiles/${userId}/links/${linkId}`, data);
+  return response.data.data;
+}
+
+/**
+ * Delete a profile link
+ * 
+ * @param userId - User ID
+ * @param linkId - Link ID to delete
+ */
+export async function deleteProfileLink(userId: string, linkId: string): Promise<void> {
+  await apiClient.delete(`${USER_BASE_URL}/api/v1/profiles/${userId}/links/${linkId}`);
+}
+
+/**
+ * Reorder profile links
+ * 
+ * @param userId - User ID
+ * @param data - Array of link IDs in desired order
+ */
+export async function reorderProfileLinks(userId: string, data: ReorderLinksRequest): Promise<void> {
+  await apiClient.patch(`${USER_BASE_URL}/api/v1/profiles/${userId}/links/reorder`, data);
 }
