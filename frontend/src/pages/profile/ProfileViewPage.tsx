@@ -71,12 +71,36 @@ const MOCK_ACTIVITY = [
 ];
 
 
+// Local storage keys for mock data
+const MOCK_STATS_KEY = 'unityplan_mock_profile_stats';
+const MOCK_FOLLOWING_KEY = 'unityplan_mock_following';
+
 export function ProfileViewPage() {
     const { user } = useAuthStore();
     const navigate = useNavigate();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string>('');
+
+    // Mock stats state - persisted in localStorage
+    const [stats, setStats] = useState(() => {
+        try {
+            const stored = localStorage.getItem(MOCK_STATS_KEY);
+            return stored ? JSON.parse(stored) : { following: 24, followers: 156, posts: MOCK_POSTS.length };
+        } catch {
+            return { following: 24, followers: 156, posts: MOCK_POSTS.length };
+        }
+    });
+
+    // Mock following state - for when viewing other profiles
+    const [isFollowing, setIsFollowing] = useState(() => {
+        try {
+            const stored = localStorage.getItem(MOCK_FOLLOWING_KEY);
+            return stored ? JSON.parse(stored) : false;
+        } catch {
+            return false;
+        }
+    });
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -170,6 +194,34 @@ export function ProfileViewPage() {
         navigate({ to: '/login' });
     };
 
+    // Mock follow handler
+    const handleFollow = () => {
+        setIsFollowing(true);
+        const newStats = { ...stats, followers: stats.followers + 1 };
+        setStats(newStats);
+
+        // Persist to localStorage
+        localStorage.setItem(MOCK_FOLLOWING_KEY, JSON.stringify(true));
+        localStorage.setItem(MOCK_STATS_KEY, JSON.stringify(newStats));
+
+        // TODO: Show toast notification
+        console.log('Followed user');
+    };
+
+    // Mock unfollow handler
+    const handleUnfollow = () => {
+        setIsFollowing(false);
+        const newStats = { ...stats, followers: Math.max(0, stats.followers - 1) };
+        setStats(newStats);
+
+        // Persist to localStorage
+        localStorage.setItem(MOCK_FOLLOWING_KEY, JSON.stringify(false));
+        localStorage.setItem(MOCK_STATS_KEY, JSON.stringify(newStats));
+
+        // TODO: Show toast notification
+        console.log('Unfollowed user');
+    };
+
     return (
         <AppLayout
             breadcrumbs={
@@ -202,12 +254,11 @@ export function ProfileViewPage() {
                         created_at: profile.created_at || new Date().toISOString(),
                         is_verified: false, // TODO: Add is_verified field to backend
                     }}
-                    stats={{
-                        following: 0, // TODO: Fetch real stats from connections API
-                        followers: 0,
-                        posts: 0,
-                    }}
+                    stats={stats}
                     isOwnProfile={true}
+                    isFollowing={isFollowing}
+                    onFollow={handleFollow}
+                    onUnfollow={handleUnfollow}
                     onEditProfile={() => navigate({ to: '/profile/edit' })}
                     onPrivacySettings={() => navigate({ to: '/settings/privacy' })}
                     onSignOut={handleSignOut}
@@ -320,20 +371,20 @@ export function ProfileViewPage() {
                                 {/* Details */}
                                 <div className="space-y-3">
                                     <h3 className="text-sm font-semibold">Details</h3>
-                                    
+
                                     {profile.location && (
                                         <div className="flex items-center gap-2 text-sm">
                                             <MapPin className="size-4 text-muted-foreground" />
                                             <span>{profile.location}</span>
                                         </div>
                                     )}
-                                    
+
                                     {profile.website_url && (
                                         <div className="flex items-center gap-2 text-sm">
                                             <Link2 className="size-4 text-muted-foreground" />
-                                            <a 
-                                                href={profile.website_url} 
-                                                target="_blank" 
+                                            <a
+                                                href={profile.website_url}
+                                                target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-primary hover:underline"
                                             >
@@ -341,14 +392,14 @@ export function ProfileViewPage() {
                                             </a>
                                         </div>
                                     )}
-                                    
+
                                     {user?.email && (
                                         <div className="flex items-center gap-2 text-sm">
                                             <Mail className="size-4 text-muted-foreground" />
                                             <span className="text-muted-foreground">{user.email}</span>
                                         </div>
                                     )}
-                                    
+
                                     <div className="flex items-center gap-2 text-sm">
                                         <Calendar className="size-4 text-muted-foreground" />
                                         <span className="text-muted-foreground">

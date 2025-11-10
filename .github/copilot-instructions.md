@@ -103,7 +103,7 @@ This workspace contains a microservices platform with:
 | Technology                    | Version             | Function                                                 |
 | ----------------------------- | ------------------- | -------------------------------------------------------- |
 | **Vite**                      | 5.x                 | Dev server and bundler                                   |
-| **React**                     | 18.x                | Component-based UI (stable ecosystem, Tauri-ready)       |
+| **React**                     | 19.2.0              | Component-based UI (stable ecosystem, Tauri-ready)       |
 | **TailwindCSS**               | 4.1.16              | Utility-first styling                                    |
 | **shadcn/ui**                 | 3.5.0               | Accessible component library with theming                |
 | **TanStack Router**           | 1.134.10            | Type-safe client-side routing                            |
