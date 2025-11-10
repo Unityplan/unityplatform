@@ -16,8 +16,6 @@ import {
     Shield,
     Lock,
     Bell,
-    Users,
-    Trash2,
     FileText,
     ChevronRight,
     KeyRound,
@@ -44,13 +42,26 @@ export function SettingsPage() {
     const settingsSections = [
         {
             title: 'Appearance',
-            description: 'Customize how UnityPlan looks and feels',
+            description: 'Customize how Unity Platform looks and feels',
             items: [
                 {
                     icon: Palette,
                     title: 'Theme & Display',
                     description: 'Choose your color theme and display preferences',
                     href: '/settings/appearance',
+                    available: true,
+                },
+            ],
+        },
+        {
+            title: 'Account',
+            description: 'Manage your account settings',
+            items: [
+                {
+                    icon: KeyRound,
+                    title: 'Account Settings',
+                    description: 'Email, password, and two-factor authentication',
+                    href: '/settings/account',
                     available: true,
                 },
             ],
@@ -68,19 +79,10 @@ export function SettingsPage() {
                 },
                 {
                     icon: Lock,
-                    title: 'Two-Factor Authentication',
-                    description: 'Secure your account with TOTP authentication',
-                    href: '/settings/security/totp',
-                    available: false,
-                    badge: 'Coming Soon',
-                },
-                {
-                    icon: KeyRound,
-                    title: 'Password & Security',
-                    description: 'Change password and manage security settings',
-                    href: '/settings/security/password',
-                    available: false,
-                    badge: 'Coming Soon',
+                    title: 'Security Settings',
+                    description: 'Account recovery, active sessions, and login history',
+                    href: '/settings/security',
+                    available: true,
                 },
             ],
         },
@@ -90,33 +92,10 @@ export function SettingsPage() {
             items: [
                 {
                     icon: Bell,
-                    title: 'Notification Settings',
-                    description: 'Choose what notifications you receive',
+                    title: 'Notification Preferences',
+                    description: 'Email, in-app, and push notification settings',
                     href: '/settings/notifications',
-                    available: false,
-                    badge: 'Coming Soon',
-                },
-            ],
-        },
-        {
-            title: 'Account Recovery',
-            description: 'Set up account recovery methods',
-            items: [
-                {
-                    icon: Users,
-                    title: 'Friend Recovery',
-                    description: 'Designate trusted friends for account recovery',
-                    href: '/settings/recovery/friends',
-                    available: false,
-                    badge: 'Coming Soon',
-                },
-                {
-                    icon: Users,
-                    title: 'Manager Recovery',
-                    description: 'Configure manager-assisted recovery',
-                    href: '/settings/recovery/manager',
-                    available: false,
-                    badge: 'Coming Soon',
+                    available: true,
                 },
             ],
         },
@@ -126,19 +105,10 @@ export function SettingsPage() {
             items: [
                 {
                     icon: FileText,
-                    title: 'GDPR & Data Export',
-                    description: 'Download your data and manage privacy rights',
-                    href: '/settings/data/gdpr',
-                    available: false,
-                    badge: 'Coming Soon',
-                },
-                {
-                    icon: Trash2,
-                    title: 'Account Deletion',
-                    description: 'Permanently delete your account and data',
-                    href: '/settings/account/delete',
-                    available: false,
-                    badge: 'Coming Soon',
+                    title: 'Data Management',
+                    description: 'Export your data or delete your account',
+                    href: '/settings/data',
+                    available: true,
                 },
             ],
         },
@@ -185,7 +155,7 @@ export function SettingsPage() {
 
                             <div className="space-y-3">
                                 {section.items.map((item, itemIndex) => (
-                                    <Card key={itemIndex} className={!item.available ? 'opacity-60' : ''}>
+                                    <Card key={itemIndex}>
                                         <CardHeader className="pb-3">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3 flex-1">
@@ -193,30 +163,19 @@ export function SettingsPage() {
                                                         <item.icon className="size-5 text-primary" />
                                                     </div>
                                                     <div className="flex-1">
-                                                        <CardTitle className="text-base flex items-center gap-2">
+                                                        <CardTitle className="text-base">
                                                             {item.title}
-                                                            {item.badge && (
-                                                                <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                                                                    {item.badge}
-                                                                </span>
-                                                            )}
                                                         </CardTitle>
                                                         <CardDescription className="text-sm">
                                                             {item.description}
                                                         </CardDescription>
                                                     </div>
                                                 </div>
-                                                {item.available ? (
-                                                    <Button asChild size="icon">
-                                                        <Link to={item.href}>
-                                                            <ChevronRight className="size-5" />
-                                                        </Link>
-                                                    </Button>
-                                                ) : (
-                                                    <Button size="icon" disabled>
+                                                <Button asChild size="icon">
+                                                    <Link to={item.href}>
                                                         <ChevronRight className="size-5" />
-                                                    </Button>
-                                                )}
+                                                    </Link>
+                                                </Button>
                                             </div>
                                         </CardHeader>
                                     </Card>
