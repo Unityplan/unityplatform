@@ -81,6 +81,6 @@ export async function validateInvitation(token: string): Promise<{
   remaining_uses?: number;
 }> {
   // ⭐ No territory_code parameter - backend looks it up from global registry
-  const response = await apiClient.get(`${AUTH_BASE_URL}/api/v1/invitations/validate/${token}`);
+  const response = await apiClient.get(`${AUTH_BASE_URL}/api/v1/auth/invitations/validate/${token}`);
   return response.data;
 }

@@ -19,8 +19,7 @@ export interface RegisterRequest {
   username: string;
   password: string;
   full_name?: string;
-  territory_code: string;
-  invitation_token: string; // Required for registration
+  invitation_token: string; // Required for registration (territory derived from token)
 }
 
 export interface AuthResponse {
