@@ -98,11 +98,11 @@ export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
                                     <User className="mr-2 size-5" />
                                     <span>Profile</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => window.location.href = '/profile/edit'}>
+                                <DropdownMenuItem onClick={() => window.location.href = '/settings'}>
                                     <Settings className="mr-2 size-5" />
                                     <span>Settings</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => window.location.href = '/settings/privacy'}>
                                     <Shield className="mr-2 size-5" />
                                     <span>Privacy</span>
                                 </DropdownMenuItem>
