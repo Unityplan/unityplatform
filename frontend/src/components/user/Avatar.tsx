@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { User } from 'lucide-react';
 
-export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
 
 interface AvatarProps {
     src?: string | null;
@@ -20,6 +20,8 @@ const sizeClasses: Record<AvatarSize, string> = {
     lg: 'h-12 w-12 text-lg',
     xl: 'h-16 w-16 text-xl',
     '2xl': 'h-24 w-24 text-2xl',
+    '3xl': 'h-32 w-32 text-3xl',
+    '4xl': 'h-48 w-48 text-4xl',
 };
 
 const statusSizeClasses: Record<AvatarSize, string> = {
@@ -29,6 +31,8 @@ const statusSizeClasses: Record<AvatarSize, string> = {
     lg: 'h-3 w-3 border-2',
     xl: 'h-4 w-4 border-2',
     '2xl': 'h-5 w-5 border-2',
+    '3xl': 'h-6 w-6 border-2',
+    '4xl': 'h-8 w-8 border-2',
 };
 
 /**

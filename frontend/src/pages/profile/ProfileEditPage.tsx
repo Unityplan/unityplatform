@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useDropzone } from 'react-dropzone';
 import { useAuthStore } from '@/stores/authStore';
 import {
     getUserProfile,
@@ -24,7 +25,7 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Link, useRouter } from '@tanstack/react-router';
-import { Home } from 'lucide-react';
+import { Home, Upload, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 
 // Validation schemas
@@ -114,9 +115,9 @@ export function ProfileEditPage() {
         loadData();
     }, [user, reset]);
 
-    // Handle avatar file selection
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+    // Handle avatar file selection with react-dropzone
+    const onDrop = (acceptedFiles: File[]) => {
+        const file = acceptedFiles[0];
         if (file) {
             setAvatarFile(file);
             const reader = new FileReader();
@@ -126,6 +127,15 @@ export function ProfileEditPage() {
             reader.readAsDataURL(file);
         }
     };
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        accept: {
+            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+        },
+        maxFiles: 1,
+        multiple: false,
+    });
 
     // Handle avatar deletion
     const handleDeleteAvatar = async () => {
@@ -293,7 +303,7 @@ export function ProfileEditPage() {
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold">Edit Profile</h1>
                     <Button
-                        onClick={() => router.navigate({ to: '/profile' })}
+                        onClick={() => router.history.back()}
                         disabled={isSaving}
                     >
                         Cancel
@@ -313,103 +323,132 @@ export function ProfileEditPage() {
                 )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    {/* Avatar Section */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Profile Picture</CardTitle>
-                            <CardDescription>Upload a photo to represent yourself</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center gap-4">
+                    {/* Profile Picture & Basic Info Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Avatar Section */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Profile Picture</CardTitle>
+                                <CardDescription>Upload a photo to represent yourself</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
                                 {/* Avatar Preview */}
-                                <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center text-3xl font-bold overflow-hidden">
-                                    {avatarPreview ? (
-                                        <img
-                                            src={avatarPreview}
-                                            alt="Avatar preview"
-                                            className="h-full w-full object-cover"
-                                        />
-                                    ) : (
-                                        <span>{user?.username.charAt(0).toUpperCase()}</span>
-                                    )}
+                                <div className="flex justify-center">
+                                    <div className="h-32 w-32 rounded-full bg-muted flex items-center justify-center text-4xl font-bold overflow-hidden ring-2 ring-border">
+                                        {avatarPreview ? (
+                                            <img
+                                                src={avatarPreview}
+                                                alt="Avatar preview"
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <span>{user?.username.charAt(0).toUpperCase()}</span>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* Upload Controls */}
-                                <div className="flex-1 space-y-2">
-                                    <Input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleAvatarChange}
+                                {/* Upload Dropzone */}
+                                <div
+                                    {...getRootProps()}
+                                    className={`
+                                        relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
+                                        ${isDragActive
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50'
+                                        }
+                                        ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}
+                                    `}
+                                >
+                                    <input {...getInputProps()} disabled={isSaving} />
+                                    <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                                    <p className="text-sm font-medium mb-1">
+                                        {isDragActive ? 'Drop the image here' : 'Click to upload or drag and drop'}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        PNG, JPG, GIF up to 10MB
+                                    </p>
+                                </div>
+
+                                {/* Delete Button */}
+                                {avatarPreview && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleDeleteAvatar}
                                         disabled={isSaving}
+                                        className="w-full"
+                                    >
+                                        <X className="mr-2 h-4 w-4" />
+                                        Remove Avatar
+                                    </Button>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Basic Info Section */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Basic Information</CardTitle>
+                                <CardDescription>Your identity and display name</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {/* Username (readonly) */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="username">Username</Label>
+                                    <Input
+                                        id="username"
+                                        value={user?.username}
+                                        disabled
+                                        className="bg-muted"
                                     />
-                                    {avatarPreview && (
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            onClick={handleDeleteAvatar}
-                                            disabled={isSaving}
-                                        >
-                                            Delete Avatar
-                                        </Button>
+                                    <p className="text-sm text-muted-foreground">
+                                        Username cannot be changed
+                                    </p>
+                                </div>
+
+                                {/* Full Name */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="full_name">Full Name</Label>
+                                    <Input
+                                        id="full_name"
+                                        {...register('full_name')}
+                                        disabled={isSaving}
+                                        placeholder="Your full name"
+                                    />
+                                    {errors.full_name && (
+                                        <p className="text-sm text-destructive">{errors.full_name.message}</p>
                                     )}
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
 
-                    {/* Basic Info Section */}
+                                {/* Display Name */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="display_name">Display Name</Label>
+                                    <Input
+                                        id="display_name"
+                                        {...register('display_name')}
+                                        disabled={isSaving}
+                                        placeholder="How you'd like to be called (optional)"
+                                    />
+                                    {errors.display_name && (
+                                        <p className="text-sm text-destructive">{errors.display_name.message}</p>
+                                    )}
+                                    <p className="text-sm text-muted-foreground">
+                                        Alternative name to show instead of your full name
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Location Section */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Basic Information</CardTitle>
-                            <CardDescription>Your identity and public display information</CardDescription>
+                            <CardTitle>Location</CardTitle>
+                            <CardDescription>Where you're located (optional)</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {/* Username (readonly) */}
-                            <div className="space-y-2">
-                                <Label htmlFor="username">Username</Label>
-                                <Input
-                                    id="username"
-                                    value={user?.username}
-                                    disabled
-                                    className="bg-muted"
-                                />
-                                <p className="text-sm text-muted-foreground">
-                                    Username cannot be changed
-                                </p>
-                            </div>
-
-                            {/* Full Name */}
-                            <div className="space-y-2">
-                                <Label htmlFor="full_name">Full Name</Label>
-                                <Input
-                                    id="full_name"
-                                    {...register('full_name')}
-                                    disabled={isSaving}
-                                    placeholder="Your full name"
-                                />
-                                {errors.full_name && (
-                                    <p className="text-sm text-destructive">{errors.full_name.message}</p>
-                                )}
-                            </div>
-
-                            {/* Display Name */}
-                            <div className="space-y-2">
-                                <Label htmlFor="display_name">Display Name</Label>
-                                <Input
-                                    id="display_name"
-                                    {...register('display_name')}
-                                    disabled={isSaving}
-                                    placeholder="How you'd like to be called (optional)"
-                                />
-                                {errors.display_name && (
-                                    <p className="text-sm text-destructive">{errors.display_name.message}</p>
-                                )}
-                                <p className="text-sm text-muted-foreground">
-                                    Alternative name to show instead of your full name
-                                </p>
-                            </div>
-
-                            {/* Location */}
+                            {/* Location Input */}
                             <div className="space-y-2">
                                 <Label htmlFor="location">Location</Label>
                                 <Input
@@ -421,13 +460,15 @@ export function ProfileEditPage() {
                                 {errors.location && (
                                     <p className="text-sm text-destructive">{errors.location.message}</p>
                                 )}
-                                {/* TODO: Add interactive map component with marker
-                                    - Use shadcn-map (https://shadcn-map.vercel.app/docs)
-                                    - Show location on map with draggable marker
-                                    - Geocode address to coordinates
-                                    - Allow marker placement to set location
-                                */}
                             </div>
+
+                            {/* TODO: Add interactive map component with marker
+                                - Use shadcn-map (https://shadcn-map.vercel.app/docs)
+                                - Show location on map with draggable marker
+                                - Geocode address to coordinates
+                                - Allow marker placement to set location
+                                - Display map here below the text input
+                            */}
                         </CardContent>
                     </Card>
 

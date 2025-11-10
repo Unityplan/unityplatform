@@ -98,7 +98,7 @@ export function ProfileHeader({
             {/* Profile Content */}
             <div className="px-6 pb-6">
                 {/* Avatar & Action Buttons Row */}
-                <div className="flex items-end justify-between -mt-16 mb-4">
+                <div className="flex items-end justify-between -mt-24 lg:-mt-40 mb-4">
                     {/* Avatar */}
                     <div className="relative">
                         <Avatar
@@ -106,7 +106,16 @@ export function ProfileHeader({
                             alt={user.username}
                             fallback={user.full_name || user.username}
                             size="2xl"
-                            className="ring-4 ring-background"
+                            className="lg:hidden"
+                            showOnlineStatus
+                            isOnline={false}
+                        />
+                        <Avatar
+                            src={user.avatar_url}
+                            alt={user.username}
+                            fallback={user.full_name || user.username}
+                            size="4xl"
+                            className="hidden lg:block"
                             showOnlineStatus
                             isOnline={false}
                         />

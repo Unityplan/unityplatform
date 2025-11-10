@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layouts/AppLayout';
 import { PrivacySettingsForm } from '@/components/user/PrivacySettingsForm';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -10,7 +11,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Link } from '@tanstack/react-router';
+import { Link, useRouter } from '@tanstack/react-router';
 import { Home, User, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
 
 // Privacy settings type (matches PrivacySettingsForm schema)
@@ -43,6 +44,7 @@ const PRIVACY_SETTINGS_KEY = 'unityplan_privacy_settings';
  * Route: /settings/privacy
  */
 export function PrivacySettingsPage() {
+    const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [saveError, setSaveError] = useState(false);
@@ -101,7 +103,9 @@ export function PrivacySettingsPage() {
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
                             <BreadcrumbLink asChild>
-                                <Link to="/profile"><User className="size-4" /> Profile</Link>
+                                <Link to="/profile" className="flex items-center gap-1">
+                                    <User className="size-4" /> Profile
+                                </Link>
                             </BreadcrumbLink>
                         </BreadcrumbItem>
                         <BreadcrumbSeparator />
@@ -117,11 +121,19 @@ export function PrivacySettingsPage() {
         >
             <div className="mx-auto max-w-4xl space-y-6 py-6">
                 {/* Page Header */}
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">Privacy Settings</h1>
-                    <p className="text-muted-foreground">
-                        Manage who can see your profile and how others can interact with you.
-                    </p>
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">Privacy Settings</h1>
+                        <p className="text-muted-foreground">
+                            Manage who can see your profile and how others can interact with you.
+                        </p>
+                    </div>
+                    <Button
+                        onClick={() => router.history.back()}
+                        disabled={isLoading}
+                    >
+                        Cancel
+                    </Button>
                 </div>
 
                 {/* Privacy Settings Form */}

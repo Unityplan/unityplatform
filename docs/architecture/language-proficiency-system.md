@@ -185,24 +185,28 @@ function needsTranslation(
 ## Migration Path
 
 ### Phase 1: MVP (Current)
+
 - Simple string array in `user_profiles.languages`
 - Comma-separated input field
 - Manual proficiency indication in parentheses
 - No automatic translation yet
 
 ### Phase 2: Structured Data
+
 - Create `user_languages` table
 - Migrate existing language strings to structured format
 - Parse proficiency levels from strings
 - Build language selector UI component
 
 ### Phase 3: Translation Integration
+
 - Integrate translation service (LibreTranslate preferred)
 - Implement content language detection
 - Add translation caching (translation memory)
 - Smart translation based on user proficiency
 
 ### Phase 4: Advanced Features
+
 - Language learning mode (side-by-side original + translation)
 - Community-driven translation corrections
 - Context-aware translation (preserve technical terms)
@@ -227,7 +231,7 @@ Common languages for Nordic/European context:
 | `pl` | Polish | Polski |
 | `ru` | Russian | Русский |
 
-Full list: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+Full list: <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>
 
 ## Privacy & Data Sovereignty
 
@@ -320,7 +324,7 @@ Response:
 
 ## References
 
-- **LibreTranslate**: https://libretranslate.com/ (self-hosted translation)
-- **ISO 639**: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes (language codes)
-- **CEFR Levels**: https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages
-- **DeepL API**: https://www.deepl.com/pro-api (premium option)
+- **LibreTranslate**: <https://libretranslate.com/> (self-hosted translation)
+- **ISO 639**: <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes> (language codes)
+- **CEFR Levels**: <https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages>
+- **DeepL API**: <https://www.deepl.com/pro-api> (premium option)

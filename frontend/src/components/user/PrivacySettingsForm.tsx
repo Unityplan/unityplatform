@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Shield, Eye, Mail, MessageCircle, Users } from 'lucide-react';
+import { Shield, Eye, Mail, MessageCircle, Users, User, Activity } from 'lucide-react';
 
 // Privacy settings validation schema
 const privacySettingsSchema = z.object({
@@ -104,7 +104,7 @@ export function PrivacySettingsForm({
                                     </div>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
-                                            <SelectTrigger>
+                                            <SelectTrigger className="h-auto min-h-12 py-2">
                                                 <SelectValue placeholder="Select visibility" />
                                             </SelectTrigger>
                                         </FormControl>
@@ -170,7 +170,10 @@ export function PrivacySettingsForm({
                             render={({ field }) => (
                                 <FormItem className="flex items-center justify-between space-y-0">
                                     <div className="space-y-1">
-                                        <FormLabel>Show Full Name</FormLabel>
+                                        <div className="flex items-center gap-2">
+                                            <User className="h-4 w-4 text-muted-foreground" />
+                                            <FormLabel>Show Full Name</FormLabel>
+                                        </div>
                                         <FormDescription>
                                             Display your full name instead of just username
                                         </FormDescription>
@@ -225,7 +228,10 @@ export function PrivacySettingsForm({
                             render={({ field }) => (
                                 <FormItem className="flex items-center justify-between space-y-0">
                                     <div className="space-y-1">
-                                        <FormLabel>Show Activity Status</FormLabel>
+                                        <div className="flex items-center gap-2">
+                                            <Activity className="h-4 w-4 text-muted-foreground" />
+                                            <FormLabel>Show Activity Status</FormLabel>
+                                        </div>
                                         <FormDescription>
                                             Let others see when you're online or active
                                         </FormDescription>
