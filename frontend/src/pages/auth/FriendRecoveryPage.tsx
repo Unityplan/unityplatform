@@ -373,11 +373,10 @@ export function FriendRecoveryPage() {
                                                                 key={friend}
                                                                 type="button"
                                                                 onClick={() => field.onChange(friend)}
-                                                                className={`p-3 rounded-lg border-2 transition-colors ${
-                                                                    field.value === friend
+                                                                className={`p-3 rounded-lg border-2 transition-colors ${field.value === friend
                                                                         ? 'border-primary bg-primary/10'
                                                                         : 'border-border hover:border-primary/50'
-                                                                }`}
+                                                                    }`}
                                                             >
                                                                 <div className="font-medium">@{friend}</div>
                                                             </button>
@@ -436,7 +435,7 @@ export function FriendRecoveryPage() {
                                     <Alert className="bg-blue-500/10 border-blue-500/20">
                                         <AlertCircle className="h-4 w-4 text-blue-500" />
                                         <AlertDescription className="text-blue-700 dark:text-blue-400">
-                                            A recovery token has been sent to <span className="font-semibold">@{selectedFriend}</span>. 
+                                            A recovery token has been sent to <span className="font-semibold">@{selectedFriend}</span>.
                                             Contact them outside of the platform (phone, in-person, etc.) to get the token.
                                         </AlertDescription>
                                     </Alert>

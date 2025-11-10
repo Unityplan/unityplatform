@@ -102,17 +102,17 @@ export function ForgotPasswordPage() {
             if (methods.available_methods.length === 1) {
                 const method = methods.available_methods[0];
                 if (method === 'email') {
-                    navigate({ 
+                    navigate({
                         to: '/forgot-password/email',
                         search: { username: data.username }
                     });
                 } else if (method === 'friend') {
-                    navigate({ 
+                    navigate({
                         to: '/forgot-password/friend',
                         search: { username: data.username }
                     });
                 } else if (method === 'manager') {
-                    navigate({ 
+                    navigate({
                         to: '/forgot-password/manager',
                         search: { username: data.username }
                     });
@@ -128,19 +128,19 @@ export function ForgotPasswordPage() {
 
     const handleMethodSelection = (method: 'email' | 'friend' | 'manager') => {
         const username = form.getValues('username');
-        
+
         if (method === 'email') {
-            navigate({ 
+            navigate({
                 to: '/forgot-password/email',
                 search: { username }
             });
         } else if (method === 'friend') {
-            navigate({ 
+            navigate({
                 to: '/forgot-password/friend',
                 search: { username }
             });
         } else if (method === 'manager') {
-            navigate({ 
+            navigate({
                 to: '/forgot-password/manager',
                 search: { username }
             });

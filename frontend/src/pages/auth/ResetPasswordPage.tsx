@@ -30,7 +30,7 @@ type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 export function ResetPasswordPage() {
     // Get token from URL path
     const token = window.location.pathname.split('/').pop() || '';
-    
+
     const [isLoading, setIsLoading] = useState(false);
     const [isValidating, setIsValidating] = useState(true);
     const [isTokenValid, setIsTokenValid] = useState(false);

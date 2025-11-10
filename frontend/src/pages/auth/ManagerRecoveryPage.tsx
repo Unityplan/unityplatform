@@ -251,7 +251,7 @@ export function ManagerRecoveryPage() {
                                 <Alert className="bg-muted/50">
                                     <AlertCircle className="h-4 w-4" />
                                     <AlertDescription>
-                                        Your request will be reviewed by your community or territory manager. 
+                                        Your request will be reviewed by your community or territory manager.
                                         They may contact you for additional verification before approving the reset.
                                     </AlertDescription>
                                 </Alert>
