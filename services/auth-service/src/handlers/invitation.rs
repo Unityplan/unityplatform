@@ -2,7 +2,7 @@ use crate::{
     middleware::get_authenticated_user,
     models::invitation::{CreateInvitationRequest, InvitationResponse},
     services::{
-        create_invitation_token, get_invitation_uses, list_user_invitations,
+        create_invitation_token, get_invitation_uses, get_token_territory, list_user_invitations,
         revoke_invitation_token, validate_invitation_token,
     },
 };
@@ -44,10 +44,11 @@ pub async fn create_invitation(
     // Get territory schema
     let schema_name = get_schema_name(&auth_user.territory_code);
 
-    // Create invitation token
+    // Create invitation token (⭐ Now includes territory_code for global registry)
     let token = create_invitation_token(
         pool.get_ref(),
         &schema_name,
+        &auth_user.territory_code,  // ⭐ NEW: Pass territory for global registry
         &body.token_type,
         body.email.clone(),
         body.max_uses,
@@ -139,6 +140,9 @@ pub async fn get_invitation_usage(
 
 /// Validate an invitation token (public endpoint - no auth required)
 /// GET /api/auth/invitations/validate/{token}
+/// 
+/// ⭐ SECURE: Territory is looked up from global.invitation_token_registry
+/// Client cannot manipulate which territory the token belongs to
 pub async fn validate_invitation(
     path: web::Path<String>,
     query: web::Query<ValidationQuery>,
@@ -146,15 +150,19 @@ pub async fn validate_invitation(
 ) -> actix_web::Result<HttpResponse> {
     let token = path.into_inner();
 
-    // For validation, we need to know which territory to check
-    // This should come from query parameter
-    let territory_code = query.territory_code.as_deref().ok_or_else(|| {
-        actix_web::error::ErrorBadRequest("territory_code query parameter is required")
-    })?;
+    // ⭐ SECURITY: Look up territory from global registry (client cannot manipulate this)
+    let territory_code = get_token_territory(pool.get_ref(), &token)
+        .await
+        .map_err(|e| match e {
+            shared_lib::error::AppError::Validation(msg) => {
+                actix_web::error::ErrorBadRequest(msg)
+            }
+            _ => actix_web::error::ErrorInternalServerError(e),
+        })?;
 
     let schema_name = get_schema_name(&territory_code);
 
-    // Validate token (without consuming it)
+    // Validate token details (expiration, uses, email matching)
     let invitation =
         validate_invitation_token(pool.get_ref(), &schema_name, &token, query.email.as_deref())
             .await
@@ -165,10 +173,46 @@ pub async fn validate_invitation(
                 _ => actix_web::error::ErrorInternalServerError(e),
             })?;
 
-    // Return validation response
+    // Lookup territory name from global.territories
+    let territory_name = sqlx::query_scalar::<_, String>(
+        "SELECT name FROM global.territories WHERE code = $1"
+    )
+    .bind(&territory_code)
+    .fetch_optional(pool.get_ref())
+    .await
+    .map_err(actix_web::error::ErrorInternalServerError)?
+    .unwrap_or_else(|| territory_code.clone());
+
+    // Lookup community name if invitation has community_id
+    let community_info = if let Some(community_id) = invitation.community_id {
+        let community_query = format!(
+            "SELECT name FROM {}.communities WHERE id = $1",
+            schema_name
+        );
+        
+        let community_name = sqlx::query_scalar::<_, String>(&community_query)
+            .bind(community_id)
+            .fetch_optional(pool.get_ref())
+            .await
+            .map_err(actix_web::error::ErrorInternalServerError)?;
+
+        community_name.map(|name| serde_json::json!({
+            "id": community_id,
+            "name": name
+        }))
+    } else {
+        None
+    };
+
+    // Return validation response with territory and community info
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "valid": true,
         "token_type": invitation.token_type,
+        "territory": {
+            "code": territory_code,
+            "name": territory_name
+        },
+        "community": community_info,
         "email": invitation.invited_email,
         "expires_at": invitation.expires_at,
         "remaining_uses": invitation.max_uses.map(|max| max - invitation.current_uses),
@@ -177,6 +221,6 @@ pub async fn validate_invitation(
 
 #[derive(serde::Deserialize)]
 pub struct ValidationQuery {
-    pub territory_code: Option<String>,
+    // ⭐ territory_code is NO LONGER needed - we look it up from global registry
     pub email: Option<String>,
 }

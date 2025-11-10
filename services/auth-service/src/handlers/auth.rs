@@ -1,6 +1,6 @@
 use crate::{
     models::{user::User, AuthResponse, AuthUserInfo, LoginRequest, RegisterRequest},
-    services::{use_invitation_token, validate_invitation_token, PasswordService, TokenService},
+    services::{get_token_territory, use_invitation_token, validate_invitation_token, PasswordService, TokenService},
 };
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
@@ -41,13 +41,23 @@ pub async fn register(
         actix_web::error::ErrorBadRequest(format!("Validation error: {}", e))
     })?;
 
-    eprintln!("DEBUG: Validation passed, checking territory");
+    eprintln!("DEBUG: Validation passed, looking up territory from token");
+
+    // ⭐ SECURITY: Look up territory from global registry (client cannot manipulate this)
+    let territory_code = get_token_territory(pool.get_ref(), &req.invitation_token)
+        .await
+        .map_err(|e| {
+            eprintln!("DEBUG: Failed to lookup token territory: {}", e);
+            actix_web::error::ErrorBadRequest("Invalid or expired invitation token")
+        })?;
+
+    eprintln!("DEBUG: Token belongs to territory: {}", territory_code);
 
     // Verify territory exists and is active
     let territory = sqlx::query_as::<_, TerritoryCode>(
         "SELECT code FROM global.territories WHERE code = $1 AND is_active = true",
     )
-    .bind(&req.territory_code)
+    .bind(&territory_code)
     .fetch_optional(pool.get_ref())
     .await
     .map_err(|e| {
@@ -55,8 +65,8 @@ pub async fn register(
         actix_web::error::ErrorInternalServerError(e)
     })?
     .ok_or_else(|| {
-        eprintln!("DEBUG: Territory not found");
-        actix_web::error::ErrorBadRequest("Invalid territory code")
+        eprintln!("DEBUG: Territory not found or inactive");
+        actix_web::error::ErrorBadRequest("Territory not available")
     })?;
 
     eprintln!("DEBUG: Territory found: {}", territory.code);
@@ -64,7 +74,7 @@ pub async fn register(
     // Set schema context to territory (dynamic based on territory_code)
     let schema_name = get_schema_name(&territory.code);
 
-    // Validate invitation token
+    // Validate invitation token details (expiration, uses, email)
     let invitation = validate_invitation_token(
         pool.get_ref(),
         &schema_name,

@@ -60,20 +60,27 @@ export async function getCurrentUser(): Promise<User> {
 /**
  * Validate an invitation token
  * 
+ * ⭐ SECURE: Territory is looked up from global registry (client cannot manipulate)
+ * 
  * @param token - Invitation token to validate
- * @param territoryCode - Territory code
- * @returns Invitation details if valid
+ * @returns Invitation details including territory and community info
  */
-export async function validateInvitation(token: string, territoryCode: string): Promise<{
+export async function validateInvitation(token: string): Promise<{
   valid: boolean;
-  invitation_id?: string;
-  created_by?: string;
-  max_uses?: number;
-  current_uses?: number;
+  token_type: string;
+  territory: {
+    code: string;
+    name: string;
+  };
+  community?: {
+    id: string;
+    name: string;
+  };
+  email?: string;
   expires_at?: string;
+  remaining_uses?: number;
 }> {
-  const response = await apiClient.get(`${AUTH_BASE_URL}/api/v1/invitations/validate/${token}`, {
-    params: { territory_code: territoryCode },
-  });
+  // ⭐ No territory_code parameter - backend looks it up from global registry
+  const response = await apiClient.get(`${AUTH_BASE_URL}/api/v1/invitations/validate/${token}`);
   return response.data;
 }

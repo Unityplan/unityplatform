@@ -15,6 +15,29 @@ pub fn generate_invitation_token() -> String {
     format!("inv_{}", hex_string)
 }
 
+/// Look up which territory a token belongs to (from global registry)
+///
+/// This is the SECURE way to determine territory - client cannot manipulate this.
+/// Returns territory_code from global.invitation_token_registry
+pub async fn get_token_territory(
+    pool: &PgPool,
+    token: &str,
+) -> Result<String, AppError> {
+    let result = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT territory_code 
+        FROM global.invitation_token_registry
+        WHERE token = $1
+        "#
+    )
+    .bind(token)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| AppError::Internal(format!("Failed to lookup token territory: {}", e)))?;
+
+    result.ok_or_else(|| AppError::Validation("Invalid or expired invitation token".to_string()))
+}
+
 /// Validate an invitation token without consuming it
 ///
 /// This checks:
@@ -173,10 +196,12 @@ pub async fn use_invitation_token(
 /// Create a new invitation token
 ///
 /// This generates a new token and stores it in the database
+/// Also registers the token in global.invitation_token_registry for territory lookup
 /// Returns the created token with all fields populated
 pub async fn create_invitation_token(
     pool: &PgPool,
     schema_name: &str,
+    territory_code: &str,  // ⭐ NEW: Required for global registry
     token_type: &str,
     email: Option<String>,
     max_uses: i32,
@@ -194,7 +219,7 @@ pub async fn create_invitation_token(
         None => chrono::Utc::now() + chrono::Duration::days(30),
     };
 
-    // Insert token
+    // Insert token into territory schema
     let insert_query = format!(
         r#"
         INSERT INTO {}.invitation_tokens 
@@ -221,6 +246,20 @@ pub async fn create_invitation_token(
         .fetch_one(pool)
         .await
         .map_err(|e| AppError::Internal(format!("Failed to create invitation token: {}", e)))?;
+
+    // ⭐ NEW: Register token in global registry for secure territory lookup
+    sqlx::query(
+        r#"
+        INSERT INTO global.invitation_token_registry (token, territory_code, territory_token_id)
+        VALUES ($1, $2, $3)
+        "#
+    )
+    .bind(&created_token.token)
+    .bind(territory_code)
+    .bind(created_token.id)
+    .execute(pool)
+    .await
+    .map_err(|e| AppError::Internal(format!("Failed to register token globally: {}", e)))?;
 
     Ok(created_token)
 }
