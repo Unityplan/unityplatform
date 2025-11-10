@@ -140,8 +140,8 @@ export function ProfileViewPage() {
                         bio: profile.bio,
                         location: profile.location,
                         website: undefined, // TODO: Add website field to UserProfile type
-                        created_at: user!.created_at,
-                        is_verified: user!.is_verified,
+                        created_at: profile.created_at || new Date().toISOString(),
+                        is_verified: false, // TODO: Add is_verified field to backend
                     }}
                     stats={{
                         following: 0, // TODO: Fetch real stats from connections API
