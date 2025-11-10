@@ -15,6 +15,9 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { CenteredLayout } from '@/components/layouts/CenteredLayout';
+import { Logo } from '@/components/ui/logo';
+import { ModeToggle } from '@/components/mode-toggle';
 
 // Invitation validation schema
 const invitationSchema = z.object({
@@ -58,7 +61,6 @@ const TERRITORIES = [
 export function RegisterPage() {
     const { register: registerUser, isLoading, error } = useAuthStore();
     const [step, setStep] = useState<'invitation' | 'registration'>('invitation');
-    const [validatedToken, setValidatedToken] = useState<string>('');
     const [validatedTerritory, setValidatedTerritory] = useState<string>('');
     const [invitationError, setInvitationError] = useState<string>('');
     const [showPassword, setShowPassword] = useState(false);
@@ -92,13 +94,9 @@ export function RegisterPage() {
 
             if (response.valid) {
                 // Token is valid, move to registration step
-                setValidatedToken(data.invitation_token);
                 setValidatedTerritory(data.territory_code);
                 registerForm.setValue('invitation_token', data.invitation_token);
                 registerForm.setValue('territory_code', data.territory_code);
-                if (response.email) {
-                    registerForm.setValue('email', response.email);
-                }
                 setStep('registration');
             } else {
                 setInvitationError('Invalid or expired invitation token');
@@ -112,7 +110,7 @@ export function RegisterPage() {
     const onSubmitRegistration = async (data: RegisterFormValues) => {
         try {
             await registerUser({
-                email: data.email || undefined,
+                email: data.email || '',
                 username: data.username,
                 password: data.password,
                 full_name: data.full_name || undefined,
@@ -129,99 +127,123 @@ export function RegisterPage() {
 
     if (step === 'invitation') {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-background p-4">
-                <Card className="w-full max-w-md">
-                    <CardHeader>
-                        <CardTitle>Welcome to UnityPlan</CardTitle>
-                        <CardDescription>Enter your invitation token to create an account</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Form {...invitationForm}>
-                            <form onSubmit={invitationForm.handleSubmit(onValidateInvitation)} className="space-y-4">
-                                {/* Territory Selection */}
-                                <FormField
-                                    control={invitationForm.control}
-                                    name="territory_code"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Territory</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <CenteredLayout>
+                {/* Dark Mode Toggle - Fixed to top right */}
+                <div className="fixed top-4 right-4 z-10">
+                    <ModeToggle />
+                </div>
+
+                <div className="w-full max-w-md">
+                    <div className="mb-8 flex justify-center">
+                        <Logo className="text-foreground" />
+                    </div>
+                    <Card className="w-full">
+                        <CardHeader>
+                            <CardTitle className="text-foreground">Welcome to Unity Platform</CardTitle>
+                            <CardDescription className="text-muted-foreground">Enter your invitation token to create an account</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Form {...invitationForm}>
+                                <form onSubmit={invitationForm.handleSubmit(onValidateInvitation)} className="space-y-4">
+                                    {/* Territory Selection */}
+                                    <FormField
+                                        control={invitationForm.control}
+                                        name="territory_code"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Territory</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select your territory" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {TERRITORIES.map((territory) => (
+                                                            <SelectItem key={territory.code} value={territory.code}>
+                                                                {territory.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Invitation Token Field */}
+                                    <FormField
+                                        control={invitationForm.control}
+                                        name="invitation_token"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Invitation Token</FormLabel>
                                                 <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select your territory" />
-                                                    </SelectTrigger>
+                                                    <Input
+                                                        type="text"
+                                                        placeholder="inv_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                                        {...field}
+                                                    />
                                                 </FormControl>
-                                                <SelectContent>
-                                                    {TERRITORIES.map((territory) => (
-                                                        <SelectItem key={territory.code} value={territory.code}>
-                                                            {territory.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
+                                                <FormDescription>
+                                                    Enter the invitation token you received from your territory administrator
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Error Message */}
+                                    {invitationError && (
+                                        <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                                            {invitationError}
+                                        </div>
                                     )}
-                                />
 
-                                {/* Invitation Token Field */}
-                                <FormField
-                                    control={invitationForm.control}
-                                    name="invitation_token"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Invitation Token</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="text"
-                                                    placeholder="inv_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormDescription>
-                                                Enter the invitation token you received from your territory administrator
-                                            </FormDescription>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                    {/* Submit Button */}
+                                    <Button type="submit" className="w-full">
+                                        Validate Invitation
+                                    </Button>
+                                </form>
+                            </Form>
+                        </CardContent>
+                        <CardFooter className="flex flex-col space-y-2">
+                            <div className="text-sm text-muted-foreground">
+                                Already have an account?{' '}
+                                <a href="/login" className="text-primary hover:underline">
+                                    Sign in
+                                </a>
+                            </div>
+                        </CardFooter>
+                    </Card>
 
-                                {/* Error Message */}
-                                {invitationError && (
-                                    <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-                                        {invitationError}
-                                    </div>
-                                )}
-
-                                {/* Submit Button */}
-                                <Button type="submit" className="w-full">
-                                    Validate Invitation
-                                </Button>
-                            </form>
-                        </Form>
-                    </CardContent>
-                    <CardFooter className="flex flex-col space-y-2">
-                        <div className="text-sm text-muted-foreground">
-                            Already have an account?{' '}
-                            <a href="/login" className="text-primary hover:underline">
-                                Sign in
-                            </a>
-                        </div>
-                    </CardFooter>
-                </Card>
-            </div>
+                    {/* Platform branding */}
+                    <div className="mt-6 text-center text-sm text-muted-foreground">
+                        Powered by Unity Platform <span className="font-mono">v0.1.0-alpha.1</span>
+                    </div>
+                </div>
+            </CenteredLayout>
         );
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-background p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader>
-                    <CardTitle>Create Your Account</CardTitle>
-                    <CardDescription>
-                        Complete your profile to join {TERRITORIES.find(t => t.code === validatedTerritory)?.name}
-                    </CardDescription>
-                </CardHeader>
+        <CenteredLayout>
+            {/* Dark Mode Toggle - Fixed to top right */}
+            <div className="fixed top-4 right-4 z-10">
+                <ModeToggle />
+            </div>
+
+            <div className="w-full max-w-md">
+                <div className="mb-8 flex justify-center">
+                    <Logo className="text-foreground" />
+                </div>
+                <Card className="w-full">
+                    <CardHeader>
+                        <CardTitle className="text-foreground">Create Your Account</CardTitle>
+                        <CardDescription className="text-muted-foreground">
+                            Complete your profile to join {TERRITORIES.find(t => t.code === validatedTerritory)?.name}
+                        </CardDescription>
+                    </CardHeader>
                 <CardContent>
                     <Form {...registerForm}>
                         <form onSubmit={registerForm.handleSubmit(onSubmitRegistration)} className="space-y-4">
@@ -372,6 +394,12 @@ export function RegisterPage() {
                     </div>
                 </CardFooter>
             </Card>
+
+            {/* Platform branding */}
+            <div className="mt-6 text-center text-sm text-muted-foreground">
+                Powered by Unity Platform <span className="font-mono">v0.1.0-alpha.1</span>
+            </div>
         </div>
+    </CenteredLayout>
     );
 }
