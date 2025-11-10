@@ -226,13 +226,13 @@ export function RegisterPage() {
                                     <Shield className="size-5 text-primary" />
                                     <h3 className="font-semibold text-foreground">Invitation Details</h3>
                                 </div>
-                                
+
                                 <div className="space-y-2 text-sm">
                                     <div>
                                         <span className="text-muted-foreground">Territory:</span>{' '}
                                         <span className="font-medium text-foreground">{validatedInvitation.territory.name}</span>
                                     </div>
-                                    
+
                                     {validatedInvitation.community && (
                                         <div className="flex items-center gap-2">
                                             <Users className="size-4 text-muted-foreground" />
