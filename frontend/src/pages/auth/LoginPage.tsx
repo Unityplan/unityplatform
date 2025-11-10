@@ -16,6 +16,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { CenteredLayout } from '@/components/layouts/CenteredLayout';
 import { Logo } from '@/components/ui/logo';
+import { ModeToggle } from '@/components/mode-toggle';
 
 // Login form validation schema
 const loginSchema = z.object({
@@ -60,114 +61,126 @@ export function LoginPage() {
 
     return (
         <CenteredLayout>
-            <div className="mb-8 flex justify-center">
-                <Logo className="text-gray-950 dark:text-white" />
+            {/* Dark Mode Toggle - Fixed to top right */}
+            <div className="fixed top-4 right-4 z-10">
+                <ModeToggle />
             </div>
-            <Card className="w-full max-w-md">
-                <CardHeader>
-                    <CardTitle>Welcome Back</CardTitle>
-                    <CardDescription>Sign in to your UnityPlan account</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            {/* Territory Selection */}
-                            <FormField
-                                control={form.control}
-                                name="territory_code"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Territory</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+
+            <div className="w-full max-w-md">
+                <div className="mb-8 flex justify-center">
+                    <Logo className="text-foreground" />
+                </div>
+                <Card className="w-full">
+                    <CardHeader>
+                        <CardTitle className="text-foreground">Welcome Back</CardTitle>
+                        <CardDescription className="text-muted-foreground">Sign in to your UnityPlan account</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                {/* Territory Selection */}
+                                <FormField
+                                    control={form.control}
+                                    name="territory_code"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Territory</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder="Select your territory" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {TERRITORIES.map((territory) => (
+                                                        <SelectItem key={territory.code} value={territory.code}>
+                                                            {territory.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Username Field */}
+                                <FormField
+                                    control={form.control}
+                                    name="username"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Username</FormLabel>
                                             <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select your territory" />
-                                                </SelectTrigger>
+                                                <Input
+                                                    type="text"
+                                                    placeholder="Enter your username"
+                                                    autoComplete="username"
+                                                    {...field}
+                                                />
                                             </FormControl>
-                                            <SelectContent>
-                                                {TERRITORIES.map((territory) => (
-                                                    <SelectItem key={territory.code} value={territory.code}>
-                                                        {territory.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Password Field */}
+                                <FormField
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <div className="flex items-center justify-between">
+                                                <FormLabel>Password</FormLabel>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="text-sm text-muted-foreground hover:text-primary"
+                                                >
+                                                    {showPassword ? 'Hide' : 'Show'}
+                                                </button>
+                                            </div>
+                                            <FormControl>
+                                                <Input
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    placeholder="Enter your password"
+                                                    autoComplete="current-password"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Error Message */}
+                                {error && (
+                                    <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                                        {error}
+                                    </div>
                                 )}
-                            />
 
-                            {/* Username Field */}
-                            <FormField
-                                control={form.control}
-                                name="username"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Username</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="text"
-                                                placeholder="Enter your username"
-                                                autoComplete="username"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                {/* Submit Button */}
+                                <Button type="submit" className="w-full" disabled={isLoading}>
+                                    {isLoading ? 'Signing in...' : 'Sign In'}
+                                </Button>
+                            </form>
+                        </Form>
+                    </CardContent>
+                    <CardFooter className="flex flex-col space-y-2">
+                        <div className="text-sm text-muted-foreground">
+                            <a href="/reset-password" className="hover:text-primary hover:underline">
+                                Forgot your password?
+                            </a>
+                        </div>
+                    </CardFooter>
+                </Card>
 
-                            {/* Password Field */}
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex items-center justify-between">
-                                            <FormLabel>Password</FormLabel>
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="text-sm text-muted-foreground hover:text-primary"
-                                            >
-                                                {showPassword ? 'Hide' : 'Show'}
-                                            </button>
-                                        </div>
-                                        <FormControl>
-                                            <Input
-                                                type={showPassword ? 'text' : 'password'}
-                                                placeholder="Enter your password"
-                                                autoComplete="current-password"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Error Message */}
-                            {error && (
-                                <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-                                    {error}
-                                </div>
-                            )}
-
-                            {/* Submit Button */}
-                            <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading ? 'Signing in...' : 'Sign In'}
-                            </Button>
-                        </form>
-                    </Form>
-                </CardContent>
-                <CardFooter className="flex flex-col space-y-2">
-                    <div className="text-sm text-muted-foreground">
-                        <a href="/reset-password" className="hover:text-primary hover:underline">
-                            Forgot your password?
-                        </a>
-                    </div>
-                </CardFooter>
-            </Card>
+                {/* Platform branding */}
+                <div className="mt-6 text-center text-sm text-muted-foreground">
+                    Powered by UnityPlan Platform <span className="font-mono">v0.1.0-alpha.1</span>
+                </div>
+            </div>
         </CenteredLayout>
     );
 }

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Unity Platform Icon: Interconnected community tree/network representing user sovereignty and collaboration -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Central hub/tree trunk - representing the platform foundation -->
+  <circle cx="50" cy="50" r="12" fill="url(#gradient)"/>
+  
+  <!-- Outer nodes - representing users/communities (inverted pyramid - wide at top) -->
+  <!-- Top layer - many users (most power) -->
+  <circle cx="30" cy="20" r="6" fill="url(#gradient)" opacity="0.9"/>
+  <circle cx="50" cy="15" r="6" fill="url(#gradient)" opacity="0.9"/>
+  <circle cx="70" cy="20" r="6" fill="url(#gradient)" opacity="0.9"/>
+  
+  <!-- Middle layer - communities -->
+  <circle cx="20" cy="50" r="7" fill="url(#gradient)" opacity="0.85"/>
+  <circle cx="80" cy="50" r="7" fill="url(#gradient)" opacity="0.85"/>
+  
+  <!-- Bottom layer - territories/global (narrow base - service role) -->
+  <circle cx="35" cy="80" r="5" fill="url(#gradient)" opacity="0.8"/>
+  <circle cx="65" cy="80" r="5" fill="url(#gradient)" opacity="0.8"/>
+  
+  <!-- Connections - mycorrhizal network style (knowledge sharing) -->
+  <line x1="50" y1="50" x2="30" y2="20" stroke="url(#gradient)" stroke-width="2" opacity="0.4"/>
+  <line x1="50" y1="50" x2="50" y2="15" stroke="url(#gradient)" stroke-width="2" opacity="0.4"/>
+  <line x1="50" y1="50" x2="70" y2="20" stroke="url(#gradient)" stroke-width="2" opacity="0.4"/>
+  <line x1="50" y1="50" x2="20" y2="50" stroke="url(#gradient)" stroke-width="2" opacity="0.4"/>
+  <line x1="50" y1="50" x2="80" y2="50" stroke="url(#gradient)" stroke-width="2" opacity="0.4"/>
+  <line x1="50" y1="50" x2="35" y2="80" stroke="url(#gradient)" stroke-width="2" opacity="0.4"/>
+  <line x1="50" y1="50" x2="65" y2="80" stroke="url(#gradient)" stroke-width="2" opacity="0.4"/>
+  
+  <!-- Inter-community connections -->
+  <line x1="20" y1="50" x2="30" y2="20" stroke="url(#gradient)" stroke-width="1.5" opacity="0.3"/>
+  <line x1="80" y1="50" x2="70" y2="20" stroke="url(#gradient)" stroke-width="1.5" opacity="0.3"/>
+  <line x1="20" y1="50" x2="35" y2="80" stroke="url(#gradient)" stroke-width="1.5" opacity="0.3"/>
+  <line x1="80" y1="50" x2="65" y2="80" stroke="url(#gradient)" stroke-width="1.5" opacity="0.3"/>
+</svg>

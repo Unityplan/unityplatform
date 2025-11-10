@@ -4,7 +4,6 @@ import { RegisterPage } from './pages/auth/RegisterPage'
 import { PasswordResetPage } from './pages/auth/PasswordResetPage'
 import { ProfileViewPage } from './pages/profile/ProfileViewPage'
 import { ProfileEditPage } from './pages/profile/ProfileEditPage'
-import './App.css'
 
 function App() {
   const [page, setPage] = useState<'login' | 'register' | 'reset-password' | 'profile' | 'profile-edit'>('login')

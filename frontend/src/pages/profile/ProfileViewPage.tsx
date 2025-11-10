@@ -4,9 +4,17 @@ import { getUserProfile } from '@/api/users';
 import type { UserProfile } from '@/api/users';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SidebarLayout, SidebarLayoutContent } from '@/components/layouts/SidebarLayout';
-import { Breadcrumbs, BreadcrumbHome, BreadcrumbSeparator, Breadcrumb } from '@/components/ui/breadcrumbs';
-import { dashboardNavigation } from '@/config/navigation';
+import { AppLayout } from '@/components/layouts/AppLayout';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { Link } from '@tanstack/react-router';
+import { Home } from 'lucide-react';
 
 export function ProfileViewPage() {
     const { user } = useAuthStore();
@@ -41,73 +49,97 @@ export function ProfileViewPage() {
 
     if (isLoading) {
         return (
-            <SidebarLayout sections={dashboardNavigation}>
-                <SidebarLayoutContent
-                    breadcrumbs={
-                        <Breadcrumbs>
-                            <BreadcrumbHome />
+            <AppLayout
+                breadcrumbs={
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link to="/"><Home className="size-4" /></Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
                             <BreadcrumbSeparator />
-                            <Breadcrumb>Profile</Breadcrumb>
-                        </Breadcrumbs>
-                    }
-                >
-                    <div className="flex min-h-[50vh] items-center justify-center">
-                        <div className="text-muted-foreground">Loading profile...</div>
-                    </div>
-                </SidebarLayoutContent>
-            </SidebarLayout>
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>Profile</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                }
+            >
+                <div className="flex min-h-[50vh] items-center justify-center">
+                    <div className="text-muted-foreground">Loading profile...</div>
+                </div>
+            </AppLayout>
         );
     }
 
     if (error || !profile) {
         return (
-            <SidebarLayout sections={dashboardNavigation}>
-                <SidebarLayoutContent
-                    breadcrumbs={
-                        <Breadcrumbs>
-                            <BreadcrumbHome />
+            <AppLayout
+                breadcrumbs={
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link to="/"><Home className="size-4" /></Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
                             <BreadcrumbSeparator />
-                            <Breadcrumb>Profile</Breadcrumb>
-                        </Breadcrumbs>
-                    }
-                >
-                    <div className="flex min-h-[50vh] items-center justify-center p-4">
-                        <Card className="w-full max-w-md">
-                            <CardHeader>
-                                <CardTitle>Error</CardTitle>
-                                <CardDescription>{error || 'Profile not found'}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Button onClick={() => window.location.href = '/login'}>
-                                    Go to Login
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </SidebarLayoutContent>
-            </SidebarLayout>
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>Profile</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                }
+            >
+                <div className="flex min-h-[50vh] items-center justify-center p-4">
+                    <Card className="w-full max-w-md">
+                        <CardHeader>
+                            <CardTitle>Error</CardTitle>
+                            <CardDescription>{error || 'Profile not found'}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Button onClick={() => window.location.href = '/login'}>
+                                Go to Login
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            </AppLayout>
         );
     }
 
     return (
-        <SidebarLayout sections={dashboardNavigation}>
-            <SidebarLayoutContent
-                breadcrumbs={
-                    <Breadcrumbs>
-                        <BreadcrumbHome />
+        <AppLayout
+            breadcrumbs={
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink asChild>
+                                <Link to="/"><Home className="size-4" /></Link>
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>
                         <BreadcrumbSeparator />
-                        <Breadcrumb>Profile</Breadcrumb>
-                    </Breadcrumbs>
-                }
-            >
-                <div className="space-y-6 py-6">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold">Profile</h1>
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>Profile</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+            }
+        >
+            <div className="space-y-6 py-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <h1 className="text-3xl font-bold">Profile</h1>
+                    <div className="flex gap-2">
+                        <Button size="icon" onClick={() => window.location.href = '/dashboard'} title="Dashboard">
+                            <Home className="size-5" />
+                        </Button>
                         <Button onClick={() => window.location.href = '/profile/edit'}>
                             Edit Profile
                         </Button>
                     </div>
+                </div>
 
                 {/* Profile Card */}
                 <Card>
@@ -195,21 +227,18 @@ export function ProfileViewPage() {
                     </CardHeader>
                     <CardContent className="space-y-2">
                         <Button
-                            variant="outline"
                             className="w-full justify-start"
                             onClick={() => window.location.href = '/profile/edit'}
                         >
                             Edit Profile
                         </Button>
                         <Button
-                            variant="outline"
                             className="w-full justify-start"
                             onClick={() => window.location.href = '/settings/privacy'}
                         >
                             Privacy Settings
                         </Button>
                         <Button
-                            variant="outline"
                             className="w-full justify-start"
                             onClick={() => {
                                 useAuthStore.getState().logout();
@@ -220,8 +249,7 @@ export function ProfileViewPage() {
                         </Button>
                     </CardContent>
                 </Card>
-                </div>
-            </SidebarLayoutContent>
-        </SidebarLayout>
+            </div>
+        </AppLayout>
     );
 }

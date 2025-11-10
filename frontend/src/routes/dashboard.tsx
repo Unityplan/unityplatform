@@ -3,9 +3,17 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SidebarLayout, SidebarLayoutContent } from '@/components/layouts/SidebarLayout';
-import { Breadcrumbs, BreadcrumbHome, BreadcrumbSeparator, Breadcrumb } from '@/components/ui/breadcrumbs';
-import { dashboardNavigation } from '@/config/navigation';
+import { AppLayout } from '@/components/layouts/AppLayout';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { Link, useRouter } from '@tanstack/react-router';
+import { Home } from 'lucide-react';
 
 export const Route = createFileRoute('/dashboard')({
     component: Dashboard,
@@ -13,20 +21,35 @@ export const Route = createFileRoute('/dashboard')({
 
 function Dashboard() {
     const { user } = useAuthStore();
+    const router = useRouter();
+
+    const handleLogout = () => {
+        useAuthStore.getState().logout();
+        router.navigate({ to: '/login' });
+    };
 
     return (
         <AuthGuard>
-            <SidebarLayout sections={dashboardNavigation}>
-                <SidebarLayoutContent
-                    breadcrumbs={
-                        <Breadcrumbs>
-                            <BreadcrumbHome />
+            <AppLayout
+                breadcrumbs={
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link to="/">
+                                        <Home className="size-4" />
+                                    </Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
                             <BreadcrumbSeparator />
-                            <Breadcrumb>Dashboard</Breadcrumb>
-                        </Breadcrumbs>
-                    }
-                >
-                    <div className="space-y-6 py-6">
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                }
+            >
+                <div className="space-y-6 py-6">
                     {/* Welcome Header */}
                     <div>
                         <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -61,7 +84,7 @@ function Dashboard() {
                                 <CardDescription>Manage your profile</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <Button variant="outline" onClick={() => window.location.href = '/profile/edit'}>
+                                <Button onClick={() => window.location.href = '/profile/edit'}>
                                     Edit Profile
                                 </Button>
                             </CardContent>
@@ -76,26 +99,20 @@ function Dashboard() {
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <Button
-                                variant="outline"
                                 className="w-full justify-start"
                                 onClick={() => window.location.href = '/profile'}
                             >
                                 View Profile
                             </Button>
                             <Button
-                                variant="outline"
                                 className="w-full justify-start"
                                 onClick={() => window.location.href = '/profile/edit'}
                             >
                                 Edit Profile
                             </Button>
                             <Button
-                                variant="outline"
                                 className="w-full justify-start"
-                                onClick={() => {
-                                    useAuthStore.getState().logout();
-                                    window.location.href = '/login';
-                                }}
+                                onClick={handleLogout}
                             >
                                 Sign Out
                             </Button>
@@ -124,9 +141,8 @@ function Dashboard() {
                             </p>
                         </CardContent>
                     </Card>
-                    </div>
-                </SidebarLayoutContent>
-            </SidebarLayout>
+                </div>
+            </AppLayout>
         </AuthGuard>
     );
 }

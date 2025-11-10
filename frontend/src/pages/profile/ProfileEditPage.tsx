@@ -14,6 +14,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AppLayout } from '@/components/layouts/AppLayout';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { Link, useRouter } from '@tanstack/react-router';
+import { Home } from 'lucide-react';
 
 // Validation schemas
 const profileSchema = z.object({
@@ -27,6 +38,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 export function ProfileEditPage() {
     const { user } = useAuthStore();
+    const router = useRouter();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -139,9 +151,9 @@ export function ProfileEditPage() {
 
             setSuccess('Profile updated successfully');
 
-            // Reload user data
+            // Reload user data and navigate
             setTimeout(() => {
-                window.location.href = '/profile';
+                router.navigate({ to: '/profile' });
             }, 1500);
         } catch (err) {
             setError('Failed to update profile');
@@ -153,39 +165,112 @@ export function ProfileEditPage() {
 
     if (isLoading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-background">
-                <div className="text-muted-foreground">Loading profile...</div>
-            </div>
+            <AppLayout
+                breadcrumbs={
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link to="/">
+                                        <Home className="size-4" />
+                                    </Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link to="/profile">Profile</Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>Edit</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                }
+            >
+                <div className="flex items-center justify-center py-12">
+                    <div className="text-muted-foreground">Loading profile...</div>
+                </div>
+            </AppLayout>
         );
     }
 
     if (error && !profile) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-background p-4">
-                <Card className="w-full max-w-md">
+            <AppLayout
+                breadcrumbs={
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link to="/">
+                                        <Home className="size-4" />
+                                    </Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link to="/profile">Profile</Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>Edit</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                }
+            >
+                <Card className="w-full max-w-md mx-auto">
                     <CardHeader>
                         <CardTitle>Error</CardTitle>
                         <CardDescription>{error}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Button onClick={() => window.location.href = '/profile'}>
+                        <Button onClick={() => router.navigate({ to: '/profile' })}>
                             Back to Profile
                         </Button>
                     </CardContent>
                 </Card>
-            </div>
+            </AppLayout>
         );
     }
 
     return (
-        <div className="min-h-screen bg-background p-4">
-            <div className="mx-auto max-w-2xl space-y-6">
+        <AppLayout
+            breadcrumbs={
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink asChild>
+                                <Link to="/">
+                                    <Home className="size-4" />
+                                </Link>
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink asChild>
+                                <Link to="/profile">Profile</Link>
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>Edit</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+            }
+        >
+            <div className="space-y-6 py-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold">Edit Profile</h1>
                     <Button
-                        variant="outline"
-                        onClick={() => window.location.href = '/profile'}
+                        onClick={() => router.navigate({ to: '/profile' })}
                         disabled={isSaving}
                     >
                         Cancel
@@ -194,12 +279,12 @@ export function ProfileEditPage() {
 
                 {/* Success/Error Messages */}
                 {success && (
-                    <div className="rounded-lg bg-green-50 p-4 text-green-800 border border-green-200">
+                    <div className="rounded-lg bg-green-100 dark:bg-green-900/20 p-4 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
                         {success}
                     </div>
                 )}
                 {error && (
-                    <div className="rounded-lg bg-red-50 p-4 text-red-800 border border-red-200">
+                    <div className="rounded-lg bg-red-100 dark:bg-red-900/20 p-4 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800">
                         {error}
                     </div>
                 )}
@@ -237,7 +322,6 @@ export function ProfileEditPage() {
                                     {avatarPreview && (
                                         <Button
                                             type="button"
-                                            variant="destructive"
                                             size="sm"
                                             onClick={handleDeleteAvatar}
                                             disabled={isSaving}
@@ -342,8 +426,7 @@ export function ProfileEditPage() {
                         </Button>
                         <Button
                             type="button"
-                            variant="outline"
-                            onClick={() => window.location.href = '/profile'}
+                            onClick={() => router.navigate({ to: '/profile' })}
                             disabled={isSaving}
                         >
                             Cancel
@@ -351,6 +434,6 @@ export function ProfileEditPage() {
                     </div>
                 </form>
             </div>
-        </div>
+        </AppLayout>
     );
 }
