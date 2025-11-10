@@ -1,4 +1,4 @@
-import { Home, User, Settings } from "lucide-react"
+import { Home, User, Settings, Shield } from "lucide-react"
 import { Link, useRouterState } from "@tanstack/react-router"
 
 import {
@@ -28,9 +28,19 @@ const mainItems = [
 
 const settingsItems = [
     {
+        title: "Settings",
+        path: "/settings",
+        icon: Settings,
+    },
+    {
+        title: "Privacy",
+        path: "/settings/privacy",
+        icon: Shield,
+    },
+    {
         title: "Edit Profile",
         path: "/profile/edit",
-        icon: Settings,
+        icon: User,
     },
 ]
 

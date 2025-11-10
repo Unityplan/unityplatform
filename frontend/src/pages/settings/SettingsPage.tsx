@@ -10,14 +10,14 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Link } from '@tanstack/react-router';
-import { 
-    Home, 
-    Settings as SettingsIcon, 
-    Shield, 
-    Lock, 
-    Bell, 
-    Users, 
-    Trash2, 
+import {
+    Home,
+    Settings as SettingsIcon,
+    Shield,
+    Lock,
+    Bell,
+    Users,
+    Trash2,
     FileText,
     ChevronRight,
     KeyRound
@@ -168,7 +168,7 @@ export function SettingsPage() {
                                 <h2 className="text-xl font-semibold">{section.title}</h2>
                                 <p className="text-sm text-muted-foreground">{section.description}</p>
                             </div>
-                            
+
                             <div className="space-y-3">
                                 {section.items.map((item, itemIndex) => (
                                     <Card key={itemIndex} className={!item.available ? 'opacity-60' : ''}>
