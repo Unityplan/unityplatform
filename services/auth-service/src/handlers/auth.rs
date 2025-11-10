@@ -192,12 +192,7 @@ pub async fn register(
 
     // Generate tokens
     let access_token = token_service
-        .generate_access_token(
-            &public_key_hash,
-            &territory_code,
-            user.id,
-            &user.username,
-        )
+        .generate_access_token(&public_key_hash, &territory_code, user.id, &user.username)
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
     let refresh_token = token_service.generate_refresh_token();

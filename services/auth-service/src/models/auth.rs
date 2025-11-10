@@ -17,7 +17,6 @@ pub struct RegisterRequest {
 
     // ⭐ REMOVED: territory_code - now derived from invitation token via global registry
     // This prevents users from accidentally (or maliciously) selecting wrong territory
-
     #[validate(length(min = 10, max = 100, message = "Invitation token is required"))]
     pub invitation_token: String, // ⭐ REQUIRED - territory is looked up from this
 }

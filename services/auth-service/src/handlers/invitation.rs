@@ -48,7 +48,7 @@ pub async fn create_invitation(
     let token = create_invitation_token(
         pool.get_ref(),
         &schema_name,
-        &auth_user.territory_code,  // ⭐ NEW: Pass territory for global registry
+        &auth_user.territory_code, // ⭐ NEW: Pass territory for global registry
         &body.token_type,
         body.email.clone(),
         body.max_uses,
@@ -140,7 +140,7 @@ pub async fn get_invitation_usage(
 
 /// Validate an invitation token (public endpoint - no auth required)
 /// GET /api/auth/invitations/validate/{token}
-/// 
+///
 /// ⭐ SECURE: Territory is looked up from global.invitation_token_registry
 /// Client cannot manipulate which territory the token belongs to
 pub async fn validate_invitation(
@@ -151,14 +151,15 @@ pub async fn validate_invitation(
     let token = path.into_inner();
 
     // ⭐ SECURITY: Look up territory from global registry (client cannot manipulate this)
-    let territory_code = get_token_territory(pool.get_ref(), &token)
-        .await
-        .map_err(|e| match e {
-            shared_lib::error::AppError::Validation(msg) => {
-                actix_web::error::ErrorBadRequest(msg)
-            }
-            _ => actix_web::error::ErrorInternalServerError(e),
-        })?;
+    let territory_code =
+        get_token_territory(pool.get_ref(), &token)
+            .await
+            .map_err(|e| match e {
+                shared_lib::error::AppError::Validation(msg) => {
+                    actix_web::error::ErrorBadRequest(msg)
+                }
+                _ => actix_web::error::ErrorInternalServerError(e),
+            })?;
 
     let schema_name = get_schema_name(&territory_code);
 
@@ -174,32 +175,30 @@ pub async fn validate_invitation(
             })?;
 
     // Lookup territory name from global.territories
-    let territory_name = sqlx::query_scalar::<_, String>(
-        "SELECT name FROM global.territories WHERE code = $1"
-    )
-    .bind(&territory_code)
-    .fetch_optional(pool.get_ref())
-    .await
-    .map_err(actix_web::error::ErrorInternalServerError)?
-    .unwrap_or_else(|| territory_code.clone());
+    let territory_name =
+        sqlx::query_scalar::<_, String>("SELECT name FROM global.territories WHERE code = $1")
+            .bind(&territory_code)
+            .fetch_optional(pool.get_ref())
+            .await
+            .map_err(actix_web::error::ErrorInternalServerError)?
+            .unwrap_or_else(|| territory_code.clone());
 
     // Lookup community name if invitation has community_id
     let community_info = if let Some(community_id) = invitation.community_id {
-        let community_query = format!(
-            "SELECT name FROM {}.communities WHERE id = $1",
-            schema_name
-        );
-        
+        let community_query = format!("SELECT name FROM {}.communities WHERE id = $1", schema_name);
+
         let community_name = sqlx::query_scalar::<_, String>(&community_query)
             .bind(community_id)
             .fetch_optional(pool.get_ref())
             .await
             .map_err(actix_web::error::ErrorInternalServerError)?;
 
-        community_name.map(|name| serde_json::json!({
-            "id": community_id,
-            "name": name
-        }))
+        community_name.map(|name| {
+            serde_json::json!({
+                "id": community_id,
+                "name": name
+            })
+        })
     } else {
         None
     };

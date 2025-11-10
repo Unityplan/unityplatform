@@ -19,16 +19,13 @@ pub fn generate_invitation_token() -> String {
 ///
 /// This is the SECURE way to determine territory - client cannot manipulate this.
 /// Returns territory_code from global.invitation_token_registry
-pub async fn get_token_territory(
-    pool: &PgPool,
-    token: &str,
-) -> Result<String, AppError> {
+pub async fn get_token_territory(pool: &PgPool, token: &str) -> Result<String, AppError> {
     let result = sqlx::query_scalar::<_, String>(
         r#"
         SELECT territory_code 
         FROM global.invitation_token_registry
         WHERE token = $1
-        "#
+        "#,
     )
     .bind(token)
     .fetch_optional(pool)
@@ -201,7 +198,7 @@ pub async fn use_invitation_token(
 pub async fn create_invitation_token(
     pool: &PgPool,
     schema_name: &str,
-    territory_code: &str,  // ⭐ NEW: Required for global registry
+    territory_code: &str, // ⭐ NEW: Required for global registry
     token_type: &str,
     email: Option<String>,
     max_uses: i32,
@@ -252,7 +249,7 @@ pub async fn create_invitation_token(
         r#"
         INSERT INTO global.invitation_token_registry (token, territory_code, territory_token_id)
         VALUES ($1, $2, $3)
-        "#
+        "#,
     )
     .bind(&created_token.token)
     .bind(territory_code)

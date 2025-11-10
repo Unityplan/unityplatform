@@ -27,6 +27,7 @@ UnityPlan uses an **invitation-only registration system** to maintain community 
 ## Invitation Token Types
 
 ### 1. **Single-Use Token** (Personal Invitation)
+
 - Valid for **one registration only**
 - Sent to a **specific email address**
 - Created by any user with `invite_user` permission
@@ -36,6 +37,7 @@ UnityPlan uses an **invitation-only registration system** to maintain community 
 **Use Case:** Invite a specific person you know
 
 **Example:**
+
 ```json
 {
   "token_type": "single_use",
@@ -48,6 +50,7 @@ UnityPlan uses an **invitation-only registration system** to maintain community 
 ```
 
 ### 2. **Group Token** (Multi-Use Invitation)
+
 - Valid for **multiple registrations** (configurable limit)
 - Not tied to specific email addresses
 - Created by territory managers or users with `invite_group` permission
@@ -57,6 +60,7 @@ UnityPlan uses an **invitation-only registration system** to maintain community 
 **Use Case:** Invite a class of students, workshop participants, or community group
 
 **Example:**
+
 ```json
 {
   "token_type": "group",
@@ -144,6 +148,7 @@ CREATE INDEX idx_global_invitation_registry_territory ON global.invitation_token
 ```
 
 **How it works:**
+
 1. When invitation token is created in `territory_dk.invitation_tokens`, it's also registered in `global.invitation_token_registry` with `territory_code = 'dk'`
 2. When user enters token during registration, backend queries `global.invitation_token_registry` to determine territory
 3. Client **cannot manipulate** territory selection (database-enforced)
@@ -200,6 +205,7 @@ Backend Processing:
 ```
 
 **Security Benefits:**
+
 - ✅ Territory binding enforced in database (client cannot manipulate)
 - ✅ Community context preserved automatically
 - ✅ Prevents accidental registration in wrong territory
@@ -211,6 +217,7 @@ Backend Processing:
 ## API Endpoints
 
 ### **Validate Invitation (Updated)** ⭐
+
 ```http
 GET /api/auth/invitations/validate/{token}
 # ⭐ NO territory_code parameter - backend looks it up
@@ -234,6 +241,7 @@ GET /api/auth/invitations/validate/{token}
 ```
 
 ### **Registration (Updated)** ⭐
+
 ```http
 POST /api/auth/register
 Content-Type: application/json
@@ -249,6 +257,7 @@ Content-Type: application/json
 ```
 
 **Response (Success):**
+
 ```json
 {
   "user": { "id": "...", "username": "alice_dk", "territory_code": "dk", ... },
@@ -259,6 +268,7 @@ Content-Type: application/json
 ```
 
 **Response (Invalid Token):**
+
 ```json
 {
   "error": "Invalid or expired invitation token"
@@ -266,6 +276,7 @@ Content-Type: application/json
 ```
 
 **Response (Token Already Used - Single Use):**
+
 ```json
 {
   "error": "Invitation token has already been used"
@@ -273,6 +284,7 @@ Content-Type: application/json
 ```
 
 **Response (Email Mismatch - Single Use):**
+
 ```json
 {
   "error": "This invitation is for a different email address"
@@ -280,6 +292,7 @@ Content-Type: application/json
 ```
 
 **Response (Success):**
+
 ```json
 {
   "user": { "id": "...", "username": "alice_dk", ... },
@@ -290,6 +303,7 @@ Content-Type: application/json
 ```
 
 **Response (Invalid Token):**
+
 ```json
 {
   "error": "Invalid or expired invitation token"
@@ -297,6 +311,7 @@ Content-Type: application/json
 ```
 
 **Response (Token Already Used - Single Use):**
+
 ```json
 {
   "error": "Invitation token has already been used"
@@ -304,6 +319,7 @@ Content-Type: application/json
 ```
 
 **Response (Email Mismatch - Single Use):**
+
 ```json
 {
   "error": "This invitation is for a different email address"
@@ -311,6 +327,7 @@ Content-Type: application/json
 ```
 
 ### **Create Invitation Token (New Endpoint)**
+
 ```http
 POST /api/auth/invitations
 Authorization: Bearer <access_token>
@@ -326,6 +343,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "invitation": {
@@ -342,6 +360,7 @@ Content-Type: application/json
 ```
 
 ### **List Invitations**
+
 ```http
 GET /api/auth/invitations
 Authorization: Bearer <access_token>
@@ -350,6 +369,7 @@ Authorization: Bearer <access_token>
 ```
 
 ### **Revoke Invitation**
+
 ```http
 DELETE /api/auth/invitations/{token_id}
 Authorization: Bearer <access_token>
@@ -358,6 +378,7 @@ Authorization: Bearer <access_token>
 ```
 
 ### **Validate Invitation (Public)**
+
 ```http
 GET /api/auth/invitations/validate/{token}
 
@@ -384,6 +405,7 @@ GET /api/auth/invitations/validate/{token}
 | `manage_territory`  | both        | Territory managers have full access   |
 
 **Default Settings:**
+
 - New users: No invitation permissions by default
 - Community moderators: `invite_user` permission
 - Territory managers: All invitation permissions
@@ -393,6 +415,7 @@ GET /api/auth/invitations/validate/{token}
 ## Security Considerations
 
 ### **Token Generation**
+
 ```rust
 // Generate cryptographically secure random token
 use rand::Rng;
@@ -406,16 +429,19 @@ fn generate_invitation_token() -> String {
 ```
 
 ### **Rate Limiting**
+
 - Max 10 invitations per user per day (configurable)
 - Max 100 group invitations per territory manager per month
 - Prevent invitation spam
 
 ### **Audit Trail**
+
 - Log all invitation creation (who, when, type)
 - Log all invitation uses (who used, when, IP)
 - Track revocations (who revoked, when, why)
 
 ### **Token Expiration**
+
 - Single-use: 7 days default (configurable)
 - Group: 30 days default (configurable)
 - Auto-cleanup: Delete expired tokens after 90 days
@@ -425,17 +451,20 @@ fn generate_invitation_token() -> String {
 ## Migration Strategy
 
 ### **Phase 1: Add Invitation System (Current)**
+
 1. Create invitation_tokens and invitation_uses tables
 2. Update /api/auth/register to require invitation_token
 3. Implement invitation CRUD endpoints
 4. Add invitation management to auth-service
 
 ### **Phase 2: Seed Initial Invitations**
+
 1. Territory managers get default invitation permissions
 2. Create initial group tokens for early adopters
 3. Document invitation workflow for community leaders
 
 ### **Phase 3: Frontend Integration**
+
 1. Invitation management UI (create, view, revoke)
 2. Registration form with token input
 3. Token validation on frontend before submission
@@ -445,6 +474,7 @@ fn generate_invitation_token() -> String {
 ## Example Workflows
 
 ### **Workflow 1: Territory Manager Invites Workshop Participants**
+
 ```
 1. Territory manager logs in
 2. Creates group token:
@@ -459,6 +489,7 @@ fn generate_invitation_token() -> String {
 ```
 
 ### **Workflow 2: User Invites a Friend**
+
 ```
 1. User logs in
 2. Creates single-use token:
@@ -475,6 +506,7 @@ fn generate_invitation_token() -> String {
 ## Future Enhancements (Phase 2+)
 
 ### **Badge-Based Invitations** ⭐ NEW
+
 - **Attach badges to invitation tokens** - Pre-grant permissions and access rights
 - **Automatic course enrollment** - Grant access to specific courses upon registration
 - **Forum permissions** - Provide forum access rights through invitation
@@ -486,6 +518,7 @@ fn generate_invitation_token() -> String {
   - Student invitation auto-enrolls in semester courses
 
 **Implementation Concept:**
+
 ```json
 {
   "token_type": "group",
@@ -507,6 +540,7 @@ fn generate_invitation_token() -> String {
 ```
 
 **Flow:**
+
 1. User accepts invitation and registers
 2. User completes Code of Conduct course (mandatory)
 3. System automatically grants badges from invitation
@@ -514,6 +548,7 @@ fn generate_invitation_token() -> String {
 5. Audit trail tracks badge grants via invitation
 
 ### **Other Future Features**
+
 - **Email Integration**: Automatic invitation emails with magic links
 - **Invitation Templates**: Pre-defined invitation messages
 - **Invitation Analytics**: Track conversion rates, popular sources

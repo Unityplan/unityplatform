@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { getUserProfile } from '@/api/users';
 import type { UserProfile } from '@/api/users';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLayout } from '@/components/layouts/AppLayout';
 import { ProfileHeader } from '@/components/user';
@@ -101,15 +100,20 @@ export function ProfileViewPage() {
                             <CardDescription>{error || 'Profile not found'}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Button onClick={() => window.location.href = '/login'}>
+                            <button onClick={() => navigate({ to: '/login' })} className="text-primary hover:underline">
                                 Go to Login
-                            </Button>
+                            </button>
                         </CardContent>
                     </Card>
                 </div>
             </AppLayout>
         );
     }
+
+    const handleSignOut = () => {
+        useAuthStore.getState().logout();
+        navigate({ to: '/login' });
+    };
 
     return (
         <AppLayout
@@ -139,7 +143,7 @@ export function ProfileViewPage() {
                         avatar_url: profile.avatar_url,
                         bio: profile.bio,
                         location: profile.location,
-                        website: undefined, // TODO: Add website field to UserProfile type
+                        website: profile.website_url,
                         created_at: profile.created_at || new Date().toISOString(),
                         is_verified: false, // TODO: Add is_verified field to backend
                     }}
@@ -150,37 +154,9 @@ export function ProfileViewPage() {
                     }}
                     isOwnProfile={true}
                     onEditProfile={() => navigate({ to: '/profile/edit' })}
+                    onPrivacySettings={() => navigate({ to: '/settings/privacy' })}
+                    onSignOut={handleSignOut}
                 />
-
-                {/* Account Actions Card */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Account Actions</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                        <Button
-                            className="w-full justify-start"
-                            onClick={() => navigate({ to: '/profile/edit' })}
-                        >
-                            Edit Profile
-                        </Button>
-                        <Button
-                            className="w-full justify-start"
-                            onClick={() => navigate({ to: '/settings/privacy' })}
-                        >
-                            Privacy Settings
-                        </Button>
-                        <Button
-                            className="w-full justify-start"
-                            onClick={() => {
-                                useAuthStore.getState().logout();
-                                navigate({ to: '/login' });
-                            }}
-                        >
-                            Sign Out
-                        </Button>
-                    </CardContent>
-                </Card>
             </div>
         </AppLayout>
     );
