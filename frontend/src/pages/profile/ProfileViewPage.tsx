@@ -5,6 +5,7 @@ import type { UserProfile } from '@/api/users';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLayout } from '@/components/layouts/AppLayout';
+import { ProfileHeader } from '@/components/user';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -13,11 +14,12 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Home } from 'lucide-react';
 
 export function ProfileViewPage() {
     const { user } = useAuthStore();
+    const navigate = useNavigate();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string>('');
@@ -128,99 +130,29 @@ export function ProfileViewPage() {
             }
         >
             <div className="space-y-6 py-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <h1 className="text-3xl font-bold">Profile</h1>
-                    <div className="flex gap-2">
-                        <Button size="icon" onClick={() => window.location.href = '/dashboard'} title="Dashboard">
-                            <Home className="size-5" />
-                        </Button>
-                        <Button onClick={() => window.location.href = '/profile/edit'}>
-                            Edit Profile
-                        </Button>
-                    </div>
-                </div>
+                {/* Profile Header - Social Network Style */}
+                <ProfileHeader
+                    user={{
+                        id: user!.id,
+                        username: user!.username,
+                        full_name: profile.full_name,
+                        avatar_url: profile.avatar_url,
+                        bio: profile.bio,
+                        location: profile.location,
+                        website: undefined, // TODO: Add website field to UserProfile type
+                        created_at: user!.created_at,
+                        is_verified: user!.is_verified,
+                    }}
+                    stats={{
+                        following: 0, // TODO: Fetch real stats from connections API
+                        followers: 0,
+                        posts: 0,
+                    }}
+                    isOwnProfile={true}
+                    onEditProfile={() => navigate({ to: '/profile/edit' })}
+                />
 
-                {/* Profile Card */}
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-start gap-4">
-                            {/* Avatar */}
-                            <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center text-2xl font-bold">
-                                {profile.avatar_url ? (
-                                    <img
-                                        src={profile.avatar_url}
-                                        alt={user?.username}
-                                        className="h-full w-full rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <span>{user?.username.charAt(0).toUpperCase()}</span>
-                                )}
-                            </div>
-
-                            {/* User Info */}
-                            <div className="flex-1">
-                                <CardTitle className="text-2xl">{profile.full_name || user?.username}</CardTitle>
-                                <CardDescription className="text-lg">@{user?.username}</CardDescription>
-                                {user?.email && (
-                                    <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
-                                )}
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {/* Bio */}
-                        {profile.bio && (
-                            <div>
-                                <h3 className="text-sm font-medium text-muted-foreground mb-1">About</h3>
-                                <p className="text-foreground">{profile.bio}</p>
-                            </div>
-                        )}
-
-                        {/* Location */}
-                        {profile.location && (
-                            <div>
-                                <h3 className="text-sm font-medium text-muted-foreground mb-1">Location</h3>
-                                <p className="text-foreground">{profile.location}</p>
-                            </div>
-                        )}
-
-                        {/* Website */}
-                        {profile.website && (
-                            <div>
-                                <h3 className="text-sm font-medium text-muted-foreground mb-1">Website</h3>
-                                <a
-                                    href={profile.website}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-primary hover:underline"
-                                >
-                                    {profile.website}
-                                </a>
-                            </div>
-                        )}
-
-                        {/* Member Since */}
-                        <div>
-                            <h3 className="text-sm font-medium text-muted-foreground mb-1">Member Since</h3>
-                            <p className="text-foreground">
-                                {new Date(profile.created_at).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                })}
-                            </p>
-                        </div>
-
-                        {/* Territory */}
-                        <div>
-                            <h3 className="text-sm font-medium text-muted-foreground mb-1">Territory</h3>
-                            <p className="text-foreground uppercase">{user?.territory_code}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Actions Card */}
+                {/* Account Actions Card */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Account Actions</CardTitle>
@@ -228,13 +160,13 @@ export function ProfileViewPage() {
                     <CardContent className="space-y-2">
                         <Button
                             className="w-full justify-start"
-                            onClick={() => window.location.href = '/profile/edit'}
+                            onClick={() => navigate({ to: '/profile/edit' })}
                         >
                             Edit Profile
                         </Button>
                         <Button
                             className="w-full justify-start"
-                            onClick={() => window.location.href = '/settings/privacy'}
+                            onClick={() => navigate({ to: '/settings/privacy' })}
                         >
                             Privacy Settings
                         </Button>
@@ -242,7 +174,7 @@ export function ProfileViewPage() {
                             className="w-full justify-start"
                             onClick={() => {
                                 useAuthStore.getState().logout();
-                                window.location.href = '/login';
+                                navigate({ to: '/login' });
                             }}
                         >
                             Sign Out
