@@ -1,7 +1,8 @@
 # Invitation-Based Registration System
 
-**Status:** Planned (Phase 1)  
-**Last Updated:** November 6, 2025
+**Status:** Implemented (Phase 1) ✅  
+**Last Updated:** November 10, 2025  
+**Security Model:** Database-enforced territory binding
 
 ---
 
@@ -9,12 +10,17 @@
 
 UnityPlan uses an **invitation-only registration system** to maintain community quality, prevent spam, and align with the user sovereignty model where communities control their membership.
 
+### Key Security Feature (November 2025 Update)
+
+**Territory Binding:** Invitation tokens are bound to specific territories via a **global registry table**. This prevents users from accidentally or maliciously registering in the wrong territory. The territory is determined by the database, not client input.
+
 ## Philosophy
 
 - **No open registration** - Users cannot self-register without an invitation
 - **Community gatekeeping** - Existing members control who joins
 - **Territory management** - Territory managers can invite groups of users
 - **Trust network** - Growth happens through trusted connections
+- **Security-first** - Territory binding enforced in database, not client-provided ✅
 
 ---
 
@@ -69,7 +75,10 @@ UnityPlan uses an **invitation-only registration system** to maintain community 
 
 ## Database Schema
 
-### **territory_*.invitation_tokens**
+### **1. Territory Invitation Tokens** (territory_*.invitation_tokens)
+
+Stores invitation tokens within each territory schema. Each token is created by a territory user.
+
 ```sql
 CREATE TABLE territory_dk.invitation_tokens (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -83,6 +92,7 @@ CREATE TABLE territory_dk.invitation_tokens (
     
     -- Metadata
     created_by_user_id UUID NOT NULL REFERENCES territory_dk.users(id),
+    community_id UUID REFERENCES territory_dk.communities(id),  -- ⭐ Optional community assignment
     purpose TEXT,  -- Optional description
     metadata JSONB,  -- Additional data (group name, course info, etc.)
     
@@ -110,7 +120,37 @@ CREATE INDEX idx_invitation_tokens_created_by ON territory_dk.invitation_tokens(
 CREATE INDEX idx_invitation_tokens_active ON territory_dk.invitation_tokens(is_active, expires_at);
 ```
 
-### **territory_*.invitation_uses**
+### **2. Global Token Registry** (global.invitation_token_registry) ⭐ NEW
+
+**Purpose:** Secure token-to-territory mapping. Prevents users from selecting wrong territory.
+
+**Security Model:** Territory binding is **database-enforced**, not client-provided.
+
+```sql
+CREATE TABLE global.invitation_token_registry (
+    token VARCHAR(255) PRIMARY KEY,  -- Same token as in territory schema
+    territory_code VARCHAR(10) NOT NULL REFERENCES global.territories(code) ON DELETE CASCADE,
+    territory_token_id UUID NOT NULL,  -- FK to territory_X.invitation_tokens.id
+    
+    -- Metadata
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- Ensure token is globally unique across all territories
+    CONSTRAINT uq_global_invitation_token UNIQUE (token)
+);
+
+CREATE INDEX idx_global_invitation_registry_token ON global.invitation_token_registry(token);
+CREATE INDEX idx_global_invitation_registry_territory ON global.invitation_token_registry(territory_code);
+```
+
+**How it works:**
+1. When invitation token is created in `territory_dk.invitation_tokens`, it's also registered in `global.invitation_token_registry` with `territory_code = 'dk'`
+2. When user enters token during registration, backend queries `global.invitation_token_registry` to determine territory
+3. Client **cannot manipulate** territory selection (database-enforced)
+4. Backend then validates full token details in the appropriate territory schema
+
+### **3. Territory Invitation Uses** (territory_*.invitation_uses)
+
 ```sql
 -- Track who used which invitation (audit trail)
 CREATE TABLE territory_dk.invitation_uses (
@@ -128,43 +168,72 @@ CREATE INDEX idx_invitation_uses_user ON territory_dk.invitation_uses(user_id);
 
 ---
 
-## Updated Registration Flow
+## Registration Flow
 
-### **Current Flow (Open Registration - TO BE REMOVED)**
-```
-User submits:
-  - email, username, password, territory_code
+### **Secure Flow (Invitation-Based with Territory Binding)** ✅
 
-System:
-  ✅ Validates input
-  ✅ Creates user
-  ✅ Returns tokens
+```
+User Flow:
+  1. User receives invitation: "Join Denmark Territory" + token inv_abc123
+  2. User opens registration page
+  3. User enters invitation token (NO territory selection)
+  4. Frontend validates token via GET /api/auth/invitations/validate/{token}
+  5. Backend looks up territory from global.invitation_token_registry
+  6. Backend returns: { territory: "Denmark", community: "Copenhagen Guild" }
+  7. Frontend displays: "You're joining Denmark Territory → Copenhagen Guild"
+  8. User completes registration (username, password, etc.)
+  9. Backend derives territory from token (client cannot manipulate)
+  10. User created in correct territory schema with community assignment
+
+Backend Processing:
+  1. Query global.invitation_token_registry for territory_code
+  2. Validate token exists in territory_{code}.invitation_tokens
+  3. Check token is active and not expired
+  4. For single_use: Verify email matches token.email (if provided)
+  5. For group: Check used_count < max_uses
+  6. Create user account in territory_{code}.users
+  7. If token has community_id: assign user to that community
+  8. Increment token.used_count
+  9. Record invitation use in invitation_uses table
+  10. If single_use OR group token reached max_uses: mark token as inactive
+  11. Return access/refresh tokens
 ```
 
-### **New Flow (Invitation-Based)**
-```
-User submits:
-  - email, username, password, territory_code
-  - invitation_token ⭐ (REQUIRED)
-
-System:
-  1. Validate invitation_token exists in territory schema
-  2. Check token is active and not expired
-  3. For single_use: Verify email matches token.email
-  4. For group: Check used_count < max_uses
-  5. Validate other input (email format, password strength, etc.)
-  6. Create user account
-  7. Increment token.used_count
-  8. Record invitation use in invitation_uses table
-  9. If single_use OR group token reached max_uses: mark token as inactive
-  10. Return tokens
-```
+**Security Benefits:**
+- ✅ Territory binding enforced in database (client cannot manipulate)
+- ✅ Community context preserved automatically
+- ✅ Prevents accidental registration in wrong territory
+- ✅ Prevents malicious territory manipulation
+- ✅ Clear UX: user sees exactly where they're joining
 
 ---
 
 ## API Endpoints
 
-### **Registration (Updated)**
+### **Validate Invitation (Updated)** ⭐
+```http
+GET /api/auth/invitations/validate/{token}
+# ⭐ NO territory_code parameter - backend looks it up
+
+# Response:
+{
+  "valid": true,
+  "token_type": "single_use",
+  "territory": {
+    "code": "dk",
+    "name": "Denmark"
+  },
+  "community": {                    # ⭐ If invitation has community
+    "id": "uuid",
+    "name": "Copenhagen Permaculture Guild"
+  },
+  "email": "alice@example.com",     # Only for single_use tokens
+  "expires_at": "2025-11-13T12:00:00Z",
+  "remaining_uses": 1
+}
+```
+
+### **Registration (Updated)** ⭐
 ```http
 POST /api/auth/register
 Content-Type: application/json
@@ -174,8 +243,39 @@ Content-Type: application/json
   "username": "alice_dk",
   "password": "SecurePass123!",
   "full_name": "Alice Denmark",
-  "territory_code": "DK",
-  "invitation_token": "inv_a7bd3632957845479"  ⭐ REQUIRED
+  # ⭐ REMOVED: "territory_code" - backend derives from token
+  "invitation_token": "inv_a7bd3632957845479"  # ⭐ REQUIRED - territory looked up from this
+}
+```
+
+**Response (Success):**
+```json
+{
+  "user": { "id": "...", "username": "alice_dk", "territory_code": "dk", ... },
+  "access_token": "eyJ0eXAi...",
+  "refresh_token": "414426c9...",
+  "expires_in": 900
+}
+```
+
+**Response (Invalid Token):**
+```json
+{
+  "error": "Invalid or expired invitation token"
+}
+```
+
+**Response (Token Already Used - Single Use):**
+```json
+{
+  "error": "Invitation token has already been used"
+}
+```
+
+**Response (Email Mismatch - Single Use):**
+```json
+{
+  "error": "This invitation is for a different email address"
 }
 ```
 
