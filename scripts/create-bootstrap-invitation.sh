@@ -49,38 +49,64 @@ EXPIRES_AT=$(date -u -d "+${DAYS} days" '+%Y-%m-%d %H:%M:%S+00')
 echo -e "${YELLOW}Inserting token into database...${NC}"
 
 # Insert the token (created_by_user_id is NULL for bootstrap tokens)
+# ⭐ DUAL-TABLE INSERT: territory.invitation_tokens + global.invitation_token_registry
 docker exec -i "${DB_CONTAINER}" psql -U "${DB_USER}" -d "${DB_NAME}" <<SQL
-INSERT INTO ${SCHEMA_NAME}.invitation_tokens (
-    id,
+-- Insert into territory schema and global registry in a single transaction
+WITH new_token AS (
+    INSERT INTO ${SCHEMA_NAME}.invitation_tokens (
+        id,
+        token,
+        token_type,
+        invited_email,
+        max_uses,
+        current_uses,
+        expires_at,
+        is_active,
+        created_by_user_id
+    ) VALUES (
+        gen_random_uuid(),
+        '${TOKEN}',
+        'single_use',
+        '${EMAIL}',
+        1,
+        0,
+        '${EXPIRES_AT}'::timestamptz,
+        true,
+        NULL
+    )
+    RETURNING id, token
+)
+INSERT INTO global.invitation_token_registry (
     token,
-    token_type,
-    invited_email,
-    max_uses,
-    current_uses,
-    expires_at,
-    is_active,
-    created_by_user_id
-) VALUES (
-    gen_random_uuid(),
-    '${TOKEN}',
-    'single_use',
-    '${EMAIL}',
-    1,
-    0,
-    '${EXPIRES_AT}'::timestamptz,
-    true,
-    NULL
-);
-
--- Verify insertion
+    territory_code,
+    territory_token_id
+)
 SELECT 
     token,
-    token_type,
-    invited_email,
-    expires_at,
-    is_active
-FROM ${SCHEMA_NAME}.invitation_tokens 
-WHERE token = '${TOKEN}';
+    '${TERRITORY_CODE}',
+    id
+FROM new_token;
+
+-- Verify insertion in both tables
+SELECT 
+    'territory.invitation_tokens' AS source,
+    t.token,
+    t.token_type,
+    t.invited_email,
+    t.expires_at,
+    t.is_active
+FROM ${SCHEMA_NAME}.invitation_tokens t
+WHERE t.token = '${TOKEN}'
+UNION ALL
+SELECT 
+    'global.invitation_token_registry' AS source,
+    r.token,
+    NULL AS token_type,
+    NULL AS invited_email,
+    NULL AS expires_at,
+    NULL AS is_active
+FROM global.invitation_token_registry r
+WHERE r.token = '${TOKEN}';
 SQL
 
 if [ $? -eq 0 ]; then
