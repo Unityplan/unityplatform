@@ -421,6 +421,12 @@ export function ProfileEditPage() {
                                 {errors.location && (
                                     <p className="text-sm text-destructive">{errors.location.message}</p>
                                 )}
+                                {/* TODO: Add interactive map component with marker
+                                    - Use shadcn-map (https://shadcn-map.vercel.app/docs)
+                                    - Show location on map with draggable marker
+                                    - Geocode address to coordinates
+                                    - Allow marker placement to set location
+                                */}
                             </div>
                         </CardContent>
                     </Card>
@@ -486,7 +492,7 @@ export function ProfileEditPage() {
                                     id="interests"
                                     {...register('interests')}
                                     disabled={isSaving}
-                                    placeholder="e.g., Machine Learning, Photography, Hiking"
+                                    placeholder="e.g., Permaculture, Forest Ecology, Beekeeping"
                                 />
                                 {errors.interests && (
                                     <p className="text-sm text-destructive">{errors.interests.message}</p>
@@ -503,7 +509,7 @@ export function ProfileEditPage() {
                                     id="skills"
                                     {...register('skills')}
                                     disabled={isSaving}
-                                    placeholder="e.g., Python, React, Project Management"
+                                    placeholder="e.g., Composting, Rainwater Harvesting, Natural Building"
                                 />
                                 {errors.skills && (
                                     <p className="text-sm text-destructive">{errors.skills.message}</p>
@@ -520,13 +526,14 @@ export function ProfileEditPage() {
                                     id="languages"
                                     {...register('languages')}
                                     disabled={isSaving}
-                                    placeholder="e.g., English, Danish, Spanish"
+                                    placeholder="e.g., English (Native), Danish (Fluent), Swedish (Intermediate)"
                                 />
                                 {errors.languages && (
                                     <p className="text-sm text-destructive">{errors.languages.message}</p>
                                 )}
                                 <p className="text-sm text-muted-foreground">
-                                    Separate multiple languages with commas
+                                    Primary language first, then secondary languages with proficiency levels.
+                                    This helps with translation features.
                                 </p>
                             </div>
                         </CardContent>

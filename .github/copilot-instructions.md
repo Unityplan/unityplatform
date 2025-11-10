@@ -113,6 +113,7 @@ This workspace contains a microservices platform with:
 | **TypeScript**                | latest              | Type-safe frontend logic                                 |
 | **Vitest**                    | latest              | Unit testing (Vite-native)                               |
 | **Testing Library**           | latest              | Component testing                                        |
+| **shadcn-map**                | latest              | Interactive maps with markers (OpenStreetMap/Mapbox)     |
 | **Matrix SDK**                | `matrix-js-sdk`     | Matrix protocol integration                              |
 | **Holochain Client (future)** | `@holochain/client` | Holochain DNA module interaction                         |
 | **Tauri (future)**            | latest              | Cross-platform desktop/mobile packaging                  |
