@@ -10,9 +10,9 @@ import {
     UserPlus,
     UserMinus,
     MessageCircle,
-    Settings,
+    Pencil,
     MoreHorizontal,
-    Lock,
+    Shield,
     LogOut
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -121,14 +121,14 @@ export function ProfileHeader({
                                     onClick={onEditProfile}
                                     title="Edit Profile"
                                 >
-                                    <Settings className="h-4 w-4" />
+                                    <Pencil className="h-4 w-4" />
                                 </Button>
                                 <Button
                                     size="icon"
                                     onClick={onPrivacySettings}
                                     title="Privacy Settings"
                                 >
-                                    <Lock className="h-4 w-4" />
+                                    <Shield className="h-4 w-4" />
                                 </Button>
                                 <Button
                                     size="icon"
