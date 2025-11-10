@@ -1,5 +1,5 @@
 import { AppLayout } from '@/components/layouts/AppLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
     Breadcrumb,
@@ -20,7 +20,8 @@ import {
     Trash2,
     FileText,
     ChevronRight,
-    KeyRound
+    KeyRound,
+    Palette
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
@@ -41,6 +42,19 @@ import { Separator } from '@/components/ui/separator';
  */
 export function SettingsPage() {
     const settingsSections = [
+        {
+            title: 'Appearance',
+            description: 'Customize how UnityPlan looks and feels',
+            items: [
+                {
+                    icon: Palette,
+                    title: 'Theme & Display',
+                    description: 'Choose your color theme and display preferences',
+                    href: '/settings/appearance',
+                    available: true,
+                },
+            ],
+        },
         {
             title: 'Privacy & Security',
             description: 'Control your privacy and security settings',
@@ -151,9 +165,9 @@ export function SettingsPage() {
                 </Breadcrumb>
             }
         >
-            <div className="mx-auto max-w-4xl space-y-6 py-6">
+            <div className="space-y-6 py-6">
                 {/* Page Header */}
-                <div className="space-y-2">
+                <div className="mb-8">
                     <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
                     <p className="text-muted-foreground">
                         Manage your account settings and preferences
@@ -193,13 +207,13 @@ export function SettingsPage() {
                                                     </div>
                                                 </div>
                                                 {item.available ? (
-                                                    <Button asChild variant="ghost" size="icon">
+                                                    <Button asChild size="icon">
                                                         <Link to={item.href}>
                                                             <ChevronRight className="size-5" />
                                                         </Link>
                                                     </Button>
                                                 ) : (
-                                                    <Button variant="ghost" size="icon" disabled>
+                                                    <Button size="icon" disabled>
                                                         <ChevronRight className="size-5" />
                                                     </Button>
                                                 )}

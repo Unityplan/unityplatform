@@ -15,7 +15,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Bell, User, Settings, LogOut, Shield, HelpCircle, Maximize2, Minimize2 } from "lucide-react"
 import { useAuthStore } from "@/stores/authStore"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "@tanstack/react-router"
 
 interface AppLayoutProps {
@@ -26,8 +26,39 @@ interface AppLayoutProps {
 export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
     const { user } = useAuthStore()
     const [isOnline, setIsOnline] = useState(true)
-    const [isFullWidth, setIsFullWidth] = useState(false)
+    const [isFullWidth, setIsFullWidth] = useState(() => {
+        // Load from localStorage on initial render
+        if (typeof localStorage !== 'undefined') {
+            const saved = localStorage.getItem("wideContentView")
+            console.log('Initial wideContentView from localStorage:', saved)
+            return saved === "true"
+        }
+        return false
+    })
     const router = useRouter()
+
+    // Sync with localStorage changes and custom events
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const savedWideContentView = localStorage.getItem("wideContentView") === "true"
+            console.log('Storage change detected, new value:', savedWideContentView)
+            setIsFullWidth(savedWideContentView)
+        }
+
+        const handleWideContentViewChange = (event: Event) => {
+            const customEvent = event as CustomEvent<{ value: boolean }>
+            console.log('Custom event received, new value:', customEvent.detail.value)
+            setIsFullWidth(customEvent.detail.value)
+        }
+
+        window.addEventListener('storage', handleStorageChange)
+        window.addEventListener('wideContentViewChange', handleWideContentViewChange)
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange)
+            window.removeEventListener('wideContentViewChange', handleWideContentViewChange)
+        }
+    }, [])
 
     const handleLogout = () => {
         useAuthStore.getState().logout()
@@ -122,9 +153,14 @@ export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
 
                         {/* Full Width Toggle */}
                         <Button
+                            variant="ghost"
                             size="icon"
-                            onClick={() => setIsFullWidth(!isFullWidth)}
-                            className="bg-transparent hover:bg-accent text-foreground"
+                            onClick={() => {
+                                const newValue = !isFullWidth
+                                console.log('Button clicked, toggling from', isFullWidth, 'to', newValue)
+                                setIsFullWidth(newValue)
+                                localStorage.setItem("wideContentView", String(newValue))
+                            }}
                             title={isFullWidth ? "Constrain width" : "Full width"}
                         >
                             {isFullWidth ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
@@ -135,7 +171,7 @@ export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
                     </div>
                 </header>
                 <div className="flex flex-1 flex-col gap-4 p-4">
-                    <div className={isFullWidth ? "w-full" : "mx-auto w-full max-w-7xl"}>
+                    <div className={isFullWidth ? "w-full" : "mx-auto w-full max-w-7xl"} key={isFullWidth ? 'full' : 'constrained'}>
                         {children}
                     </div>
                 </div>
