@@ -1,6 +1,9 @@
 use crate::{
     models::{user::User, AuthResponse, AuthUserInfo, LoginRequest, RegisterRequest},
-    services::{get_token_territory, use_invitation_token, validate_invitation_token, PasswordService, TokenService},
+    services::{
+        get_token_territory, use_invitation_token, validate_invitation_token, PasswordService,
+        TokenService,
+    },
 };
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
@@ -163,7 +166,7 @@ pub async fn register(
         WHERE territory_code = $1 AND territory_user_id = $2
         "#,
     )
-    .bind(&req.territory_code)
+    .bind(&territory_code)
     .bind(user.id)
     .fetch_one(pool.get_ref())
     .await
@@ -191,7 +194,7 @@ pub async fn register(
     let access_token = token_service
         .generate_access_token(
             &public_key_hash,
-            &req.territory_code,
+            &territory_code,
             user.id,
             &user.username,
         )
