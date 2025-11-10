@@ -11,12 +11,14 @@ User profiles support custom external links (social media, websites, portfolios,
 ## Problem Statement
 
 The original design included hardcoded social link fields in the user profile:
+
 - `website_url`
 - `github_url`
 - `linkedin_url`
 - `twitter_handle`
 
 **Issues with this approach:**
+
 1. ❌ Not user-sovereign - users limited to predefined platforms
 2. ❌ Inflexible - can't add other platforms (Mastodon, GitLab, YouTube, etc.)
 3. ❌ Wasteful - creates null fields for links users don't use
@@ -60,10 +62,12 @@ CREATE INDEX idx_profile_links_visible ON profile_links(user_id, is_visible);
 #### Migration Strategy
 
 **Phase 1: Add new table** (Immediate)
+
 - Create `profile_links` table
 - Keep existing social link fields temporarily
 
 **Phase 2: Data migration** (Before removing old fields)
+
 ```sql
 -- Migrate existing social links to new table
 INSERT INTO profile_links (user_id, label, url, icon, display_order, is_visible)
@@ -116,6 +120,7 @@ WHERE twitter_handle IS NOT NULL;
 ```
 
 **Phase 3: Remove old fields** (After migration verified)
+
 ```sql
 ALTER TABLE user_profiles DROP COLUMN website_url;
 ALTER TABLE user_profiles DROP COLUMN github_url;
@@ -128,12 +133,14 @@ ALTER TABLE user_profiles DROP COLUMN twitter_handle;
 ### User Service Endpoints
 
 #### List User's Profile Links
+
 ```http
 GET /api/v1/profiles/{user_id}/links
 Authorization: Bearer {token}
 ```
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -153,6 +160,7 @@ Authorization: Bearer {token}
 ```
 
 #### Create Profile Link
+
 ```http
 POST /api/v1/profiles/{user_id}/links
 Authorization: Bearer {token}
@@ -170,6 +178,7 @@ Content-Type: application/json
 **Response:** `201 Created` with link object
 
 #### Update Profile Link
+
 ```http
 PUT /api/v1/profiles/{user_id}/links/{link_id}
 Authorization: Bearer {token}
@@ -187,6 +196,7 @@ Content-Type: application/json
 **Response:** `200 OK` with updated link object
 
 #### Delete Profile Link
+
 ```http
 DELETE /api/v1/profiles/{user_id}/links/{link_id}
 Authorization: Bearer {token}
@@ -195,6 +205,7 @@ Authorization: Bearer {token}
 **Response:** `204 No Content`
 
 #### Reorder Profile Links
+
 ```http
 PATCH /api/v1/profiles/{user_id}/links/reorder
 Authorization: Bearer {token}
@@ -273,9 +284,10 @@ Content-Type: application/json
 ### Icon Library
 
 **Font Awesome Free Brands Icons:**
-https://fontawesome.com/v6/search?ip=brands&ic=free&o=r
+<https://fontawesome.com/v6/search?ip=brands&ic=free&o=r>
 
 **Common Icons:**
+
 - `fa-github` - GitHub
 - `fa-gitlab` - GitLab
 - `fa-linkedin` - LinkedIn
@@ -505,5 +517,5 @@ impl CreateProfileLinkRequest {
 
 ## References
 
-- Font Awesome Icons: https://fontawesome.com/v6/search?ip=brands&ic=free&o=r
-- React Icons Library: https://react-icons.github.io/react-icons/
+- Font Awesome Icons: <https://fontawesome.com/v6/search?ip=brands&ic=free&o=r>
+- React Icons Library: <https://react-icons.github.io/react-icons/>

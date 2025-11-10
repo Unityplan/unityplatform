@@ -25,10 +25,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Link, useRouter } from '@tanstack/react-router';
 import { Home } from 'lucide-react';
-
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
 
 // Validation schemas
 const profileSchema = z.object({
@@ -37,13 +34,22 @@ const profileSchema = z.object({
     bio: z.string().max(500, 'Bio must be 500 characters or less').optional(),
     about: z.string().max(2000, 'About must be 2000 characters or less').optional(),
     location: z.string().max(255, 'Location must be 255 characters or less').optional(),
-    website: z.string().url('Must be a valid URL').max(255).optional().or(z.literal('')),
-    github_url: z.string().url('Must be a valid URL').max(255).optional().or(z.literal('')),
-    linkedin_url: z.string().url('Must be a valid URL').max(255).optional().or(z.literal('')),
-    twitter_handle: z.string().max(50, 'Twitter handle must be 50 characters or less').optional(),
+    interests: z.string().optional(), // Comma-separated string, will be split into array
+    skills: z.string().optional(), // Comma-separated string, will be split into array
+    languages: z.string().optional(), // Comma-separated string, will be split into array
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
+
+// Helper functions for array fields
+const arrayToString = (arr: string[] | null | undefined): string => {
+    return arr?.join(', ') || '';
+};
+
+const stringToArray = (str: string | undefined): string[] | null => {
+    if (!str || str.trim() === '') return null;
+    return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+};
 
 export function ProfileEditPage() {
     const { user } = useAuthStore();
@@ -85,9 +91,13 @@ export function ProfileEditPage() {
                 // Set form default values
                 reset({
                     full_name: profileData.full_name || '',
+                    display_name: profileData.display_name || '',
                     bio: profileData.bio || '',
+                    about: profileData.about || '',
                     location: profileData.location || '',
-                    website: profileData.website_url || '',
+                    interests: arrayToString(profileData.interests),
+                    skills: arrayToString(profileData.skills),
+                    languages: arrayToString(profileData.languages),
                 });
 
                 if (profileData.avatar_url) {
@@ -148,9 +158,13 @@ export function ProfileEditPage() {
             // Update profile info
             await updateProfile(user.id, {
                 full_name: data.full_name || null,
+                display_name: data.display_name || null,
                 bio: data.bio || null,
+                about: data.about || null,
                 location: data.location || null,
-                website_url: data.website || null,
+                interests: stringToArray(data.interests),
+                skills: stringToArray(data.skills),
+                languages: stringToArray(data.languages),
             });
 
             // Upload avatar if changed
@@ -347,7 +361,7 @@ export function ProfileEditPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Basic Information</CardTitle>
-                            <CardDescription>Update your public profile information</CardDescription>
+                            <CardDescription>Your identity and public display information</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {/* Username (readonly) */}
@@ -378,22 +392,20 @@ export function ProfileEditPage() {
                                 )}
                             </div>
 
-                            {/* Bio */}
+                            {/* Display Name */}
                             <div className="space-y-2">
-                                <Label htmlFor="bio">Bio</Label>
-                                <textarea
-                                    id="bio"
-                                    {...register('bio')}
+                                <Label htmlFor="display_name">Display Name</Label>
+                                <Input
+                                    id="display_name"
+                                    {...register('display_name')}
                                     disabled={isSaving}
-                                    placeholder="Tell us about yourself..."
-                                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                                    maxLength={500}
+                                    placeholder="How you'd like to be called (optional)"
                                 />
-                                {errors.bio && (
-                                    <p className="text-sm text-destructive">{errors.bio.message}</p>
+                                {errors.display_name && (
+                                    <p className="text-sm text-destructive">{errors.display_name.message}</p>
                                 )}
                                 <p className="text-sm text-muted-foreground">
-                                    {register('bio').name ? '0' : '0'}/500 characters
+                                    Alternative name to show instead of your full name
                                 </p>
                             </div>
 
@@ -410,20 +422,112 @@ export function ProfileEditPage() {
                                     <p className="text-sm text-destructive">{errors.location.message}</p>
                                 )}
                             </div>
+                        </CardContent>
+                    </Card>
 
-                            {/* Website */}
+                    {/* Bio & About Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Bio & About</CardTitle>
+                            <CardDescription>Tell others about yourself</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {/* Short Bio */}
                             <div className="space-y-2">
-                                <Label htmlFor="website">Website</Label>
-                                <Input
-                                    id="website"
-                                    type="url"
-                                    {...register('website')}
+                                <Label htmlFor="bio">Short Bio</Label>
+                                <Textarea
+                                    id="bio"
+                                    {...register('bio')}
                                     disabled={isSaving}
-                                    placeholder="https://example.com"
+                                    placeholder="A brief description about yourself..."
+                                    className="min-h-[100px] resize-none"
+                                    maxLength={500}
                                 />
-                                {errors.website && (
-                                    <p className="text-sm text-destructive">{errors.website.message}</p>
+                                {errors.bio && (
+                                    <p className="text-sm text-destructive">{errors.bio.message}</p>
                                 )}
+                                <p className="text-sm text-muted-foreground">
+                                    Brief introduction shown on your profile (max 500 characters)
+                                </p>
+                            </div>
+
+                            {/* Extended About */}
+                            <div className="space-y-2">
+                                <Label htmlFor="about">About Me</Label>
+                                <Textarea
+                                    id="about"
+                                    {...register('about')}
+                                    disabled={isSaving}
+                                    placeholder="Tell your story, share your background, goals, and what you're passionate about..."
+                                    className="min-h-[200px] resize-y"
+                                    maxLength={2000}
+                                />
+                                {errors.about && (
+                                    <p className="text-sm text-destructive">{errors.about.message}</p>
+                                )}
+                                <p className="text-sm text-muted-foreground">
+                                    Extended information shown in the About tab (max 2000 characters)
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Skills & Interests Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Skills & Interests</CardTitle>
+                            <CardDescription>Share your expertise and passions</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {/* Interests */}
+                            <div className="space-y-2">
+                                <Label htmlFor="interests">Interests</Label>
+                                <Input
+                                    id="interests"
+                                    {...register('interests')}
+                                    disabled={isSaving}
+                                    placeholder="e.g., Machine Learning, Photography, Hiking"
+                                />
+                                {errors.interests && (
+                                    <p className="text-sm text-destructive">{errors.interests.message}</p>
+                                )}
+                                <p className="text-sm text-muted-foreground">
+                                    Separate multiple interests with commas
+                                </p>
+                            </div>
+
+                            {/* Skills */}
+                            <div className="space-y-2">
+                                <Label htmlFor="skills">Skills</Label>
+                                <Input
+                                    id="skills"
+                                    {...register('skills')}
+                                    disabled={isSaving}
+                                    placeholder="e.g., Python, React, Project Management"
+                                />
+                                {errors.skills && (
+                                    <p className="text-sm text-destructive">{errors.skills.message}</p>
+                                )}
+                                <p className="text-sm text-muted-foreground">
+                                    Separate multiple skills with commas
+                                </p>
+                            </div>
+
+                            {/* Languages */}
+                            <div className="space-y-2">
+                                <Label htmlFor="languages">Languages</Label>
+                                <Input
+                                    id="languages"
+                                    {...register('languages')}
+                                    disabled={isSaving}
+                                    placeholder="e.g., English, Danish, Spanish"
+                                />
+                                {errors.languages && (
+                                    <p className="text-sm text-destructive">{errors.languages.message}</p>
+                                )}
+                                <p className="text-sm text-muted-foreground">
+                                    Separate multiple languages with commas
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
