@@ -173,6 +173,12 @@ export function LoginPage() {
                                 Forgot your password?
                             </a>
                         </div>
+                        <div className="text-sm text-muted-foreground">
+                            Have an invitation token?{' '}
+                            <a href="/register" className="font-medium text-primary hover:underline">
+                                Create an account
+                            </a>
+                        </div>
                     </CardFooter>
                 </Card>
 
