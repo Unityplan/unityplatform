@@ -160,22 +160,22 @@ start_pod() {
     case $pod_id in
         dk)
             pod_name="Denmark"
-            env_file="pods/denmark/.env"
+            env_file="../pods/denmark/.env"
             compose_file="../docker-compose.pod.yml"
             ;;
         no)
             pod_name="Norway"
-            env_file="pods/norway/.env"
+            env_file="../pods/norway/.env"
             compose_file="../docker-compose.pod.yml"
             ;;
         se)
             pod_name="Sweden"
-            env_file="pods/sweden/.env"
+            env_file="../pods/sweden/.env"
             compose_file="../docker-compose.pod.yml"
             ;;
         eu)
             pod_name="Europe (Multi-Territory)"
-            env_file="pods/europe/.env"
+            env_file="../pods/europe/.env"
             compose_file="../docker-compose.multi-territory-pod.yml"
             ;;
         *)
@@ -191,7 +191,7 @@ start_pod() {
     fi
     
     echo "🚢 Starting Pod: $pod_name ($pod_id)..."
-    docker compose -f $compose_file -p pod-$pod_id --env-file ../$env_file up -d
+    docker compose -f $compose_file -p pod-$pod_id --env-file $env_file up -d
     
     echo "⏳ Waiting for pod to start..."
     sleep 5

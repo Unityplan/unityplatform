@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Home, Calendar, Heart, MessageCircle, Share2, MapPin, Link2, Mail } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { getLocationDisplayName } from '@/lib/geocoding';
 
 // Mock data - TODO: Replace with real API calls
 const MOCK_POSTS = [
@@ -374,8 +375,8 @@ export function ProfileViewPage() {
 
                                     {profile.location && (
                                         <div className="flex items-center gap-2 text-sm">
-                                            <MapPin className="size-4 text-muted-foreground" />
-                                            <span>{profile.location}</span>
+                                            <MapPin className="size-4 text-muted-foreground shrink-0" />
+                                            <span>{getLocationDisplayName(profile.location)}</span>
                                         </div>
                                     )}
 

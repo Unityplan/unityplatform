@@ -16,6 +16,7 @@ import {
     LogOut
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { getLocationDisplayName } from '@/lib/geocoding';
 
 interface ProfileHeaderProps {
     user: {
@@ -204,8 +205,8 @@ export function ProfileHeader({
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                         {user.location && (
                             <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                <span>{user.location}</span>
+                                <MapPin className="h-4 w-4 shrink-0" />
+                                <span>{getLocationDisplayName(user.location)}</span>
                             </div>
                         )}
                         {user.website && (

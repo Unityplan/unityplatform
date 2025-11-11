@@ -27,6 +27,7 @@ import {
 import { Link, useRouter } from '@tanstack/react-router';
 import { Home, Upload, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { LocationPicker } from '@/components/LocationPicker';
 
 // Validation schemas
 const profileSchema = z.object({
@@ -68,6 +69,8 @@ export function ProfileEditPage() {
         handleSubmit,
         formState: { errors },
         reset,
+        watch,
+        setValue,
     } = useForm<ProfileFormData>({
         resolver: zodResolver(profileSchema),
     });
@@ -448,27 +451,12 @@ export function ProfileEditPage() {
                             <CardDescription>Where you're located (optional)</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {/* Location Input */}
-                            <div className="space-y-2">
-                                <Label htmlFor="location">Location</Label>
-                                <Input
-                                    id="location"
-                                    {...register('location')}
-                                    disabled={isSaving}
-                                    placeholder="City, Country"
-                                />
-                                {errors.location && (
-                                    <p className="text-sm text-destructive">{errors.location.message}</p>
-                                )}
-                            </div>
-
-                            {/* TODO: Add interactive map component with marker
-                                - Use shadcn-map (https://shadcn-map.vercel.app/docs)
-                                - Show location on map with draggable marker
-                                - Geocode address to coordinates
-                                - Allow marker placement to set location
-                                - Display map here below the text input
-                            */}
+                            {/* Interactive Location Picker with Map */}
+                            <LocationPicker
+                                value={watch('location')}
+                                onChange={(value) => setValue('location', value)}
+                                disabled={isSaving}
+                            />
                         </CardContent>
                     </Card>
 
