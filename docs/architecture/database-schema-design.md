@@ -87,6 +87,10 @@ unityplan_db
 │   ├── badge_definitions
 │   ├── badge_awards
 │   ├── badge_progress
+│   ├── groups (access bubbles)
+│   ├── group_communities
+│   ├── group_forums (future extension)
+│   ├── group_courses (future extension)
 │   ├── posts
 │   ├── messages
 │   └── users_audit_logs
@@ -1496,6 +1500,291 @@ pub struct BadgeProgress {
 
 ---
 
+### 18. Groups Table (Access Bubbles)
+
+**Purpose:** Groups are logical containers ("bubbles") that bundle together communities, forums (future extension), and courses (future extension). A badge acts as a "key" to unlock access to the entire group.
+
+**Key Concept:** Instead of granting access to individual resources, users earn badges that unlock entire groups of related content. This creates cohesive learning/collaboration spaces.
+
+**Example Use Cases:**
+- "Platform Management" group → "Platform Management Access" badge → General Platform Management forum + Territory Management course
+- "Platform Developer" group → "Platform Developer" badge → Development communities + Dev forums + Advanced courses
+- "Beekeepers Network" group → "Beekeeping Basics" badge → Local beekeeping communities + Forums + Courses
+
+**Scope Rules:**
+- **Global scope**: Available to all users across all territories (if they have the badge)
+- **Territory scope**: Available only to users in that territory (and child communities)
+- **Community scope**: Available only from that community level and up in the hierarchy
+
+```sql
+CREATE TABLE territory_dk.groups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(100) UNIQUE NOT NULL,         -- Unique identifier (e.g., 'platform_management', 'beekeeping_network')
+    name VARCHAR(255) NOT NULL,                -- Display name
+    description TEXT NOT NULL,
+    
+    -- Access control
+    scope VARCHAR(50) NOT NULL,                -- 'global', 'territory', 'community'
+    scope_id UUID,                             -- NULL for global, territory/community UUID for local
+    access_badge_id UUID NOT NULL REFERENCES territory_dk.badge_definitions(id), -- Badge required to access this group
+    
+    -- Visual
+    icon_url TEXT,
+    color VARCHAR(7),                          -- Hex color code
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,
+    
+    -- Lifecycle
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by_user_id UUID REFERENCES territory_dk.users(id),
+    
+    CHECK (scope IN ('global', 'territory', 'community')),
+    -- Global groups don't need scope_id, local groups require it
+    CHECK (
+        (scope = 'global' AND scope_id IS NULL) OR
+        (scope IN ('territory', 'community') AND scope_id IS NOT NULL)
+    )
+);
+
+CREATE INDEX idx_groups_code ON territory_dk.groups(code);
+CREATE INDEX idx_groups_scope ON territory_dk.groups(scope);
+CREATE INDEX idx_groups_scope_id ON territory_dk.groups(scope_id);
+CREATE INDEX idx_groups_access_badge ON territory_dk.groups(access_badge_id);
+CREATE INDEX idx_groups_active ON territory_dk.groups(is_active);
+
+-- Example: Platform Management group
+INSERT INTO territory_dk.groups (code, name, description, scope, access_badge_id, created_by_user_id)
+VALUES (
+    'platform_management',
+    'Platform Management',
+    'Access to platform administration resources, forums, and courses',
+    'global',
+    '<platform_management_access_badge_id>',
+    '<platform_admin_user_id>'
+);
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct Group {
+    pub code: String,
+    pub name: String,
+    pub description: String,
+    pub scope: GroupScope,
+    pub access_badge: ActionHash,  // Badge required to access
+    pub created_by: AgentPubKey,
+}
+
+enum GroupScope {
+    Global,
+    Territory(ActionHash),
+    Community(ActionHash),
+}
+
+// Links:
+// - Badge → Group (groups requiring this badge)
+// - Territory → Group (if territory-scoped)
+// - Community → Group (if community-scoped)
+// - Creator → Group
+```
+
+---
+
+### 19. Group Communities Table
+
+**Purpose:** Link groups to communities. A group can contain multiple communities, creating logical groupings.
+
+**Example:** "Beekeeping Network" group might include communities like "Urban Beekeepers", "Organic Beekeepers", "Commercial Beekeepers"
+
+```sql
+CREATE TABLE territory_dk.group_communities (
+    group_id UUID NOT NULL REFERENCES territory_dk.groups(id) ON DELETE CASCADE,
+    community_id UUID NOT NULL REFERENCES territory_dk.communities(id) ON DELETE CASCADE,
+    
+    -- Metadata
+    added_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    added_by_user_id UUID REFERENCES territory_dk.users(id),
+    
+    PRIMARY KEY (group_id, community_id)
+);
+
+CREATE INDEX idx_group_communities_group ON territory_dk.group_communities(group_id);
+CREATE INDEX idx_group_communities_community ON territory_dk.group_communities(community_id);
+```
+
+**Holochain Mapping:**
+
+```rust
+// Links:
+// - Group → Community (communities in this group)
+// - Community → Group (groups this community belongs to)
+```
+
+---
+
+### 20. Group Forums Table (Future Extension)
+
+**Purpose:** Link groups to forums when forum extension is added. A group can contain multiple forums for discussion.
+
+**Note:** This table structure is defined now for completeness, but will only be populated when the forum extension is implemented.
+
+```sql
+CREATE TABLE territory_dk.group_forums (
+    group_id UUID NOT NULL REFERENCES territory_dk.groups(id) ON DELETE CASCADE,
+    forum_id UUID NOT NULL,  -- References forum table (when extension added)
+    
+    -- Metadata
+    added_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    added_by_user_id UUID REFERENCES territory_dk.users(id),
+    
+    PRIMARY KEY (group_id, forum_id)
+);
+
+CREATE INDEX idx_group_forums_group ON territory_dk.group_forums(group_id);
+CREATE INDEX idx_group_forums_forum ON territory_dk.group_forums(forum_id);
+
+COMMENT ON TABLE territory_dk.group_forums IS 'Links groups to forums. Populated when forum extension is added.';
+```
+
+**Holochain Mapping:**
+
+```rust
+// Links:
+// - Group → Forum (forums in this group)
+// - Forum → Group (groups this forum belongs to)
+```
+
+---
+
+### 21. Group Courses Table (Future Extension)
+
+**Purpose:** Link groups to courses when LMS extension is added. A group can contain multiple courses.
+
+**Note:** This table structure is defined now for completeness, but will only be populated when the LMS extension is implemented.
+
+**Example:** "Territory Management" group → "Creating Territories" course + "Managing Territory Settings" course + "Territory Best Practices" course
+
+```sql
+CREATE TABLE territory_dk.group_courses (
+    group_id UUID NOT NULL REFERENCES territory_dk.groups(id) ON DELETE CASCADE,
+    course_id UUID NOT NULL,  -- References course table (when extension added)
+    
+    -- Metadata
+    added_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    added_by_user_id UUID REFERENCES territory_dk.users(id),
+    
+    PRIMARY KEY (group_id, course_id)
+);
+
+CREATE INDEX idx_group_courses_group ON territory_dk.group_courses(group_id);
+CREATE INDEX idx_group_courses_course ON territory_dk.group_courses(course_id);
+
+COMMENT ON TABLE territory_dk.group_courses IS 'Links groups to courses. Populated when LMS extension is added.';
+```
+
+**Holochain Mapping:**
+
+```rust
+// Links:
+// - Group → Course (courses in this group)
+// - Course → Group (groups this course belongs to)
+```
+
+---
+
+## Groups Access Control Flow
+
+**How Groups Work:**
+
+1. **Platform Admin creates a group** (e.g., "Platform Management")
+2. **Creates/assigns access badge** (e.g., "Platform Management Access")
+3. **Adds resources to group**:
+   - Communities (immediately)
+   - Forums (when extension added)
+   - Courses (when extension added)
+4. **Users gain access** by earning/receiving the badge:
+   - Complete a course that awards the badge
+   - Manually assigned by authorized user
+5. **Access check**: When user tries to view/join content, system checks:
+   - Is this resource in a group?
+   - Does user have the required badge?
+   - Is badge still valid (not expired/revoked)?
+
+**Scope Visibility:**
+
+```sql
+-- Check if user can access a group
+CREATE OR REPLACE FUNCTION territory_dk.user_can_access_group(
+    p_user_id UUID,
+    p_group_id UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+    v_access_badge_id UUID;
+    v_has_badge BOOLEAN;
+    v_scope VARCHAR(50);
+    v_scope_id UUID;
+BEGIN
+    -- Get group details
+    SELECT access_badge_id, scope, scope_id
+    INTO v_access_badge_id, v_scope, v_scope_id
+    FROM territory_dk.groups
+    WHERE id = p_group_id AND is_active = TRUE;
+    
+    IF NOT FOUND THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Check if user has the required badge (and it's not expired/revoked)
+    SELECT EXISTS(
+        SELECT 1
+        FROM territory_dk.badge_awards
+        WHERE user_id = p_user_id
+          AND badge_id = v_access_badge_id
+          AND revoked_at IS NULL
+          AND (expires_at IS NULL OR expires_at > NOW())
+    ) INTO v_has_badge;
+    
+    IF NOT v_has_badge THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Check scope visibility
+    IF v_scope = 'global' THEN
+        -- Global groups accessible to all (with badge)
+        RETURN TRUE;
+    ELSIF v_scope = 'territory' THEN
+        -- Territory groups: user must be in that territory
+        -- (This would check user's territory membership)
+        RETURN TRUE; -- Simplified for now
+    ELSIF v_scope = 'community' THEN
+        -- Community groups: user must be in that community or parent communities
+        -- (This would check community hierarchy)
+        RETURN TRUE; -- Simplified for now
+    END IF;
+    
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+**Example Workflow: Platform Management**
+
+1. Platform Admin bootstrapped into system
+2. Admin creates "Platform Management" group (global scope)
+3. Admin creates "Platform Management Access" badge
+4. Admin assigns badge to themselves
+5. Admin creates "General Platform Management" forum → adds to group
+6. Admin creates "Territory Management" course → adds to group
+7. Course completion grants "Territory Manager" badge (different badge with different permissions)
+8. New user takes "Territory Management" course → earns Territory Manager badge → can now create territories
+
+---
+
 ## User Initialization Workflow
 
 ### What Happens When a New User is Created?
@@ -1966,8 +2255,13 @@ async fn register_user(
 | `badge_definitions` | `BadgeDefinition` | Public | N/A (template) |
 | `badge_awards` | `BadgeAward` | Public | User → Badge, Badge → User, Course → Badge |
 | `badge_progress` | `BadgeProgress` | Private | User → Progress, Badge → Progress |
+| `groups` | `Group` | Public | Badge → Group, Territory → Group, Community → Group |
+| `group_communities` | Link | Public | Group → Community, Community → Group |
+| `group_forums` | Link | Public | Group → Forum, Forum → Group (future) |
+| `group_courses` | Link | Public | Group → Course, Course → Group (future) |
 
-**Notes:** 
+**Notes:**
+
 - Community role election votes are **private entries** but cryptographically signed to prove authenticity. The election tally is public, but individual votes remain private to preserve democratic integrity.
 - Badge awards are **public** to enable verification of permissions and credentials.
 - Badge progress is **private** to protect user learning journey privacy.
