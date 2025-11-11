@@ -84,6 +84,9 @@ unityplan_db
 │   ├── role_assignments
 │   ├── community_role_elections
 │   ├── community_role_election_votes
+│   ├── badge_definitions
+│   ├── badge_awards
+│   ├── badge_progress
 │   ├── posts
 │   ├── messages
 │   └── users_audit_logs
@@ -955,12 +958,37 @@ CREATE TABLE territory_dk.roles (
 CREATE INDEX idx_roles_scope ON territory_dk.roles(scope);
 CREATE INDEX idx_roles_electable ON territory_dk.roles(is_electable);
 
--- Seed core roles
+-- Seed core platform and territory roles
+-- Platform roles have LIMITED permissions due to inverted pyramid (users > communities > territories > global)
 INSERT INTO territory_dk.roles (name, scope, description, is_electable, requires_election) VALUES
+    -- Platform/Global roles (Limited by inverted pyramid - infrastructure only)
+    ('platform_admin', 'global', 'System maintenance and oversight - READ access to all data, LIMITED write access', FALSE, FALSE),
+    ('database_admin', 'global', 'Database maintenance, backups, performance tuning', FALSE, FALSE),
+    ('security_engineer', 'global', 'Security audits, vulnerability management, incident response', FALSE, FALSE),
+    ('devops_engineer', 'global', 'CI/CD pipelines, container orchestration, deployment automation', FALSE, FALSE),
+    ('monitoring_specialist', 'global', 'Observability setup, alerting, incident detection', FALSE, FALSE),
+    ('network_engineer', 'global', 'Network architecture, VPNs, firewalls', FALSE, FALSE),
+    ('technical_support', 'global', 'Initial troubleshooting of infrastructure and user issues', FALSE, FALSE),
+    
+    -- Territory roles
     ('territory_manager', 'territory', 'Manages territory infrastructure and users', FALSE, FALSE),
+    
+    -- Community roles (Democratic elections)
     ('community_manager', 'community', 'Manages a specific community', TRUE, TRUE),
     ('community_moderator', 'community', 'Moderates community discussions', TRUE, TRUE),
     ('member', 'community', 'Standard community member', FALSE, FALSE);
+```
+
+**Platform Role Permissions (Inverted Pyramid):**
+
+```sql
+-- Example: Platform Admin has LIMITED permissions
+-- ✅ CAN: Read all data (monitoring, troubleshooting)
+-- ✅ CAN: Server management, database optimization, security updates
+-- ✅ CAN: Analytics, performance metrics, system health monitoring
+-- ❌ CANNOT: Modify user content, courses, or governance decisions
+-- ❌ CANNOT: Override territory sovereignty or user data ownership
+-- All actions logged in immutable audit trail
 ```
 
 **Holochain Mapping:**
@@ -1184,6 +1212,286 @@ pub struct ElectionVote {
 // - Voter must be in eligible_voters list
 // - Only one vote per voter per election
 // - Election must be active
+```
+
+---
+
+### 15. Badge Definitions Table
+
+**Purpose:** Define badges that grant permissions and can be earned through courses or assigned
+
+**Note:** Badges are the **cornerstone of the permission system**. All access to courses, forums, and administrative functions is controlled by badges.
+
+```sql
+CREATE TABLE territory_dk.badge_definitions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(100) UNIQUE NOT NULL,         -- Unique identifier (e.g., 'code_of_conduct', 'forum_moderator')
+    name VARCHAR(255) NOT NULL,                -- Display name
+    description TEXT NOT NULL,
+    category VARCHAR(50) NOT NULL,             -- 'governance', 'learning', 'community', 'admin'
+    
+    -- Visual
+    icon_url TEXT,                             -- Badge icon/image URL
+    color VARCHAR(7),                          -- Hex color code (#FF5733)
+    
+    -- Permissions granted by this badge
+    permissions JSONB DEFAULT '[]'::jsonb,     -- Array of permission strings
+    
+    -- Prerequisites
+    prerequisite_badge_ids UUID[],             -- Must have these badges first
+    
+    -- Expiration
+    requires_renewal BOOLEAN NOT NULL DEFAULT FALSE,
+    renewal_period_days INTEGER,              -- NULL = never expires, 365 = annual renewal
+    
+    -- Criteria for earning (if course-based)
+    earn_criteria JSONB DEFAULT '{}'::jsonb,   -- Course completion, achievements, etc.
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,
+    
+    -- Lifecycle
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by_user_id UUID REFERENCES territory_dk.users(id),
+    
+    CHECK (category IN ('governance', 'learning', 'community', 'admin'))
+);
+
+CREATE INDEX idx_badge_definitions_code ON territory_dk.badge_definitions(code);
+CREATE INDEX idx_badge_definitions_category ON territory_dk.badge_definitions(category);
+CREATE INDEX idx_badge_definitions_active ON territory_dk.badge_definitions(is_active);
+
+-- Seed core mandatory badge
+INSERT INTO territory_dk.badge_definitions (
+    code, 
+    name, 
+    description, 
+    category, 
+    permissions, 
+    requires_renewal, 
+    renewal_period_days,
+    is_active
+) VALUES (
+    'code_of_conduct',
+    'Code of Conduct',
+    'Mandatory badge - required for all platform participation. Must be renewed annually.',
+    'governance',
+    '["enroll_in_courses", "view_forums", "comment_on_topics", "join_communities"]'::jsonb,
+    TRUE,
+    365,  -- Annual renewal
+    TRUE
+);
+```
+
+**Special Badge: Code of Conduct**
+
+- **REQUIRED** for all platform participation
+- **Annual renewal** mandatory (365 days)
+- **Automated notifications** at 30, 14, 7 days before expiration
+- **Automatic lockout** on expiration:
+  - ❌ Cannot enroll in courses
+  - ❌ Cannot view/comment on forums
+  - ❌ Cannot join communities
+  - ✅ Can view/edit profile
+  - ✅ Can delete account
+  - ✅ Can retake Code of Conduct course
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct BadgeDefinition {
+    pub code: String,
+    pub name: String,
+    pub description: String,
+    pub category: BadgeCategory,
+    pub permissions: Vec<String>,
+    pub prerequisite_badges: Vec<ActionHash>,
+    pub requires_renewal: bool,
+    pub renewal_period_days: Option<u32>,
+}
+
+enum BadgeCategory {
+    Governance,
+    Learning,
+    Community,
+    Admin,
+}
+```
+
+---
+
+### 16. Badge Awards Table
+
+**Purpose:** Track badge assignments to users (earned or manually assigned)
+
+```sql
+CREATE TABLE territory_dk.badge_awards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    badge_id UUID NOT NULL REFERENCES territory_dk.badge_definitions(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    
+    -- Award source
+    award_source VARCHAR(50) NOT NULL,         -- 'course_completion', 'manual_assignment', 'achievement'
+    source_id UUID,                            -- Course ID, achievement ID, etc.
+    
+    -- Assignment metadata
+    awarded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    awarded_by_user_id UUID REFERENCES territory_dk.users(id),
+    awarded_reason TEXT,
+    
+    -- Expiration (calculated from badge.renewal_period_days)
+    expires_at TIMESTAMPTZ,                    -- NULL = never expires
+    
+    -- Renewal tracking
+    renewal_reminder_sent BOOLEAN NOT NULL DEFAULT FALSE,
+    renewal_reminder_sent_at TIMESTAMPTZ,
+    
+    -- Revocation
+    revoked_at TIMESTAMPTZ,
+    revoked_by_user_id UUID REFERENCES territory_dk.users(id),
+    revoked_reason TEXT,
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,
+    
+    -- Constraints
+    CHECK (award_source IN ('course_completion', 'manual_assignment', 'achievement')),
+    
+    -- Allow multiple awards of same badge (for renewal tracking)
+    CONSTRAINT uq_active_badge_award UNIQUE (badge_id, user_id, revoked_at)
+);
+
+CREATE INDEX idx_badge_awards_user ON territory_dk.badge_awards(user_id);
+CREATE INDEX idx_badge_awards_badge ON territory_dk.badge_awards(badge_id);
+CREATE INDEX idx_badge_awards_expires ON territory_dk.badge_awards(expires_at) WHERE revoked_at IS NULL;
+CREATE INDEX idx_badge_awards_active ON territory_dk.badge_awards(user_id, badge_id) 
+    WHERE revoked_at IS NULL;
+CREATE INDEX idx_badge_awards_expiring_soon ON territory_dk.badge_awards(expires_at)
+    WHERE revoked_at IS NULL AND expires_at IS NOT NULL;
+```
+
+**Expiration Checking:**
+
+```sql
+-- Find badges expiring in the next 30 days (for reminders)
+SELECT 
+    ba.id,
+    ba.user_id,
+    bd.name,
+    ba.expires_at,
+    EXTRACT(DAY FROM (ba.expires_at - NOW())) as days_until_expiry
+FROM territory_dk.badge_awards ba
+JOIN territory_dk.badge_definitions bd ON bd.id = ba.badge_id
+WHERE ba.revoked_at IS NULL
+    AND ba.expires_at IS NOT NULL
+    AND ba.expires_at <= NOW() + INTERVAL '30 days'
+    AND ba.renewal_reminder_sent = FALSE
+ORDER BY ba.expires_at ASC;
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct BadgeAward {
+    pub badge_hash: ActionHash,
+    pub user: AgentPubKey,
+    pub award_source: AwardSource,
+    pub awarded_at: Timestamp,
+    pub expires_at: Option<Timestamp>,
+}
+
+enum AwardSource {
+    CourseCompletion(ActionHash),
+    ManualAssignment(AgentPubKey),
+    Achievement(ActionHash),
+}
+
+// Links:
+// - User → BadgeAward
+// - Badge → BadgeAward
+// - Course → BadgeAward (if course completion)
+```
+
+---
+
+### 17. Badge Progress Table
+
+**Purpose:** Track progress toward earning multi-step badges (achievements, milestones)
+
+```sql
+CREATE TABLE territory_dk.badge_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    badge_id UUID NOT NULL REFERENCES territory_dk.badge_definitions(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    
+    -- Progress tracking
+    progress JSONB NOT NULL DEFAULT '{}'::jsonb,  -- Flexible progress data
+    current_step INTEGER NOT NULL DEFAULT 0,
+    total_steps INTEGER NOT NULL,
+    completion_percentage DECIMAL(5,2) GENERATED ALWAYS AS ((current_step::DECIMAL / NULLIF(total_steps, 0)) * 100) STORED,
+    
+    -- Timestamps
+    started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_at TIMESTAMPTZ,
+    
+    -- Constraints
+    CHECK (current_step >= 0),
+    CHECK (total_steps > 0),
+    CHECK (current_step <= total_steps),
+    
+    CONSTRAINT uq_badge_progress UNIQUE (badge_id, user_id)
+);
+
+CREATE INDEX idx_badge_progress_user ON territory_dk.badge_progress(user_id);
+CREATE INDEX idx_badge_progress_badge ON territory_dk.badge_progress(badge_id);
+CREATE INDEX idx_badge_progress_incomplete ON territory_dk.badge_progress(user_id, badge_id)
+    WHERE completed_at IS NULL;
+```
+
+**Example Usage:**
+
+```sql
+-- Track "100 Forum Comments" badge progress
+INSERT INTO territory_dk.badge_progress (badge_id, user_id, progress, current_step, total_steps)
+VALUES (
+    '<forum_100_comments_badge_id>',
+    '<user_id>',
+    '{"comment_count": 45}'::jsonb,
+    45,
+    100
+);
+
+-- When user reaches 100 comments, award badge
+UPDATE territory_dk.badge_progress
+SET current_step = 100,
+    completed_at = NOW()
+WHERE id = '<progress_id>';
+
+INSERT INTO territory_dk.badge_awards (badge_id, user_id, award_source)
+VALUES ('<forum_100_comments_badge_id>', '<user_id>', 'achievement');
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct BadgeProgress {
+    pub badge_hash: ActionHash,
+    pub user: AgentPubKey,
+    pub progress: ProgressData,
+    pub current_step: u32,
+    pub total_steps: u32,
+    pub started_at: Timestamp,
+}
+
+// Links:
+// - User → BadgeProgress
+// - Badge → BadgeProgress
 ```
 
 ---
@@ -1655,8 +1963,14 @@ async fn register_user(
 | `role_assignments` | Link + Entry | Public/Private | User → Role, Community → RoleHolder |
 | `community_role_elections` | `Election` | Public | Community → Election, Election → Nominee |
 | `community_role_election_votes` | `Vote` | Private (signed) | Election → Vote (encrypted) |
+| `badge_definitions` | `BadgeDefinition` | Public | N/A (template) |
+| `badge_awards` | `BadgeAward` | Public | User → Badge, Badge → User, Course → Badge |
+| `badge_progress` | `BadgeProgress` | Private | User → Progress, Badge → Progress |
 
-**Note:** Community role election votes are **private entries** but cryptographically signed to prove authenticity. The election tally is public, but individual votes remain private to preserve democratic integrity.
+**Notes:** 
+- Community role election votes are **private entries** but cryptographically signed to prove authenticity. The election tally is public, but individual votes remain private to preserve democratic integrity.
+- Badge awards are **public** to enable verification of permissions and credentials.
+- Badge progress is **private** to protect user learning journey privacy.
 
 ### Validation Functions
 
