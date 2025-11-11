@@ -91,6 +91,14 @@ unityplan_db
 │   ├── group_communities
 │   ├── group_forums (future extension)
 │   ├── group_courses (future extension)
+│   ├── notifications
+│   ├── user_connections
+│   ├── community_events
+│   ├── event_rsvps
+│   ├── file_uploads
+│   ├── content_reports
+│   ├── moderation_actions
+│   ├── activities
 │   ├── posts
 │   ├── messages
 │   └── users_audit_logs
@@ -821,6 +829,7 @@ CREATE INDEX idx_invitation_uses_user ON territory_dk.invitation_uses(user_id);
 **Design Decision:** Communities use **UUID primary keys** instead of hierarchical string IDs to support unlimited parent/child nesting. The hierarchy is tracked via `parent_community_id`, and the full path can be reconstructed by traversing parent relationships.
 
 **Access Model:**
+
 - **ALL users can VIEW all communities** (read-only by default) - for inspiration and discovery
 - **Territory Communities** (geographic/place-based): Membership via invitation only
 - **Guild Communities** (interest-based): Membership via badge OR invitation OR public join
@@ -1024,7 +1033,7 @@ $$ LANGUAGE plpgsql;
 
 2. **Guild Communities** (`community_type = 'guild'`):
    - **Purpose**: Interest-based communities (beekeepers, developers, artists)
-   - **Join Policies**: 
+   - **Join Policies**:
      - `open`: Anyone can join freely
      - `badge_required`: Must have specific badge to join
      - `approval_required`: Can request to join, admin approves
@@ -1035,12 +1044,14 @@ $$ LANGUAGE plpgsql;
 **Universal View Access:**
 
 ALL users can VIEW all communities regardless of:
+
 - Community type
 - Join policy
 - Badge requirements
 - Membership status
 
 **Why?**
+
 - **Discovery**: Users see what's happening and get inspired
 - **Transparency**: Territory communities visible before moving to a place
 - **Motivation**: Guild activities visible to encourage learning and participation
@@ -1055,6 +1066,7 @@ ALL users can VIEW all communities regardless of:
 | Comment/post/participate | ❌ No | ✅ Yes |
 | Join events | ❌ No (view only) | ✅ Yes |
 | Vote in community decisions | ❌ No | ✅ Yes |
+
 ```
 
 **Holochain Mapping:**
@@ -2041,6 +2053,1026 @@ $$ LANGUAGE plpgsql;
 
 ---
 
+### 22. Notifications Table
+
+**Purpose:** Store notifications for users about system events, badge expirations, elections, invitations, etc.
+
+**Note:** This is the notification queue/history. User preferences are in `users_notification_settings`.
+
+```sql
+CREATE TABLE territory_dk.notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    
+    -- Notification type and content
+    notification_type VARCHAR(50) NOT NULL,    -- 'badge_expiring', 'badge_awarded', 'election_vote_request', 'community_invitation', 'role_assigned', 'system_announcement'
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    
+    -- Related entities (polymorphic)
+    related_entity_type VARCHAR(50),           -- 'badge', 'community', 'election', 'role', 'invitation', 'event'
+    related_entity_id UUID,                    -- ID of the related entity
+    
+    -- Action links
+    action_url TEXT,                           -- Deep link to take action
+    action_label VARCHAR(100),                 -- "View Badge", "Vote Now", "Accept Invitation"
+    
+    -- Delivery tracking
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    read_at TIMESTAMPTZ,
+    is_delivered BOOLEAN NOT NULL DEFAULT FALSE,
+    delivered_at TIMESTAMPTZ,
+    delivery_method VARCHAR(50),               -- 'in_app', 'email', 'push'
+    
+    -- Priority and expiration
+    priority VARCHAR(20) NOT NULL DEFAULT 'normal', -- 'low', 'normal', 'high', 'urgent'
+    expires_at TIMESTAMPTZ,                    -- Auto-delete after this date
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    CHECK (notification_type IN ('badge_expiring', 'badge_awarded', 'badge_revoked', 'election_vote_request', 'election_completed', 'community_invitation', 'community_joined', 'role_assigned', 'role_removed', 'system_announcement', 'event_reminder', 'event_invitation')),
+    CHECK (priority IN ('low', 'normal', 'high', 'urgent'))
+);
+
+CREATE INDEX idx_notifications_user ON territory_dk.notifications(user_id);
+CREATE INDEX idx_notifications_unread ON territory_dk.notifications(user_id, is_read) WHERE is_read = FALSE;
+CREATE INDEX idx_notifications_type ON territory_dk.notifications(notification_type);
+CREATE INDEX idx_notifications_created ON territory_dk.notifications(created_at DESC);
+CREATE INDEX idx_notifications_related ON territory_dk.notifications(related_entity_type, related_entity_id);
+CREATE INDEX idx_notifications_expires ON territory_dk.notifications(expires_at) WHERE expires_at IS NOT NULL;
+```
+
+**Common Notification Types:**
+
+```sql
+-- Badge expiration warning (30, 14, 7 days before)
+INSERT INTO territory_dk.notifications (user_id, notification_type, title, message, related_entity_type, related_entity_id, priority, action_url, action_label)
+VALUES (
+    '<user_id>',
+    'badge_expiring',
+    'Code of Conduct Badge Expiring Soon',
+    'Your Code of Conduct badge will expire in 7 days. Please retake the course to maintain platform access.',
+    'badge',
+    '<badge_id>',
+    'high',
+    '/courses/code-of-conduct',
+    'Renew Now'
+);
+
+-- Election vote request
+INSERT INTO territory_dk.notifications (user_id, notification_type, title, message, related_entity_type, related_entity_id, priority, action_url, action_label)
+VALUES (
+    '<user_id>',
+    'election_vote_request',
+    'Your Vote Needed: Community Manager Election',
+    'The Copenhagen community is voting to elect a new Community Manager. Your vote is required (100% participation).',
+    'election',
+    '<election_id>',
+    'urgent',
+    '/elections/<election_id>',
+    'Vote Now'
+);
+
+-- Community invitation
+INSERT INTO territory_dk.notifications (user_id, notification_type, title, message, related_entity_type, related_entity_id, action_url, action_label)
+VALUES (
+    '<user_id>',
+    'community_invitation',
+    'Invitation to Join Beekeepers Guild',
+    'You have been invited to join the Beekeepers Guild community.',
+    'community',
+    '<community_id>',
+    '/communities/<community_id>/join',
+    'Accept Invitation'
+);
+```
+
+**Auto-cleanup Expired Notifications:**
+
+```sql
+-- Scheduled job to delete expired notifications
+DELETE FROM territory_dk.notifications
+WHERE expires_at IS NOT NULL AND expires_at < NOW();
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct Notification {
+    pub recipient: AgentPubKey,
+    pub notification_type: NotificationType,
+    pub title: String,
+    pub message: String,
+    pub related_entity: Option<ActionHash>,
+    pub action_url: Option<String>,
+    pub priority: NotificationPriority,
+    pub created_at: Timestamp,
+}
+
+enum NotificationType {
+    BadgeExpiring,
+    BadgeAwarded,
+    ElectionVoteRequest,
+    CommunityInvitation,
+    RoleAssigned,
+    SystemAnnouncement,
+    EventReminder,
+}
+
+enum NotificationPriority {
+    Low,
+    Normal,
+    High,
+    Urgent,
+}
+
+// Links:
+// - User → Notification (recipient's notifications)
+// - Related Entity → Notification (notifications about this entity)
+```
+
+---
+
+### 23. User Connections Table
+
+**Purpose:** Track social connections between users (following, friends, blocks)
+
+```sql
+CREATE TABLE territory_dk.user_connections (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,      -- The user initiating the connection
+    target_user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE, -- The user being connected to
+    
+    -- Connection type
+    connection_type VARCHAR(50) NOT NULL,      -- 'follow', 'friend', 'block'
+    
+    -- Status (for friend requests)
+    status VARCHAR(50) NOT NULL DEFAULT 'active', -- 'pending', 'active', 'rejected'
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- Constraints
+    CHECK (connection_type IN ('follow', 'friend', 'block')),
+    CHECK (status IN ('pending', 'active', 'rejected')),
+    CHECK (user_id != target_user_id),         -- Can't connect to yourself
+    
+    -- Prevent duplicate connections
+    CONSTRAINT uq_user_connection UNIQUE (user_id, target_user_id, connection_type)
+);
+
+CREATE INDEX idx_user_connections_user ON territory_dk.user_connections(user_id);
+CREATE INDEX idx_user_connections_target ON territory_dk.user_connections(target_user_id);
+CREATE INDEX idx_user_connections_type ON territory_dk.user_connections(connection_type);
+CREATE INDEX idx_user_connections_pending ON territory_dk.user_connections(target_user_id, status) 
+    WHERE connection_type = 'friend' AND status = 'pending';
+```
+
+**Connection Types:**
+
+1. **Follow** (one-way):
+   - User follows another user to see their activity
+   - Status: Always 'active' (no approval needed)
+   - Example: Alice follows Bob
+
+2. **Friend** (two-way, requires approval):
+   - User sends friend request
+   - Status: 'pending' until accepted
+   - Creates reciprocal connection when accepted
+   - Example: Alice sends friend request to Bob → Bob accepts → both are friends
+
+3. **Block** (one-way):
+   - User blocks another user
+   - Prevents all interactions
+   - Status: Always 'active'
+   - Example: Alice blocks Bob → Bob can't see Alice's content or message her
+
+**Example Operations:**
+
+```sql
+-- User follows another user
+INSERT INTO territory_dk.user_connections (user_id, target_user_id, connection_type, status)
+VALUES ('<alice_id>', '<bob_id>', 'follow', 'active');
+
+-- Send friend request
+INSERT INTO territory_dk.user_connections (user_id, target_user_id, connection_type, status)
+VALUES ('<alice_id>', '<bob_id>', 'friend', 'pending');
+
+-- Accept friend request (creates reciprocal connection)
+UPDATE territory_dk.user_connections
+SET status = 'active', updated_at = NOW()
+WHERE user_id = '<alice_id>' AND target_user_id = '<bob_id>' AND connection_type = 'friend';
+
+INSERT INTO territory_dk.user_connections (user_id, target_user_id, connection_type, status)
+VALUES ('<bob_id>', '<alice_id>', 'friend', 'active');
+
+-- Block user
+INSERT INTO territory_dk.user_connections (user_id, target_user_id, connection_type, status)
+VALUES ('<alice_id>', '<spam_user_id>', 'block', 'active');
+
+-- Check if user is blocked
+SELECT EXISTS(
+    SELECT 1
+    FROM territory_dk.user_connections
+    WHERE target_user_id = '<alice_id>'
+      AND user_id = '<bob_id>'
+      AND connection_type = 'block'
+      AND status = 'active'
+) AS is_blocked;
+
+-- Get user's followers
+SELECT u.id, u.username, up.display_name, up.avatar_url
+FROM territory_dk.user_connections uc
+JOIN territory_dk.users u ON u.id = uc.user_id
+LEFT JOIN territory_dk.users_profiles up ON up.user_id = u.id
+WHERE uc.target_user_id = '<user_id>'
+  AND uc.connection_type = 'follow'
+  AND uc.status = 'active';
+
+-- Get users that user is following
+SELECT u.id, u.username, up.display_name, up.avatar_url
+FROM territory_dk.user_connections uc
+JOIN territory_dk.users u ON u.id = uc.target_user_id
+LEFT JOIN territory_dk.users_profiles up ON up.user_id = u.id
+WHERE uc.user_id = '<user_id>'
+  AND uc.connection_type = 'follow'
+  AND uc.status = 'active';
+
+-- Get user's friends (mutual connections)
+SELECT u.id, u.username, up.display_name, up.avatar_url
+FROM territory_dk.user_connections uc
+JOIN territory_dk.users u ON u.id = uc.target_user_id
+LEFT JOIN territory_dk.users_profiles up ON up.user_id = u.id
+WHERE uc.user_id = '<user_id>'
+  AND uc.connection_type = 'friend'
+  AND uc.status = 'active';
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct UserConnection {
+    pub user: AgentPubKey,
+    pub target_user: AgentPubKey,
+    pub connection_type: ConnectionType,
+    pub status: ConnectionStatus,
+    pub created_at: Timestamp,
+}
+
+enum ConnectionType {
+    Follow,
+    Friend,
+    Block,
+}
+
+enum ConnectionStatus {
+    Pending,
+    Active,
+    Rejected,
+}
+
+// Links:
+// - User → Target User (following, friends)
+// - Target User → User (reverse lookups)
+// - Blocks stored as private entries
+```
+
+---
+
+### 24. Community Events Table
+
+**Purpose:** Community events/calendar with RSVP tracking
+
+```sql
+CREATE TABLE territory_dk.community_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    community_id UUID NOT NULL REFERENCES territory_dk.communities(id) ON DELETE CASCADE,
+    
+    -- Event details
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    
+    -- Event type
+    event_type VARCHAR(50) NOT NULL,           -- 'meeting', 'workshop', 'social', 'learning', 'ceremony', 'other'
+    
+    -- Scheduling
+    starts_at TIMESTAMPTZ NOT NULL,
+    ends_at TIMESTAMPTZ NOT NULL,
+    timezone VARCHAR(50) NOT NULL,             -- 'Europe/Copenhagen', 'America/New_York'
+    is_all_day BOOLEAN NOT NULL DEFAULT FALSE,
+    
+    -- Recurrence (for recurring events)
+    recurrence_rule TEXT,                      -- RRULE format (RFC 5545)
+    parent_event_id UUID REFERENCES territory_dk.community_events(id), -- For recurring event instances
+    
+    -- Location
+    location_type VARCHAR(50) NOT NULL,        -- 'physical', 'virtual', 'hybrid'
+    location_address TEXT,                     -- Physical address
+    location_url TEXT,                         -- Video conference link
+    location_coordinates POINT,                -- Lat/Long for mapping
+    
+    -- Capacity
+    max_participants INTEGER,
+    requires_rsvp BOOLEAN NOT NULL DEFAULT TRUE,
+    rsvp_deadline TIMESTAMPTZ,
+    
+    -- Visibility
+    is_public BOOLEAN NOT NULL DEFAULT TRUE,   -- Public events visible to all
+    requires_badge_id UUID REFERENCES territory_dk.badge_definitions(id), -- Badge required to attend
+    
+    -- Organizer
+    created_by_user_id UUID NOT NULL REFERENCES territory_dk.users(id),
+    
+    -- Status
+    status VARCHAR(50) NOT NULL DEFAULT 'scheduled', -- 'draft', 'scheduled', 'ongoing', 'completed', 'cancelled'
+    cancellation_reason TEXT,
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,        -- Tags, custom fields, etc.
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    CHECK (event_type IN ('meeting', 'workshop', 'social', 'learning', 'ceremony', 'other')),
+    CHECK (location_type IN ('physical', 'virtual', 'hybrid')),
+    CHECK (status IN ('draft', 'scheduled', 'ongoing', 'completed', 'cancelled')),
+    CHECK (ends_at > starts_at)
+);
+
+CREATE INDEX idx_community_events_community ON territory_dk.community_events(community_id);
+CREATE INDEX idx_community_events_starts ON territory_dk.community_events(starts_at);
+CREATE INDEX idx_community_events_status ON territory_dk.community_events(status);
+CREATE INDEX idx_community_events_creator ON territory_dk.community_events(created_by_user_id);
+CREATE INDEX idx_community_events_upcoming ON territory_dk.community_events(starts_at) 
+    WHERE status = 'scheduled' AND starts_at > NOW();
+```
+
+**Event RSVPs Table:**
+
+```sql
+CREATE TABLE territory_dk.event_rsvps (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID NOT NULL REFERENCES territory_dk.community_events(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    
+    -- RSVP status
+    response VARCHAR(50) NOT NULL,             -- 'going', 'maybe', 'not_going', 'invited'
+    
+    -- Additional info
+    guest_count INTEGER NOT NULL DEFAULT 0,    -- Number of additional guests
+    dietary_requirements TEXT,
+    notes TEXT,                                -- User notes
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    CHECK (response IN ('going', 'maybe', 'not_going', 'invited')),
+    CHECK (guest_count >= 0),
+    
+    CONSTRAINT uq_event_rsvp UNIQUE (event_id, user_id)
+);
+
+CREATE INDEX idx_event_rsvps_event ON territory_dk.event_rsvps(event_id);
+CREATE INDEX idx_event_rsvps_user ON territory_dk.event_rsvps(user_id);
+CREATE INDEX idx_event_rsvps_response ON territory_dk.event_rsvps(event_id, response);
+CREATE INDEX idx_event_rsvps_going ON territory_dk.event_rsvps(event_id) 
+    WHERE response = 'going';
+```
+
+**Example Operations:**
+
+```sql
+-- Create community event
+INSERT INTO territory_dk.community_events (
+    community_id, title, description, event_type, starts_at, ends_at, 
+    timezone, location_type, location_address, max_participants, created_by_user_id
+)
+VALUES (
+    '<community_id>',
+    'Monthly Beekeeping Workshop',
+    'Learn about queen rearing and hive management techniques.',
+    'workshop',
+    '2025-12-15 14:00:00+01',
+    '2025-12-15 17:00:00+01',
+    'Europe/Copenhagen',
+    'physical',
+    'Community Garden, Valby, Copenhagen',
+    20,
+    '<organizer_id>'
+);
+
+-- RSVP to event
+INSERT INTO territory_dk.event_rsvps (event_id, user_id, response, guest_count)
+VALUES ('<event_id>', '<user_id>', 'going', 1)
+ON CONFLICT (event_id, user_id) 
+DO UPDATE SET response = EXCLUDED.response, guest_count = EXCLUDED.guest_count, updated_at = NOW();
+
+-- Get upcoming events for a community
+SELECT e.*, 
+       COUNT(r.id) FILTER (WHERE r.response = 'going') AS going_count,
+       COUNT(r.id) FILTER (WHERE r.response = 'maybe') AS maybe_count
+FROM territory_dk.community_events e
+LEFT JOIN territory_dk.event_rsvps r ON r.event_id = e.id
+WHERE e.community_id = '<community_id>'
+  AND e.status = 'scheduled'
+  AND e.starts_at > NOW()
+GROUP BY e.id
+ORDER BY e.starts_at ASC;
+
+-- Get user's upcoming events
+SELECT e.*, c.name AS community_name, r.response
+FROM territory_dk.community_events e
+JOIN territory_dk.communities c ON c.id = e.community_id
+JOIN territory_dk.event_rsvps r ON r.event_id = e.id
+WHERE r.user_id = '<user_id>'
+  AND e.starts_at > NOW()
+  AND e.status = 'scheduled'
+ORDER BY e.starts_at ASC;
+
+-- Check event capacity
+SELECT 
+    e.title,
+    e.max_participants,
+    COUNT(r.id) FILTER (WHERE r.response = 'going') + COALESCE(SUM(r.guest_count) FILTER (WHERE r.response = 'going'), 0) AS total_attendees,
+    e.max_participants - (COUNT(r.id) FILTER (WHERE r.response = 'going') + COALESCE(SUM(r.guest_count) FILTER (WHERE r.response = 'going'), 0)) AS spots_remaining
+FROM territory_dk.community_events e
+LEFT JOIN territory_dk.event_rsvps r ON r.event_id = e.id
+WHERE e.id = '<event_id>'
+GROUP BY e.id;
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct CommunityEvent {
+    pub community: ActionHash,
+    pub title: String,
+    pub description: String,
+    pub event_type: EventType,
+    pub starts_at: Timestamp,
+    pub ends_at: Timestamp,
+    pub location_type: LocationType,
+    pub location_details: LocationDetails,
+    pub max_participants: Option<u32>,
+    pub created_by: AgentPubKey,
+}
+
+#[hdk_entry_helper]
+pub struct EventRSVP {
+    pub event: ActionHash,
+    pub user: AgentPubKey,
+    pub response: RSVPResponse,
+    pub guest_count: u32,
+}
+
+enum EventType {
+    Meeting,
+    Workshop,
+    Social,
+    Learning,
+    Ceremony,
+    Other,
+}
+
+enum LocationType {
+    Physical,
+    Virtual,
+    Hybrid,
+}
+
+enum RSVPResponse {
+    Going,
+    Maybe,
+    NotGoing,
+    Invited,
+}
+
+// Links:
+// - Community → Event (community's events)
+// - Event → RSVP (event attendees)
+// - User → RSVP (user's RSVPs)
+```
+
+---
+
+### 25. File Uploads Table
+
+**Purpose:** Track file uploads and IPFS metadata (avatars, community logos, attachments)
+
+```sql
+CREATE TABLE territory_dk.file_uploads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Owner
+    uploaded_by_user_id UUID NOT NULL REFERENCES territory_dk.users(id),
+    
+    -- File details
+    file_name VARCHAR(255) NOT NULL,
+    file_size BIGINT NOT NULL,                 -- Size in bytes
+    mime_type VARCHAR(100) NOT NULL,           -- 'image/jpeg', 'application/pdf'
+    file_extension VARCHAR(10),                -- 'jpg', 'pdf', 'png'
+    
+    -- Storage
+    storage_type VARCHAR(50) NOT NULL,         -- 'ipfs', 's3', 'local'
+    storage_path TEXT NOT NULL,                -- IPFS hash or S3 path or local path
+    ipfs_hash VARCHAR(100),                    -- CID for IPFS files
+    
+    -- Usage tracking
+    entity_type VARCHAR(50),                   -- 'user_avatar', 'community_logo', 'event_image', 'post_attachment'
+    entity_id UUID,                            -- ID of the related entity
+    
+    -- Image metadata (if applicable)
+    image_width INTEGER,
+    image_height INTEGER,
+    has_thumbnail BOOLEAN DEFAULT FALSE,
+    thumbnail_path TEXT,
+    
+    -- Status
+    upload_status VARCHAR(50) NOT NULL DEFAULT 'pending', -- 'pending', 'processing', 'completed', 'failed'
+    virus_scan_status VARCHAR(50),             -- 'pending', 'clean', 'infected'
+    
+    -- Access control
+    is_public BOOLEAN NOT NULL DEFAULT TRUE,
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_accessed_at TIMESTAMPTZ,
+    
+    CHECK (storage_type IN ('ipfs', 's3', 'local')),
+    CHECK (upload_status IN ('pending', 'processing', 'completed', 'failed')),
+    CHECK (virus_scan_status IN ('pending', 'clean', 'infected', 'skipped'))
+);
+
+CREATE INDEX idx_file_uploads_user ON territory_dk.file_uploads(uploaded_by_user_id);
+CREATE INDEX idx_file_uploads_entity ON territory_dk.file_uploads(entity_type, entity_id);
+CREATE INDEX idx_file_uploads_ipfs ON territory_dk.file_uploads(ipfs_hash) WHERE ipfs_hash IS NOT NULL;
+CREATE INDEX idx_file_uploads_status ON territory_dk.file_uploads(upload_status);
+CREATE INDEX idx_file_uploads_created ON territory_dk.file_uploads(created_at DESC);
+```
+
+**Example Operations:**
+
+```sql
+-- Upload avatar to IPFS
+INSERT INTO territory_dk.file_uploads (
+    uploaded_by_user_id, file_name, file_size, mime_type, file_extension,
+    storage_type, storage_path, ipfs_hash, entity_type, entity_id,
+    image_width, image_height, upload_status
+)
+VALUES (
+    '<user_id>',
+    'avatar.jpg',
+    153600,
+    'image/jpeg',
+    'jpg',
+    'ipfs',
+    'https://ipfs.io/ipfs/QmXyz123...',
+    'QmXyz123...',
+    'user_avatar',
+    '<user_id>',
+    512,
+    512,
+    'completed'
+);
+
+-- Update user's avatar URL
+UPDATE territory_dk.users_profiles
+SET avatar_url = (SELECT storage_path FROM territory_dk.file_uploads WHERE id = '<file_id>')
+WHERE user_id = '<user_id>';
+
+-- Upload community logo
+INSERT INTO territory_dk.file_uploads (
+    uploaded_by_user_id, file_name, file_size, mime_type, storage_type, 
+    storage_path, ipfs_hash, entity_type, entity_id, upload_status
+)
+VALUES (
+    '<user_id>',
+    'beekeepers-logo.png',
+    89432,
+    'image/png',
+    'ipfs',
+    'https://ipfs.io/ipfs/QmAbc456...',
+    'QmAbc456...',
+    'community_logo',
+    '<community_id>',
+    'completed'
+);
+
+-- Get user's recent uploads
+SELECT id, file_name, file_size, mime_type, storage_path, created_at
+FROM territory_dk.file_uploads
+WHERE uploaded_by_user_id = '<user_id>'
+ORDER BY created_at DESC
+LIMIT 20;
+
+-- Clean up old unused files (scheduled job)
+DELETE FROM territory_dk.file_uploads
+WHERE created_at < NOW() - INTERVAL '90 days'
+  AND entity_type IS NULL
+  AND upload_status = 'completed';
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct FileUpload {
+    pub uploaded_by: AgentPubKey,
+    pub file_name: String,
+    pub file_size: u64,
+    pub mime_type: String,
+    pub ipfs_hash: String,
+    pub entity_type: Option<EntityType>,
+    pub entity_id: Option<ActionHash>,
+    pub is_public: bool,
+    pub created_at: Timestamp,
+}
+
+enum EntityType {
+    UserAvatar,
+    CommunityLogo,
+    EventImage,
+    PostAttachment,
+}
+
+// Links:
+// - User → FileUpload (user's uploads)
+// - Entity → FileUpload (files for this entity)
+// - IPFS hash stored for DHT retrieval
+```
+
+---
+
+### 26. Content Reports Table
+
+**Purpose:** User-generated reports for inappropriate content or behavior
+
+```sql
+CREATE TABLE territory_dk.content_reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Reporter
+    reported_by_user_id UUID NOT NULL REFERENCES territory_dk.users(id),
+    
+    -- Reported content/user
+    report_type VARCHAR(50) NOT NULL,          -- 'user', 'community', 'event', 'profile', 'comment' (future)
+    reported_entity_type VARCHAR(50) NOT NULL, -- 'user', 'community', 'event', 'post', 'comment'
+    reported_entity_id UUID NOT NULL,
+    reported_user_id UUID REFERENCES territory_dk.users(id), -- If reporting a user or user's content
+    
+    -- Report details
+    reason VARCHAR(100) NOT NULL,              -- 'spam', 'harassment', 'inappropriate_content', 'misinformation', 'other'
+    description TEXT NOT NULL,
+    severity VARCHAR(50) NOT NULL DEFAULT 'normal', -- 'low', 'normal', 'high', 'critical'
+    
+    -- Status
+    status VARCHAR(50) NOT NULL DEFAULT 'pending', -- 'pending', 'under_review', 'resolved', 'dismissed'
+    resolution TEXT,
+    resolved_by_user_id UUID REFERENCES territory_dk.users(id),
+    resolved_at TIMESTAMPTZ,
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    CHECK (report_type IN ('user', 'community', 'event', 'profile', 'comment', 'post')),
+    CHECK (reported_entity_type IN ('user', 'community', 'event', 'post', 'comment', 'profile')),
+    CHECK (reason IN ('spam', 'harassment', 'inappropriate_content', 'hate_speech', 'misinformation', 'violence', 'other')),
+    CHECK (severity IN ('low', 'normal', 'high', 'critical')),
+    CHECK (status IN ('pending', 'under_review', 'resolved', 'dismissed'))
+);
+
+CREATE INDEX idx_content_reports_reporter ON territory_dk.content_reports(reported_by_user_id);
+CREATE INDEX idx_content_reports_entity ON territory_dk.content_reports(reported_entity_type, reported_entity_id);
+CREATE INDEX idx_content_reports_user ON territory_dk.content_reports(reported_user_id);
+CREATE INDEX idx_content_reports_status ON territory_dk.content_reports(status);
+CREATE INDEX idx_content_reports_pending ON territory_dk.content_reports(status, created_at) 
+    WHERE status = 'pending';
+```
+
+**Moderation Actions Table:**
+
+```sql
+CREATE TABLE territory_dk.moderation_actions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Related report (optional - can take action without report)
+    content_report_id UUID REFERENCES territory_dk.content_reports(id),
+    
+    -- Moderator
+    moderator_user_id UUID NOT NULL REFERENCES territory_dk.users(id),
+    moderator_role_id UUID REFERENCES territory_dk.roles(id),
+    
+    -- Action target
+    target_user_id UUID REFERENCES territory_dk.users(id),
+    target_entity_type VARCHAR(50),            -- 'user', 'community', 'event', 'post', 'comment'
+    target_entity_id UUID,
+    
+    -- Action details
+    action_type VARCHAR(50) NOT NULL,          -- 'warning', 'content_removal', 'temporary_restriction', 'permanent_ban', 'badge_revocation'
+    action_reason TEXT NOT NULL,
+    action_duration INTERVAL,                  -- For temporary restrictions
+    
+    -- Warning tracking (3-strike system)
+    is_strike BOOLEAN NOT NULL DEFAULT FALSE,
+    strike_number INTEGER,                     -- 1, 2, 3
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ,                    -- For temporary actions
+    
+    CHECK (action_type IN ('warning', 'content_removal', 'temporary_restriction', 'permanent_ban', 'badge_revocation', 'account_suspension'))
+);
+
+CREATE INDEX idx_moderation_actions_moderator ON territory_dk.moderation_actions(moderator_user_id);
+CREATE INDEX idx_moderation_actions_target_user ON territory_dk.moderation_actions(target_user_id);
+CREATE INDEX idx_moderation_actions_report ON territory_dk.moderation_actions(content_report_id);
+CREATE INDEX idx_moderation_actions_strikes ON territory_dk.moderation_actions(target_user_id, is_strike) 
+    WHERE is_strike = TRUE;
+CREATE INDEX idx_moderation_actions_active ON territory_dk.moderation_actions(target_user_id, expires_at)
+    WHERE expires_at IS NOT NULL AND expires_at > NOW();
+```
+
+**Example Operations:**
+
+```sql
+-- Report inappropriate profile
+INSERT INTO territory_dk.content_reports (
+    reported_by_user_id, report_type, reported_entity_type, reported_entity_id,
+    reported_user_id, reason, description, severity
+)
+VALUES (
+    '<reporter_id>',
+    'user',
+    'profile',
+    '<profile_user_id>',
+    '<profile_user_id>',
+    'inappropriate_content',
+    'Profile contains offensive images and hate speech in bio.',
+    'high'
+);
+
+-- Moderator reviews and issues warning (strike 1)
+INSERT INTO territory_dk.moderation_actions (
+    content_report_id, moderator_user_id, target_user_id, action_type,
+    action_reason, is_strike, strike_number
+)
+VALUES (
+    '<report_id>',
+    '<moderator_id>',
+    '<offending_user_id>',
+    'warning',
+    'Inappropriate profile content removed. This is your first warning.',
+    TRUE,
+    1
+);
+
+-- Update report status
+UPDATE territory_dk.content_reports
+SET status = 'resolved',
+    resolution = 'User warned and content removed.',
+    resolved_by_user_id = '<moderator_id>',
+    resolved_at = NOW()
+WHERE id = '<report_id>';
+
+-- Check user's strike count
+SELECT COUNT(*) AS strike_count
+FROM territory_dk.moderation_actions
+WHERE target_user_id = '<user_id>'
+  AND is_strike = TRUE;
+
+-- Get pending reports for moderation queue
+SELECT r.*, 
+       reporter.username AS reporter_username,
+       reported.username AS reported_username
+FROM territory_dk.content_reports r
+LEFT JOIN territory_dk.users reporter ON reporter.id = r.reported_by_user_id
+LEFT JOIN territory_dk.users reported ON reported.id = r.reported_user_id
+WHERE r.status = 'pending'
+ORDER BY r.severity DESC, r.created_at ASC;
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct ContentReport {
+    pub reported_by: AgentPubKey,
+    pub report_type: ReportType,
+    pub reported_entity: ActionHash,
+    pub reported_user: Option<AgentPubKey>,
+    pub reason: ReportReason,
+    pub description: String,
+    pub severity: ReportSeverity,
+    pub created_at: Timestamp,
+}
+
+#[hdk_entry_helper]
+pub struct ModerationAction {
+    pub moderator: AgentPubKey,
+    pub target_user: AgentPubKey,
+    pub action_type: ActionType,
+    pub reason: String,
+    pub is_strike: bool,
+    pub strike_number: Option<u8>,
+    pub created_at: Timestamp,
+}
+
+// Reports and moderation actions stored as signed entries
+// Links:
+// - Reported Entity → Report
+// - Target User → ModerationAction (user's moderation history)
+```
+
+---
+
+### 27. Activity Feed Table
+
+**Purpose:** Track user and community activities for timeline/feed display
+
+```sql
+CREATE TABLE territory_dk.activities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Actor (who did the action)
+    actor_user_id UUID NOT NULL REFERENCES territory_dk.users(id),
+    
+    -- Activity type
+    activity_type VARCHAR(50) NOT NULL,        -- 'user_joined', 'badge_earned', 'community_joined', 'event_created', 'role_assigned'
+    
+    -- Target/Object (what was acted upon)
+    object_type VARCHAR(50),                   -- 'user', 'badge', 'community', 'event', 'role'
+    object_id UUID,
+    object_name VARCHAR(255),                  -- Denormalized for performance
+    
+    -- Context
+    community_id UUID REFERENCES territory_dk.communities(id), -- If activity is within a community
+    
+    -- Visibility
+    visibility VARCHAR(50) NOT NULL DEFAULT 'public', -- 'public', 'community', 'friends', 'private'
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,        -- Additional context, rich content
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    CHECK (activity_type IN ('user_joined', 'profile_updated', 'badge_earned', 'badge_renewed', 'community_joined', 'community_created', 'event_created', 'event_rsvp', 'role_assigned', 'election_completed', 'connection_made')),
+    CHECK (visibility IN ('public', 'community', 'friends', 'private'))
+);
+
+CREATE INDEX idx_activities_actor ON territory_dk.activities(actor_user_id);
+CREATE INDEX idx_activities_community ON territory_dk.activities(community_id);
+CREATE INDEX idx_activities_object ON territory_dk.activities(object_type, object_id);
+CREATE INDEX idx_activities_created ON territory_dk.activities(created_at DESC);
+CREATE INDEX idx_activities_public ON territory_dk.activities(created_at DESC) WHERE visibility = 'public';
+CREATE INDEX idx_activities_community_feed ON territory_dk.activities(community_id, created_at DESC)
+    WHERE community_id IS NOT NULL;
+```
+
+**Example Activities:**
+
+```sql
+-- User joined platform
+INSERT INTO territory_dk.activities (actor_user_id, activity_type, visibility)
+VALUES ('<user_id>', 'user_joined', 'public');
+
+-- User earned badge
+INSERT INTO territory_dk.activities (
+    actor_user_id, activity_type, object_type, object_id, object_name, visibility, metadata
+)
+VALUES (
+    '<user_id>',
+    'badge_earned',
+    'badge',
+    '<badge_id>',
+    'Code of Conduct',
+    'public',
+    '{"badge_category": "governance"}'::jsonb
+);
+
+-- User joined community
+INSERT INTO territory_dk.activities (
+    actor_user_id, activity_type, object_type, object_id, object_name, 
+    community_id, visibility
+)
+VALUES (
+    '<user_id>',
+    'community_joined',
+    'community',
+    '<community_id>',
+    'Beekeepers Guild',
+    '<community_id>',
+    'community'
+);
+
+-- User created event
+INSERT INTO territory_dk.activities (
+    actor_user_id, activity_type, object_type, object_id, object_name,
+    community_id, visibility, metadata
+)
+VALUES (
+    '<user_id>',
+    'event_created',
+    'event',
+    '<event_id>',
+    'Monthly Beekeeping Workshop',
+    '<community_id>',
+    'public',
+    '{"event_date": "2025-12-15T14:00:00Z"}'::jsonb
+);
+
+-- Get user's activity feed
+SELECT a.*,
+       u.username AS actor_username,
+       up.display_name AS actor_display_name,
+       up.avatar_url AS actor_avatar
+FROM territory_dk.activities a
+JOIN territory_dk.users u ON u.id = a.actor_user_id
+LEFT JOIN territory_dk.users_profiles up ON up.user_id = a.actor_user_id
+WHERE a.actor_user_id = '<user_id>'
+ORDER BY a.created_at DESC
+LIMIT 50;
+
+-- Get community activity feed
+SELECT a.*,
+       u.username AS actor_username,
+       up.display_name AS actor_display_name
+FROM territory_dk.activities a
+JOIN territory_dk.users u ON u.id = a.actor_user_id
+LEFT JOIN territory_dk.users_profiles up ON up.user_id = a.actor_user_id
+WHERE a.community_id = '<community_id>'
+  AND a.visibility IN ('public', 'community')
+ORDER BY a.created_at DESC
+LIMIT 50;
+
+-- Get global public activity feed
+SELECT a.*,
+       u.username AS actor_username,
+       up.display_name AS actor_display_name
+FROM territory_dk.activities a
+JOIN territory_dk.users u ON u.id = a.actor_user_id
+LEFT JOIN territory_dk.users_profiles up ON up.user_id = a.actor_user_id
+WHERE a.visibility = 'public'
+ORDER BY a.created_at DESC
+LIMIT 100;
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct Activity {
+    pub actor: AgentPubKey,
+    pub activity_type: ActivityType,
+    pub object_type: Option<ObjectType>,
+    pub object_hash: Option<ActionHash>,
+    pub community: Option<ActionHash>,
+    pub visibility: Visibility,
+    pub metadata: HashMap<String, String>,
+    pub created_at: Timestamp,
+}
+
+enum ActivityType {
+    UserJoined,
+    ProfileUpdated,
+    BadgeEarned,
+    CommunityJoined,
+    EventCreated,
+    RoleAssigned,
+}
+
+enum Visibility {
+    Public,
+    Community,
+    Friends,
+    Private,
+}
+
+// Links:
+// - Actor → Activity (user's activities)
+// - Community → Activity (community feed)
+// - Public activities indexed for global feed
+```
+
+---
+
 ## User Initialization Workflow
 
 ### What Happens When a New User is Created?
@@ -2515,6 +3547,14 @@ async fn register_user(
 | `group_communities` | Link | Public | Group → Community, Community → Group |
 | `group_forums` | Link | Public | Group → Forum, Forum → Group (future) |
 | `group_courses` | Link | Public | Group → Course, Course → Group (future) |
+| `notifications` | `Notification` | Private | User → Notification, Entity → Notification |
+| `user_connections` | `Connection` | Public/Private | User → Target (follow/friend), blocks private |
+| `community_events` | `Event` | Public | Community → Event, Creator → Event |
+| `event_rsvps` | `RSVP` | Public | Event → RSVP, User → RSVP |
+| `file_uploads` | `FileMetadata` | Public/Private | User → File, Entity → File, IPFS hash |
+| `content_reports` | `Report` | Private (mods) | Reporter → Report, Entity → Report |
+| `moderation_actions` | `ModerationAction` | Private (mods) | Moderator → Action, User → Action |
+| `activities` | `Activity` | Public/Private | Actor → Activity, Community → Activity |
 
 **Notes:**
 
