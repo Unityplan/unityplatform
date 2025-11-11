@@ -722,7 +722,7 @@ CREATE TABLE territory_dk.invitation_tokens (
     token_type VARCHAR(20) NOT NULL CHECK (token_type IN ('single_use', 'group')),
     
     -- Restrictions
-    email VARCHAR(255),                        -- NULL for group, specific for single_use
+    email VARCHAR(255),                        -- Optional: for email delivery, can be NULL for QR/link sharing
     max_uses INT NOT NULL DEFAULT 1,
     used_count INT NOT NULL DEFAULT 0,
     
@@ -744,8 +744,8 @@ CREATE TABLE territory_dk.invitation_tokens (
     
     -- Constraints
     CHECK (
-        (token_type = 'single_use' AND email IS NOT NULL AND max_uses = 1) OR
-        (token_type = 'group' AND email IS NULL AND max_uses > 1)
+        (token_type = 'single_use' AND max_uses = 1) OR
+        (token_type = 'group' AND max_uses > 1)
     ),
     CHECK (used_count <= max_uses)
 );
@@ -1076,6 +1076,7 @@ CREATE TRIGGER trigger_create_user_notification_settings
 If you prefer **application-level initialization** (instead of database triggers):
 
 **Advantages:**
+
 - Easier to test and mock
 - More flexible (can conditionally skip tables)
 - Clearer error handling in API responses
@@ -1229,6 +1230,7 @@ async fn register_user(
 #### Summary
 
 **Required Tables on User Creation:**
+
 1. ✅ `users` - Always created (primary table)
 2. ✅ `users_profiles` - Always created (via trigger or app logic)
 3. ✅ `users_settings` - Always created (via trigger or app logic)
@@ -1238,6 +1240,7 @@ async fn register_user(
 7. ⚠️ `invitation_uses` - Only if registration via invitation
 
 **Optional Tables (Created Later):**
+
 - `users_profile_links` - When user adds external links
 - `users_language_proficiency` - When user declares language skills
 - `users_audit_logs` - As user performs auditable actions

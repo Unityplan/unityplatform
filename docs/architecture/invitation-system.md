@@ -28,15 +28,17 @@ UnityPlan uses an **invitation-only registration system** to maintain community 
 
 ### 1. **Single-Use Token** (Personal Invitation)
 
-- Valid for **one registration only**
-- Sent to a **specific email address**
+- Valid for **one registration only** (`max_uses = 1`)
+- **Email optional** - Can be sent via email OR shared as link/QR code
 - Created by any user with `invite_user` permission
 - Expires after a set period (default: 7 days)
 - Automatically revoked after use
 
-**Use Case:** Invite a specific person you know
+**Use Cases:**
+- **With Email**: Send invitation email directly to invitee (requires email address)
+- **Without Email**: Share link via Telegram, Signal, QR code, etc. (privacy-respecting)
 
-**Example:**
+**Example (With Email):**
 
 ```json
 {
@@ -49,10 +51,26 @@ UnityPlan uses an **invitation-only registration system** to maintain community 
 }
 ```
 
+**Example (Without Email - Privacy Mode):**
+
+```json
+{
+  "token_type": "single_use",
+  "email": null,
+  "created_by": "user-uuid",
+  "expires_at": "2025-11-13T12:00:00Z",
+  "max_uses": 1,
+  "used_count": 0,
+  "metadata": {
+    "delivery_method": "telegram_qr_code"
+  }
+}
+```
+
 ### 2. **Group Token** (Multi-Use Invitation)
 
-- Valid for **multiple registrations** (configurable limit)
-- Not tied to specific email addresses
+- Valid for **multiple registrations** (`max_uses > 1`)
+- **Email always null** - Shared as link/QR code
 - Created by territory managers or users with `invite_group` permission
 - Expires after a set period OR usage limit reached
 - Useful for onboarding groups, workshops, or courses
@@ -64,6 +82,7 @@ UnityPlan uses an **invitation-only registration system** to maintain community 
 ```json
 {
   "token_type": "group",
+  "email": null,
   "max_uses": 50,
   "used_count": 23,
   "created_by": "manager-uuid",
@@ -90,7 +109,7 @@ CREATE TABLE territory_dk.invitation_tokens (
     token_type VARCHAR(20) NOT NULL CHECK (token_type IN ('single_use', 'group')),
     
     -- Restrictions
-    email VARCHAR(255),  -- NULL for group tokens, specific for single_use
+    email VARCHAR(255),  -- Optional: for email delivery OR NULL for link/QR sharing
     max_uses INT NOT NULL DEFAULT 1,
     used_count INT NOT NULL DEFAULT 0,
     
@@ -98,7 +117,7 @@ CREATE TABLE territory_dk.invitation_tokens (
     created_by_user_id UUID NOT NULL REFERENCES territory_dk.users(id),
     community_id UUID REFERENCES territory_dk.communities(id),  -- ⭐ Optional community assignment
     purpose TEXT,  -- Optional description
-    metadata JSONB,  -- Additional data (group name, course info, etc.)
+    metadata JSONB,  -- Additional data (group name, course info, delivery method, etc.)
     
     -- Lifecycle
     expires_at TIMESTAMPTZ NOT NULL,
@@ -112,8 +131,8 @@ CREATE TABLE territory_dk.invitation_tokens (
     
     -- Constraints
     CHECK (
-        (token_type = 'single_use' AND email IS NOT NULL AND max_uses = 1) OR
-        (token_type = 'group' AND email IS NULL AND max_uses > 1)
+        (token_type = 'single_use' AND max_uses = 1) OR
+        (token_type = 'group' AND max_uses > 1)
     ),
     CHECK (used_count <= max_uses)
 );
@@ -194,14 +213,15 @@ Backend Processing:
   1. Query global.invitation_token_registry for territory_code
   2. Validate token exists in territory_{code}.invitation_tokens
   3. Check token is active and not expired
-  4. For single_use: Verify email matches token.email (if provided)
-  5. For group: Check used_count < max_uses
-  6. Create user account in territory_{code}.users
-  7. If token has community_id: assign user to that community
-  8. Increment token.used_count
-  9. Record invitation use in invitation_uses table
-  10. If single_use OR group token reached max_uses: mark token as inactive
-  11. Return access/refresh tokens
+  4. For single_use with email: Verify provided email matches token.email
+  5. For single_use without email: Skip email validation (privacy mode)
+  6. For group: Check used_count < max_uses
+  7. Create user account in territory_{code}.users
+  8. If token has community_id: assign user to that community
+  9. Increment token.used_count
+  10. Record invitation use in invitation_uses table
+  11. If single_use OR group token reached max_uses: mark token as inactive
+  12. Return access/refresh tokens
 ```
 
 **Security Benefits:**
@@ -473,32 +493,68 @@ fn generate_invitation_token() -> String {
 
 ## Example Workflows
 
-### **Workflow 1: Territory Manager Invites Workshop Participants**
+### **Workflow 1: Territory Manager Invites Workshop Participants (Group Token)**
 
 ```
 1. Territory manager logs in
 2. Creates group token:
    - Type: group
+   - Email: null (group tokens are always shared via link/QR)
    - Max uses: 25
    - Expires: 30 days
    - Purpose: "Spring 2025 Gardening Workshop"
-3. Shares token link with workshop participants
+   - Community: "Urban Gardening Guild"
+3. Shares token link/QR code with workshop participants
 4. Participants register using the group token
-5. Manager monitors invitation usage
-6. After workshop, manager can revoke unused invitations
+5. All participants automatically join "Urban Gardening Guild"
+6. Manager monitors invitation usage
+7. After workshop, manager can revoke unused invitations
 ```
 
-### **Workflow 2: User Invites a Friend**
+### **Workflow 2: User Invites Friend via Email (Single-Use with Email)**
 
 ```
 1. User logs in
 2. Creates single-use token:
    - Type: single_use
-   - Email: friend@example.com
+   - Email: friend@example.com (for email delivery)
+   - Max uses: 1
    - Expires: 7 days
 3. System sends invitation email to friend (Phase 2)
 4. Friend clicks link, registers with pre-filled email
 5. Token automatically invalidated after use
+```
+
+### **Workflow 3: User Invites Friend via Telegram (Single-Use without Email - Privacy Mode)**
+
+```
+1. User logs in
+2. Creates single-use token:
+   - Type: single_use
+   - Email: null (privacy-respecting, no email required)
+   - Max uses: 1
+   - Expires: 7 days
+   - Metadata: { "delivery_method": "telegram" }
+3. User copies invitation link
+4. User sends link to friend via Telegram/Signal/private chat
+5. Friend clicks link, registers (no email validation)
+6. Token automatically invalidated after use
+```
+
+### **Workflow 4: Community Leader Shares QR Code at Event (Single-Use, No Email)**
+
+```
+1. Community leader creates single-use tokens for event attendees
+2. Tokens created:
+   - Type: single_use
+   - Email: null (no email addresses collected)
+   - Max uses: 1 each
+   - Expires: 7 days
+   - Community: "Local Beekeeping Association"
+3. Leader generates QR codes for each token
+4. Attendees scan QR code with phone
+5. Attendees register on-site
+6. Automatically join "Local Beekeeping Association"
 ```
 
 ---
