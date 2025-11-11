@@ -91,14 +91,15 @@ Global Schema (Cross-Territory)
 └── invitation_token_registry -- Territory binding
 
 Territory Schema (Per Pod)
-├── users                    -- Authentication
-├── profiles                -- User profiles
-├── profile_links          -- External links
-├── privacy_settings       -- Privacy preferences
-├── user_settings          -- App preferences
-├── notification_settings  -- Notification prefs
-├── invitation_tokens      -- Territory-local tokens
-└── invitation_uses        -- Audit trail
+├── users                          -- Authentication
+├── users_profiles                 -- User profiles
+├── users_profile_links            -- External links
+├── users_privacy_settings         -- Privacy preferences
+├── users_settings                 -- App preferences
+├── users_notification_settings    -- Notification prefs
+├── users_audit_logs               -- User audit trail
+├── invitation_tokens              -- Territory-local tokens
+└── invitation_uses                -- Invitation audit trail
 ```
 
 ### Holochain Migration Ready

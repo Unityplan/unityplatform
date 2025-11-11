@@ -125,11 +125,12 @@ PostgreSQL Structure:
 │
 └── territory_{code} (Per pod)
     ├── users
-    ├── profiles
-    ├── profile_links
-    ├── privacy_settings
-    ├── user_settings
-    ├── notification_settings
+    ├── users_profiles
+    ├── users_profile_links
+    ├── users_privacy_settings
+    ├── users_settings
+    ├── users_notification_settings
+    ├── users_audit_logs
     ├── invitation_tokens
     └── invitation_uses
 ```

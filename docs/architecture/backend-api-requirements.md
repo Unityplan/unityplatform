@@ -170,7 +170,7 @@ interface UserProfile {
   // Location (privacy-aware)
   location?: string | null;      // Encoded: "[55.6761,12.5683]Copenhagen, Denmark"
   
-  // Social Links (DEPRECATED - Use profile_links instead)
+  // Social Links (DEPRECATED - Use users_profile_links instead)
   website_url?: string | null;   // @deprecated - Remove in next version
   github_url?: string | null;    // @deprecated - Remove in next version
   linkedin_url?: string | null;  // @deprecated - Remove in next version
@@ -187,7 +187,7 @@ interface UserProfile {
 
 **Database Requirements:**
 
-- Profile table in each territory schema (`territory_dk.profiles`)
+- Profile table in each territory schema (`{schema_name}.users_profiles`)
 - One-to-one relationship with users table
 - JSON/JSONB column for interests, skills, languages arrays
 - Full-text search on: `display_name`, `bio`, `about`, `interests`, `skills`
@@ -247,7 +247,7 @@ interface ProfileLink {
 
 **Database Requirements:**
 
-- Separate table: `territory_dk.profile_links`
+- Separate table: `{schema_name}.users_profile_links`
 - Index on: `user_id`, `display_order`
 - Constraint: Max 10 links per user
 - URL validation (must be valid HTTPS)
@@ -356,7 +356,7 @@ interface AppearanceSettings {
 **Storage:**
 
 - Frontend: localStorage + cookies (for immediate UX)
-- Backend: `territory_dk.user_settings` table (sync across devices)
+- Backend: `{schema_name}.users_settings` table (sync across devices)
 
 ### 3.2 Privacy Settings
 
@@ -399,7 +399,7 @@ interface NotificationSettings {
 
 **Database:**
 
-- Table: `territory_dk.notification_settings`
+- Table: `{schema_name}.users_notification_settings`
 - One-to-one with users table
 
 **Endpoints:**
@@ -597,14 +597,14 @@ POST   /api/v1/account/delete/cancel    - Cancel pending deletion
 4. **Key Entities to Map:**
 
    ```
-   PostgreSQL                  →  Holochain
-   ────────────────────────────────────────────
-   territory_dk.users          →  Agent Entry (built-in)
-   territory_dk.profiles       →  Profile Entry Type
-   territory_dk.profile_links  →  ProfileLink Entry Type
-   territory_dk.posts          →  Post Entry Type
-   territory_dk.communities    →  Community Entry Type
-   global.invitation_tokens    →  Bridge between DNAs
+   PostgreSQL                            →  Holochain
+   ──────────────────────────────────────────────────────────
+   {schema_name}.users                   →  Agent Entry (built-in)
+   {schema_name}.users_profiles          →  Profile Entry Type
+   {schema_name}.users_profile_links     →  ProfileLink Entry Type
+   {schema_name}.posts                   →  Post Entry Type
+   {schema_name}.communities             →  Community Entry Type
+   global.invitation_tokens              →  Bridge between DNAs
    ```
 
 5. **Validation Rules:**

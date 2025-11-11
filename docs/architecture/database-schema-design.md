@@ -71,16 +71,16 @@ unityplan_db
 │
 ├── territory_dk (Single-pod example: Denmark)
 │   ├── users
-│   ├── profiles
-│   ├── profile_links
-│   ├── user_settings
-│   ├── notification_settings
+│   ├── users_profiles
+│   ├── users_profile_links
+│   ├── users_settings
+│   ├── users_notification_settings
 │   ├── invitation_tokens
 │   ├── invitation_uses
 │   ├── communities
 │   ├── posts
 │   ├── messages
-│   └── audit_logs
+│   └── users_audit_logs
 │
 ├── territory_dk (Multi-pod example: Denmark on shared pod)
 │   └── (same structure as above)
@@ -319,7 +319,7 @@ CREATE INDEX idx_users_verified ON {schema_name}.users(is_verified);
 **Purpose:** User profile data (public & private)
 
 ```sql
-CREATE TABLE {schema_name}.profiles (
+CREATE TABLE {schema_name}.users_profiles (
     user_id UUID PRIMARY KEY REFERENCES {schema_name}.users(id) ON DELETE CASCADE,
     
     -- Display Info
@@ -338,7 +338,7 @@ CREATE TABLE {schema_name}.profiles (
     -- Location (privacy-aware encoded format)
     location VARCHAR(500),                     -- "[lat,lng]Display Name"
     
-    -- Social Links (DEPRECATED - use profile_links table)
+    -- Social Links (DEPRECATED - use users_profile_links table)
     website_url VARCHAR(500),
     github_url VARCHAR(500),
     linkedin_url VARCHAR(500),
@@ -391,9 +391,9 @@ create_link(agent_pub_key, profile_hash, "profile")?;
 **Purpose:** Flexible external links (replaces deprecated social link columns)
 
 ```sql
-CREATE TABLE territory_dk.profile_links (
+CREATE TABLE {schema_name}.users_profile_links (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES {schema_name}.users(id) ON DELETE CASCADE,
     
     -- Link Data
     label VARCHAR(100) NOT NULL,               -- "My Portfolio", "GitHub"
@@ -413,8 +413,8 @@ CREATE TABLE territory_dk.profile_links (
     UNIQUE (user_id, display_order)            -- Unique order per user
 );
 
-CREATE INDEX idx_profile_links_user ON territory_dk.profile_links(user_id);
-CREATE INDEX idx_profile_links_order ON territory_dk.profile_links(user_id, display_order);
+CREATE INDEX idx_users_profile_links_user ON {schema_name}.users_profile_links(user_id);
+CREATE INDEX idx_users_profile_links_order ON {schema_name}.users_profile_links(user_id, display_order);
 
 -- Limit to 10 links per user (trigger or application logic)
 ```
@@ -491,8 +491,8 @@ pub enum ProfileVisibility {
 **Purpose:** App preferences (appearance, notifications, etc.)
 
 ```sql
-CREATE TABLE territory_dk.user_settings (
-    user_id UUID PRIMARY KEY REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+CREATE TABLE {schema_name}.users_settings (
+    user_id UUID PRIMARY KEY REFERENCES {schema_name}.users(id) ON DELETE CASCADE,
     
     -- Appearance
     theme VARCHAR(20) NOT NULL DEFAULT 'system',
@@ -521,8 +521,8 @@ CREATE TABLE territory_dk.user_settings (
 **Purpose:** Notification delivery preferences
 
 ```sql
-CREATE TABLE territory_dk.notification_settings (
-    user_id UUID PRIMARY KEY REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+CREATE TABLE {schema_name}.users_notification_settings (
+    user_id UUID PRIMARY KEY REFERENCES {schema_name}.users(id) ON DELETE CASCADE,
     
     -- Email Notifications
     email_digest BOOLEAN NOT NULL DEFAULT true,
