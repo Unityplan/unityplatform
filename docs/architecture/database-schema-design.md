@@ -424,6 +424,7 @@ WHERE EXISTS (
 ```
 
 **Tag Format Best Practices:**
+
 - Use lowercase: "beekeeping" not "Beekeeping"
 - Hyphenate compound words: "web-development" not "web development"
 - Use singular form: "beekeeping" not "beekeepings"
@@ -798,6 +799,450 @@ CREATE INDEX idx_invitation_uses_user ON territory_dk.invitation_uses(user_id);
 
 - Immutable source chain entry
 - Link from invitation to user who redeemed it
+
+---
+
+## User Initialization Workflow
+
+### What Happens When a New User is Created?
+
+When a new user registers on the platform, the system performs a **multi-table initialization** to ensure all necessary user-related tables have proper default entries. This can be implemented using **database triggers** (automatic, guaranteed consistency) or **application logic** (flexible, easier to test).
+
+#### Recommended Approach: Database Triggers
+
+Database triggers ensure atomic initialization - if any part fails, the entire user creation rolls back. This prevents orphaned user records without corresponding profiles/settings.
+
+**Tables Automatically Created:**
+
+1. **`users`** - Created by registration endpoint (primary table)
+2. **`users_profiles`** - Auto-created by trigger with default values
+3. **`users_settings`** - Auto-created by trigger with default preferences
+4. **`users_notification_settings`** - Auto-created by trigger with default notification preferences
+
+**Tables Created On-Demand (not required for registration):**
+
+- **`users_profile_links`** - Added when user adds external links
+- **`users_language_proficiency`** - Added when user declares language skills
+- **`users_audit_logs`** - Created as user performs auditable actions
+
+#### Initialization Sequence
+
+```sql
+-- Step 1: Registration endpoint creates user (application logic)
+-- This happens in territory_dk schema (or whichever territory user registers in)
+INSERT INTO territory_dk.users (
+    username,
+    matrix_id,
+    email, -- optional
+    password_hash,
+    territory_code
+) VALUES (
+    'john_doe',
+    '@john_doe:unityplan.dk',
+    'john@example.com', -- optional
+    '$argon2id$v=19$m=...',
+    'dk'
+);
+
+-- Step 2: Trigger automatically creates profile with defaults
+-- (Trigger fires on users INSERT)
+INSERT INTO territory_dk.users_profiles (
+    user_id,
+    display_name,
+    bio,
+    avatar_url,
+    header_image_url,
+    location,
+    website,
+    skills,
+    interests,
+    is_public
+) VALUES (
+    <new_user_id>,
+    'john_doe', -- defaults to username
+    '',         -- empty bio
+    NULL,       -- no avatar yet
+    NULL,       -- no header image yet
+    NULL,       -- no location yet
+    '',         -- empty website
+    ARRAY[]::TEXT[], -- empty skills array
+    ARRAY[]::TEXT[], -- empty interests array
+    TRUE        -- public by default
+);
+
+-- Step 3: Trigger automatically creates settings with defaults
+INSERT INTO territory_dk.users_settings (
+    user_id,
+    preferred_language,
+    theme_mode,
+    color_scheme,
+    auto_translate,
+    translation_provider,
+    contribute_translations,
+    data_collection_consent
+) VALUES (
+    <new_user_id>,
+    'en',              -- English default
+    'system',          -- Follow system theme
+    'default',         -- Default color scheme
+    FALSE,             -- No auto-translate
+    'libre-translate', -- Privacy-first provider
+    TRUE,              -- Contribute to translation memory
+    FALSE              -- Explicit consent required
+);
+
+-- Step 4: Trigger automatically creates notification settings
+INSERT INTO territory_dk.users_notification_settings (
+    user_id,
+    email_notifications,
+    push_notifications,
+    matrix_notifications,
+    notification_frequency,
+    notify_mentions,
+    notify_replies,
+    notify_follows,
+    notify_forum_activity,
+    notify_course_updates,
+    notify_badge_awards,
+    notify_system_announcements
+) VALUES (
+    <new_user_id>,
+    FALSE,      -- Email off by default (privacy-first)
+    TRUE,       -- Push on (in-app)
+    TRUE,       -- Matrix on (primary communication)
+    'realtime', -- Immediate notifications
+    TRUE,       -- Notify on mentions
+    TRUE,       -- Notify on replies
+    TRUE,       -- Notify on follows
+    FALSE,      -- Forum activity off by default
+    TRUE,       -- Course updates on
+    TRUE,       -- Badge awards on
+    TRUE        -- System announcements on
+);
+
+-- Step 5: Register username globally (application logic)
+-- This happens in global schema to prevent duplicates across territories
+INSERT INTO global.username_registry (
+    username,
+    territory_code,
+    user_id
+) VALUES (
+    'john_doe',
+    'dk',
+    <new_user_id>
+);
+
+-- Step 6: Register email globally if provided (application logic)
+-- Only if user provided email during registration
+INSERT INTO global.email_registry (
+    email,
+    territory_code,
+    user_id
+) VALUES (
+    'john@example.com',
+    'dk',
+    <new_user_id>
+);
+
+-- Step 7: Record invitation use (if registration via invitation)
+INSERT INTO territory_dk.invitation_uses (
+    invitation_token_id,
+    user_id,
+    used_at
+) VALUES (
+    <invitation_token_id>,
+    <new_user_id>,
+    NOW()
+);
+```
+
+#### SQL Trigger Implementation
+
+```sql
+-- Trigger function to auto-create profile
+CREATE OR REPLACE FUNCTION territory_dk.create_user_profile()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO territory_dk.users_profiles (
+        user_id,
+        display_name,
+        bio,
+        avatar_url,
+        header_image_url,
+        location,
+        website,
+        skills,
+        interests,
+        is_public
+    ) VALUES (
+        NEW.id,
+        NEW.username, -- Default display_name to username
+        '',
+        NULL,
+        NULL,
+        NULL,
+        '',
+        ARRAY[]::TEXT[],
+        ARRAY[]::TEXT[],
+        TRUE
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Attach trigger to users table
+CREATE TRIGGER trigger_create_user_profile
+    AFTER INSERT ON territory_dk.users
+    FOR EACH ROW
+    EXECUTE FUNCTION territory_dk.create_user_profile();
+
+-- Trigger function to auto-create settings
+CREATE OR REPLACE FUNCTION territory_dk.create_user_settings()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO territory_dk.users_settings (
+        user_id,
+        preferred_language,
+        theme_mode,
+        color_scheme,
+        auto_translate,
+        translation_provider,
+        contribute_translations,
+        data_collection_consent
+    ) VALUES (
+        NEW.id,
+        'en',
+        'system',
+        'default',
+        FALSE,
+        'libre-translate',
+        TRUE,
+        FALSE
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Attach trigger to users table
+CREATE TRIGGER trigger_create_user_settings
+    AFTER INSERT ON territory_dk.users
+    FOR EACH ROW
+    EXECUTE FUNCTION territory_dk.create_user_settings();
+
+-- Trigger function to auto-create notification settings
+CREATE OR REPLACE FUNCTION territory_dk.create_user_notification_settings()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO territory_dk.users_notification_settings (
+        user_id,
+        email_notifications,
+        push_notifications,
+        matrix_notifications,
+        notification_frequency,
+        notify_mentions,
+        notify_replies,
+        notify_follows,
+        notify_forum_activity,
+        notify_course_updates,
+        notify_badge_awards,
+        notify_system_announcements
+    ) VALUES (
+        NEW.id,
+        FALSE,
+        TRUE,
+        TRUE,
+        'realtime',
+        TRUE,
+        TRUE,
+        TRUE,
+        FALSE,
+        TRUE,
+        TRUE,
+        TRUE
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Attach trigger to users table
+CREATE TRIGGER trigger_create_user_notification_settings
+    AFTER INSERT ON territory_dk.users
+    FOR EACH ROW
+    EXECUTE FUNCTION territory_dk.create_user_notification_settings();
+```
+
+#### Application Logic Alternative
+
+If you prefer **application-level initialization** (instead of database triggers):
+
+**Advantages:**
+- Easier to test and mock
+- More flexible (can conditionally skip tables)
+- Clearer error handling in API responses
+- No trigger maintenance across multiple territory schemas
+
+**Implementation:**
+
+```rust
+// Pseudo-Rust code for registration endpoint
+async fn register_user(
+    territory: &str,
+    registration: UserRegistration
+) -> Result<UserCreated, RegistrationError> {
+    // Start database transaction
+    let mut tx = db.begin().await?;
+    
+    // 1. Create user
+    let user = sqlx::query_as!(
+        User,
+        r#"
+        INSERT INTO territory_{territory}.users 
+        (username, matrix_id, email, password_hash, territory_code)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+        "#,
+        registration.username,
+        format!("@{}:unityplan.{}", registration.username, territory),
+        registration.email,
+        password_hash,
+        territory
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+    
+    // 2. Create profile with defaults
+    sqlx::query!(
+        r#"
+        INSERT INTO territory_{territory}.users_profiles
+        (user_id, display_name, bio, website, skills, interests, is_public)
+        VALUES ($1, $2, '', '', ARRAY[]::TEXT[], ARRAY[]::TEXT[], TRUE)
+        "#,
+        user.id,
+        registration.username
+    )
+    .execute(&mut *tx)
+    .await?;
+    
+    // 3. Create settings with defaults
+    sqlx::query!(
+        r#"
+        INSERT INTO territory_{territory}.users_settings
+        (user_id, preferred_language, theme_mode, color_scheme, 
+         auto_translate, translation_provider, contribute_translations, 
+         data_collection_consent)
+        VALUES ($1, 'en', 'system', 'default', FALSE, 'libre-translate', TRUE, FALSE)
+        "#,
+        user.id
+    )
+    .execute(&mut *tx)
+    .await?;
+    
+    // 4. Create notification settings with defaults
+    sqlx::query!(
+        r#"
+        INSERT INTO territory_{territory}.users_notification_settings
+        (user_id, email_notifications, push_notifications, matrix_notifications,
+         notification_frequency, notify_mentions, notify_replies, notify_follows,
+         notify_forum_activity, notify_course_updates, notify_badge_awards,
+         notify_system_announcements)
+        VALUES ($1, FALSE, TRUE, TRUE, 'realtime', TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE)
+        "#,
+        user.id
+    )
+    .execute(&mut *tx)
+    .await?;
+    
+    // 5. Register username globally
+    sqlx::query!(
+        r#"
+        INSERT INTO global.username_registry (username, territory_code, user_id)
+        VALUES ($1, $2, $3)
+        "#,
+        registration.username,
+        territory,
+        user.id
+    )
+    .execute(&mut *tx)
+    .await?;
+    
+    // 6. Register email globally (if provided)
+    if let Some(email) = registration.email {
+        sqlx::query!(
+            r#"
+            INSERT INTO global.email_registry (email, territory_code, user_id)
+            VALUES ($1, $2, $3)
+            "#,
+            email,
+            territory,
+            user.id
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+    
+    // 7. Record invitation use (if via invitation)
+    if let Some(invitation_token_id) = registration.invitation_token_id {
+        sqlx::query!(
+            r#"
+            INSERT INTO territory_{territory}.invitation_uses
+            (invitation_token_id, user_id, used_at)
+            VALUES ($1, $2, NOW())
+            "#,
+            invitation_token_id,
+            user.id
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+    
+    // Commit transaction
+    tx.commit().await?;
+    
+    Ok(UserCreated {
+        user_id: user.id,
+        username: user.username,
+        matrix_id: user.matrix_id,
+    })
+}
+```
+
+#### Error Handling
+
+**Transaction Rollback Scenarios:**
+
+- Username already exists (global.username_registry unique constraint)
+- Email already registered (global.email_registry unique constraint)
+- Invalid invitation token
+- Invitation token already used or expired
+- Database constraint violation
+
+**Error Response:**
+
+```json
+{
+  "error": "registration_failed",
+  "message": "Username already exists",
+  "field": "username"
+}
+```
+
+#### Summary
+
+**Required Tables on User Creation:**
+1. ✅ `users` - Always created (primary table)
+2. ✅ `users_profiles` - Always created (via trigger or app logic)
+3. ✅ `users_settings` - Always created (via trigger or app logic)
+4. ✅ `users_notification_settings` - Always created (via trigger or app logic)
+5. ✅ `username_registry` (global) - Always created
+6. ⚠️ `email_registry` (global) - Only if email provided
+7. ⚠️ `invitation_uses` - Only if registration via invitation
+
+**Optional Tables (Created Later):**
+- `users_profile_links` - When user adds external links
+- `users_language_proficiency` - When user declares language skills
+- `users_audit_logs` - As user performs auditable actions
+
+**Recommendation:** Use **database triggers** for guaranteed atomic initialization of core user tables (profiles, settings, notification_settings). Use **application logic** for global registries and conditional tables (email_registry, invitation_uses).
 
 ---
 
