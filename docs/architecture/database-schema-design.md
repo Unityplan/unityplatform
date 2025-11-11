@@ -53,12 +53,11 @@
 **Schema Naming Convention:**
 
 - **Single-territory pod:** Schema named after territory code
-  - Example: `territory_dk` (Denmark), `territory_no` (Norway)
+  - Example: `territory_dk` (Denmark only)
   - One territory per database
   
-- **Multi-territory pod:** Schema named with numeric ID
-  - Example: `territory_1`, `territory_2`, `territory_3`
-  - Mapping stored in `global.territories` table
+- **Multi-territory pod:** Schema named after territory code
+  - Example: `territory_dk`, `territory_no`, `territory_se`
   - Multiple territories per database
   
 - **In documentation:** We use `{schema_name}` as placeholder in SQL examples
@@ -83,13 +82,13 @@ unityplan_db
 │   ├── messages
 │   └── audit_logs
 │
-├── territory_1 (Multi-pod example: Denmark on shared pod)
+├── territory_dk (Multi-pod example: Denmark on shared pod)
 │   └── (same structure as above)
 │
-├── territory_2 (Multi-pod example: Norway on shared pod)
+├── territory_no (Multi-pod example: Norway on shared pod)
 │   └── (same structure as above)
 │
-└── territory_3 (Multi-pod example: Sweden on shared pod)
+└── territory_se (Multi-pod example: Sweden on shared pod)
     └── (same structure as above)
 ```
 
@@ -704,9 +703,9 @@ All migration scripts should accept `schema_name` as a parameter to support both
 ./migrate.sh --schema territory_dk
 
 # Multi-territory pod deployment
-./migrate.sh --schema territory_1 --territory-code dk
-./migrate.sh --schema territory_2 --territory-code no
-./migrate.sh --schema territory_3 --territory-code se
+./migrate.sh --schema territory_dk --territory-code dk
+./migrate.sh --schema territory_no --territory-code no
+./migrate.sh --schema territory_se --territory-code se
 ```
 
 **Migration Script Structure:**
@@ -745,11 +744,11 @@ database:
 database:
   mode: multi_territory
   territories:
-    - schema_name: territory_1
+    - schema_name: territory_dk
       territory_code: dk
-    - schema_name: territory_2
+    - schema_name: territory_no
       territory_code: no
-    - schema_name: territory_3
+    - schema_name: territory_se
       territory_code: se
 ```
 

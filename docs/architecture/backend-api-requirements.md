@@ -49,7 +49,7 @@ interface User {
 
 **Database Requirements:**
 
-- Multi-tenant architecture with territory schemas (flexible naming: `territory_dk` or `territory_1`)
+- Multi-tenant architecture with territory schemas (naming: `territory_{code}`, e.g., `territory_dk`)
 - User table in each territory schema
 - Global registry for cross-territory lookups (username uniqueness - email uniqueness if provided)
 - Indexes on: `username`, `email` (where not null), `territory_code`

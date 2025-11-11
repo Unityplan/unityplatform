@@ -237,11 +237,10 @@ All changes committed to:
    - Old Matrix IDs become aliases
    - Username remains constant anchor
 
-4. **Flexible Schema Naming**
-   - Single-pod: Use territory code (`territory_dk`)
-   - Multi-pod: Use numeric ID (`territory_1`)
+4. **Consistent Schema Naming**
+   - Both single and multi-pod: Use territory code (`territory_dk`, `territory_no`, etc.)
    - All migrations parameterized
-   - Config drives schema selection
+   - Schema name format: `territory_{code}`
 
 ---
 
