@@ -79,6 +79,11 @@ unityplan_db
 │   ├── invitation_tokens
 │   ├── invitation_uses
 │   ├── communities
+│   ├── community_members
+│   ├── roles
+│   ├── role_assignments
+│   ├── community_role_elections
+│   ├── community_role_election_votes
 │   ├── posts
 │   ├── messages
 │   └── users_audit_logs
@@ -802,6 +807,387 @@ CREATE INDEX idx_invitation_uses_user ON territory_dk.invitation_uses(user_id);
 
 ---
 
+### 9. Communities Table
+
+**Purpose:** Communities within territories (guilds, learning circles, local chapters, study groups)
+
+**Design Decision:** Communities use **UUID primary keys** instead of hierarchical string IDs to support unlimited parent/child nesting. The hierarchy is tracked via `parent_community_id`, and the full path can be reconstructed by traversing parent relationships.
+
+```sql
+CREATE TABLE territory_dk.communities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,                -- Simple name (e.g., "Copenhagen", "Beekeepers Guild")
+    slug VARCHAR(255) NOT NULL,                -- URL-friendly identifier
+    description TEXT,
+    
+    -- Hierarchy
+    parent_community_id UUID REFERENCES territory_dk.communities(id) ON DELETE CASCADE,
+    territory_code VARCHAR(10) NOT NULL,       -- Which territory this community belongs to
+    depth INTEGER NOT NULL DEFAULT 0,          -- Hierarchy depth (0 = top-level, 1 = child, etc.)
+    
+    -- Settings
+    is_public BOOLEAN NOT NULL DEFAULT TRUE,   -- Public communities visible to all
+    requires_approval BOOLEAN NOT NULL DEFAULT FALSE, -- Member approval required
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,        -- Flexible storage (tags, location, etc.)
+    
+    -- Lifecycle
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by_user_id UUID NOT NULL REFERENCES territory_dk.users(id),
+    
+    -- Constraints
+    CONSTRAINT uq_community_slug_territory UNIQUE (slug, territory_code),
+    CHECK (depth >= 0)
+);
+
+CREATE INDEX idx_communities_parent ON territory_dk.communities(parent_community_id);
+CREATE INDEX idx_communities_territory ON territory_dk.communities(territory_code);
+CREATE INDEX idx_communities_slug ON territory_dk.communities(slug);
+CREATE INDEX idx_communities_active ON territory_dk.communities(is_active);
+CREATE INDEX idx_communities_depth ON territory_dk.communities(depth);
+```
+
+**Example Hierarchy:**
+
+```sql
+-- Top-level community (depth 0)
+INSERT INTO territory_dk.communities (id, name, slug, territory_code, depth, created_by_user_id)
+VALUES ('uuid-copenhagen', 'Copenhagen', 'copenhagen', 'DK', 0, 'creator-uuid');
+
+-- Child community (depth 1)
+INSERT INTO territory_dk.communities (id, name, slug, parent_community_id, territory_code, depth, created_by_user_id)
+VALUES ('uuid-valby', 'Valby', 'valby', 'uuid-copenhagen', 'DK', 1, 'creator-uuid');
+
+-- Grandchild community (depth 2)
+INSERT INTO territory_dk.communities (id, name, slug, parent_community_id, territory_code, depth, created_by_user_id)
+VALUES ('uuid-beekeepers', 'Beekeepers Guild', 'beekeepers', 'uuid-valby', 'DK', 2, 'creator-uuid');
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct Community {
+    pub name: String,
+    pub description: String,
+    pub parent_community: Option<ActionHash>, // Link to parent community entry
+    pub is_public: bool,
+    pub created_by: AgentPubKey,
+}
+
+// Links:
+// - Creator → Community
+// - Parent Community → Child Community (if parent exists)
+// - Territory → Community (via anchor)
+```
+
+---
+
+### 10. Community Members Table
+
+**Purpose:** Track user membership in communities
+
+```sql
+CREATE TABLE territory_dk.community_members (
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    community_id UUID NOT NULL REFERENCES territory_dk.communities(id) ON DELETE CASCADE,
+    
+    -- Membership status
+    role VARCHAR(50) NOT NULL DEFAULT 'member',  -- 'member', 'moderator', 'admin'
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    approved_at TIMESTAMPTZ,                     -- NULL if requires_approval and not yet approved
+    approved_by_user_id UUID REFERENCES territory_dk.users(id),
+    
+    -- Lifecycle
+    left_at TIMESTAMPTZ,                         -- NULL if currently a member
+    
+    PRIMARY KEY (user_id, community_id)
+);
+
+CREATE INDEX idx_community_members_user ON territory_dk.community_members(user_id);
+CREATE INDEX idx_community_members_community ON territory_dk.community_members(community_id);
+CREATE INDEX idx_community_members_role ON territory_dk.community_members(role);
+CREATE INDEX idx_community_members_active ON territory_dk.community_members(user_id, community_id) 
+    WHERE left_at IS NULL;
+```
+
+**Holochain Mapping:**
+
+```rust
+// Link from Community to Member
+create_link(community_hash, user_agent_pub_key, "member", LinkTag::new("role:member"))?;
+
+// Link from User to Community (reverse lookup)
+create_link(user_agent_pub_key, community_hash, "joined_community")?;
+```
+
+---
+
+### 11. Roles Table
+
+**Purpose:** Define roles that can be assigned to users (territory-level and community-level)
+
+**Note:** LMS and Forum-specific roles will be added later as extensions
+
+```sql
+CREATE TABLE territory_dk.roles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,                -- 'territory_manager', 'community_manager', etc.
+    scope VARCHAR(50) NOT NULL,                -- 'territory', 'community', 'user'
+    description TEXT,
+    
+    -- Role metadata
+    is_electable BOOLEAN NOT NULL DEFAULT FALSE, -- Can this role be elected democratically?
+    requires_election BOOLEAN NOT NULL DEFAULT FALSE, -- Must this role be elected?
+    metadata JSONB DEFAULT '{}'::jsonb,
+    
+    -- Lifecycle
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    CONSTRAINT uq_role_name_scope UNIQUE (name, scope)
+);
+
+CREATE INDEX idx_roles_scope ON territory_dk.roles(scope);
+CREATE INDEX idx_roles_electable ON territory_dk.roles(is_electable);
+
+-- Seed core roles
+INSERT INTO territory_dk.roles (name, scope, description, is_electable, requires_election) VALUES
+    ('territory_manager', 'territory', 'Manages territory infrastructure and users', FALSE, FALSE),
+    ('community_manager', 'community', 'Manages a specific community', TRUE, TRUE),
+    ('community_moderator', 'community', 'Moderates community discussions', TRUE, TRUE),
+    ('member', 'community', 'Standard community member', FALSE, FALSE);
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct Role {
+    pub name: String,
+    pub scope: RoleScope,
+    pub description: String,
+    pub is_electable: bool,
+}
+
+enum RoleScope {
+    Territory,
+    Community,
+    User,
+}
+```
+
+---
+
+### 12. Role Assignments Table
+
+**Purpose:** Assign roles to users at territory or community level
+
+```sql
+CREATE TABLE territory_dk.role_assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    role_id UUID NOT NULL REFERENCES territory_dk.roles(id) ON DELETE CASCADE,
+    
+    -- Scope
+    community_id UUID REFERENCES territory_dk.communities(id) ON DELETE CASCADE,
+    -- community_id is NULL for territory-level roles, NOT NULL for community-level roles
+    
+    -- Assignment metadata
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    assigned_by_user_id UUID REFERENCES territory_dk.users(id), -- NULL if elected
+    assigned_via_election_id UUID,                    -- NULL if assigned manually
+    
+    -- Expiration (optional)
+    expires_at TIMESTAMPTZ,                           -- NULL = no expiration
+    
+    -- Lifecycle
+    revoked_at TIMESTAMPTZ,
+    revoked_by_user_id UUID REFERENCES territory_dk.users(id),
+    revoked_reason TEXT,
+    
+    -- Constraints
+    CONSTRAINT chk_community_scope CHECK (
+        (community_id IS NULL AND role_id IN (
+            SELECT id FROM territory_dk.roles WHERE scope IN ('territory', 'user')
+        ))
+        OR
+        (community_id IS NOT NULL AND role_id IN (
+            SELECT id FROM territory_dk.roles WHERE scope = 'community'
+        ))
+    ),
+    
+    -- Prevent duplicate active assignments
+    CONSTRAINT uq_active_role_assignment UNIQUE (user_id, role_id, community_id, revoked_at)
+);
+
+CREATE INDEX idx_role_assignments_user ON territory_dk.role_assignments(user_id);
+CREATE INDEX idx_role_assignments_role ON territory_dk.role_assignments(role_id);
+CREATE INDEX idx_role_assignments_community ON territory_dk.role_assignments(community_id);
+CREATE INDEX idx_role_assignments_active ON territory_dk.role_assignments(user_id, role_id, community_id)
+    WHERE revoked_at IS NULL;
+```
+
+**Holochain Mapping:**
+
+```rust
+// Link from User to Role Assignment
+create_link(user_agent_pub_key, role_assignment_hash, "has_role")?;
+
+// Link from Community to Role Assignment (for community-scoped roles)
+create_link(community_hash, role_assignment_hash, "role_holder")?;
+```
+
+---
+
+### 13. Community Role Elections Table
+
+**Purpose:** Democratic elections for community roles (100% unanimous vote required)
+
+See [overview.md](../project/overview.md#community-level-democratic-role-elections) for complete election process.
+
+```sql
+CREATE TABLE territory_dk.community_role_elections (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    community_id UUID NOT NULL REFERENCES territory_dk.communities(id) ON DELETE CASCADE,
+    role_id UUID NOT NULL REFERENCES territory_dk.roles(id),
+    
+    -- Election type
+    election_type VARCHAR(20) NOT NULL CHECK (election_type IN ('elect', 'remove')),
+    
+    -- Nominee and nominator
+    nominee_user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    nominated_by_user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    
+    -- Voting period
+    voting_period_starts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    voting_period_ends TIMESTAMPTZ NOT NULL,
+    
+    -- Eligible voters (snapshot at election creation)
+    eligible_voter_count INTEGER NOT NULL,     -- Total eligible voters
+    eligible_voter_ids UUID[] NOT NULL,        -- Array of eligible voter user IDs
+    
+    -- Election status
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'passed', 'failed', 'expired')),
+    
+    -- Results (populated when finalized)
+    votes_for INTEGER DEFAULT 0,
+    votes_against INTEGER DEFAULT 0,
+    votes_total INTEGER DEFAULT 0,
+    finalized_at TIMESTAMPTZ,
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,        -- Purpose, reasoning, etc.
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- Constraints
+    CHECK (voting_period_ends > voting_period_starts),
+    CHECK (eligible_voter_count > 0),
+    CHECK (votes_total <= eligible_voter_count)
+);
+
+CREATE INDEX idx_elections_community ON territory_dk.community_role_elections(community_id);
+CREATE INDEX idx_elections_nominee ON territory_dk.community_role_elections(nominee_user_id);
+CREATE INDEX idx_elections_status ON territory_dk.community_role_elections(status);
+CREATE INDEX idx_elections_active ON territory_dk.community_role_elections(community_id, status)
+    WHERE status = 'active';
+```
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct CommunityRoleElection {
+    pub community_hash: ActionHash,
+    pub role_name: String,
+    pub election_type: ElectionType,
+    pub nominee: AgentPubKey,
+    pub nominated_by: AgentPubKey,
+    pub voting_period_ends: Timestamp,
+    pub eligible_voters: Vec<AgentPubKey>,
+}
+
+enum ElectionType {
+    Elect,
+    Remove,
+}
+
+// Links:
+// - Community → Election
+// - Election → Nominee
+```
+
+---
+
+### 14. Community Role Election Votes Table
+
+**Purpose:** Track individual votes in community role elections
+
+```sql
+CREATE TABLE territory_dk.community_role_election_votes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    election_id UUID NOT NULL REFERENCES territory_dk.community_role_elections(id) ON DELETE CASCADE,
+    voter_user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    
+    -- Vote
+    approved BOOLEAN NOT NULL,                 -- TRUE = yes, FALSE = no
+    
+    -- Timestamp
+    voted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- Metadata
+    comment TEXT,                              -- Optional reasoning
+    
+    -- Prevent duplicate votes
+    CONSTRAINT uq_election_vote UNIQUE (election_id, voter_user_id)
+);
+
+CREATE INDEX idx_election_votes_election ON territory_dk.community_role_election_votes(election_id);
+CREATE INDEX idx_election_votes_voter ON territory_dk.community_role_election_votes(voter_user_id);
+```
+
+**Election Finalization Logic:**
+
+When all eligible voters have voted (or voting period ends):
+
+1. Count votes: `votes_for`, `votes_against`, `votes_total`
+2. Check for **100% unanimous approval**: `votes_for = eligible_voter_count`
+3. If unanimous:
+   - `election_type = 'elect'`: Create `role_assignment` for nominee
+   - `election_type = 'remove'`: Revoke existing `role_assignment`
+4. Update election `status` to 'passed' or 'failed'
+5. Set `finalized_at` timestamp
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct ElectionVote {
+    pub election_hash: ActionHash,
+    pub voter: AgentPubKey,
+    pub approved: bool,
+    pub voted_at: Timestamp,
+}
+
+// Links:
+// - Election → Vote
+// - Voter → Vote (for audit)
+
+// Validation:
+// - Voter must be in eligible_voters list
+// - Only one vote per voter per election
+// - Election must be active
+```
+
+---
+
 ## User Initialization Workflow
 
 ### What Happens When a New User is Created?
@@ -1256,13 +1642,21 @@ async fn register_user(
 | PostgreSQL Table | Holochain Entry Type | Visibility | Links |
 |------------------|---------------------|------------|-------|
 | `users` | Agent (built-in) | Private | → Profile |
-| `profiles` | `Profile` | Public/Private | Agent → Profile, Profile → ProfileLink |
-| `profile_links` | `ProfileLink` | Public | Profile → ProfileLink |
-| `privacy_settings` | `PrivacySettings` | Private | Agent → PrivacySettings |
-| `user_settings` | Local storage | Private | N/A (not on DHT) |
-| `notification_settings` | Local storage | Private | N/A |
+| `users_profiles` | `Profile` | Public/Private | Agent → Profile, Profile → ProfileLink |
+| `users_profile_links` | `ProfileLink` | Public | Profile → ProfileLink |
+| `users_language_proficiency` | `LanguageProficiency` | Public | Agent → LanguageProficiency |
+| `users_settings` | Local storage | Private | N/A (not on DHT) |
+| `users_notification_settings` | Local storage | Private | N/A |
 | `invitation_tokens` | `InvitationToken` | Private | Creator → Invitation, Invitation → Redeemer |
 | `invitation_uses` | Source chain entry | Immutable | Invitation → User |
+| `communities` | `Community` | Public | Creator → Community, Parent → Child |
+| `community_members` | Link | Public | Community → Member, Member → Community |
+| `roles` | `Role` | Public | N/A (global definition) |
+| `role_assignments` | Link + Entry | Public/Private | User → Role, Community → RoleHolder |
+| `community_role_elections` | `Election` | Public | Community → Election, Election → Nominee |
+| `community_role_election_votes` | `Vote` | Private (signed) | Election → Vote (encrypted) |
+
+**Note:** Community role election votes are **private entries** but cryptographically signed to prove authenticity. The election tally is public, but individual votes remain private to preserve democratic integrity.
 
 ### Validation Functions
 
