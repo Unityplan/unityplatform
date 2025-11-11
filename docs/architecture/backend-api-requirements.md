@@ -170,12 +170,6 @@ interface UserProfile {
   // Location (privacy-aware)
   location?: string | null;      // Encoded: "[55.6761,12.5683]Copenhagen, Denmark"
   
-  // Social Links (DEPRECATED - Use users_profile_links instead)
-  website_url?: string | null;   // @deprecated - Remove in next version
-  github_url?: string | null;    // @deprecated - Remove in next version
-  linkedin_url?: string | null;  // @deprecated - Remove in next version
-  twitter_handle?: string | null;// @deprecated - Remove in next version
-  
   // Privacy Settings
   privacy?: PrivacySettings;
   

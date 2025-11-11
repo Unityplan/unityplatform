@@ -90,7 +90,9 @@ After Migration:
 ./migrate.sh --schema territory_no --territory-code no
 ./migrate.sh --schema territory_se --territory-code se
 ```
+
 ./migrate.sh --schema territory_3 --territory-code se
+
 ```
 
 **SQL Template Example:**

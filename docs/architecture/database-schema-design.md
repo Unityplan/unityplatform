@@ -338,23 +338,17 @@ CREATE TABLE {schema_name}.users_profiles (
     -- Location (privacy-aware encoded format)
     location VARCHAR(500),                     -- "[lat,lng]Display Name"
     
-    -- Social Links (DEPRECATED - use users_profile_links table)
-    website_url VARCHAR(500),
-    github_url VARCHAR(500),
-    linkedin_url VARCHAR(500),
-    twitter_handle VARCHAR(100),
-    
     -- Timestamps
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_profiles_display_name ON territory_dk.profiles(display_name);
-CREATE INDEX idx_profiles_interests ON territory_dk.profiles USING GIN(interests);
-CREATE INDEX idx_profiles_skills ON territory_dk.profiles USING GIN(skills);
+CREATE INDEX idx_users_profiles_display_name ON {schema_name}.users_profiles(display_name);
+CREATE INDEX idx_users_profiles_interests ON {schema_name}.users_profiles USING GIN(interests);
+CREATE INDEX idx_users_profiles_skills ON {schema_name}.users_profiles USING GIN(skills);
 
 -- Full-text search
-CREATE INDEX idx_profiles_search ON territory_dk.profiles USING GIN(
+CREATE INDEX idx_users_profiles_search ON {schema_name}.users_profiles USING GIN(
     to_tsvector('english', 
         COALESCE(display_name, '') || ' ' || 
         COALESCE(bio, '') || ' ' || 
