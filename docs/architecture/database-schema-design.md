@@ -358,6 +358,77 @@ CREATE INDEX idx_users_profiles_search ON {schema_name}.users_profiles USING GIN
 );
 ```
 
+**Skills & Interests Search Examples:**
+
+GIN (Generalized Inverted Index) enables fast array-based searches for finding users by skills or interests.
+
+```sql
+-- Find all users with "beekeeping" skill
+SELECT u.username, p.display_name, p.location, p.skills
+FROM {schema_name}.users u
+JOIN {schema_name}.users_profiles p ON u.id = p.user_id
+WHERE p.skills @> ARRAY['beekeeping'];
+
+-- Find users with ANY of multiple skills (OR)
+SELECT u.username, p.display_name, p.skills
+FROM {schema_name}.users u
+JOIN {schema_name}.users_profiles p ON u.id = p.user_id
+WHERE p.skills && ARRAY['beekeeping', 'permaculture', 'carpentry'];
+
+-- Find users with ALL of multiple skills (AND)
+SELECT u.username, p.display_name, p.skills
+FROM {schema_name}.users u
+JOIN {schema_name}.users_profiles p ON u.id = p.user_id
+WHERE p.skills @> ARRAY['beekeeping', 'permaculture'];
+
+-- Find closest user with specific skill (sorted by distance)
+WITH user_locations AS (
+    SELECT 
+        u.username,
+        p.display_name,
+        p.skills,
+        p.location,
+        -- Extract coordinates from "[lat,lng]Display Name" format
+        CAST(substring(p.location from '\[([0-9.-]+),') AS FLOAT) AS lat,
+        CAST(substring(p.location from ',([0-9.-]+)\]') AS FLOAT) AS lng
+    FROM {schema_name}.users u
+    JOIN {schema_name}.users_profiles p ON u.id = p.user_id
+    WHERE p.skills @> ARRAY['beekeeping']
+      AND p.location IS NOT NULL
+)
+SELECT 
+    username,
+    display_name,
+    skills,
+    location,
+    -- Calculate distance in km using Haversine formula
+    (6371 * acos(
+        cos(radians(:user_lat)) * 
+        cos(radians(lat)) * 
+        cos(radians(lng) - radians(:user_lng)) + 
+        sin(radians(:user_lat)) * 
+        sin(radians(lat))
+    )) AS distance_km
+FROM user_locations
+ORDER BY distance_km
+LIMIT 10;
+
+-- Case-insensitive skill search
+SELECT u.username, p.display_name, p.skills
+FROM {schema_name}.users u
+JOIN {schema_name}.users_profiles p ON u.id = p.user_id
+WHERE EXISTS (
+    SELECT 1 FROM unnest(p.skills) skill 
+    WHERE LOWER(skill) = LOWER('Beekeeping')
+);
+```
+
+**Tag Format Best Practices:**
+- Use lowercase: "beekeeping" not "Beekeeping"
+- Hyphenate compound words: "web-development" not "web development"
+- Use singular form: "beekeeping" not "beekeepings"
+- Implement autocomplete in frontend to suggest standardized tags
+
 **Holochain Mapping:**
 
 ```rust
@@ -473,6 +544,7 @@ CREATE INDEX idx_users_language_proficiency_preferred ON {schema_name}.users_lan
 ```
 
 **Usage:**
+
 - User's preferred language marked with `is_preferred = true`
 - Secondary languages ordered by `display_order`
 - Different proficiency for each skill (speaking/writing/reading/listening)
@@ -590,6 +662,7 @@ CREATE TABLE {schema_name}.users_settings (
 ```
 
 **Translation Flow:**
+
 1. User views content in foreign language
 2. Client-side translation (privacy-first, on user's device)
 3. If `contribute_translations = true`, translated content pushed to translation memory
