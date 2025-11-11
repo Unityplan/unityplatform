@@ -221,10 +221,10 @@ CREATE INDEX idx_global_invitation_registry_territory ON global.invitation_token
 
 ### Design Template
 
-**Important:** Schema names use variables for flexibility in single vs multi-territory deployments:
+**Important:** Schema names use territory codes for all deployments:
 
-- **Single-territory pod:** Use territory code directly (e.g., `territory_dk`, `territory_no`)
-- **Multi-territory pod:** Use territory ID suffix (e.g., `territory_1`, `territory_2`, `territory_3`)
+- **Single-territory pod:** Use territory code directly (e.g., `territory_dk`)
+- **Multi-territory pod:** Use territory codes for each territory (e.g., `territory_dk`, `territory_no`, `territory_se`)
 - **Template:** All examples below use `{schema_name}` as placeholder
 
 Each territory schema has identical structure. Migration scripts should accept `schema_name` as parameter.
@@ -234,9 +234,9 @@ Each territory schema has identical structure. Migration scripts should accept `
 CREATE SCHEMA IF NOT EXISTS territory_dk;
 
 -- Multi-territory pod example (hosting dk, no, se)
-CREATE SCHEMA IF NOT EXISTS territory_1;  -- Denmark
-CREATE SCHEMA IF NOT EXISTS territory_2;  -- Norway  
-CREATE SCHEMA IF NOT EXISTS territory_3;  -- Sweden
+CREATE SCHEMA IF NOT EXISTS territory_dk;  -- Denmark
+CREATE SCHEMA IF NOT EXISTS territory_no;  -- Norway  
+CREATE SCHEMA IF NOT EXISTS territory_se;  -- Sweden
 ```
 
 ### 1. Users Table

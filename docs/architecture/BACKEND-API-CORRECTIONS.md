@@ -68,16 +68,16 @@ After Migration:
 - `database-schema-design.md` - Added identity system integration section
 - Clarified in user table documentation
 
-### 3. ✅ Territory Schema Naming (Flexible Template)
+### 3. ✅ Territory Schema Naming (Consistent Approach)
 
-**Correction:** Schema names must be flexible for single vs multi-territory pod deployments.
+**Correction:** Schema names use territory codes consistently for all deployment types.
 
 **What Changed:**
 
-- **Old:** Hardcoded `territory_dk`, `territory_no`, etc. in all examples
-- **New:** Use `{schema_name}` as placeholder in SQL templates
-- **Single-territory pod:** `territory_dk`, `territory_no`, `territory_se`
-- **Multi-territory pod:** `territory_1`, `territory_2`, `territory_3` (with mapping in global.territories)
+- **Old:** Suggested `territory_1`, `territory_2` for multi-territory pods
+- **New:** Use territory codes (`territory_dk`, `territory_no`, `territory_se`) for both single and multi-territory
+- **Single-territory pod:** `territory_dk`
+- **Multi-territory pod:** `territory_dk`, `territory_no`, `territory_se`
 
 **Migration Script Design:**
 
@@ -86,8 +86,10 @@ After Migration:
 ./migrate.sh --schema territory_dk --territory-code dk
 
 # Multi-territory pod
-./migrate.sh --schema territory_1 --territory-code dk
-./migrate.sh --schema territory_2 --territory-code no
+./migrate.sh --schema territory_dk --territory-code dk
+./migrate.sh --schema territory_no --territory-code no
+./migrate.sh --schema territory_se --territory-code se
+```
 ./migrate.sh --schema territory_3 --territory-code se
 ```
 
@@ -116,9 +118,9 @@ database:
 database:
   mode: multi_territory
   territories:
-    - { schema_name: territory_1, territory_code: dk }
-    - { schema_name: territory_2, territory_code: no }
-    - { schema_name: territory_3, territory_code: se }
+    - { schema_name: territory_dk, territory_code: dk }
+    - { schema_name: territory_no, territory_code: no }
+    - { schema_name: territory_se, territory_code: se }
 ```
 
 **Files Updated:**
@@ -158,9 +160,9 @@ let schema = format!("territory_{}", territory_code);
 **After:**
 
 ```rust
-// Get schema name from config (supports both modes)
-let schema = config.get_territory_schema(territory_code);
-// Returns: "territory_dk" (single) or "territory_1" (multi)
+// Schema name matches territory code
+let schema = format!("territory_{}", territory_code);
+// Returns: "territory_dk" (single or multi-territory)
 ```
 
 ### Email Handling
