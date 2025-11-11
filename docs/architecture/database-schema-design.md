@@ -73,6 +73,7 @@ unityplan_db
 │   ├── users
 │   ├── users_profiles
 │   ├── users_profile_links
+│   ├── users_language_proficiency
 │   ├── users_settings
 │   ├── users_notification_settings
 │   ├── invitation_tokens
@@ -430,7 +431,81 @@ pub struct ProfileLink {
 create_link(profile_hash, link_hash, "profile_link")?;
 ```
 
-### 4. Privacy Settings Table
+### 4. Language Proficiency Table
+
+**Purpose:** User's language skills visible to other users (public profile info)
+
+```sql
+CREATE TABLE {schema_name}.users_language_proficiency (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES {schema_name}.users(id) ON DELETE CASCADE,
+    
+    -- Language Details
+    language_code VARCHAR(10) NOT NULL,        -- ISO 639-1 (e.g., "en", "da", "es")
+    language_name VARCHAR(100) NOT NULL,       -- "English", "Dansk", "Español"
+    
+    -- Proficiency Levels
+    spoken_level VARCHAR(20) NOT NULL DEFAULT 'basic',
+        CHECK (spoken_level IN ('native', 'fluent', 'advanced', 'intermediate', 'basic', 'learning')),
+    written_level VARCHAR(20) NOT NULL DEFAULT 'basic',
+        CHECK (written_level IN ('native', 'fluent', 'advanced', 'intermediate', 'basic', 'learning')),
+    reading_level VARCHAR(20) NOT NULL DEFAULT 'basic',
+        CHECK (reading_level IN ('native', 'fluent', 'advanced', 'intermediate', 'basic', 'learning')),
+    listening_level VARCHAR(20) NOT NULL DEFAULT 'basic',
+        CHECK (listening_level IN ('native', 'fluent', 'advanced', 'intermediate', 'basic', 'learning')),
+    
+    -- Display Control
+    display_order INT NOT NULL DEFAULT 0,      -- User's preference order
+    is_preferred BOOLEAN NOT NULL DEFAULT false, -- Primary/preferred language
+    show_on_profile BOOLEAN NOT NULL DEFAULT true,
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- Constraints
+    UNIQUE (user_id, language_code)             -- One entry per language per user
+);
+
+CREATE INDEX idx_users_language_proficiency_user ON {schema_name}.users_language_proficiency(user_id);
+CREATE INDEX idx_users_language_proficiency_order ON {schema_name}.users_language_proficiency(user_id, display_order);
+CREATE INDEX idx_users_language_proficiency_preferred ON {schema_name}.users_language_proficiency(user_id, is_preferred) WHERE is_preferred = true;
+```
+
+**Usage:**
+- User's preferred language marked with `is_preferred = true`
+- Secondary languages ordered by `display_order`
+- Different proficiency for each skill (speaking/writing/reading/listening)
+- Public visibility controlled by `show_on_profile`
+
+**Holochain Mapping:**
+
+```rust
+#[hdk_entry_helper]
+pub struct LanguageProficiency {
+    pub agent: AgentPubKey,
+    pub language_code: String,
+    pub language_name: String,
+    pub spoken_level: ProficiencyLevel,
+    pub written_level: ProficiencyLevel,
+    pub reading_level: ProficiencyLevel,
+    pub listening_level: ProficiencyLevel,
+    pub display_order: u32,
+    pub is_preferred: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ProficiencyLevel {
+    Native,
+    Fluent,
+    Advanced,
+    Intermediate,
+    Basic,
+    Learning,
+}
+```
+
+### 5. Privacy Settings Table
 
 **Purpose:** User privacy preferences
 
@@ -497,15 +572,29 @@ CREATE TABLE {schema_name}.users_settings (
     wide_content_view BOOLEAN NOT NULL DEFAULT false,
     compact_mode BOOLEAN NOT NULL DEFAULT false,
     
-    -- Locale
-    language VARCHAR(10) NOT NULL DEFAULT 'en',
+    -- Locale & Language Preferences
+    preferred_language VARCHAR(10) NOT NULL DEFAULT 'en',  -- ISO 639-1 code (UI language)
     timezone VARCHAR(50) NOT NULL DEFAULT 'UTC',
+    
+    -- Translation Settings (for consuming content in other languages)
+    auto_translate BOOLEAN NOT NULL DEFAULT true,         -- Auto-translate content not in preferred language
+    translation_provider VARCHAR(30) NOT NULL DEFAULT 'libre-translate',
+        CHECK (translation_provider IN ('libre-translate', 'deepl', 'google', 'microsoft')),
+    contribute_translations BOOLEAN NOT NULL DEFAULT true, -- Share local translations with community
+    fallback_to_english BOOLEAN NOT NULL DEFAULT true,    -- Use English if preferred language unavailable
     
     -- Timestamps
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
+
+**Translation Flow:**
+1. User views content in foreign language
+2. Client-side translation (privacy-first, on user's device)
+3. If `contribute_translations = true`, translated content pushed to translation memory
+4. Other users with same language pair benefit from cached translation
+5. Collaborative translation effort reduces API costs and improves privacy
 
 **Holochain Mapping:**
 

@@ -127,6 +127,7 @@ PostgreSQL Structure:
     ├── users
     ├── users_profiles
     ├── users_profile_links
+    ├── users_language_proficiency
     ├── users_privacy_settings
     ├── users_settings
     ├── users_notification_settings

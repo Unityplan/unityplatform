@@ -204,8 +204,9 @@ territory_dk (Denmark)
 ├── users                          -- Authentication
 ├── users_profiles                 -- User profiles
 ├── users_profile_links            -- External links
+├── users_language_proficiency     -- Language skills (public)
 ├── users_privacy_settings         -- Privacy preferences
-├── users_settings                 -- App preferences
+├── users_settings                 -- App & translation preferences
 ├── users_notification_settings    -- Notification preferences
 ├── users_audit_logs               -- User audit trail
 ├── invitation_tokens              -- Territory-local tokens

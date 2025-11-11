@@ -165,7 +165,9 @@ interface UserProfile {
   // Interests & Skills
   interests?: string[] | null;   // Array of interest tags
   skills?: string[] | null;      // Array of skill tags
-  languages?: string[] | null;   // Array of language codes (ISO 639-1)
+  
+  // Language Proficiency (detailed skills visible to others)
+  language_proficiencies?: LanguageProficiency[];  // Ordered by user preference
   
   // Location (privacy-aware)
   location?: string | null;      // Encoded: "[55.6761,12.5683]Copenhagen, Denmark"
@@ -346,12 +348,39 @@ interface AppearanceSettings {
   wide_content_view: boolean;                  // Use full width for content
   compact_mode: boolean;                       // Collapse sidebar by default
 }
+
+interface LanguageSettings {
+  preferred_language: string;                  // ISO 639-1 code (UI language)
+  timezone: string;                            // IANA timezone
+  auto_translate: boolean;                     // Auto-translate foreign content
+  translation_provider: 'libre-translate' | 'deepl' | 'google' | 'microsoft';
+  contribute_translations: boolean;            // Share translations with community
+  fallback_to_english: boolean;                // Fallback if preferred unavailable
+}
+
+interface LanguageProficiency {
+  id: string;
+  language_code: string;                       // ISO 639-1
+  language_name: string;                       // Display name
+  spoken_level: ProficiencyLevel;
+  written_level: ProficiencyLevel;
+  reading_level: ProficiencyLevel;
+  listening_level: ProficiencyLevel;
+  display_order: number;                       // User's preference order
+  is_preferred: boolean;                       // Primary language
+  show_on_profile: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+type ProficiencyLevel = 'native' | 'fluent' | 'advanced' | 'intermediate' | 'basic' | 'learning';
 ```
 
 **Storage:**
 
 - Frontend: localStorage + cookies (for immediate UX)
 - Backend: `{schema_name}.users_settings` table (sync across devices)
+- Language proficiency: `{schema_name}.users_language_proficiency` table (public profile data)
 
 ### 3.2 Privacy Settings
 
