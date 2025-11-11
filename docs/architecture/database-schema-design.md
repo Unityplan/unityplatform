@@ -820,6 +820,12 @@ CREATE INDEX idx_invitation_uses_user ON territory_dk.invitation_uses(user_id);
 
 **Design Decision:** Communities use **UUID primary keys** instead of hierarchical string IDs to support unlimited parent/child nesting. The hierarchy is tracked via `parent_community_id`, and the full path can be reconstructed by traversing parent relationships.
 
+**Access Model:**
+- **ALL users can VIEW all communities** (read-only by default) - for inspiration and discovery
+- **Territory Communities** (geographic/place-based): Membership via invitation only
+- **Guild Communities** (interest-based): Membership via badge OR invitation OR public join
+- Members can actively participate (post, comment, join events), non-members can only observe
+
 ```sql
 CREATE TABLE territory_dk.communities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -827,14 +833,18 @@ CREATE TABLE territory_dk.communities (
     slug VARCHAR(255) NOT NULL,                -- URL-friendly identifier
     description TEXT,
     
+    -- Type and Access Control
+    community_type VARCHAR(50) NOT NULL,       -- 'territory' (place-based) or 'guild' (interest-based)
+    access_badge_id UUID REFERENCES territory_dk.badge_definitions(id), -- Badge required to join (guilds only, optional)
+    
     -- Hierarchy
     parent_community_id UUID REFERENCES territory_dk.communities(id) ON DELETE CASCADE,
     territory_code VARCHAR(10) NOT NULL,       -- Which territory this community belongs to
     depth INTEGER NOT NULL DEFAULT 0,          -- Hierarchy depth (0 = top-level, 1 = child, etc.)
     
-    -- Settings
-    is_public BOOLEAN NOT NULL DEFAULT TRUE,   -- Public communities visible to all
-    requires_approval BOOLEAN NOT NULL DEFAULT FALSE, -- Member approval required
+    -- Membership Settings
+    join_policy VARCHAR(50) NOT NULL DEFAULT 'open', -- 'open', 'invite_only', 'badge_required', 'approval_required'
+    requires_approval BOOLEAN NOT NULL DEFAULT FALSE, -- Requires admin approval to join
     
     -- Metadata
     metadata JSONB DEFAULT '{}'::jsonb,        -- Flexible storage (tags, location, etc.)
@@ -847,7 +857,19 @@ CREATE TABLE territory_dk.communities (
     
     -- Constraints
     CONSTRAINT uq_community_slug_territory UNIQUE (slug, territory_code),
-    CHECK (depth >= 0)
+    CHECK (depth >= 0),
+    CHECK (community_type IN ('territory', 'guild')),
+    CHECK (join_policy IN ('open', 'invite_only', 'badge_required', 'approval_required')),
+    -- Territory communities are invitation-based, guilds can require badges
+    CHECK (
+        (community_type = 'territory' AND join_policy = 'invite_only') OR
+        (community_type = 'guild' AND join_policy IN ('open', 'badge_required', 'approval_required', 'invite_only'))
+    ),
+    -- Badge required only for guilds with badge_required policy
+    CHECK (
+        (join_policy = 'badge_required' AND access_badge_id IS NOT NULL) OR
+        (join_policy != 'badge_required')
+    )
 );
 
 CREATE INDEX idx_communities_parent ON territory_dk.communities(parent_community_id);
@@ -855,22 +877,184 @@ CREATE INDEX idx_communities_territory ON territory_dk.communities(territory_cod
 CREATE INDEX idx_communities_slug ON territory_dk.communities(slug);
 CREATE INDEX idx_communities_active ON territory_dk.communities(is_active);
 CREATE INDEX idx_communities_depth ON territory_dk.communities(depth);
+CREATE INDEX idx_communities_type ON territory_dk.communities(community_type);
+CREATE INDEX idx_communities_badge ON territory_dk.communities(access_badge_id) WHERE access_badge_id IS NOT NULL;
 ```
 
-**Example Hierarchy:**
+**Example Communities:**
 
 ```sql
--- Top-level community (depth 0)
-INSERT INTO territory_dk.communities (id, name, slug, territory_code, depth, created_by_user_id)
-VALUES ('uuid-copenhagen', 'Copenhagen', 'copenhagen', 'DK', 0, 'creator-uuid');
+-- Territory community (place-based, invitation only)
+INSERT INTO territory_dk.communities (
+    id, name, slug, community_type, join_policy, territory_code, depth, created_by_user_id
+)
+VALUES (
+    'uuid-copenhagen', 
+    'Copenhagen', 
+    'copenhagen', 
+    'territory',      -- Place-based community
+    'invite_only',    -- Can only join via invitation
+    'DK', 
+    0, 
+    'creator-uuid'
+);
 
--- Child community (depth 1)
-INSERT INTO territory_dk.communities (id, name, slug, parent_community_id, territory_code, depth, created_by_user_id)
-VALUES ('uuid-valby', 'Valby', 'valby', 'uuid-copenhagen', 'DK', 1, 'creator-uuid');
+-- Guild community (interest-based, open to all)
+INSERT INTO territory_dk.communities (
+    id, name, slug, community_type, join_policy, territory_code, depth, created_by_user_id
+)
+VALUES (
+    'uuid-beekeepers-guild', 
+    'Beekeepers Guild', 
+    'beekeepers-guild', 
+    'guild',          -- Interest-based community
+    'open',           -- Anyone can join
+    'DK', 
+    0, 
+    'creator-uuid'
+);
 
--- Grandchild community (depth 2)
-INSERT INTO territory_dk.communities (id, name, slug, parent_community_id, territory_code, depth, created_by_user_id)
-VALUES ('uuid-beekeepers', 'Beekeepers Guild', 'beekeepers', 'uuid-valby', 'DK', 2, 'creator-uuid');
+-- Guild community (interest-based, badge required)
+INSERT INTO territory_dk.communities (
+    id, name, slug, community_type, join_policy, access_badge_id, territory_code, depth, created_by_user_id
+)
+VALUES (
+    'uuid-advanced-permaculture', 
+    'Advanced Permaculture Guild', 
+    'advanced-permaculture', 
+    'guild',                           -- Interest-based community
+    'badge_required',                  -- Requires badge to join
+    'uuid-permaculture-cert-badge',    -- Badge ID required
+    'DK', 
+    0, 
+    'creator-uuid'
+);
+
+-- Nested territory community (sub-community of Copenhagen)
+INSERT INTO territory_dk.communities (
+    id, name, slug, parent_community_id, community_type, join_policy, territory_code, depth, created_by_user_id
+)
+VALUES (
+    'uuid-valby', 
+    'Valby', 
+    'valby', 
+    'uuid-copenhagen',  -- Parent community
+    'territory',        -- Place-based
+    'invite_only',      -- Invitation required
+    'DK', 
+    1,                  -- Child depth
+    'creator-uuid'
+);
+```
+
+**Access Control Examples:**
+
+```sql
+-- Check if user can JOIN a community (not just view)
+CREATE OR REPLACE FUNCTION territory_dk.user_can_join_community(
+    p_user_id UUID,
+    p_community_id UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+    v_community_type VARCHAR(50);
+    v_join_policy VARCHAR(50);
+    v_access_badge_id UUID;
+    v_has_badge BOOLEAN;
+    v_is_member BOOLEAN;
+BEGIN
+    -- Get community details
+    SELECT community_type, join_policy, access_badge_id
+    INTO v_community_type, v_join_policy, v_access_badge_id
+    FROM territory_dk.communities
+    WHERE id = p_community_id AND is_active = TRUE;
+    
+    IF NOT FOUND THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Check if already a member
+    SELECT EXISTS(
+        SELECT 1
+        FROM territory_dk.community_members
+        WHERE user_id = p_user_id
+          AND community_id = p_community_id
+          AND left_at IS NULL
+    ) INTO v_is_member;
+    
+    IF v_is_member THEN
+        RETURN TRUE;  -- Already a member
+    END IF;
+    
+    -- Check join policy
+    IF v_join_policy = 'open' THEN
+        RETURN TRUE;  -- Anyone can join
+    ELSIF v_join_policy = 'invite_only' THEN
+        RETURN FALSE;  -- Requires invitation (handled separately)
+    ELSIF v_join_policy = 'badge_required' THEN
+        -- Check if user has the required badge
+        SELECT EXISTS(
+            SELECT 1
+            FROM territory_dk.badge_awards
+            WHERE user_id = p_user_id
+              AND badge_id = v_access_badge_id
+              AND revoked_at IS NULL
+              AND (expires_at IS NULL OR expires_at > NOW())
+        ) INTO v_has_badge;
+        RETURN v_has_badge;
+    ELSIF v_join_policy = 'approval_required' THEN
+        RETURN TRUE;  -- Can request to join (pending approval)
+    END IF;
+    
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Note: ALL users can VIEW all communities regardless of membership or badges
+-- This function only controls who can JOIN/PARTICIPATE actively
+```
+
+**Community Types Explained:**
+
+1. **Territory Communities** (`community_type = 'territory'`):
+   - **Purpose**: Geographic/place-based communities (cities, neighborhoods, regions)
+   - **Join Policy**: ALWAYS `invite_only` (enforced by CHECK constraint)
+   - **Membership**: Via invitation tokens only
+   - **Example**: Copenhagen, Valby, Aarhus
+   - **Rationale**: You can't join a place-based community unless you're invited (typically because you live there or have connection)
+
+2. **Guild Communities** (`community_type = 'guild'`):
+   - **Purpose**: Interest-based communities (beekeepers, developers, artists)
+   - **Join Policies**: 
+     - `open`: Anyone can join freely
+     - `badge_required`: Must have specific badge to join
+     - `approval_required`: Can request to join, admin approves
+     - `invite_only`: Only via invitation
+   - **Example**: Beekeepers Guild (open), Advanced Permaculture (badge required)
+   - **Rationale**: Interest-based groups can set their own entry requirements
+
+**Universal View Access:**
+
+ALL users can VIEW all communities regardless of:
+- Community type
+- Join policy
+- Badge requirements
+- Membership status
+
+**Why?**
+- **Discovery**: Users see what's happening and get inspired
+- **Transparency**: Territory communities visible before moving to a place
+- **Motivation**: Guild activities visible to encourage learning and participation
+- **Roadmap**: Users see what they could unlock by earning badges
+
+**Participation vs Viewing:**
+
+| Action | Non-Members | Members |
+|--------|-------------|---------|
+| View community info | ✅ All users | ✅ Members |
+| View community posts/events | ✅ All users | ✅ Members |
+| Comment/post/participate | ❌ No | ✅ Yes |
+| Join events | ❌ No (view only) | ✅ Yes |
+| Vote in community decisions | ❌ No | ✅ Yes |
 ```
 
 **Holochain Mapping:**
@@ -880,15 +1064,33 @@ VALUES ('uuid-beekeepers', 'Beekeepers Guild', 'beekeepers', 'uuid-valby', 'DK',
 pub struct Community {
     pub name: String,
     pub description: String,
+    pub community_type: CommunityType,
+    pub join_policy: JoinPolicy,
+    pub access_badge: Option<ActionHash>,  // Badge required to join (if badge_required)
     pub parent_community: Option<ActionHash>, // Link to parent community entry
-    pub is_public: bool,
     pub created_by: AgentPubKey,
+}
+
+enum CommunityType {
+    Territory,  // Place-based (cities, neighborhoods)
+    Guild,      // Interest-based (beekeepers, developers)
+}
+
+enum JoinPolicy {
+    Open,              // Anyone can join freely
+    InviteOnly,        // Requires invitation
+    BadgeRequired,     // Must have specific badge
+    ApprovalRequired,  // Request to join, admin approves
 }
 
 // Links:
 // - Creator → Community
 // - Parent Community → Child Community (if parent exists)
 // - Territory → Community (via anchor)
+// - Badge → Community (if badge required for access)
+
+// Note: All communities are publicly readable in Holochain DHT
+// Access control only applies to participation (posting, voting, etc.)
 ```
 
 ---
@@ -1507,11 +1709,13 @@ pub struct BadgeProgress {
 **Key Concept:** Instead of granting access to individual resources, users earn badges that unlock entire groups of related content. This creates cohesive learning/collaboration spaces.
 
 **Example Use Cases:**
+
 - "Platform Management" group → "Platform Management Access" badge → General Platform Management forum + Territory Management course
 - "Platform Developer" group → "Platform Developer" badge → Development communities + Dev forums + Advanced courses
 - "Beekeepers Network" group → "Beekeeping Basics" badge → Local beekeeping communities + Forums + Courses
 
 **Scope Rules:**
+
 - **Global scope**: Available to all users across all territories (if they have the badge)
 - **Territory scope**: Available only to users in that territory (and child communities)
 - **Community scope**: Available only from that community level and up in the hierarchy
@@ -1710,10 +1914,62 @@ COMMENT ON TABLE territory_dk.group_courses IS 'Links groups to courses. Populat
 4. **Users gain access** by earning/receiving the badge:
    - Complete a course that awards the badge
    - Manually assigned by authorized user
-5. **Access check**: When user tries to view/join content, system checks:
+5. **Access check**: When user tries to participate in group resources:
    - Is this resource in a group?
    - Does user have the required badge?
    - Is badge still valid (not expired/revoked)?
+
+**Important: Groups Control PARTICIPATION, Not VIEWING**
+
+- **Viewing**: ALL users can VIEW all communities/forums/courses regardless of group membership
+- **Participation**: Groups control who can ACTIVELY PARTICIPATE (post, comment, enroll, etc.)
+- **Purpose**: Users see what's available and are motivated to earn badges to unlock participation
+
+**Community Access Layers:**
+
+1. **Universal View Access** (ALL users):
+   - View all communities (territory & guild)
+   - Read community descriptions
+   - See community posts/events (read-only)
+   - View community members
+
+2. **Group-Based Participation** (Badge holders):
+   - If community is in a group: Badge required to join and participate
+   - If community NOT in a group: Follow community's own join_policy
+
+3. **Community-Level Access** (Individual community settings):
+   - Territory communities: Always invite_only (membership)
+   - Guild communities: Can be open, badge_required, approval_required, or invite_only
+   - Community badge (if set) overrides group badge for that specific community
+
+**Example Scenarios:**
+
+1. **Territory Community (Copenhagen)**:
+   - Type: `territory`
+   - Join Policy: `invite_only`
+   - In Group: No
+   - Result: All users can VIEW activity, only invited users can JOIN and participate
+
+2. **Guild Community (Beekeepers)**:
+   - Type: `guild`
+   - Join Policy: `open`
+   - In Group: No
+   - Result: All users can VIEW, anyone can JOIN and participate
+
+3. **Guild Community (Advanced Permaculture)**:
+   - Type: `guild`
+   - Join Policy: `badge_required`
+   - Badge: "Permaculture Basics Certificate"
+   - In Group: Yes ("Permaculture Network" group)
+   - Result: All users can VIEW, only badge holders can JOIN and participate
+
+4. **Platform Management Community**:
+   - Type: `guild`
+   - Join Policy: `badge_required`
+   - Badge: "Platform Admin"
+   - In Group: Yes ("Platform Management" group)
+   - Group Badge: "Platform Management Access"
+   - Result: All users can VIEW, only Platform Management Access badge holders can participate
 
 **Scope Visibility:**
 
