@@ -340,10 +340,11 @@ PATCH  /api/v1/profiles/{userId}/privacy   - Update privacy settings
 
 ```typescript
 interface AppearanceSettings {
-  theme: 'light' | 'dark' | 'system';  // Theme preference
-  reduced_motion: boolean;              // Accessibility: reduce animations
-  wide_content_view: boolean;           // Use full width for content
-  compact_mode: boolean;                // Collapse sidebar by default
+  theme_mode: 'light' | 'dark' | 'system';     // Theme mode preference
+  color_scheme: 'forest-green' | 'ocean-blue' | 'royal-purple' | 'custom';  // Color palette (future feature)
+  reduced_motion: boolean;                     // Accessibility: reduce animations
+  wide_content_view: boolean;                  // Use full width for content
+  compact_mode: boolean;                       // Collapse sidebar by default
 }
 ```
 

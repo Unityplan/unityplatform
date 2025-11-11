@@ -489,8 +489,10 @@ CREATE TABLE {schema_name}.users_settings (
     user_id UUID PRIMARY KEY REFERENCES {schema_name}.users(id) ON DELETE CASCADE,
     
     -- Appearance
-    theme VARCHAR(20) NOT NULL DEFAULT 'system',
-        CHECK (theme IN ('light', 'dark', 'system')),
+    theme_mode VARCHAR(20) NOT NULL DEFAULT 'system',
+        CHECK (theme_mode IN ('light', 'dark', 'system')),
+    color_scheme VARCHAR(50) NOT NULL DEFAULT 'forest-green',
+        CHECK (color_scheme IN ('forest-green', 'ocean-blue', 'royal-purple', 'custom')),
     reduced_motion BOOLEAN NOT NULL DEFAULT false,
     wide_content_view BOOLEAN NOT NULL DEFAULT false,
     compact_mode BOOLEAN NOT NULL DEFAULT false,
