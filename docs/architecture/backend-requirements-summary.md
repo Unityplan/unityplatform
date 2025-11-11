@@ -111,8 +111,8 @@ The requirements were extracted from these implemented frontend components:
 // Authentication
 User {
   id: UUID
-  username: string (unique globally)
-  email: string (unique globally)
+  username: string (unique globally - primary identifier)
+  email?: string | null (optional - for external notifications only)
   password_hash: string
   territory_code: string
   is_active: boolean

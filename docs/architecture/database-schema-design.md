@@ -48,6 +48,21 @@
 
 ## Schema Structure Overview
 
+## Schema Structure Overview
+
+**Schema Naming Convention:**
+
+- **Single-territory pod:** Schema named after territory code
+  - Example: `territory_dk` (Denmark), `territory_no` (Norway)
+  - One territory per database
+  
+- **Multi-territory pod:** Schema named with numeric ID
+  - Example: `territory_1`, `territory_2`, `territory_3`
+  - Mapping stored in `global.territories` table
+  - Multiple territories per database
+  
+- **In documentation:** We use `{schema_name}` as placeholder in SQL examples
+
 ```
 unityplan_db
 ├── global (Global/shared data across territories)
@@ -55,7 +70,7 @@ unityplan_db
 │   ├── invitation_token_registry
 │   └── global_username_registry
 │
-├── territory_dk (Denmark territory)
+├── territory_dk (Single-pod example: Denmark)
 │   ├── users
 │   ├── profiles
 │   ├── profile_links
@@ -68,11 +83,14 @@ unityplan_db
 │   ├── messages
 │   └── audit_logs
 │
-├── territory_no (Norway territory)
-│   └── (same as territory_dk)
+├── territory_1 (Multi-pod example: Denmark on shared pod)
+│   └── (same structure as above)
 │
-└── territory_se (Sweden territory)
-    └── (same as territory_dk)
+├── territory_2 (Multi-pod example: Norway on shared pod)
+│   └── (same structure as above)
+│
+└── territory_3 (Multi-pod example: Sweden on shared pod)
+    └── (same structure as above)
 ```
 
 ---
@@ -203,23 +221,37 @@ CREATE INDEX idx_global_invitation_registry_territory ON global.invitation_token
 
 ### Design Template
 
-Each territory schema (`territory_dk`, `territory_no`, etc.) has identical structure:
+**Important:** Schema names use variables for flexibility in single vs multi-territory deployments:
+
+- **Single-territory pod:** Use territory code directly (e.g., `territory_dk`, `territory_no`)
+- **Multi-territory pod:** Use territory ID suffix (e.g., `territory_1`, `territory_2`, `territory_3`)
+- **Template:** All examples below use `{schema_name}` as placeholder
+
+Each territory schema has identical structure. Migration scripts should accept `schema_name` as parameter.
 
 ```sql
+-- Single-territory pod example (Denmark)
 CREATE SCHEMA IF NOT EXISTS territory_dk;
+
+-- Multi-territory pod example (hosting dk, no, se)
+CREATE SCHEMA IF NOT EXISTS territory_1;  -- Denmark
+CREATE SCHEMA IF NOT EXISTS territory_2;  -- Norway  
+CREATE SCHEMA IF NOT EXISTS territory_3;  -- Sweden
 ```
 
 ### 1. Users Table
 
 **Purpose:** Core user authentication and identity
 
+**Note:** Email is **OPTIONAL** - used only for external notifications (invitations, password reset), not authentication.
+
 ```sql
-CREATE TABLE territory_dk.users (
+CREATE TABLE {schema_name}.users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
-    -- Authentication
-    username VARCHAR(50) NOT NULL UNIQUE,      -- Territory-local unique
-    email VARCHAR(255) NOT NULL UNIQUE,        -- Territory-local unique
+    -- Authentication (Username is primary identifier)
+    username VARCHAR(50) NOT NULL UNIQUE,      -- Territory-local unique (matches global)
+    email VARCHAR(255) UNIQUE,                 -- OPTIONAL - for notifications only
     password_hash VARCHAR(255) NOT NULL,       -- bcrypt/argon2
     
     -- Profile
@@ -245,38 +277,51 @@ CREATE TABLE territory_dk.users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
     -- Constraints
-    CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'),
+    CHECK (email IS NULL OR email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'),
     CHECK (char_length(username) >= 3 AND char_length(username) <= 50),
     CHECK (deleted_at IS NULL OR is_active = false)
 );
 
-CREATE INDEX idx_users_username ON territory_dk.users(username);
-CREATE INDEX idx_users_email ON territory_dk.users(email);
-CREATE INDEX idx_users_active ON territory_dk.users(is_active) WHERE deleted_at IS NULL;
-CREATE INDEX idx_users_verified ON territory_dk.users(is_verified);
+CREATE INDEX idx_users_username ON {schema_name}.users(username);
+CREATE INDEX idx_users_email ON {schema_name}.users(email) WHERE email IS NOT NULL;
+CREATE INDEX idx_users_active ON {schema_name}.users(is_active) WHERE deleted_at IS NULL;
+CREATE INDEX idx_users_verified ON {schema_name}.users(is_verified);
 ```
 
 **Holochain Mapping:**
 
 ```rust
 // Agent Entry (built-in Holochain type)
-// username, email stored in Agent's source chain
-// Password hash: NOT stored on-chain (centralized auth bridge)
+// username stored in Agent's source chain
+// email: NOT stored on-chain (privacy - used only for external notifications)
+// Password hash: Stored in separate auth service (not on DHT)
 ```
 
 **Migration Notes:**
 
 - `id` (UUID) → `AgentPubKey` (Holochain agent identifier)
+- `username` → **Primary identifier** (never changes, globally unique across all pods/territories)
+- `email` → **Optional** (stored off-chain for privacy, used only for external notifications: invitations, password reset)
 - `password_hash` → Stored in separate auth service (not on DHT)
 - `is_active`, `is_verified` → Validation rules in zome
+
+**Identity System Integration:**
+
+- **Username:** Primary human-readable identifier (globally unique, never changes even with territory migration)
+- **Matrix ID:** Derived from `username@territory` (e.g., `@alice:unityplan.dk`)
+- **Territory Migration:** Username stays same, Matrix ID changes (old ID becomes alias)
+  - Before migration: `@alice:unityplan.dk` (primary)
+  - After migration: `@alice:unityplan.no` (new primary), `@alice:unityplan.dk` (alias - still works)
+- **Key Point:** Username is the anchor - Matrix ID is just a federated representation
+- See [Identity System Architecture](identity-system.md) for complete details
 
 ### 2. Profiles Table
 
 **Purpose:** User profile data (public & private)
 
 ```sql
-CREATE TABLE territory_dk.profiles (
-    user_id UUID PRIMARY KEY REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+CREATE TABLE {schema_name}.profiles (
+    user_id UUID PRIMARY KEY REFERENCES {schema_name}.users(id) ON DELETE CASCADE,
     
     -- Display Info
     display_name VARCHAR(100),
@@ -648,9 +693,72 @@ pub fn validate_create_profile(
 
 ## Migration Strategy
 
+### Database Migration: Single vs Multi-Territory Pods
+
+**Migration Scripts Design:**
+
+All migration scripts should accept `schema_name` as a parameter to support both deployment types:
+
+```bash
+# Single-territory pod deployment
+./migrate.sh --schema territory_dk
+
+# Multi-territory pod deployment
+./migrate.sh --schema territory_1 --territory-code dk
+./migrate.sh --schema territory_2 --territory-code no
+./migrate.sh --schema territory_3 --territory-code se
+```
+
+**Migration Script Structure:**
+
+```sql
+-- Migration template (parameterized)
+-- Usage: psql -v schema_name=territory_dk -v territory_code=dk -f migration.sql
+
+-- Create schema
+CREATE SCHEMA IF NOT EXISTS :schema_name;
+
+-- Create tables
+CREATE TABLE :schema_name.users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255) UNIQUE,  -- OPTIONAL
+    territory_code VARCHAR(10) NOT NULL DEFAULT :'territory_code',
+    -- ... rest of columns
+);
+
+-- Create indexes
+CREATE INDEX idx_users_username ON :schema_name.users(username);
+-- ... rest of indexes
+```
+
+**Pod Configuration:**
+
+```yaml
+# Single-territory pod (config.yml)
+database:
+  mode: single_territory
+  schema_name: territory_dk
+  territory_code: dk
+
+# Multi-territory pod (config.yml)
+database:
+  mode: multi_territory
+  territories:
+    - schema_name: territory_1
+      territory_code: dk
+    - schema_name: territory_2
+      territory_code: no
+    - schema_name: territory_3
+      territory_code: se
+```
+
+### Holochain Migration Phases
+
 ### Phase 1: PostgreSQL Foundation (Current)
 
-- Implement full PostgreSQL schema
+- Implement full PostgreSQL schema with parameterized scripts
+- Support both single and multi-territory deployments
 - Build REST APIs
 - Test with frontend
 - Optimize queries and indexes

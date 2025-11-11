@@ -26,8 +26,8 @@
 ```typescript
 interface User {
   id: string;                    // UUID - Primary identifier
-  email: string;                 // UNIQUE - For authentication and communication
-  username: string;              // UNIQUE - Privacy-first login identifier
+  username: string;              // UNIQUE - Primary identifier (never changes, even with territory migration)
+  email?: string | null;         // OPTIONAL - For external notifications only (invitations, password reset)
   full_name: string | null;      // Optional display name
   territory_code: string;        // FK to territory (e.g., 'dk', 'no', 'se', 'eu')
   is_active: boolean;            // Account status
@@ -36,17 +36,28 @@ interface User {
 }
 ```
 
+**Identity System:**
+
+- **Username:** Primary human-readable identifier (globally unique across all pods/territories)
+- **Never changes:** Username remains the same even when user migrates between territories
+- **Matrix ID:** Derived from username@territory (e.g., `@alice:unityplan.dk`)
+- **Territory Migration:** Matrix ID changes, but username stays constant
+  - Before: `@alice:unityplan.dk` (primary Matrix ID)
+  - After: `@alice:unityplan.no` (new primary), `@alice:unityplan.dk` (alias - still works)
+- **Email:** Optional field used only for external notifications, NOT for authentication
+- See [Identity System Architecture](identity-system.md) for complete details
+
 **Database Requirements:**
 
-- Multi-tenant architecture with territory schemas (`territory_dk`, `territory_no`, etc.)
+- Multi-tenant architecture with territory schemas (flexible naming: `territory_dk` or `territory_1`)
 - User table in each territory schema
-- Global registry for cross-territory lookups (username/email uniqueness)
-- Indexes on: `email`, `username`, `territory_code`
+- Global registry for cross-territory lookups (username uniqueness - email uniqueness if provided)
+- Indexes on: `username`, `email` (where not null), `territory_code`
 
 **Security Requirements:**
 
 - Password hashing (bcrypt/argon2)
-- Email verification workflow
+- Email verification workflow (only if email provided)
 - Account activation/deactivation
 - Soft delete support (retain data for GDPR export)
 
@@ -97,9 +108,9 @@ POST   /api/v1/auth/verify-email    - Verify email address
 
 ```typescript
 interface RegisterRequest {
-  email: string;                 // Required - Will receive verification email
-  username: string;              // Required - Must be unique globally
+  username: string;              // Required - Must be unique globally (primary identifier)
   password: string;              // Required - Min 8 chars, complexity requirements
+  email?: string;                // Optional - If provided, will receive verification email
   full_name?: string;            // Optional - Can be added later in profile
   invitation_token: string;      // Required - Determines territory automatically
 }
@@ -109,14 +120,16 @@ interface RegisterRequest {
 
 1. Validate invitation token via `global.invitation_token_registry`
 2. Determine territory from token (NOT client-provided)
-3. Verify username/email uniqueness (global check)
-4. Validate password complexity
-5. Hash password
-6. Create user in `territory_{code}.users` table
-7. If invitation has `community_id`, assign user to community
-8. Send verification email
-9. Mark invitation token as used
-10. Return auth tokens
+3. Verify username uniqueness (global check across all territories)
+4. If email provided: Verify email uniqueness (global check)
+5. Validate password complexity
+6. Hash password
+7. Create user in `{territory_schema}.users` table
+8. Register username in `global.user_identities`
+9. If email provided: Send verification email
+10. If invitation has `community_id`, assign user to community
+11. Mark invitation token as used
+12. Return auth tokens
 
 **Required Endpoints:**
 
