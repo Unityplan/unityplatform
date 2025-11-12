@@ -354,3 +354,67 @@ pub struct UserConnectionWithProfile {
     pub status: ConnectionStatus,
     pub created_at: DateTime<Utc>,
 }
+
+// ============================================================================
+// GDPR DATA EXPORT MODELS
+// ============================================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type, ToSchema)]
+#[sqlx(type_name = "varchar", rename_all = "lowercase")]
+pub enum ExportStatus {
+    #[serde(rename = "pending")]
+    Pending,
+    #[serde(rename = "processing")]
+    Processing,
+    #[serde(rename = "completed")]
+    Completed,
+    #[serde(rename = "failed")]
+    Failed,
+    #[serde(rename = "expired")]
+    Expired,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, ToSchema)]
+pub struct DataExport {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub status: ExportStatus,
+    pub file_path: Option<String>,
+    pub file_size: Option<i64>,
+    pub requested_at: DateTime<Utc>,
+    pub started_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime<Utc>>,
+    pub downloaded_at: Option<DateTime<Utc>>,
+    pub error_message: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct DataExportResponse {
+    pub id: Uuid,
+    pub status: ExportStatus,
+    pub file_size: Option<i64>,
+    pub requested_at: DateTime<Utc>,
+    pub completed_at: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime<Utc>>,
+    pub download_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct ExportedUserData {
+    pub export_date: DateTime<Utc>,
+    pub user: User,
+    pub profile: Option<UserProfile>,
+    pub links: Vec<ProfileLink>,
+    pub languages: Vec<LanguageProficiency>,
+    pub settings: Option<UserSettings>,
+    pub notification_settings: Option<NotificationSettings>,
+    pub connections: ExportedConnections,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct ExportedConnections {
+    pub followers: Vec<UserConnectionWithProfile>,
+    pub following: Vec<UserConnectionWithProfile>,
+    pub blocked: Vec<UserConnectionWithProfile>,
+}

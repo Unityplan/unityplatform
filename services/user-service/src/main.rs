@@ -132,6 +132,19 @@ async fn main() -> std::io::Result<()> {
                 "/v1/users/{id}/connections/blocked",
                 web::get().to(user_service::handlers::get_blocked_users),
             )
+            // GDPR data export endpoints
+            .route(
+                "/v1/users/{id}/data/export",
+                web::post().to(user_service::handlers::request_data_export),
+            )
+            .route(
+                "/v1/users/{id}/data/export",
+                web::get().to(user_service::handlers::list_data_exports),
+            )
+            .route(
+                "/v1/users/{id}/data/export/{export_id}",
+                web::get().to(user_service::handlers::download_data_export),
+            )
             .service(user_service::openapi::swagger_ui())
     })
     .bind((server_host.as_str(), server_port))?

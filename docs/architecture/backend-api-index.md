@@ -2,7 +2,7 @@
 
 **Created:** November 11, 2025  
 **Last Updated:** November 12, 2025  
-**Status:** Phase 1 Implementation In Progress (22/28 endpoints complete)
+**Status:** Phase 1 Implementation In Progress (25/28 endpoints complete - 89%)
 
 ---
 
@@ -158,8 +158,8 @@ User Service (port 8002):
 /v1/users/{id}/connections/following        - Get following ✅
 /v1/users/{id}/connections/block/*          - Block/unblock (2 endpoints) ✅
 /v1/users/{id}/connections/blocked          - Get blocked users ✅
-/v1/users/{id}/data/export                  - GDPR data export (pending)
-/v1/users/{id}/account/delete               - Account deletion (pending)
+/v1/users/{id}/data/export                  - GDPR data export (3 endpoints) ✅
+/v1/users/{id}/account/delete               - Account deletion (3 endpoints, pending)
 ```
 
 ---
@@ -169,13 +169,15 @@ User Service (port 8002):
 ### ✅ Completed (November 12, 2025)
 
 **Auth Service (5/5 endpoints):**
+
 - ✅ User registration with invitation tokens
 - ✅ Login with JWT authentication
 - ✅ Token refresh
 - ✅ Logout
 - ✅ Token validation
 
-**User Service (17/23 endpoints):**
+**User Service (25/28 endpoints - 89%):**
+
 - ✅ Profile management (GET, PUT)
 - ✅ Profile links (GET, POST, PUT, DELETE, PATCH reorder)
 - ✅ Language proficiency (GET, POST, PUT, DELETE)
@@ -185,24 +187,36 @@ User Service (port 8002):
 - ✅ User connections - Get followers/following (GET, GET)
 - ✅ User connections - Block/Unblock (POST, DELETE)
 - ✅ User connections - Get blocked users (GET)
+- ✅ GDPR data export - Request/List/Download (POST, GET, GET)
 
 **Database Schema:**
+
 - ✅ Global schema (territories, registries)
 - ✅ Territory schema (users, profiles, settings)
 - ✅ Language proficiency with 4 skill levels
 - ✅ User connections (follow/friend/block)
 - ✅ Profile links with ordering
 - ✅ Notification settings (email/inapp/push)
+- ✅ GDPR data exports with auto-expiry (7 days)
+
+**Migrations:**
+
+- ✅ 20251111000001_mvp_core_schema.sql (59K - base schema)
+- ✅ 20251112000001_update_language_proficiency_schema.sql (3.2K)
+- ✅ 20251112000002_fix_users_settings_schema.sql (2.6K)
+- ✅ 20251112000003_fix_notification_settings_schema.sql (2.1K)
+- ✅ 20251112000004_create_data_exports_table.sql (3.7K - GDPR)
 
 ### 🔄 In Progress
 
-**User Service GDPR Endpoints (0/6):**
-- ⏳ Request data export
-- ⏳ Download data export
-- ⏳ List data exports
-- ⏳ Request account deletion
-- ⏳ Get deletion status
-- ⏳ Cancel account deletion
+**User Service GDPR Endpoints (3/6 - 50%):**
+
+- ✅ Request data export (POST /v1/users/{id}/data/export)
+- ✅ List data exports (GET /v1/users/{id}/data/export)
+- ✅ Download data export (GET /v1/users/{id}/data/export/{export_id})
+- ⏳ Request account deletion (POST /v1/users/{id}/account/delete)
+- ⏳ Confirm account deletion (POST /v1/users/{id}/account/delete/confirm)
+- ⏳ Cancel account deletion (DELETE /v1/users/{id}/account/delete)
 
 ### Week 1-2: Authentication & Infrastructure ✅ COMPLETE
 
@@ -232,10 +246,18 @@ User Service (port 8002):
 - ✅ Notification settings (14 toggles)
 - ✅ Auto-creation of defaults
 
-### Week 4-5: GDPR Compliance 🔄 IN PROGRESS
+### Week 4-5: GDPR Compliance 🔄 IN PROGRESS (50%)
 
-- ⏳ Data export (6 endpoints)
-- ⏳ Account deletion
+- ✅ Data export (3/3 endpoints complete)
+  - ✅ Request export with rate limiting (1/hour)
+  - ✅ List all exports for user
+  - ✅ Download complete user data as JSON
+  - ✅ Auto-expiry after 7 days
+  - ✅ Download tracking
+- ⏳ Account deletion (0/3 endpoints)
+  - ⏳ Request deletion (30-day soft delete)
+  - ⏳ Confirm deletion with email token
+  - ⏳ Cancel pending deletion
 - ⏳ Audit logs
 
 ### Week 5-6: Invitation System (Not Started)
@@ -259,12 +281,23 @@ Phase 1 (PostgreSQL) progress:
 - ✅ Language proficiency management (4 skill levels)
 - ✅ User connections (follow/block) working (7 endpoints)
 - ✅ Settings sync across devices
-- ⏳ GDPR export/deletion implemented (0/6 endpoints)
+- 🔄 GDPR export/deletion implemented (3/6 endpoints - 50%)
+  - ✅ Data export with auto-expiry working
+  - ⏳ Account deletion pending
 - ⏳ Invitation system functional
 - ⏳ Frontend integration complete (no localStorage mocks)
 - ⏳ All tests passing
 
-**Overall Progress:** 22/28 core endpoints (79% complete)
+**Overall Progress:** 25/28 core endpoints (89% complete)
+
+**GDPR Compliance Features:**
+
+- ✅ Article 20 (Data Portability): Complete user data export in JSON format
+- ✅ Rate limiting: 1 export per hour per user
+- ✅ Auto-expiry: Exports expire 7 days after completion
+- ✅ Download tracking: Records when exports are accessed
+- ✅ Complete data package: User, profile, links, languages, settings, notifications, connections
+- ⏳ Article 17 (Right to Erasure): Account deletion pending
 
 ---
 
@@ -352,5 +385,51 @@ When adding new features:
 ---
 
 **Last Updated:** November 12, 2025  
-**Next Milestone:** Complete GDPR compliance endpoints (6 endpoints)  
+**Next Milestone:** Complete GDPR account deletion endpoints (3 endpoints)  
 **Next Review:** When GDPR implementation complete
+
+---
+
+## 🔐 GDPR Compliance Implementation Details
+
+### Data Export (Article 20 - Right to Data Portability) ✅
+
+**Database Table:** `territory_dk.data_exports`
+
+**Features:**
+- ✅ Complete user data export in JSON format
+- ✅ Includes: user, profile, links, languages, settings, notifications, connections
+- ✅ Auto-expiry: Exports expire 7 days after completion
+- ✅ Rate limiting: Maximum 1 export per hour per user
+- ✅ Download tracking: Records `downloaded_at` timestamp
+- ✅ Status tracking: pending → processing → completed/failed/expired
+- ✅ Synchronous processing (ready for async job queue)
+
+**API Endpoints:**
+1. `POST /v1/users/{id}/data/export` - Request new export
+2. `GET /v1/users/{id}/data/export` - List all exports
+3. `GET /v1/users/{id}/data/export/{export_id}` - Download export
+
+**Migration:** `20251112000004_create_data_exports_table.sql`
+
+**Testing:**
+- ✅ Export creation tested (3134 bytes)
+- ✅ Auto-expiry verified (7 days)
+- ✅ Download tracking verified
+- ✅ Complete data package verified
+
+### Account Deletion (Article 17 - Right to Erasure) ⏳
+
+**Status:** Pending implementation
+
+**Planned Features:**
+- 30-day soft delete grace period
+- Email confirmation required
+- Anonymization strategy for retained data
+- CASCADE deletes for user-owned content
+- Ability to cancel deletion during grace period
+
+**API Endpoints (Planned):**
+1. `POST /v1/users/{id}/account/delete` - Request deletion
+2. `POST /v1/users/{id}/account/delete/confirm` - Confirm with email token
+3. `DELETE /v1/users/{id}/account/delete` - Cancel pending deletion

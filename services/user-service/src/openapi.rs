@@ -27,6 +27,9 @@ use utoipa_swagger_ui::SwaggerUi;
         crate::handlers::block_user,
         crate::handlers::unblock_user,
         crate::handlers::get_blocked_users,
+        crate::handlers::request_data_export,
+        crate::handlers::list_data_exports,
+        crate::handlers::download_data_export,
     ),
     components(
         schemas(
@@ -55,6 +58,11 @@ use utoipa_swagger_ui::SwaggerUi;
             crate::models::ConnectionStatus,
             crate::models::UserConnection,
             crate::models::UserConnectionWithProfile,
+            crate::models::ExportStatus,
+            crate::models::DataExport,
+            crate::models::DataExportResponse,
+            crate::models::ExportedUserData,
+            crate::models::ExportedConnections,
             crate::response::ApiResponse<crate::models::HealthResponse>,
             crate::response::ApiResponse<crate::models::CompleteProfile>,
             crate::response::ApiResponse<crate::models::UserProfile>,
@@ -66,6 +74,8 @@ use utoipa_swagger_ui::SwaggerUi;
             crate::response::ApiResponse<crate::models::NotificationSettings>,
             crate::response::ApiResponse<crate::models::UserConnection>,
             crate::response::ApiResponse<Vec<crate::models::UserConnectionWithProfile>>,
+            crate::response::ApiResponse<crate::models::DataExportResponse>,
+            crate::response::ApiResponse<Vec<crate::models::DataExportResponse>>,
         )
     ),
     tags(
@@ -75,6 +85,7 @@ use utoipa_swagger_ui::SwaggerUi;
         (name = "language-proficiency", description = "User language proficiency (public profile data)"),
         (name = "settings", description = "User settings and preferences"),
         (name = "user-connections", description = "User connections (follow/unfollow/block)"),
+        (name = "gdpr", description = "GDPR compliance (data export, account deletion)"),
     ),
     info(
         title = "User Service API",

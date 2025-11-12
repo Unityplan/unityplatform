@@ -1,4 +1,5 @@
 mod connections;
+mod data_export;
 mod health;
 mod language_proficiency;
 mod profile;
@@ -6,6 +7,7 @@ mod profile_links;
 mod settings;
 
 pub use connections::*;
+pub use data_export::*;
 pub use health::*;
 pub use language_proficiency::*;
 pub use profile::*;
