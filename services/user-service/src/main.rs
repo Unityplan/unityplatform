@@ -145,6 +145,7 @@ async fn main() -> std::io::Result<()> {
                 "/v1/users/{id}/data/export/{export_id}",
                 web::get().to(user_service::handlers::download_data_export),
             )
+            // TODO: GDPR account deletion endpoints (in progress)
             .service(user_service::openapi::swagger_ui())
     })
     .bind((server_host.as_str(), server_port))?

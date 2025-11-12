@@ -397,6 +397,7 @@ When adding new features:
 **Database Table:** `territory_dk.data_exports`
 
 **Features:**
+
 - ✅ Complete user data export in JSON format
 - ✅ Includes: user, profile, links, languages, settings, notifications, connections
 - ✅ Auto-expiry: Exports expire 7 days after completion
@@ -406,6 +407,7 @@ When adding new features:
 - ✅ Synchronous processing (ready for async job queue)
 
 **API Endpoints:**
+
 1. `POST /v1/users/{id}/data/export` - Request new export
 2. `GET /v1/users/{id}/data/export` - List all exports
 3. `GET /v1/users/{id}/data/export/{export_id}` - Download export
@@ -413,6 +415,7 @@ When adding new features:
 **Migration:** `20251112000004_create_data_exports_table.sql`
 
 **Testing:**
+
 - ✅ Export creation tested (3134 bytes)
 - ✅ Auto-expiry verified (7 days)
 - ✅ Download tracking verified
@@ -423,6 +426,7 @@ When adding new features:
 **Status:** Pending implementation
 
 **Planned Features:**
+
 - 30-day soft delete grace period
 - Email confirmation required
 - Anonymization strategy for retained data
@@ -430,6 +434,7 @@ When adding new features:
 - Ability to cancel deletion during grace period
 
 **API Endpoints (Planned):**
+
 1. `POST /v1/users/{id}/account/delete` - Request deletion
 2. `POST /v1/users/{id}/account/delete/confirm` - Confirm with email token
 3. `DELETE /v1/users/{id}/account/delete` - Cancel pending deletion
