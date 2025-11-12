@@ -46,7 +46,7 @@ Three critical corrections have been applied to the backend API documentation ba
 **Identity Hierarchy:**
 
 1. **Username** (Primary) - `alice` - Never changes, globally unique
-2. **Matrix ID** (Federated) - `@alice:unityplan.dk` - Changes with territory, old becomes alias
+2. **Matrix ID** (Federated) - `@alice:example.dk` - Changes with territory, old becomes alias
 3. **UUID** (Internal) - Database primary key
 4. **Public Key Hash** (Future) - Holochain cryptographic identity
 
@@ -55,12 +55,12 @@ Three critical corrections have been applied to the backend API documentation ba
 ```
 Before:
 - Username: alice (permanent)
-- Matrix ID: @alice:unityplan.dk (primary)
+- Matrix ID: @alice:example.dk (primary)
 
 After Migration:
 - Username: alice (unchanged)
-- Matrix ID: @alice:unityplan.no (new primary)
-- Matrix Alias: @alice:unityplan.dk (still works, redirects to new)
+- Matrix ID: @alice:example.no (new primary)
+- Matrix Alias: @alice:example.dk (still works, redirects to new)
 ```
 
 **Files Updated:**
@@ -234,7 +234,7 @@ All changes committed to:
    - Invitation system works without it
 
 3. **Matrix ID is Derived**
-   - Format: `@username:unityplan.{territory}`
+   - Format: `@username:example.{territory}`
    - Changes when user migrates
    - Old Matrix IDs become aliases
    - Username remains constant anchor

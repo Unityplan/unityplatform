@@ -8,7 +8,7 @@
 
 ## Overview
 
-UnityPlan uses an **invitation-only registration system** to maintain community quality, prevent spam, and align with the user sovereignty model where communities control their membership.
+The platform uses an **invitation-only registration system** to maintain community quality, prevent spam, and align with the user sovereignty model where communities control their membership.
 
 ### Key Security Feature (November 2025 Update)
 
@@ -35,6 +35,7 @@ UnityPlan uses an **invitation-only registration system** to maintain community 
 - Automatically revoked after use
 
 **Use Cases:**
+
 - **With Email**: Send invitation email directly to invitee (requires email address)
 - **Without Email**: Share link via Telegram, Signal, QR code, etc. (privacy-respecting)
 

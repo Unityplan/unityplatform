@@ -1,0 +1,89 @@
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        crate::handlers::health,
+        crate::handlers::get_profile,
+        crate::handlers::update_profile,
+        crate::handlers::get_profile_links,
+        crate::handlers::create_profile_link,
+        crate::handlers::update_profile_link,
+        crate::handlers::delete_profile_link,
+        crate::handlers::reorder_profile_links,
+        crate::handlers::get_language_proficiencies,
+        crate::handlers::create_language_proficiency,
+        crate::handlers::update_language_proficiency,
+        crate::handlers::delete_language_proficiency,
+        crate::handlers::get_user_settings,
+        crate::handlers::update_user_settings,
+        crate::handlers::get_notification_settings,
+        crate::handlers::update_notification_settings,
+        crate::handlers::follow_user,
+        crate::handlers::unfollow_user,
+        crate::handlers::get_followers,
+        crate::handlers::get_following,
+        crate::handlers::block_user,
+        crate::handlers::unblock_user,
+        crate::handlers::get_blocked_users,
+    ),
+    components(
+        schemas(
+            crate::models::HealthResponse,
+            crate::models::DependencyStatus,
+            crate::models::User,
+            crate::models::UserProfile,
+            crate::models::ProfileLink,
+            crate::models::LanguageProficiency,
+            crate::models::ProficiencyLevel,
+            crate::models::CompleteProfile,
+            crate::models::UpdateProfileRequest,
+            crate::models::CreateProfileLinkRequest,
+            crate::models::UpdateProfileLinkRequest,
+            crate::models::ReorderLinksRequest,
+            crate::models::CreateLanguageProficiencyRequest,
+            crate::models::UpdateLanguageProficiencyRequest,
+            crate::models::UserSettings,
+            crate::models::UpdateUserSettingsRequest,
+            crate::models::ThemeMode,
+            crate::models::ColorScheme,
+            crate::models::TranslationProvider,
+            crate::models::NotificationSettings,
+            crate::models::UpdateNotificationSettingsRequest,
+            crate::models::ConnectionType,
+            crate::models::ConnectionStatus,
+            crate::models::UserConnection,
+            crate::models::UserConnectionWithProfile,
+            crate::response::ApiResponse<crate::models::HealthResponse>,
+            crate::response::ApiResponse<crate::models::CompleteProfile>,
+            crate::response::ApiResponse<crate::models::UserProfile>,
+            crate::response::ApiResponse<Vec<crate::models::ProfileLink>>,
+            crate::response::ApiResponse<crate::models::ProfileLink>,
+            crate::response::ApiResponse<Vec<crate::models::LanguageProficiency>>,
+            crate::response::ApiResponse<crate::models::LanguageProficiency>,
+            crate::response::ApiResponse<crate::models::UserSettings>,
+            crate::response::ApiResponse<crate::models::NotificationSettings>,
+            crate::response::ApiResponse<crate::models::UserConnection>,
+            crate::response::ApiResponse<Vec<crate::models::UserConnectionWithProfile>>,
+        )
+    ),
+    tags(
+        (name = "Health", description = "Health check endpoints"),
+        (name = "profiles", description = "User profile management"),
+        (name = "profile-links", description = "User profile links management"),
+        (name = "language-proficiency", description = "User language proficiency (public profile data)"),
+        (name = "settings", description = "User settings and preferences"),
+        (name = "user-connections", description = "User connections (follow/unfollow/block)"),
+    ),
+    info(
+        title = "User Service API",
+        version = "0.1.0-alpha.1",
+        description = "User Service for Unity Platform"
+    )
+)]
+pub struct ApiDoc;
+
+pub fn swagger_ui() -> SwaggerUi {
+    SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-doc/openapi.json", ApiDoc::openapi())
+}

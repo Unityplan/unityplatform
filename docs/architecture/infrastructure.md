@@ -1,4 +1,6 @@
-# UnityPlan Platform - Infrastructure Architecture
+# Platform Infrastructure Architecture
+
+> **Note:** "unityplan.org" references in this document are examples from the test deployment only.
 
 ## 📋 Table of Contents
 
@@ -16,7 +18,7 @@
 
 ## 1. Overview
 
-UnityPlan's infrastructure is designed around three core principles:
+The platform's infrastructure is designed around three core principles:
 
 1. **Territory Sovereignty**: Each territory controls its own infrastructure and data
 2. **Microservices Architecture**: Independent, scalable services with clear boundaries
@@ -239,6 +241,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ### 3.2 Core Services Breakdown
 
 #### Authentication Service
+
 ```
 ┌───────────────────────────────────┐
 │     Authentication Service         │
@@ -268,6 +271,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ```
 
 #### User Service
+
 ```
 ┌───────────────────────────────────┐
 │         User Service              │
@@ -297,6 +301,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ```
 
 #### Badge Service
+
 ```
 ┌───────────────────────────────────┐
 │         Badge Service             │
@@ -329,6 +334,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ```
 
 #### Course Service (LMS)
+
 ```
 ┌───────────────────────────────────┐
 │         Course Service            │
@@ -359,6 +365,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ```
 
 #### Forum Service
+
 ```
 ┌───────────────────────────────────┐
 │         Forum Service             │
@@ -388,6 +395,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ```
 
 #### Matrix Gateway Service
+
 ```
 ┌───────────────────────────────────┐
 │       Matrix Gateway              │
@@ -416,6 +424,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ```
 
 #### Translation Service
+
 ```
 ┌───────────────────────────────────┐
 │      Translation Service          │
@@ -443,6 +452,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ```
 
 #### Territory Service
+
 ```
 ┌───────────────────────────────────┐
 │       Territory Service           │
@@ -470,6 +480,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ```
 
 #### Notification Service
+
 ```
 ┌───────────────────────────────────┐
 │      Notification Service         │
@@ -498,6 +509,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ### 3.3 Service Communication Patterns
 
 #### Synchronous Communication (HTTP)
+
 ```
 ┌─────────┐                              ┌─────────┐
 │ Client  │                              │ Service │
@@ -516,6 +528,7 @@ UnityPlan's infrastructure is designed around three core principles:
 ```
 
 #### Asynchronous Communication (NATS)
+
 ```
 Publisher                 NATS Bus               Subscriber(s)
 ┌────────┐               ┌────────┐              ┌────────┐
@@ -544,6 +557,7 @@ Publisher                 NATS Bus               Subscriber(s)
 ```
 
 #### Request/Reply Pattern (RPC over NATS)
+
 ```
 Requester                 NATS Bus               Responder
 ┌────────┐               ┌────────┐              ┌────────┐
@@ -673,6 +687,7 @@ http:
 ### 4.2 Evolution Path: Single Server → Multi-Server
 
 #### Phase 1: Initial Deployment (3-5 Territories)
+
 ```
 ┌──────────────────────────────────────────────────┐
 │         Single PostgreSQL Server                 │
@@ -697,6 +712,7 @@ http:
 ```
 
 #### Phase 2: Regional Servers (10-20 Territories)
+
 ```
 ┌──────────────────────┐     ┌──────────────────────┐
 │   EU Server          │     │  Americas Server     │
@@ -734,6 +750,7 @@ Benefits:
 ```
 
 #### Phase 3: Territory-Specific Servers (50+ Territories)
+
 ```
 Large Territories (Dedicated Servers):
 

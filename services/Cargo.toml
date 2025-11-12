@@ -1,7 +1,22 @@
 [workspace]
 resolver = "2"
-members = [ "auth-service",
-    "shared-lib", "user-service",
+members = [
+    "shared-lib",
+    # Phase 1 Services
+    "auth-service",
+    "user-service",
+    "settings-service",
+    "invitation-service",
+    "notification-service",
+    # Phase 2 Services (scaffolded)
+    "community-service",
+    "badge-service",
+    "territory-service",
+    "event-service",
+    "course-service",
+    "forum-service",
+    "translation-service",
+    "ipfs-service",
 ]
 
 [workspace.package]

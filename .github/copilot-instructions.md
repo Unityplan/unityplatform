@@ -2,9 +2,10 @@
 
 ## Project Overview
 
-**Platform:** UnityPlan - User sovereignty-first learning and collaboration platform  
+**Platform:** User sovereignty-first learning and collaboration platform  
 **Version:** 0.1.0-alpha.1 (MVP Phase 1 - Early Development)  
-**Status:** Infrastructure complete, backend services in development
+**Status:** Infrastructure complete, backend services in development  
+**Example Deployment:** unityplan.org (test project using this platform)
 
 This workspace contains a microservices platform with:
 

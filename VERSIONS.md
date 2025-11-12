@@ -1,7 +1,8 @@
-# UnityPlan Version Matrix
+# Unity Platform - Version Matrix
 
-**Last Updated:** November 5, 2025  
-**Platform Version:** 0.1.0-alpha.1 (MVP Phase 1 - Early Development)
+**Last Updated:** November 11, 2025  
+**Platform Version:** 0.1.0-alpha.1 (MVP Phase 1 - Early Development)  
+**Example Deployment:** unityplan.org (test project)
 
 ---
 

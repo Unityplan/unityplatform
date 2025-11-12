@@ -322,7 +322,7 @@ PATCH  /api/v1/profiles/{userId}/privacy   - Update privacy settings
   "user_id": "uuid",
   "username": "alice_dk",
   "display_name": "Alice",
-  "avatar_url": "https://cdn.unityplan.dk/avatars/uuid.jpg",
+  "avatar_url": "https://cdn.example.dk/avatars/uuid.jpg",
   "bio": "Permaculture enthusiast & community builder",
   "location": "Copenhagen, Denmark",
   "interests": ["permaculture", "community building", "education"],

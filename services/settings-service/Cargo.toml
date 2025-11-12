@@ -1,0 +1,52 @@
+[package]
+name = "settings-service"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "settings_service"
+path = "src/lib.rs"
+
+[[bin]]
+name = "settings-service"
+path = "src/main.rs"
+
+[dependencies]
+shared-lib = { path = "../shared-lib" }
+
+# Web framework
+actix-web = "4"
+actix-cors = "0.7"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Database
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio", "uuid", "chrono"] }
+
+# Authentication (for JWT validation)
+jsonwebtoken = "9"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Validation
+validator = { version = "0.18", features = ["derive"] }
+
+# Types
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Configuration
+dotenvy = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# OpenAPI
+utoipa = { version = "5", features = ["actix_extras", "chrono", "uuid"] }
+utoipa-swagger-ui = { version = "8", features = ["actix-web"] }
+anyhow.workspace = true
+thiserror.workspace = true

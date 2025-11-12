@@ -6,7 +6,7 @@
 
 ## Overview
 
-UnityPlan's language proficiency system enables true multilingual collaboration with automatic translation. Users define their language capabilities with detailed proficiency levels, allowing the platform to make intelligent translation decisions.
+The platform's language proficiency system enables true multilingual collaboration with automatic translation. Users define their language capabilities with detailed proficiency levels, allowing the platform to make intelligent translation decisions.
 
 ## User Language Preferences Structure
 

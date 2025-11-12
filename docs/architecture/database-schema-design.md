@@ -63,7 +63,18 @@
 - **In documentation:** We use `{schema_name}` as placeholder in SQL examples
 
 ```
-unityplan_db
+### Database Naming Strategy
+
+**Database Name:** `unityplan` (single database with schema-based multi-tenancy)
+
+**Schema Structure:**
+- `global` - Cross-territory shared data (territories, global username/email registry)
+- `territory_{code}` - Territory-specific data (e.g., `territory_dk`, `territory_no`, `territory_se`)
+
+**Rationale:**
+- Single database simplifies connection management and backups
+- Schema isolation provides clear separation between territories
+- Each territory pod runs its own PostgreSQL instance with relevant schemas only
 ├── global (Global/shared data across territories)
 │   ├── territories
 │   ├── invitation_token_registry
@@ -131,8 +142,8 @@ CREATE TABLE global.territories (
     description TEXT,
     
     -- Pod Configuration
-    pod_url VARCHAR(255) NOT NULL,             -- https://denmark.unityplan.org
-    api_url VARCHAR(255) NOT NULL,             -- https://api.denmark.unityplan.org
+    pod_url VARCHAR(255) NOT NULL,             -- Example: https://denmark.example.org
+    api_url VARCHAR(255) NOT NULL,             -- Example: https://api.denmark.example.org
     status VARCHAR(20) NOT NULL DEFAULT 'active', -- 'active', 'maintenance', 'inactive'
     
     -- Metadata
@@ -328,14 +339,65 @@ CREATE INDEX idx_users_verified ON {schema_name}.users(is_verified);
 **Identity System Integration:**
 
 - **Username:** Primary human-readable identifier (globally unique, never changes even with territory migration)
-- **Matrix ID:** Derived from `username@territory` (e.g., `@alice:unityplan.dk`)
+- **Matrix ID:** Derived from `username@territory` (e.g., `@alice:example.dk`)
 - **Territory Migration:** Username stays same, Matrix ID changes (old ID becomes alias)
-  - Before migration: `@alice:unityplan.dk` (primary)
-  - After migration: `@alice:unityplan.no` (new primary), `@alice:unityplan.dk` (alias - still works)
+  - Before migration: `@alice:example.dk` (primary)
+  - After migration: `@alice:example.no` (new primary), `@alice:example.dk` (alias - still works)
 - **Key Point:** Username is the anchor - Matrix ID is just a federated representation
 - See [Identity System Architecture](identity-system.md) for complete details
 
-### 2. Profiles Table
+### 2. Refresh Tokens Table
+
+**Purpose:** JWT refresh token storage for session management
+
+```sql
+CREATE TABLE {schema_name}.refresh_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Token Data (hashed for security)
+    token VARCHAR(255) NOT NULL UNIQUE,        -- Hashed refresh token (SHA-256)
+    user_id UUID NOT NULL REFERENCES {schema_name}.users(id) ON DELETE CASCADE,
+    
+    -- Session Info
+    device_name VARCHAR(255),                  -- User-agent or device identifier
+    ip_address INET,                           -- IP address for security
+    
+    -- Lifecycle
+    expires_at TIMESTAMPTZ NOT NULL,           -- Token expiration
+    revoked_at TIMESTAMPTZ,                    -- Manual revocation timestamp
+    
+    -- Timestamps
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_used_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- Constraints
+    CHECK (expires_at > created_at),
+    CHECK (revoked_at IS NULL OR revoked_at >= created_at)
+);
+
+CREATE INDEX idx_refresh_tokens_token ON {schema_name}.refresh_tokens(token);
+CREATE INDEX idx_refresh_tokens_user ON {schema_name}.refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_expires ON {schema_name}.refresh_tokens(expires_at) WHERE revoked_at IS NULL;
+CREATE INDEX idx_refresh_tokens_active ON {schema_name}.refresh_tokens(user_id, expires_at) WHERE revoked_at IS NULL;
+```
+
+**Holochain Mapping:**
+
+```rust
+// Session management stored off-chain (not on DHT)
+// Access tokens (JWT) are stateless - no storage needed
+// Refresh tokens stored in auth service database for revocation
+```
+
+**Security Notes:**
+
+- Refresh tokens are long-lived (days/weeks) but revocable
+- Access tokens are short-lived (minutes/hours) and stateless
+- On logout: `revoked_at` is set to prevent reuse
+- Expired tokens should be periodically cleaned up
+- IP address tracking helps detect suspicious activity
+
+### 3. Profiles Table
 
 **Purpose:** User profile data (public & private)
 
@@ -473,7 +535,7 @@ entry_defs![Profile::entry_def()];
 create_link(agent_pub_key, profile_hash, "profile")?;
 ```
 
-### 3. Profile Links Table
+### 4. Profile Links Table
 
 **Purpose:** Flexible external links (replaces deprecated social link columns)
 
@@ -523,7 +585,7 @@ pub struct ProfileLink {
 create_link(profile_hash, link_hash, "profile_link")?;
 ```
 
-### 4. Language Proficiency Table
+### 5. Language Proficiency Table
 
 **Purpose:** User's language skills visible to other users (public profile info)
 
@@ -598,7 +660,7 @@ pub enum ProficiencyLevel {
 }
 ```
 
-### 5. Privacy Settings Table
+### 6. Privacy Settings Table
 
 **Purpose:** User privacy preferences
 
@@ -648,7 +710,7 @@ pub enum ProfileVisibility {
 }
 ```
 
-### 5. User Settings Table
+### 7. User Settings Table
 
 **Purpose:** App preferences (appearance, notifications, etc.)
 
@@ -695,7 +757,7 @@ CREATE TABLE {schema_name}.users_settings (
 - Store in agent's source chain (private data)
 - Not replicated to DHT (local preferences)
 
-### 6. Notification Settings Table
+### 8. Notification Settings Table
 
 **Purpose:** Notification delivery preferences
 
@@ -729,7 +791,7 @@ CREATE TABLE {schema_name}.users_notification_settings (
 );
 ```
 
-### 7. Invitation Tokens Table
+### 9. Invitation Tokens Table
 
 **Purpose:** Territory-local invitation tokens
 
@@ -795,7 +857,7 @@ pub struct InvitationToken {
 create_link(creator_agent, invitation_hash, "created_invitation")?;
 ```
 
-### 8. Invitation Uses Table
+### 10. Invitation Uses Table
 
 **Purpose:** Audit trail of invitation token usage
 
@@ -822,7 +884,7 @@ CREATE INDEX idx_invitation_uses_user ON territory_dk.invitation_uses(user_id);
 
 ---
 
-### 9. Communities Table
+### 11. Communities Table
 
 **Purpose:** Communities within territories (guilds, learning circles, local chapters, study groups)
 
@@ -1107,7 +1169,7 @@ enum JoinPolicy {
 
 ---
 
-### 10. Community Members Table
+### 12. Community Members Table
 
 **Purpose:** Track user membership in communities
 
@@ -1147,7 +1209,7 @@ create_link(user_agent_pub_key, community_hash, "joined_community")?;
 
 ---
 
-### 11. Roles Table
+### 13. Roles Table
 
 **Purpose:** Define roles that can be assigned to users (territory-level and community-level)
 
@@ -1229,7 +1291,7 @@ enum RoleScope {
 
 ---
 
-### 12. Role Assignments Table
+### 14. Role Assignments Table
 
 **Purpose:** Assign roles to users at territory or community level
 
@@ -1290,7 +1352,7 @@ create_link(community_hash, role_assignment_hash, "role_holder")?;
 
 ---
 
-### 13. Community Role Elections Table
+### 15. Community Role Elections Table
 
 **Purpose:** Democratic elections for community roles (100% unanimous vote required)
 
@@ -1372,7 +1434,7 @@ enum ElectionType {
 
 ---
 
-### 14. Community Role Election Votes Table
+### 16. Community Role Election Votes Table
 
 **Purpose:** Track individual votes in community role elections
 
@@ -1434,7 +1496,7 @@ pub struct ElectionVote {
 
 ---
 
-### 15. Badge Definitions Table
+### 17. Badge Definitions Table
 
 **Purpose:** Define badges that grant permissions and can be earned through courses or assigned
 
@@ -1541,7 +1603,7 @@ enum BadgeCategory {
 
 ---
 
-### 16. Badge Awards Table
+### 18. Badge Awards Table
 
 **Purpose:** Track badge assignments to users (earned or manually assigned)
 
@@ -1636,7 +1698,7 @@ enum AwardSource {
 
 ---
 
-### 17. Badge Progress Table
+### 19. Badge Progress Table
 
 **Purpose:** Track progress toward earning multi-step badges (achievements, milestones)
 
@@ -1714,7 +1776,7 @@ pub struct BadgeProgress {
 
 ---
 
-### 18. Groups Table (Access Bubbles)
+### 20. Groups Table (Access Bubbles)
 
 **Purpose:** Groups are logical containers ("bubbles") that bundle together communities, forums (future extension), and courses (future extension). A badge acts as a "key" to unlock access to the entire group.
 
@@ -1811,7 +1873,7 @@ enum GroupScope {
 
 ---
 
-### 19. Group Communities Table
+### 21. Group Communities Table
 
 **Purpose:** Link groups to communities. A group can contain multiple communities, creating logical groupings.
 
@@ -1843,7 +1905,7 @@ CREATE INDEX idx_group_communities_community ON territory_dk.group_communities(c
 
 ---
 
-### 20. Group Forums Table (Future Extension)
+### 22. Group Forums Table (Future Extension)
 
 **Purpose:** Link groups to forums when forum extension is added. A group can contain multiple forums for discussion.
 
@@ -1877,7 +1939,7 @@ COMMENT ON TABLE territory_dk.group_forums IS 'Links groups to forums. Populated
 
 ---
 
-### 21. Group Courses Table (Future Extension)
+### 23. Group Courses Table (Future Extension)
 
 **Purpose:** Link groups to courses when LMS extension is added. A group can contain multiple courses.
 
@@ -2053,7 +2115,7 @@ $$ LANGUAGE plpgsql;
 
 ---
 
-### 22. Notifications Table
+### 24. Notifications Table
 
 **Purpose:** Store notifications for users about system events, badge expirations, elections, invitations, etc.
 
@@ -2198,7 +2260,7 @@ enum NotificationPriority {
 
 ---
 
-### 23. User Connections Table
+### 25. User Connections Table
 
 **Purpose:** Track social connections between users (following, friends, blocks)
 
@@ -2346,7 +2408,7 @@ enum ConnectionStatus {
 
 ---
 
-### 24. Community Events Table
+### 26. Community Events Table
 
 **Purpose:** Community events/calendar with RSVP tracking
 
@@ -2565,7 +2627,7 @@ enum RSVPResponse {
 
 ---
 
-### 25. File Uploads Table
+### 27. File Uploads Table
 
 **Purpose:** Track file uploads and IPFS metadata (avatars, community logos, attachments)
 
@@ -2716,7 +2778,7 @@ enum EntityType {
 
 ---
 
-### 26. Content Reports Table
+### 28. Content Reports Table
 
 **Purpose:** User-generated reports for inappropriate content or behavior
 
@@ -2902,7 +2964,7 @@ pub struct ModerationAction {
 
 ---
 
-### 27. Activity Feed Table
+### 29. Activity Feed Table
 
 **Purpose:** Track user and community activities for timeline/feed display
 
@@ -3109,7 +3171,7 @@ INSERT INTO territory_dk.users (
     territory_code
 ) VALUES (
     'john_doe',
-    '@john_doe:unityplan.dk',
+    '@john_doe:example.dk',
     'john@example.com', -- optional
     '$argon2id$v=19$m=...',
     'dk'
@@ -3374,7 +3436,7 @@ async fn register_user(
         RETURNING *
         "#,
         registration.username,
-        format!("@{}:unityplan.{}", registration.username, territory),
+        format!("@{}:example.{}", registration.username, territory),
         registration.email,
         password_hash,
         territory

@@ -1,106 +1,140 @@
-mod handlers;
-mod models;
-mod services;
-
-use actix_cors::Cors;
-use actix_web::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use actix_web::{middleware, web, App, HttpResponse, HttpServer};
+use actix_web::{middleware::Logger, web, App, HttpServer};
 use sqlx::postgres::PgPoolOptions;
-use std::env;
-
-use crate::services::{StorageService, UserService};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Initialize logging
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    dotenvy::dotenv().ok();
+    tracing_subscriber::fmt::init();
 
-    // Load configuration from environment
-    let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| {
-        "postgresql://unityplan:unityplan_dev_password@localhost:5432/unityplan_dk".to_string()
-    });
+    let config = user_service::config::Config::from_env().expect("Failed to load configuration");
 
-    let host = env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
-    let port = env::var("PORT").unwrap_or_else(|_| "8002".to_string());
-    let avatars_path = env::var("AVATARS_PATH").unwrap_or_else(|_| "./uploads/avatars".to_string());
-
-    log::info!("Starting User Service...");
-    log::info!("Database URL: {}", database_url);
-    log::info!("Avatars storage: {}", avatars_path);
-
-    // Create database connection pool
     let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&database_url)
+        .max_connections(10)
+        .connect(&config.database.url)
         .await
-        .expect("Failed to create database pool");
+        .expect("Failed to connect to database");
 
-    log::info!("✅ Database connection established");
+    let server_host = config.server.host.clone();
+    let server_port = config.server.port;
+    let allowed_origins = config.cors.allowed_origins.clone();
 
-    // Note: Migrations are managed in shared-lib
-    // All migrations should be run via shared-lib/migrations
-
-    // Create services
-    let user_service = web::Data::new(UserService::new(pool));
-    let storage_service = web::Data::new(StorageService::new(avatars_path));
-
-    // Create avatars directory if it doesn't exist
-    std::fs::create_dir_all("./uploads/avatars").expect("Failed to create avatars directory");
-
-    log::info!("✅ Services initialized");
-
-    // Parse CORS allowed origins from environment
-    let cors_origins: Vec<String> = env::var("CORS_ALLOWED_ORIGINS")
-        .unwrap_or_else(|_| "http://localhost:5173,http://localhost:3000".to_string())
-        .split(',')
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .collect();
-
-    // Start HTTP server
-    let bind_address = format!("{}:{}", host, port);
-    log::info!("🚀 User Service listening on http://{}", bind_address);
+    tracing::info!("Starting User Service on {}:{}", server_host, server_port);
 
     HttpServer::new(move || {
-        // Configure CORS with origins from environment
-        let mut cors = Cors::default();
-        for origin in &cors_origins {
+        let mut cors = actix_cors::Cors::default();
+        for origin in &allowed_origins {
             cors = cors.allowed_origin(origin);
         }
         let cors = cors
-            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"])
-            .allowed_headers(vec![AUTHORIZATION, ACCEPT, CONTENT_TYPE])
-            .supports_credentials()
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "PATCH"])
+            .allowed_headers(vec![
+                actix_web::http::header::AUTHORIZATION,
+                actix_web::http::header::ACCEPT,
+                actix_web::http::header::CONTENT_TYPE,
+            ])
             .max_age(3600);
 
         App::new()
-            // Add services to app data
-            .app_data(user_service.clone())
-            .app_data(storage_service.clone())
-            // Middleware
+            .wrap(Logger::default())
             .wrap(cors)
-            .wrap(middleware::Logger::default())
-            .wrap(middleware::Compress::default())
-            // Health check
-            .route("/health", web::get().to(health_check))
-            // API routes
-            .service(
-                web::scope("/api/v1")
-                    .configure(handlers::profile::configure)
-                    .configure(handlers::avatar::configure)
-                    .configure(handlers::connections::configure),
+            .app_data(web::Data::new(pool.clone()))
+            .route("/health", web::get().to(user_service::handlers::health))
+            // Profile endpoints
+            .route(
+                "/v1/profiles/{id}",
+                web::get().to(user_service::handlers::get_profile),
             )
+            .route(
+                "/v1/profiles/{id}",
+                web::put().to(user_service::handlers::update_profile),
+            )
+            // Profile links endpoints
+            .route(
+                "/v1/profiles/{id}/links",
+                web::get().to(user_service::handlers::get_profile_links),
+            )
+            .route(
+                "/v1/profiles/{id}/links",
+                web::post().to(user_service::handlers::create_profile_link),
+            )
+            .route(
+                "/v1/profiles/{id}/links/{link_id}",
+                web::put().to(user_service::handlers::update_profile_link),
+            )
+            .route(
+                "/v1/profiles/{id}/links/{link_id}",
+                web::delete().to(user_service::handlers::delete_profile_link),
+            )
+            .route(
+                "/v1/profiles/{id}/links/reorder",
+                web::patch().to(user_service::handlers::reorder_profile_links),
+            )
+            // Language proficiency endpoints
+            .route(
+                "/v1/profiles/{id}/languages",
+                web::get().to(user_service::handlers::get_language_proficiencies),
+            )
+            .route(
+                "/v1/profiles/{id}/languages",
+                web::post().to(user_service::handlers::create_language_proficiency),
+            )
+            .route(
+                "/v1/profiles/{id}/languages/{lang_id}",
+                web::put().to(user_service::handlers::update_language_proficiency),
+            )
+            .route(
+                "/v1/profiles/{id}/languages/{lang_id}",
+                web::delete().to(user_service::handlers::delete_language_proficiency),
+            )
+            // Settings endpoints
+            .route(
+                "/v1/users/{id}/settings",
+                web::get().to(user_service::handlers::get_user_settings),
+            )
+            .route(
+                "/v1/users/{id}/settings",
+                web::put().to(user_service::handlers::update_user_settings),
+            )
+            .route(
+                "/v1/users/{id}/settings/notifications",
+                web::get().to(user_service::handlers::get_notification_settings),
+            )
+            .route(
+                "/v1/users/{id}/settings/notifications",
+                web::put().to(user_service::handlers::update_notification_settings),
+            )
+            // User connection endpoints
+            .route(
+                "/v1/users/{id}/connections/follow/{target_id}",
+                web::post().to(user_service::handlers::follow_user),
+            )
+            .route(
+                "/v1/users/{id}/connections/follow/{target_id}",
+                web::delete().to(user_service::handlers::unfollow_user),
+            )
+            .route(
+                "/v1/users/{id}/connections/followers",
+                web::get().to(user_service::handlers::get_followers),
+            )
+            .route(
+                "/v1/users/{id}/connections/following",
+                web::get().to(user_service::handlers::get_following),
+            )
+            .route(
+                "/v1/users/{id}/connections/block/{target_id}",
+                web::post().to(user_service::handlers::block_user),
+            )
+            .route(
+                "/v1/users/{id}/connections/block/{target_id}",
+                web::delete().to(user_service::handlers::unblock_user),
+            )
+            .route(
+                "/v1/users/{id}/connections/blocked",
+                web::get().to(user_service::handlers::get_blocked_users),
+            )
+            .service(user_service::openapi::swagger_ui())
     })
-    .bind(bind_address)?
+    .bind((server_host.as_str(), server_port))?
     .run()
     .await
-}
-
-/// Health check endpoint
-async fn health_check() -> HttpResponse {
-    HttpResponse::Ok().json(serde_json::json!({
-        "status": "healthy",
-        "service": "user-service",
-        "version": env!("CARGO_PKG_VERSION"),
-    }))
 }

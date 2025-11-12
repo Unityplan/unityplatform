@@ -1,7 +1,8 @@
 # Backend API Documentation Index
 
 **Created:** November 11, 2025  
-**Status:** Requirements Complete - Ready for Implementation
+**Last Updated:** November 12, 2025  
+**Status:** Phase 1 Implementation In Progress (22/28 endpoints complete)
 
 ---
 
@@ -139,69 +140,131 @@ PostgreSQL Structure:
 ### API Endpoint Groups
 
 ```
-/api/v1/auth/*              - Authentication (8 endpoints)
-/api/v1/profiles/*          - Profile management (5 endpoints)
-/api/v1/avatars/*           - Avatar upload/delete (2 endpoints)
-/api/v1/settings/*          - Settings management (4 endpoints)
-/api/v1/account/*           - Account operations (5 endpoints)
-/api/v1/invitations/*       - Invitation system (5 endpoints)
-/api/v1/data/*              - GDPR compliance (3 endpoints)
+Auth Service (port 8001):
+/api/v1/auth/register        - Register with invitation ✅
+/api/v1/auth/login           - Login ✅
+/api/v1/auth/refresh         - Refresh token ✅
+/api/v1/auth/logout          - Logout ✅
+/api/v1/auth/validate        - Validate token ✅
+
+User Service (port 8002):
+/v1/profiles/{id}                           - Get/Update profile ✅
+/v1/profiles/{id}/links                     - Manage profile links (5 endpoints) ✅
+/v1/profiles/{id}/languages                 - Manage language proficiency (4 endpoints) ✅
+/v1/users/{id}/settings                     - User settings ✅
+/v1/users/{id}/settings/notifications       - Notification settings ✅
+/v1/users/{id}/connections/follow/*         - Follow/unfollow (2 endpoints) ✅
+/v1/users/{id}/connections/followers        - Get followers ✅
+/v1/users/{id}/connections/following        - Get following ✅
+/v1/users/{id}/connections/block/*          - Block/unblock (2 endpoints) ✅
+/v1/users/{id}/connections/blocked          - Get blocked users ✅
+/v1/users/{id}/data/export                  - GDPR data export (pending)
+/v1/users/{id}/account/delete               - Account deletion (pending)
 ```
 
 ---
 
-## 🚀 Implementation Roadmap
+## 🚀 Implementation Status
 
-### Week 1-2: Authentication & Infrastructure
+### ✅ Completed (November 12, 2025)
 
-- Global schema (territories, registries)
-- Territory schema (users table)
-- JWT authentication
-- Registration with invitation validation
-- Login/logout/refresh
+**Auth Service (5/5 endpoints):**
+- ✅ User registration with invitation tokens
+- ✅ Login with JWT authentication
+- ✅ Token refresh
+- ✅ Logout
+- ✅ Token validation
 
-### Week 2-3: User Profile
+**User Service (17/23 endpoints):**
+- ✅ Profile management (GET, PUT)
+- ✅ Profile links (GET, POST, PUT, DELETE, PATCH reorder)
+- ✅ Language proficiency (GET, POST, PUT, DELETE)
+- ✅ User settings (GET, PUT)
+- ✅ Notification settings (GET, PUT)
+- ✅ User connections - Follow/Unfollow (POST, DELETE)
+- ✅ User connections - Get followers/following (GET, GET)
+- ✅ User connections - Block/Unblock (POST, DELETE)
+- ✅ User connections - Get blocked users (GET)
 
-- Profile CRUD
-- Avatar upload/delete
-- Privacy filtering
-- Profile links system
+**Database Schema:**
+- ✅ Global schema (territories, registries)
+- ✅ Territory schema (users, profiles, settings)
+- ✅ Language proficiency with 4 skill levels
+- ✅ User connections (follow/friend/block)
+- ✅ Profile links with ordering
+- ✅ Notification settings (email/inapp/push)
 
-### Week 3-4: Invitation System
+### 🔄 In Progress
 
-- Token creation (single_use, group)
-- Token validation
-- Usage tracking
-- Community auto-assignment
+**User Service GDPR Endpoints (0/6):**
+- ⏳ Request data export
+- ⏳ Download data export
+- ⏳ List data exports
+- ⏳ Request account deletion
+- ⏳ Get deletion status
+- ⏳ Cancel account deletion
 
-### Week 4-5: Settings Management
+### Week 1-2: Authentication & Infrastructure ✅ COMPLETE
 
-- Privacy settings
-- Notification settings
-- Appearance settings
-- Account settings (email, password, 2FA)
+- ✅ Global schema (territories, registries)
+- ✅ Territory schema (users table)
+- ✅ JWT authentication
+- ✅ Registration with invitation validation
+- ✅ Login/logout/refresh
 
-### Week 5-6: GDPR Compliance
+### Week 2-3: User Profile ✅ COMPLETE
 
-- Data export
-- Account deletion
-- Audit logs
+- ✅ Profile CRUD
+- ✅ Privacy filtering
+- ✅ Profile links system (5 endpoints)
+- ✅ Language proficiency (4 skill levels)
+
+### Week 3: User Connections ✅ COMPLETE
+
+- ✅ Follow/unfollow system
+- ✅ Get followers/following lists
+- ✅ Block/unblock functionality
+- ✅ Automatic unfollow on block
+
+### Week 3-4: Settings Management ✅ COMPLETE
+
+- ✅ User settings (theme, language, translation)
+- ✅ Notification settings (14 toggles)
+- ✅ Auto-creation of defaults
+
+### Week 4-5: GDPR Compliance 🔄 IN PROGRESS
+
+- ⏳ Data export (6 endpoints)
+- ⏳ Account deletion
+- ⏳ Audit logs
+
+### Week 5-6: Invitation System (Not Started)
+
+- ⏳ Token creation (single_use, group)
+- ⏳ Token validation
+- ⏳ Usage tracking
+- ⏳ Community auto-assignment
 
 ---
 
 ## 🎯 Success Criteria
 
-Phase 1 (PostgreSQL) is complete when:
+Phase 1 (PostgreSQL) progress:
 
 - ✅ All database tables created with constraints
-- ✅ All authentication endpoints working
+- ✅ All authentication endpoints working (5/5)
 - ✅ Users can register with invitation tokens
 - ✅ Profile CRUD works with privacy filtering
+- ✅ Profile links system functional (5 endpoints)
+- ✅ Language proficiency management (4 skill levels)
+- ✅ User connections (follow/block) working (7 endpoints)
 - ✅ Settings sync across devices
-- ✅ Invitation system functional
-- ✅ GDPR export/deletion implemented
-- ✅ Frontend integration complete (no localStorage mocks)
-- ✅ All tests passing
+- ⏳ GDPR export/deletion implemented (0/6 endpoints)
+- ⏳ Invitation system functional
+- ⏳ Frontend integration complete (no localStorage mocks)
+- ⏳ All tests passing
+
+**Overall Progress:** 22/28 core endpoints (79% complete)
 
 ---
 
@@ -288,5 +351,6 @@ When adding new features:
 
 ---
 
-**Last Updated:** November 11, 2025  
-**Next Review:** When starting Phase 2 (Dual-Write to Holochain)
+**Last Updated:** November 12, 2025  
+**Next Milestone:** Complete GDPR compliance endpoints (6 endpoints)  
+**Next Review:** When GDPR implementation complete

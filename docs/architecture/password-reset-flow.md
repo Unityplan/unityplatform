@@ -8,7 +8,7 @@
 
 ## Overview
 
-Unity Platform implements a **user-sovereignty-first** password reset system with multiple recovery tiers, ensuring users maintain control over their accounts while providing fallback options for recovery.
+The platform implements a **user-sovereignty-first** password reset system with multiple recovery tiers, ensuring users maintain control over their accounts while providing fallback options for recovery.
 
 ### Design Philosophy
 

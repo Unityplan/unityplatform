@@ -1,0 +1,65 @@
+[package]
+name = "auth-service"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "auth_service"
+path = "src/lib.rs"
+
+[[bin]]
+name = "auth-service"
+path = "src/main.rs"
+
+[dependencies]
+shared-lib = { path = "../shared-lib" }
+
+# Web framework
+actix-web = "4"
+actix-cors = "0.7"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+futures-util = "0.3"
+
+# Database
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio", "uuid", "chrono"] }
+
+# Authentication & Crypto
+argon2 = "0.5"
+jsonwebtoken = "9"
+sha2 = "0.10"
+hex = "0.4"
+rand = "0.8"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Validation
+validator = { version = "0.18", features = ["derive"] }
+regex = "1"
+lazy_static = "1.4"
+
+# Types
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Configuration
+dotenvy = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-actix-web = "0.7"
+
+# Error handling
+anyhow = "1"
+thiserror = "1"
+
+# OpenAPI
+utoipa = { version = "4", features = ["actix_extras", "chrono", "uuid"] }
+utoipa-swagger-ui = { version = "7", features = ["actix-web"] }
+
+[dev-dependencies]
+actix-http = "3"

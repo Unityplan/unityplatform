@@ -1,7 +1,5 @@
-pub mod connection;
-pub mod privacy;
-pub mod profile;
+pub mod health;
+pub mod user;
 
-pub use connection::*;
-pub use privacy::*;
-pub use profile::*;
+pub use health::*;
+pub use user::*;

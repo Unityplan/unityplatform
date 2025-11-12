@@ -1,0 +1,6 @@
+The handlers need to be adapted to the new database schema.
+Key changes needed:
+1. Use global.username_registry instead of global.user_identities
+2. Use global.email_registry for email uniqueness
+3. Use territory_dk.users table structure from new migration
+4. Simpler token structure without public_key_hash

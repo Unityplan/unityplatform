@@ -31,7 +31,7 @@
 
 ## Overview
 
-This document defines the REST API specifications for all UnityPlan backend microservices. Each service operates independently and communicates via:
+This document defines the REST API specifications for all backend microservices. Each service operates independently and communicates via:
 
 - **Synchronous HTTP/REST**: Client-to-service, service-to-service when immediate response needed
 - **Asynchronous NATS**: Inter-service events, background processing
@@ -42,7 +42,8 @@ This document defines the REST API specifications for all UnityPlan backend micr
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         API Gateway (Traefik)                   │
-│                    https://api.unityplan.org                    │
+│                    https://api.example.org                      │
+│                         (Example URL)                           │
 └────────────────────────────┬────────────────────────────────────┘
                              │
         ┌────────────────────┼────────────────────┐
@@ -87,7 +88,7 @@ This document defines the REST API specifications for all UnityPlan backend micr
 ### URL Structure
 
 ```
-https://api.unityplan.org/v1/{service}/{resource}/{id}/{sub-resource}
+https://api.example.org/v1/{service}/{resource}/{id}/{sub-resource}
 
 Examples:
 GET    /v1/users/123e4567-e89b-12d3-a456-426614174000
@@ -134,6 +135,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 Query parameters:
+
 - `page`: Page number (default: 1)
 - `per_page`: Items per page (default: 20, max: 100)
 
@@ -190,6 +192,7 @@ GET /{service}/health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -229,6 +232,7 @@ POST /v1/auth/register
 ```
 
 **Request:**
+
 ```json
 {
   "invitation_token": "inv_dk_bootstrap_abc123",
@@ -244,6 +248,7 @@ POST /v1/auth/register
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "success": true,
@@ -258,6 +263,7 @@ POST /v1/auth/register
 ```
 
 **Errors:**
+
 - `400`: Invalid invitation token
 - `409`: Username or email already exists
 - `422`: Validation errors
@@ -269,6 +275,7 @@ POST /v1/auth/login
 ```
 
 **Request:**
+
 ```json
 {
   "username": "john_doe",
@@ -277,6 +284,7 @@ POST /v1/auth/login
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -296,6 +304,7 @@ POST /v1/auth/login
 ```
 
 **Errors:**
+
 - `401`: Invalid credentials
 - `403`: Account suspended/deleted
 - `429`: Too many login attempts
@@ -307,6 +316,7 @@ POST /v1/auth/refresh
 ```
 
 **Request:**
+
 ```json
 {
   "refresh_token": "refresh_abc123"
@@ -314,6 +324,7 @@ POST /v1/auth/refresh
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -345,6 +356,7 @@ GET /v1/auth/validate
 **Headers:** `Authorization: Bearer {token}`
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -391,6 +403,7 @@ GET /v1/users/me
 **Headers:** `Authorization: Bearer {token}`
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -451,6 +464,7 @@ PATCH /v1/users/me
 **Headers:** `Authorization: Bearer {token}`
 
 **Request:**
+
 ```json
 {
   "display_name": "John Doe",
@@ -468,13 +482,15 @@ PATCH /v1/users/me
 POST /v1/users/me/avatar
 ```
 
-**Headers:** 
+**Headers:**
+
 - `Authorization: Bearer {token}`
 - `Content-Type: multipart/form-data`
 
 **Request:** File upload
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -493,6 +509,7 @@ PATCH /v1/users/me/privacy
 ```
 
 **Request:**
+
 ```json
 {
   "profile_visibility": "public",
@@ -511,6 +528,7 @@ PATCH /v1/users/me/notifications
 ```
 
 **Request:**
+
 ```json
 {
   "email_notifications": {
@@ -539,6 +557,7 @@ POST /v1/users/me/links
 ```
 
 **Request:**
+
 ```json
 {
   "platform": "github",
@@ -563,6 +582,7 @@ POST /v1/users/me/languages
 ```
 
 **Request:**
+
 ```json
 {
   "language_code": "es",
@@ -582,6 +602,7 @@ DELETE /v1/users/me/connections/{user_id}
 ```
 
 **Create Connection Request:**
+
 ```json
 {
   "target_user_id": "user-456",
@@ -598,6 +619,7 @@ POST /v1/users/me/blocks
 ```
 
 **Request:**
+
 ```json
 {
   "blocked_user_id": "user-789",
@@ -622,6 +644,7 @@ DELETE /v1/users/me
 ```
 
 **Request:**
+
 ```json
 {
   "password": "SecureP@ssw0rd!",
@@ -661,11 +684,13 @@ GET /v1/badges/definitions
 ```
 
 **Query Parameters:**
+
 - `scope`: `global`, `territory`, `community`
 - `category`: Filter by category
 - `required_for_role`: Role code
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -704,6 +729,7 @@ GET /v1/users/me/badges
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -736,6 +762,7 @@ POST /v1/badges/awards
 **Headers:** `Authorization: Bearer {admin_token}`
 
 **Request:**
+
 ```json
 {
   "user_id": "user-123",
@@ -758,10 +785,12 @@ GET /v1/badges/check-access
 ```
 
 **Query Parameters:**
+
 - `user_id`: User to check
 - `badge_code`: Badge code required
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -793,6 +822,7 @@ DELETE /v1/badges/awards/{award_id}
 ```
 
 **Request:**
+
 ```json
 {
   "revoked_by_user_id": "admin-123",
@@ -814,6 +844,7 @@ Track progress toward earning a badge (e.g., course completion).
 ### NATS Events
 
 **Published:**
+
 - `badge.awarded`
 - `badge.expired`
 - `badge.renewed`
@@ -821,6 +852,7 @@ Track progress toward earning a badge (e.g., course completion).
 - `badge.expiry.warning` (30 days, 7 days before)
 
 **Subscribed:**
+
 - `course.completed` → Auto-award badges
 - `coc.signed` → Award Code of Conduct badge
 
@@ -841,6 +873,7 @@ GET /v1/communities
 ```
 
 **Query Parameters:**
+
 - `type`: `territory`, `guild`
 - `parent_id`: Filter by parent community
 - `scope`: `global`, `territory`, `community`
@@ -848,6 +881,7 @@ GET /v1/communities
 - `page`, `per_page`: Pagination
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -856,7 +890,7 @@ GET /v1/communities
       "community_id": "comm-123",
       "code": "platform_dev",
       "name": "Platform Development",
-      "description": "Building and maintaining the UnityPlan platform",
+      "description": "Building and maintaining the platform",
       "community_type": "guild",
       "join_policy": "badge_required",
       "access_badge_id": "badge-456",
@@ -894,6 +928,7 @@ POST /v1/communities
 **Headers:** `Authorization: Bearer {token}`
 
 **Request:**
+
 ```json
 {
   "code": "beekeepers_dk",
@@ -920,6 +955,7 @@ PATCH /v1/communities/{community_id}
 ```
 
 **Request:**
+
 ```json
 {
   "name": "Updated Name",
@@ -937,10 +973,12 @@ GET /v1/communities/{community_id}/members
 ```
 
 **Query Parameters:**
+
 - `role`: Filter by role (founder, elected, member)
 - `page`, `per_page`
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -966,7 +1004,8 @@ POST /v1/communities/{community_id}/join
 
 **Headers:** `Authorization: Bearer {token}`
 
-**Response:** 
+**Response:**
+
 - `201 Created`: Joined successfully (open/badge-gated)
 - `202 Accepted`: Approval required
 
@@ -981,6 +1020,7 @@ POST /v1/communities/{community_id}/join
 ```
 
 **Errors:**
+
 - `403`: Badge required or invitation needed
 - `409`: Already a member
 
@@ -999,6 +1039,7 @@ POST /v1/communities/{community_id}/invitations
 ```
 
 **Request:**
+
 ```json
 {
   "invited_user_id": "user-456",
@@ -1025,6 +1066,7 @@ POST /v1/communities/{community_id}/members/{user_id}/roles
 ```
 
 **Request:**
+
 ```json
 {
   "role_id": "role-789",
@@ -1042,6 +1084,7 @@ POST /v1/communities/{community_id}/elections/{election_id}/vote
 ```
 
 **Create Election:**
+
 ```json
 {
   "role_id": "role-moderator",
@@ -1055,6 +1098,7 @@ POST /v1/communities/{community_id}/elections/{election_id}/vote
 ```
 
 **Vote:**
+
 ```json
 {
   "candidate_user_id": "user-456"
@@ -1095,6 +1139,7 @@ GET /v1/courses
 ```
 
 **Query Parameters:**
+
 - `category`: Filter by category
 - `difficulty`: `beginner`, `intermediate`, `advanced`
 - `status`: `draft`, `published`, `archived`
@@ -1102,6 +1147,7 @@ GET /v1/courses
 - `page`, `per_page`
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1153,6 +1199,7 @@ POST /v1/courses/{course_id}/enroll
 **Headers:** `Authorization: Bearer {token}`
 
 **Response:** `201 Created`
+
 ```json
 {
   "success": true,
@@ -1167,6 +1214,7 @@ POST /v1/courses/{course_id}/enroll
 ```
 
 **Errors:**
+
 - `403`: Missing prerequisite badges
 - `409`: Already enrolled
 
@@ -1177,6 +1225,7 @@ GET /v1/courses/{course_id}/progress
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1212,6 +1261,7 @@ POST /v1/courses/{course_id}/lessons/{lesson_id}/complete
 ```
 
 **Request:**
+
 ```json
 {
   "time_spent_seconds": 1200,
@@ -1226,6 +1276,7 @@ POST /v1/courses/{course_id}/lessons/{lesson_id}/complete
 When all lessons are completed:
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1261,6 +1312,7 @@ DELETE /v1/courses/{course_id}
 ```
 
 **Create Course:**
+
 ```json
 {
   "title": "Advanced Holochain Development",
@@ -1283,6 +1335,7 @@ POST /v1/courses/{course_id}/reviews
 ### NATS Events
 
 **Published:**
+
 - `course.enrolled`
 - `course.lesson.completed`
 - `course.module.completed`
@@ -1290,6 +1343,7 @@ POST /v1/courses/{course_id}/reviews
 - `course.progress.updated`
 
 **Subscribed:**
+
 - `badge.expired` → Notify re-enrollment if course needed
 
 ---
@@ -1309,11 +1363,13 @@ GET /v1/forums
 ```
 
 **Query Parameters:**
+
 - `group_id`: Filter by group (bubble)
 - `category`: Filter by category
 - `accessible`: `true` (only forums I can access)
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1351,11 +1407,13 @@ GET /v1/forums/{forum_id}/topics
 ```
 
 **Query Parameters:**
+
 - `sort`: `latest`, `popular`, `unanswered`
 - `status`: `open`, `closed`, `pinned`
 - `page`, `per_page`
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1399,6 +1457,7 @@ POST /v1/forums/{forum_id}/topics
 **Headers:** `Authorization: Bearer {token}`
 
 **Request:**
+
 ```json
 {
   "title": "Best practices for error handling in Rust?",
@@ -1410,6 +1469,7 @@ POST /v1/forums/{forum_id}/topics
 **Response:** `201 Created`
 
 **Errors:**
+
 - `403`: Missing required badge to post
 
 #### Reply to Topic
@@ -1419,6 +1479,7 @@ POST /v1/forums/{forum_id}/topics/{topic_id}/replies
 ```
 
 **Request:**
+
 ```json
 {
   "content": "Great question! I recommend using the `thiserror` crate...",
@@ -1454,6 +1515,7 @@ POST /v1/forums/{forum_id}/replies/{reply_id}/vote
 ```
 
 **Request:**
+
 ```json
 {
   "vote_type": "upvote"
@@ -1476,6 +1538,7 @@ POST /v1/forums/reports
 ```
 
 **Request:**
+
 ```json
 {
   "content_type": "topic",
@@ -1498,6 +1561,7 @@ POST /v1/forums/{forum_id}/moderation/actions
 ```
 
 **Take Moderation Action:**
+
 ```json
 {
   "report_id": "report-123",
@@ -1531,6 +1595,7 @@ GET /v1/territories
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1544,7 +1609,7 @@ GET /v1/territories
       "status": "active",
       "database_schema": "territory_dk",
       "database_server": "postgres://eu-server:5432",
-      "matrix_server": "https://matrix.dk.unityplan.org",
+      "matrix_server": "https://matrix.dk.example.org",
       "manager_user_ids": ["user-123", "user-456"],
       "created_at": "2025-01-01T00:00:00Z"
     }
@@ -1565,6 +1630,7 @@ POST /v1/territories
 ```
 
 **Request:**
+
 ```json
 {
   "territory_id": "navajo-fn-us",
@@ -1598,6 +1664,7 @@ GET /v1/territories/{territory_id}/stats
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1637,11 +1704,13 @@ GET /v1/notifications
 **Headers:** `Authorization: Bearer {token}`
 
 **Query Parameters:**
+
 - `type`: Filter by type (badge_expiry, role_election, etc.)
 - `read`: `true`/`false`
 - `page`, `per_page`
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1694,6 +1763,7 @@ GET /v1/notifications/count
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1753,6 +1823,7 @@ POST /v1/translations/translate
 ```
 
 **Request:**
+
 ```json
 {
   "text": "Hello, how are you?",
@@ -1763,6 +1834,7 @@ POST /v1/translations/translate
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1783,6 +1855,7 @@ POST /v1/translations/batch
 ```
 
 **Request:**
+
 ```json
 {
   "texts": [
@@ -1802,6 +1875,7 @@ POST /v1/translations/detect
 ```
 
 **Request:**
+
 ```json
 {
   "text": "Bonjour, comment allez-vous?"
@@ -1809,6 +1883,7 @@ POST /v1/translations/detect
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1826,6 +1901,7 @@ GET /v1/translations/languages
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1861,12 +1937,14 @@ GET /v1/events
 ```
 
 **Query Parameters:**
+
 - `community_id`: Filter by community
 - `start_date`, `end_date`: Date range
 - `type`: `in_person`, `virtual`, `hybrid`
 - `rsvp_status`: `attending`, `maybe`, `not_attending`
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -1907,6 +1985,7 @@ POST /v1/events
 ```
 
 **Request:**
+
 ```json
 {
   "community_id": "comm-456",
@@ -1916,7 +1995,7 @@ POST /v1/events
   "start_time": "2025-12-01T14:00:00Z",
   "end_time": "2025-12-01T17:00:00Z",
   "location": "Innovation Hub",
-  "virtual_link": "https://meet.unityplan.org/workshop-123",
+  "virtual_link": "https://meet.example.org/workshop-123",
   "capacity": 30,
   "rsvp_deadline": "2025-11-30T14:00:00Z",
   "require_badge_id": "badge-coc"
@@ -1944,6 +2023,7 @@ POST /v1/events/{event_id}/rsvp
 ```
 
 **Request:**
+
 ```json
 {
   "status": "attending",
@@ -1955,6 +2035,7 @@ POST /v1/events/{event_id}/rsvp
 **Response:** `201 Created`
 
 **Errors:**
+
 - `403`: Event requires badge
 - `409`: Event at capacity
 - `410`: RSVP deadline passed
@@ -1978,6 +2059,7 @@ GET /v1/events/{event_id}/attendees
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -2024,6 +2106,7 @@ POST /v1/matrix/rooms
 ```
 
 **Request:**
+
 ```json
 {
   "name": "Platform Development",
@@ -2035,12 +2118,13 @@ POST /v1/matrix/rooms
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "success": true,
   "data": {
-    "room_id": "!abc123:matrix.dk.unityplan.org",
-    "room_alias": "#platform-dev:matrix.dk.unityplan.org"
+    "room_id": "!abc123:matrix.dk.example.org",
+    "room_alias": "#platform-dev:matrix.dk.example.org"
   }
 }
 ```
@@ -2052,6 +2136,7 @@ POST /v1/matrix/rooms/{room_id}/send
 ```
 
 **Request:**
+
 ```json
 {
   "msgtype": "m.text",
@@ -2068,6 +2153,7 @@ GET /v1/matrix/rooms/{room_id}/messages
 ```
 
 **Query Parameters:**
+
 - `from`: Pagination token
 - `limit`: Max messages (default: 20)
 
@@ -2090,6 +2176,7 @@ POST /v1/matrix/rooms/{room_id}/invite
 ```
 
 **Request:**
+
 ```json
 {
   "user_id": "user-789"
@@ -2208,7 +2295,7 @@ X-RateLimit-Reset: 1699718400
 ### Version Header (Alternative)
 
 ```http
-Accept: application/vnd.unityplan.v1+json
+Accept: application/vnd.platform.v1+json
 ```
 
 ---
