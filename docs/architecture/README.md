@@ -1,308 +1,275 @@
-# Service Architecture Documentation Index
+# Architecture Documentation
 
 **Last Updated:** November 12, 2025  
-**Purpose:** Navigation guide for microservices architecture documentation
+**Version:** 0.1.0-alpha.1  
+**Status:** MVP Phase 1 in development
 
 ---
 
-## 📚 Core Architecture Documents
+## 📂 Documentation Structure
 
-### **1. [Microservices Architecture](microservices-architecture.md)** ⭐ START HERE
-
-Complete overview of the microservices architecture, service boundaries, dependencies, and Holochain migration path.
-
-**Covers:**
-
-- Service independence principles
-- Multi-pod ready architecture
-- Service dependency matrix
-- Inter-service communication (REST + NATS)
-- Database ownership model
-- Holochain migration strategy
-
----
-
-## 🔧 Per-Service Documentation
-
-Each service has comprehensive documentation in its own folder:
-
-### **auth-service/** (Port 8001) 🔐
-
-- [ ] README.md - Service overview
-- [ ] database-schema.md - Tables owned (users, sessions, global registries)
-- [ ] api-specification.md - Authentication endpoints
-- [ ] holochain-migration.md - authentication.happ DNA design
-
-**Status:** ✅ Complete (5/5 endpoints)  
-**Dependencies:** invitation-service (during registration)
+```
+docs/architecture/
+├── README.md (this file)           # Documentation index and navigation
+├── MIGRATIONS-MASTER.md            # Database migration tracking
+├── overview/                       # Architectural patterns and principles
+│   ├── microservices-architecture.md
+│   ├── multi-pod-architecture.md
+│   ├── identity-system.md
+│   ├── invitation-system.md
+│   ├── user-data-sovereignty.md
+│   ├── infrastructure-overview.md
+│   └── ...
+├── services/                       # Service-specific documentation
+│   ├── auth-service/
+│   │   ├── README.md              # Service overview
+│   │   ├── API.md                 # Endpoint specifications
+│   │   ├── DATABASE.md            # Schema design
+│   │   └── MIGRATIONS.md          # Migration plan
+│   ├── user-service/
+│   ├── invitation-service/
+│   └── ...
+└── .archived/                      # Historical documentation (Nov 11, 2025)
+```
 
 ---
 
-### **user-service/** (Port 8002) 👤
+## 🎯 Quick Start
 
-- [x] [README.md](services/user-service/README.md) - Service overview ✅
-- [ ] database-schema.md - Profiles, links, connections, GDPR tables
-- [ ] api-specification.md - 28 endpoints documented
-- [ ] holochain-migration.md - profiles.happ DNA design
+### I want to understand
 
-**Status:** ✅ Complete (28/28 endpoints)  
-**Dependencies:** settings-service (GDPR export)
+**...the overall architecture**  
+→ Start with [overview/microservices-architecture.md](overview/microservices-architecture.md)
 
----
+**...multi-pod deployment**  
+→ Read [overview/multi-pod-architecture.md](overview/multi-pod-architecture.md)
 
-### **settings-service/** (Port 8003) ⚙️
+**...how identity works**  
+→ See [overview/identity-system.md](overview/identity-system.md)
 
-- [ ] README.md - Service overview
-- [ ] database-schema.md - users_settings, users_privacy_settings
-- [ ] api-specification.md - Settings management endpoints
-- [ ] holochain-migration.md - settings.happ DNA (private chain)
+**...data sovereignty principles**  
+→ Check [overview/user-data-sovereignty.md](overview/user-data-sovereignty.md)
 
-**Status:** ⏳ Scaffolded (0/5 endpoints)  
-**Dependencies:** None (leaf service)  
-**Migration:** Week 1 - [Service Separation Plan](../guides/development/service-separation-migration.md)
+**...a specific service**  
+→ Browse [services/](services/) directory
 
----
-
-### **invitation-service/** (Port 8004) 🎫
-
-- [ ] README.md - Service overview
-- [ ] database-schema.md - invitation_tokens, invitation_uses, global registry
-- [ ] api-specification.md - Invitation management endpoints
-- [ ] holochain-migration.md - invitations.happ DNA
-
-**Status:** ⏳ Scaffolded (0/6 endpoints)  
-**Dependencies:** None (leaf service)  
-**Migration:** Week 2-3 - [Service Separation Plan](../guides/development/service-separation-migration.md)
+**...database migrations**  
+→ Review [MIGRATIONS-MASTER.md](MIGRATIONS-MASTER.md)
 
 ---
 
-### **notification-service/** (Port 8005) 🔔
+## 📚 Architectural Overview Documentation
 
-- [ ] README.md - Service overview
-- [ ] database-schema.md - notifications, notification_settings, templates
-- [ ] api-specification.md - Notification endpoints
-- [ ] events.md - NATS event subscriptions
-- [ ] holochain-migration.md - notifications.happ DNA (ephemeral)
+High-level architectural patterns, principles, and cross-cutting concerns.
 
-**Status:** ⏳ Scaffolded (0/7 endpoints)  
-**Dependencies:** None (but subscribes to all service events)  
-**Migration:** Week 2 - [Service Separation Plan](../guides/development/service-separation-migration.md)
+**Location:** [overview/](overview/)
 
----
-
-### **community-service/** (Port 8006) 👥
-
-- [ ] README.md - Service overview
-- [ ] database-schema.md - communities, community_members, settings
-- [ ] api-specification.md - Community management endpoints
-- [ ] holochain-migration.md - communities.happ DNA
-
-**Status:** ⏳ Scaffolded (0/8 endpoints)  
-**Dependencies:** user-service, notification-service  
-**Priority:** Phase 2
+| Document | Description |
+|----------|-------------|
+| [microservices-architecture.md](overview/microservices-architecture.md) | Service boundaries, dependencies, communication patterns |
+| [multi-pod-architecture.md](overview/multi-pod-architecture.md) | Territory-based deployment, federation, data residency |
+| [identity-system.md](overview/identity-system.md) | Username uniqueness, Matrix federation, identity migration |
+| [invitation-system.md](overview/invitation-system.md) | Invitation-based registration flow and security |
+| [user-data-sovereignty.md](overview/user-data-sovereignty.md) | GDPR compliance, data ownership principles |
+| [infrastructure-overview.md](overview/infrastructure-overview.md) | Infrastructure stack, containers, databases |
+| [territory-management-standard.md](overview/territory-management-standard.md) | Territory hierarchy, sovereignty model |
+| [language-proficiency-system.md](overview/language-proficiency-system.md) | Multi-language support, translation features |
+| [password-reset-flow.md](overview/password-reset-flow.md) | Password recovery mechanisms |
+| [frontend-stack-rationale.md](overview/frontend-stack-rationale.md) | Frontend technology decisions |
 
 ---
 
-### **badge-service/** (Port 8007) 🏅
+## 🔧 Service-Specific Documentation
 
-- [ ] README.md - Service overview
-- [ ] database-schema.md - badges, user_badges, badge_progress
-- [ ] api-specification.md - Badge and achievement endpoints
-- [ ] holochain-migration.md - badges.happ DNA
+Detailed implementation documentation for each microservice.
 
-**Status:** ⏳ Scaffolded (0/6 endpoints)  
-**Dependencies:** user-service, notification-service  
-**Priority:** Phase 2
+**Location:** [services/](services/)
+---
+
+## 🔧 Service-Specific Documentation
+
+Detailed implementation documentation for each microservice.
+
+**Location:** [services/](services/)
+
+**Documentation Pattern:** Each service contains:
+- **README.md** - Service overview, responsibilities, dependencies
+- **API.md** - Complete endpoint specifications with examples
+- **DATABASE.md** - Schema design with multi-pod considerations
+- **MIGRATIONS.md** - Migration specifications (select services)
+
+### Phase 1 Services (MVP - In Development)
+
+| Service | Port | Status | Docs |
+|---------|------|--------|------|
+| **auth-service** | 8001 | ✅ Complete | [README](services/auth-service/README.md) · [API](services/auth-service/API.md) · [DB](services/auth-service/DATABASE.md) · [Migrations](services/auth-service/MIGRATIONS.md) |
+| **user-service** | 8002 | ✅ Complete | [README](services/user-service/README.md) · [API](services/user-service/API.md) · [DB](services/user-service/DATABASE.md) |
+| **settings-service** | 8003 | ⏳ Scaffolded | [README](services/settings-service/README.md) · [API](services/settings-service/API.md) · [DB](services/settings-service/DATABASE.md) |
+| **invitation-service** | 8004 | ⏳ Scaffolded | [README](services/invitation-service/README.md) · [API](services/invitation-service/API.md) · [DB](services/invitation-service/DATABASE.md) |
+| **notification-service** | 8005 | ⏳ Scaffolded | [README](services/notification-service/README.md) · [API](services/notification-service/API.md) · [DB](services/notification-service/DATABASE.md) |
+
+### Phase 2 Services (Planned)
+
+| Service | Port | Status | Docs |
+|---------|------|--------|------|
+| **community-service** | 8006 | ⏳ Planned | [README](services/community-service/README.md) · [API](services/community-service/API.md) · [DB](services/community-service/DATABASE.md) |
+| **badge-service** | 8007 | ⏳ Planned | [README](services/badge-service/README.md) · [API](services/badge-service/API.md) · [DB](services/badge-service/DATABASE.md) |
+| **territory-service** | 8008 | ⏳ Planned | [README](services/territory-service/README.md) · [API](services/territory-service/API.md) · [DB](services/territory-service/DATABASE.md) |
+| **event-service** | 8009 | ⏳ Planned | [README](services/event-service/README.md) · [API](services/event-service/API.md) · [DB](services/event-service/DATABASE.md) |
+| **course-service** | 8010 | ⏳ Planned | [README](services/course-service/README.md) · [API](services/course-service/API.md) · [DB](services/course-service/DATABASE.md) |
+| **forum-service** | 8011 | ⏳ Planned | [README](services/forum-service/README.md) · [API](services/forum-service/API.md) · [DB](services/forum-service/DATABASE.md) |
+| **translation-service** | 8012 | ⏳ Planned | [README](services/translation-service/README.md) · [API](services/translation-service/API.md) · [DB](services/translation-service/DATABASE.md) |
+| **ipfs-service** | 8013 | ⏳ Planned | [README](services/ipfs-service/README.md) · [API](services/ipfs-service/API.md) · [DB](services/ipfs-service/DATABASE.md) |
+
+**Port Allocation:** See [services/port-allocation.md](services/port-allocation.md)
 
 ---
 
-### **territory-service/** (Port 8008) 🌍
+## 🗄️ Database Migrations
 
-- [ ] README.md - Service overview
-- [ ] database-schema.md - global.territories, territory_settings, stats
-- [ ] api-specification.md - Territory management endpoints
-- [ ] federation.md - Multi-pod federation strategy
-- [ ] holochain-migration.md - territories.happ DNA (meta-level)
+**Master Plan:** [MIGRATIONS-MASTER.md](MIGRATIONS-MASTER.md)
 
-**Status:** ⏳ Scaffolded (0/4 endpoints)  
-**Dependencies:** None (top-level service)  
-**Priority:** Phase 2
+**Current Status:**
+- **Version:** 20251112000005
+- **Database:** PostgreSQL 15+ with TimescaleDB
+- **Migrations Applied:** 6 core migrations (30 tables)
+- **Service Ownership:** Defined per table
 
----
+**Key Principles:**
+- Data sovereignty (personal data in territory pods)
+- Global uniqueness (usernames/emails across all pods)
+- Service ownership (each service owns its tables)
+- Migration path to Holochain (future decentralization)
 
-### **event-service/** (Port 8009) 📅
-
-- [ ] README.md - Service overview
-- [ ] database-schema.md - events, event_participants, rsvps
-- [ ] api-specification.md - Event management endpoints
-- [ ] holochain-migration.md - events.happ DNA
-
-**Status:** ⏳ Planned  
-**Priority:** Phase 2
+**Service Migration Plans:**
+- [auth-service/MIGRATIONS.md](services/auth-service/MIGRATIONS.md) - Authentication migrations
+- [user-service/MIGRATIONS.md](services/user-service/MIGRATIONS.md) - User data migrations (planned)
+- More service-specific migration plans coming
 
 ---
 
-### **course-service/** (Port 8010) 📚
+## 🏗️ Architecture Principles
 
-- [ ] README.md - Service overview (LMS)
-- [ ] database-schema.md - courses, lessons, enrollments, progress
-- [ ] api-specification.md - Learning management endpoints
-- [ ] holochain-migration.md - courses.happ DNA
+### Service Independence
+- Each service owns its database tables
+- Clear API boundaries between services
+- NATS for event-driven communication
+- No direct database access across services
 
-**Status:** ⏳ Planned  
-**Priority:** Phase 2
+### Multi-Pod Ready
+- Territory-based data isolation
+- Global schema for coordination only
+- Personal data stays in user's territory
+- Cross-pod federation via NATS
 
----
+### Data Sovereignty
+- Users choose their territory (pod)
+- All personal data in territory schema
+- GDPR-compliant data export/deletion
+- Migration between territories supported
 
-### **forum-service/** (Port 8011) 💬
-
-- [ ] README.md - Service overview
-- [ ] matrix-integration.md - Matrix protocol integration
-- [ ] api-specification.md - Forum endpoints (wrapper around Matrix)
-- [ ] holochain-migration.md - Integration with Matrix rooms
-
-**Status:** ⏳ Planned  
-**Priority:** Phase 2
-
----
-
-### **translation-service/** (Port 8012) 🌐
-
-- [ ] README.md - Service overview
-- [ ] database-schema.md - translations, translation_contributions
-- [ ] api-specification.md - Translation management endpoints
-- [ ] providers.md - LibreTranslate, DeepL, Google integration
-
-**Status:** ⏳ Planned  
-**Priority:** Phase 2
-
----
-
-### **ipfs-service/** (Port 8013) 📦
-
-- [ ] README.md - Service overview
-- [ ] ipfs-integration.md - IPFS node configuration
-- [ ] api-specification.md - File storage endpoints
-- [ ] holochain-migration.md - Pure IPFS (no migration needed)
-
-**Status:** ⏳ Planned  
-**Priority:** Phase 2
+### Holochain Migration Path
+- Current: PostgreSQL + NATS
+- Future: Holochain DNAs per service
+- Agent-centric data ownership
+- Distributed hash table storage
 
 ---
 
 ## 📖 Related Documentation
 
-### **Implementation Guides**
+### Development Guides
+- [Service Separation Migration](../guides/development/service-separation-migration.md) - Migration from monolith
+- [Versioning Strategy](../guides/development/versioning-strategy.md) - SemVer 2.0.0 approach
+- [Testing Strategy](../guides/development/testing-strategy.md) - Unit and integration testing
 
-- [Service Separation Migration Plan](../guides/development/service-separation-migration.md)
-  - Week-by-week plan to properly separate consolidated services
-  - Step-by-step instructions for moving settings, notifications, invitations
-  - Testing and deployment strategy
+### Deployment Guides
+- [Multi-Pod Deployment](../guides/deployment/multi-pod-setup.md) - Territory pod setup
+- [Docker Architecture](../guides/deployment/docker-architecture.md) - Container orchestration
 
-- [Database Schema Design](database-schema-design.md)
-  - Complete PostgreSQL schema (global + territory)
-  - Table ownership by service
-  - Migration history
-
-- [Multi-Pod Architecture](multi-pod-architecture.md)
-  - Territory-based pod deployment
-  - Cross-pod federation
-  - Service discovery and routing
-
-### **Development Guides**
-
-- [Backend API Implementation](../guides/development/backend-api-implementation.md)
-  - API design patterns
-  - Request/response formats
-  - Error handling
-
-- [Testing Strategy](../guides/development/testing-strategy.md)
-  - Unit testing per service
-  - Integration testing across services
-  - Multi-pod testing
+### Project Documentation
+- [Project Overview](../project/overview.md) - Platform vision and goals
+- [Technology Stack](../project/tech-stack.md) - Technology choices
+- [Current Status](../status/current/phase-1-status.md) - Development progress
 
 ---
 
-## 🎯 Quick Navigation
+## 📊 Documentation Status
 
-### **I want to...**
+### Overview Documentation
+- ✅ Microservices architecture
+- ✅ Multi-pod architecture
+- ✅ Identity system
+- ✅ Invitation system
+- ✅ Data sovereignty
+- ✅ Infrastructure overview
+- ✅ Territory management
+- ✅ Language proficiency
+- ✅ Password reset flow
+- ✅ Frontend stack rationale
 
-**Understand the overall architecture**  
-→ Read [Microservices Architecture](microservices-architecture.md)
+**Coverage:** 100% (10/10 architectural topics)
 
-**Implement a new service**  
-→ Follow [user-service/README.md](services/user-service/README.md) as template
+### Service Documentation
 
-**Migrate from consolidated to microservices**  
-→ Follow [Service Separation Migration Plan](../guides/development/service-separation-migration.md)
+**Phase 1 (MVP):**
+- ✅ auth-service (100% - README, API, DATABASE, MIGRATIONS)
+- ✅ user-service (100% - README, API, DATABASE)
+- ✅ settings-service (75% - README, API, DATABASE)
+- ✅ invitation-service (75% - README, API, DATABASE)
+- ✅ notification-service (75% - README, API, DATABASE)
 
-**See what's implemented vs. planned**  
-→ Check service status above (✅ = complete, ⏳ = planned)
+**Phase 2:**
+- ⏳ community-service (50% - README, API, DATABASE)
+- ⏳ badge-service (50% - README, API, DATABASE)
+- ⏳ territory-service (50% - README, API, DATABASE)
+- ⏳ event-service (50% - README, API, DATABASE)
+- ⏳ course-service (50% - README, API, DATABASE)
+- ⏳ forum-service (50% - README, API, DATABASE)
+- ⏳ translation-service (50% - README, API, DATABASE)
+- ⏳ ipfs-service (50% - README, API, DATABASE)
 
-**Understand service dependencies**  
-→ See dependency matrix in [Microservices Architecture](microservices-architecture.md#-service-dependency-matrix)
-
-**Plan Holochain migration**  
-→ Read each service's `holochain-migration.md`
-
-**Deploy to multi-pod**  
-→ Read [Multi-Pod Architecture](multi-pod-architecture.md)
-
----
-
-## ✅ Documentation Todo
-
-### **Priority 1: Phase 1 Services** (Week 1-3)
-
-- [x] Microservices Architecture overview ✅
-- [x] user-service/README.md ✅
-- [x] Service Separation Migration Plan ✅
-- [ ] settings-service/README.md
-- [ ] invitation-service/README.md
-- [ ] notification-service/README.md
-- [ ] auth-service/README.md (document current state)
-
-### **Priority 2: Database Documentation** (Week 2)
-
-- [ ] Per-service database-schema.md files
-- [ ] Update database-schema-design.md with service ownership
-- [ ] Migration file documentation
-
-### **Priority 3: API Documentation** (Week 3)
-
-- [ ] Per-service api-specification.md (OpenAPI format)
-- [ ] Event documentation (NATS events per service)
-- [ ] Inter-service communication examples
-
-### **Priority 4: Holochain Migration** (Phase 2)
-
-- [ ] Per-service holochain-migration.md
-- [ ] DNA architecture diagrams
-- [ ] Migration timeline and strategy
+**Overall Coverage:** ~70% (all services documented, implementation in progress)
 
 ---
 
-## 📊 Documentation Coverage
+## 🗃️ Archived Documentation
 
-```
-Service                    Status    Docs Coverage
-──────────────────────────────────────────────────
-auth-service (8001)        ✅ Done   ⏳ 20%
-user-service (8002)        ✅ Done   ✅ 80%
-settings-service (8003)    ⏳ Todo   ⏳ 10%
-invitation-service (8004)  ⏳ Todo   ⏳ 10%
-notification-service (8005)⏳ Todo   ⏳ 10%
-community-service (8006)   ⏳ Plan   ⏳ 5%
-badge-service (8007)       ⏳ Plan   ⏳ 5%
-territory-service (8008)   ⏳ Plan   ⏳ 5%
-──────────────────────────────────────────────────
-Overall Documentation      ⏳ 20%
-```
+Historical documentation from the initial planning phase (November 11, 2025) before the microservices structure was established.
 
-**Goal:** 100% documentation coverage before Phase 1 completion
+**Location:** [.archived/](.archived/)
+
+**Contents:** Consolidated API planning documents that were superseded by the service-specific documentation structure. Kept for historical reference.
+
+See [.archived/README.md](.archived/README.md) for details.
+
+---
+
+## 🚀 Getting Started
+
+**New to the project?**
+
+1. Read [overview/microservices-architecture.md](overview/microservices-architecture.md) for architecture overview
+2. Check [MIGRATIONS-MASTER.md](MIGRATIONS-MASTER.md) for database structure
+3. Browse [services/](services/) to understand individual services
+4. See [../status/current/phase-1-status.md](../status/current/phase-1-status.md) for current progress
+
+**Implementing a new service?**
+
+1. Follow [services/user-service/](services/user-service/) as a template
+2. Create README.md, API.md, DATABASE.md in your service folder
+3. Update [MIGRATIONS-MASTER.md](MIGRATIONS-MASTER.md) with your tables
+4. Add migration plan if needed (e.g., MIGRATIONS.md)
+
+**Making changes to architecture?**
+
+1. Update relevant overview/ documentation for architectural changes
+2. Update service-specific docs for implementation changes
+3. Keep documentation in sync with code
+4. Update this README.md if structure changes
 
 ---
 
 **Last Updated:** November 12, 2025  
-**Maintained By:** Core Team  
-**Status:** Living Document (updated as services evolve)
+**Maintained By:** Development Team  
+**Status:** Living Documentation (updated continuously)
