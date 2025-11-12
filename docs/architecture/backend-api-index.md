@@ -2,7 +2,7 @@
 
 **Created:** November 11, 2025  
 **Last Updated:** November 12, 2025  
-**Status:** Phase 1 Implementation In Progress (25/28 endpoints complete - 89%)
+**Status:** Phase 1 Implementation Complete! (28/28 endpoints - 100%) 🎉
 
 ---
 
@@ -159,7 +159,7 @@ User Service (port 8002):
 /v1/users/{id}/connections/block/*          - Block/unblock (2 endpoints) ✅
 /v1/users/{id}/connections/blocked          - Get blocked users ✅
 /v1/users/{id}/data/export                  - GDPR data export (3 endpoints) ✅
-/v1/users/{id}/account/delete               - Account deletion (3 endpoints, pending)
+/v1/users/{id}/account/delete               - Account deletion (4 endpoints) ✅
 ```
 
 ---
@@ -188,6 +188,7 @@ User Service (port 8002):
 - ✅ User connections - Block/Unblock (POST, DELETE)
 - ✅ User connections - Get blocked users (GET)
 - ✅ GDPR data export - Request/List/Download (POST, GET, GET)
+- ✅ GDPR account deletion - Request/Confirm/Status/Cancel (POST, POST, GET, DELETE)
 
 **Database Schema:**
 
@@ -198,6 +199,7 @@ User Service (port 8002):
 - ✅ Profile links with ordering
 - ✅ Notification settings (email/inapp/push)
 - ✅ GDPR data exports with auto-expiry (7 days)
+- ✅ GDPR account deletion with 30-day grace period
 
 **Migrations:**
 
@@ -205,18 +207,20 @@ User Service (port 8002):
 - ✅ 20251112000001_update_language_proficiency_schema.sql (3.2K)
 - ✅ 20251112000002_fix_users_settings_schema.sql (2.6K)
 - ✅ 20251112000003_fix_notification_settings_schema.sql (2.1K)
-- ✅ 20251112000004_create_data_exports_table.sql (3.7K - GDPR)
+- ✅ 20251112000004_create_data_exports_table.sql (3.7K - GDPR Article 20)
+- ✅ 20251112000005_create_account_deletion_requests_table.sql (4.2K - GDPR Article 17)
 
-### 🔄 In Progress
+### ✅ Phase 1 Complete!
 
-**User Service GDPR Endpoints (3/6 - 50%):**
+**User Service GDPR Endpoints (7/7 - 100%):**
 
 - ✅ Request data export (POST /v1/users/{id}/data/export)
 - ✅ List data exports (GET /v1/users/{id}/data/export)
 - ✅ Download data export (GET /v1/users/{id}/data/export/{export_id})
-- ⏳ Request account deletion (POST /v1/users/{id}/account/delete)
-- ⏳ Confirm account deletion (POST /v1/users/{id}/account/delete/confirm)
-- ⏳ Cancel account deletion (DELETE /v1/users/{id}/account/delete)
+- ✅ Request account deletion (POST /v1/users/{id}/account/delete)
+- ✅ Confirm account deletion (POST /v1/users/{id}/account/delete/confirm)
+- ✅ Get deletion status (GET /v1/users/{id}/account/delete)
+- ✅ Cancel account deletion (DELETE /v1/users/{id}/account/delete)
 
 ### Week 1-2: Authentication & Infrastructure ✅ COMPLETE
 

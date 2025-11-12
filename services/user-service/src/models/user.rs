@@ -418,3 +418,58 @@ pub struct ExportedConnections {
     pub following: Vec<UserConnectionWithProfile>,
     pub blocked: Vec<UserConnectionWithProfile>,
 }
+
+// ============================================================================
+// GDPR ACCOUNT DELETION MODELS
+// ============================================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type, ToSchema)]
+#[sqlx(type_name = "varchar", rename_all = "lowercase")]
+pub enum DeletionStatus {
+    #[serde(rename = "pending")]
+    Pending,
+    #[serde(rename = "confirmed")]
+    Confirmed,
+    #[serde(rename = "cancelled")]
+    Cancelled,
+    #[serde(rename = "completed")]
+    Completed,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, ToSchema)]
+pub struct AccountDeletionRequest {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub status: DeletionStatus,
+    pub confirmation_token: Option<String>,
+    pub token_expires_at: Option<DateTime<Utc>>,
+    pub requested_at: DateTime<Utc>,
+    pub confirmed_at: Option<DateTime<Utc>>,
+    pub scheduled_deletion_at: Option<DateTime<Utc>>,
+    pub cancelled_at: Option<DateTime<Utc>>,
+    pub cancellation_reason: Option<String>,
+    pub ip_address: Option<String>,
+    pub user_agent: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct AccountDeletionResponse {
+    pub id: Uuid,
+    pub status: DeletionStatus,
+    pub requested_at: DateTime<Utc>,
+    pub confirmed_at: Option<DateTime<Utc>>,
+    pub scheduled_deletion_at: Option<DateTime<Utc>>,
+    pub days_until_deletion: Option<i64>,
+    pub can_cancel: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+pub struct AccountDeletionConfirmRequest {
+    #[validate(length(min = 32, max = 255))]
+    pub confirmation_token: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, ToSchema)]
+pub struct AccountDeletionCancelRequest {
+    pub reason: Option<String>,
+}

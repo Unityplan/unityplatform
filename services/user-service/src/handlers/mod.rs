@@ -1,3 +1,4 @@
+mod account_deletion;
 mod connections;
 mod data_export;
 mod health;
@@ -6,6 +7,7 @@ mod profile;
 mod profile_links;
 mod settings;
 
+pub use account_deletion::*;
 pub use connections::*;
 pub use data_export::*;
 pub use health::*;

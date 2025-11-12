@@ -145,7 +145,23 @@ async fn main() -> std::io::Result<()> {
                 "/v1/users/{id}/data/export/{export_id}",
                 web::get().to(user_service::handlers::download_data_export),
             )
-            // TODO: GDPR account deletion endpoints (in progress)
+            // GDPR account deletion endpoints
+            .route(
+                "/v1/users/{id}/account/delete",
+                web::post().to(user_service::handlers::request_account_deletion),
+            )
+            .route(
+                "/v1/users/{id}/account/delete/confirm",
+                web::post().to(user_service::handlers::confirm_account_deletion),
+            )
+            .route(
+                "/v1/users/{id}/account/delete",
+                web::get().to(user_service::handlers::get_deletion_status),
+            )
+            .route(
+                "/v1/users/{id}/account/delete",
+                web::delete().to(user_service::handlers::cancel_account_deletion),
+            )
             .service(user_service::openapi::swagger_ui())
     })
     .bind((server_host.as_str(), server_port))?

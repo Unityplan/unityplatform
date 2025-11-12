@@ -30,6 +30,10 @@ use utoipa_swagger_ui::SwaggerUi;
         crate::handlers::request_data_export,
         crate::handlers::list_data_exports,
         crate::handlers::download_data_export,
+        crate::handlers::request_account_deletion,
+        crate::handlers::confirm_account_deletion,
+        crate::handlers::get_deletion_status,
+        crate::handlers::cancel_account_deletion,
     ),
     components(
         schemas(
@@ -63,6 +67,11 @@ use utoipa_swagger_ui::SwaggerUi;
             crate::models::DataExportResponse,
             crate::models::ExportedUserData,
             crate::models::ExportedConnections,
+            crate::models::DeletionStatus,
+            crate::models::AccountDeletionRequest,
+            crate::models::AccountDeletionResponse,
+            crate::models::AccountDeletionConfirmRequest,
+            crate::models::AccountDeletionCancelRequest,
             crate::response::ApiResponse<crate::models::HealthResponse>,
             crate::response::ApiResponse<crate::models::CompleteProfile>,
             crate::response::ApiResponse<crate::models::UserProfile>,
@@ -76,6 +85,7 @@ use utoipa_swagger_ui::SwaggerUi;
             crate::response::ApiResponse<Vec<crate::models::UserConnectionWithProfile>>,
             crate::response::ApiResponse<crate::models::DataExportResponse>,
             crate::response::ApiResponse<Vec<crate::models::DataExportResponse>>,
+            crate::response::ApiResponse<crate::models::AccountDeletionResponse>,
         )
     ),
     tags(
