@@ -2,7 +2,7 @@
 
 # Restart all development services
 
-echo "🔄 Restarting UnityPlan Development Environment"
+echo "🔄 Restarting Unity Platform Development Environment"
 echo "================================================"
 echo ""
 

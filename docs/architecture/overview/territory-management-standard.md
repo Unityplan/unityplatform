@@ -8,7 +8,7 @@
 
 ## ⚠️ CRITICAL NOTICE
 
-This document defines the **Territory ID Format Standard** for UnityPlan. This format is **FUNDAMENTAL** to the platform's sovereignty model and **MUST NOT** be changed without comprehensive review of:
+This document defines the **Territory ID Format Standard** for unityplatform. This format is **FUNDAMENTAL** to the platform's sovereignty model and **MUST NOT** be changed without comprehensive review of:
 
 - Database schemas
 - API contracts

@@ -94,7 +94,7 @@ export function renderWithRouter(
 export const mockUser = {
     id: '0e8fefa6-3570-482c-b89d-c2ca8c96c873',
     username: 'testuser',
-    email: 'test@unityplan.dk',
+    email: 'test@unityplatform.dk',
     full_name: 'Test User',
     territory_code: 'dk',
     is_active: true,

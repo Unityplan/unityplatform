@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 TERRITORY_CODE="${1:-dk}"
-EMAIL="${2:-test@unityplan.dk}"
+EMAIL="${2:-test@unityplatform.dk}"
 USERNAME="${3:-testuser}"
 PASSWORD="${4:-TestPassword123!}"
 FULL_NAME="${5:-Test User}"
@@ -29,9 +29,13 @@ echo "Full Name: ${FULL_NAME}"
 echo ""
 
 # Database connection details
+DB_NAME="unityplatform"
+DB_USER="unityplatform"
+
+# Database connection details
 DB_CONTAINER="service-postgres-${TERRITORY_CODE}"
-DB_NAME="unityplan_${TERRITORY_CODE}"
-DB_USER="unityplan"
+DB_NAME="unityplatform_${TERRITORY_CODE}"
+DB_USER="unityplatform"
 SCHEMA_NAME="territory"
 
 echo -e "${YELLOW}Generating password hash...${NC}"

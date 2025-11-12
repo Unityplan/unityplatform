@@ -530,7 +530,7 @@ Deliverables:
 └─────────────────────────────────────────────────────────┘
 
 Matrix Synapse Configuration:
-server_name: "matrix.unityplan.org"
+server_name: "matrix.unityplatform.org"
 database:
   name: psycopg2
   args:

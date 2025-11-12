@@ -6,7 +6,7 @@
 #   docker compose -f docker-compose.pod.yml --env-file pods/norway/.env up -d
 #
 # Project names are automatically set from the 'name:' field below using POD_ID from .env file
-# Example: unityplan-pod-dk, unityplan-pod-no, unityplan-pod-se
+# Example: unityplatform-pod-dk, unityplatform-pod-no, unityplatform-pod-se
 
 # Environment variables required in .env file:
 # POD_ID=dk|no|se (territory identifier)
@@ -28,7 +28,7 @@
 # POD_PROMETHEUS_PORT=9090|9091|9092
 # NATS_ROUTES=nats://service-nats-dk:6222,nats://service-nats-no:6223 (comma-separated cluster routes)
 
-name: unityplan-pod-${POD_ID}
+name: unityplatform-pod-${POD_ID}
 
 services:
   # PostgreSQL 16 with TimescaleDB
@@ -39,9 +39,9 @@ services:
     ports:
       - "${POSTGRES_PORT}:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-unityplan}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-unityplan_dev_password}
-      POSTGRES_DB: unityplan_${POD_ID}
+      POSTGRES_USER: ${POSTGRES_USER:-unityplatform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-unityplatform_dev_password}
+      POSTGRES_DB: unityplatform_${POD_ID}
     volumes:
       - ./docker/pods/${POD_ID}/postgres-data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -49,7 +49,7 @@ services:
       - pod-net
       - mesh-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-unityplan}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-unityplatform}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -69,7 +69,7 @@ services:
       - "--store_dir=/data"                       # JetStream storage directory
       - "--name=nats-${POD_ID}"                   # Server name for clustering
       - "--cluster=nats://0.0.0.0:6222"          # Cluster listen address
-      - "--cluster_name=unityplan-global"        # Global cluster name
+      - "--cluster_name=unityplatform-global"        # Global cluster name
       - "--routes=${NATS_ROUTES:-}"              # Cluster routes to other pods (optional)
     volumes:
       - ./docker/pods/${POD_ID}/nats-data:/data
@@ -128,7 +128,7 @@ services:
     volumes:
       - ./docker/pods/${POD_ID}/matrix-data:/data
     environment:
-      - SYNAPSE_SERVER_NAME=${POD_NAME}.unityplan.local
+      - SYNAPSE_SERVER_NAME=${POD_NAME}.unityplatform.local
       - SYNAPSE_REPORT_STATS=no
       - SYNAPSE_NO_TLS=1
     networks:
@@ -143,7 +143,7 @@ services:
     ports:
       - "${POD_POSTGRES_EXPORTER_PORT}:9187"
     environment:
-      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-unityplan}:${POSTGRES_PASSWORD:-unityplan_dev_password}@postgres:5432/unityplan_${POD_ID}?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-unityplatform}:${POSTGRES_PASSWORD:-unityplatform_dev_password}@postgres:5432/unityplatform_${POD_ID}?sslmode=disable"
     networks:
       - pod-net
       - mesh-network
@@ -246,9 +246,9 @@ networks:
   # Pod-specific network (isolated)
   pod-net:
     driver: bridge
-    name: unityplan-pod-${POD_ID}-net
+    name: unityplatform-pod-${POD_ID}-net
   
   # Mesh network for cross-pod communication (shared across all pods)
   mesh-network:
     external: true
-    name: unityplan-mesh-network
+    name: unityplatform-mesh-network

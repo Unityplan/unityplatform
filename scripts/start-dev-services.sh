@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Start all development services for UnityPlan Platform
+# Start all development services for Unity Platform
 # This script starts infrastructure, backend services, and frontend
 
 set -e
 
-echo "🚀 Starting UnityPlan Development Environment"
+echo "🚀 Starting Unity Platform Development Environment"
 echo "=============================================="
 echo ""
 
@@ -89,7 +89,7 @@ else
     echo "Starting auth-service on port 8001..."
     cd "$WORKSPACE_ROOT"
     RUST_LOG=info,auth_service=debug \
-    DATABASE_URL="postgresql://unityplan:unityplan_dev_password_dk@localhost:5432/unityplan_dk" \
+    DATABASE_URL="postgresql://unityplatform:unityplatform_dev_password_dk@localhost:5432/unityplatform_dk" \
     SERVER_PORT=8001 \
     CORS_ALLOWED_ORIGINS="http://localhost:5173,http://localhost:3000" \
     ./services/target/release/auth-service > "$WORKSPACE_ROOT/logs/auth-service.log" 2>&1 &
@@ -115,7 +115,7 @@ else
     echo "Starting user-service on port 8002..."
     cd "$WORKSPACE_ROOT"
     RUST_LOG=info,user_service=debug \
-    DATABASE_URL="postgresql://unityplan:unityplan_dev_password_dk@localhost:5432/unityplan_dk" \
+    DATABASE_URL="postgresql://unityplatform:unityplatform_dev_password_dk@localhost:5432/unityplatform_dk" \
     PORT=8002 \
     CORS_ALLOWED_ORIGINS="http://localhost:5173,http://localhost:3000" \
     ./services/target/release/user-service > "$WORKSPACE_ROOT/logs/user-service.log" 2>&1 &
@@ -142,7 +142,7 @@ echo ""
 echo -e "${GREEN}✅ All services started successfully!${NC}"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo -e "${GREEN}🎉 UnityPlan Development Environment Ready${NC}"
+echo -e "${GREEN}🎉 Unity Platform Development Environment Ready${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📱 Frontend:          http://localhost:5173"

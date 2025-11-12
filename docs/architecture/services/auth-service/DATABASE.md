@@ -291,7 +291,7 @@ FROM global.username_registry
 WHERE username = 'alice';
 
 -- Step 2: Call user-service in that territory for public profile
--- (via API Gateway routing to denmark.unityplan.org)
+-- (via API Gateway routing to denmark.unityplatform.org)
 ```
 
 **Federation Pattern:**  

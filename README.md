@@ -97,7 +97,7 @@ This platform follows a microservices architecture with progressive decentraliza
 3. **Configure Forgejo (first-time setup):**
    - Open <http://localhost:3000>
    - Create admin account
-   - Create `unityplan_platform` repository
+   - Create `unity_platform` repository
    - Push code: `git remote add forgejo http://localhost:3000/admin/unityplan_platform.git`
 
 4. **Optional: Install forgejo-mcp for AI assistance:**

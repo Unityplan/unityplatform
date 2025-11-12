@@ -1,6 +1,6 @@
 # Backend Observability Guide
 
-This document describes the observability stack for UnityPlan's Rust microservices.
+This document describes the observability stack for unityplatform's Rust microservices.
 
 **Last Updated:** November 9, 2025  
 **Applies To:** All backend services (auth-service, user-service, etc.)
@@ -9,7 +9,7 @@ This document describes the observability stack for UnityPlan's Rust microservic
 
 ## 📊 Observability Stack Overview
 
-The UnityPlan platform uses the industry-standard observability stack:
+The Unity Platform uses the industry-standard observability stack:
 
 - **Prometheus** - Metrics collection and storage
 - **Grafana** - Metrics visualization and dashboards
@@ -224,7 +224,7 @@ curl http://localhost:16686/                  # Jaeger
 curl http://localhost:8222/healthz            # NATS
 
 # Database connection
-docker compose exec postgres psql -U unityplan -d unityplan_dev -c 'SELECT 1;'
+docker compose exec postgres psql -U Unity Platform -d unityplatform_dev -c 'SELECT 1;'
 
 # Redis connection
 docker compose exec redis redis-cli ping

@@ -80,7 +80,7 @@ CREATE TABLE territory_{code}.forum_memberships (
 
 ## Matrix Integration
 
-**Matrix Homeserver:** Runs on `matrix.unityplan.org`  
+**Matrix Homeserver:** Runs on `matrix.unityplatform.org`  
 **Database:** Separate Synapse PostgreSQL database
 
 **PostgreSQL Tables (Synapse):**
@@ -90,7 +90,7 @@ CREATE TABLE territory_{code}.forum_memberships (
 - `room_memberships` - Participants
 - `room_aliases` - Room names
 
-**UnityPlan Tables:**
+**Unity Platform Tables:**
 
 - Metadata index (for fast search)
 - User participation tracking

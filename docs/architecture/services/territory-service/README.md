@@ -43,7 +43,7 @@ CREATE TABLE global.territories (
     display_name VARCHAR(255) NOT NULL,  -- Denmark 🇩🇰
     
     -- Contact
-    domain VARCHAR(255),  -- denmark.unityplan.org
+    domain VARCHAR(255),  -- denmark.unityplatform.org
     admin_email VARCHAR(255),
     
     -- Status
@@ -65,10 +65,10 @@ CREATE INDEX idx_territories_active ON territories(is_active) WHERE is_active = 
 
 -- Seed data
 INSERT INTO territories (code, name, display_name, flag_emoji, domain, timezone) VALUES
-('dk', 'Denmark', 'Denmark 🇩🇰', '🇩🇰', 'denmark.unityplan.org', 'Europe/Copenhagen'),
-('no', 'Norway', 'Norway 🇳🇴', '🇳🇴', 'norway.unityplan.org', 'Europe/Oslo'),
-('se', 'Sweden', 'Sweden 🇸🇪', '🇸🇪', 'sweden.unityplan.org', 'Europe/Stockholm'),
-('eu', 'Europe', 'Europe 🇪🇺', '🇪🇺', 'europe.unityplan.org', 'Europe/Brussels');
+('dk', 'Denmark', 'Denmark 🇩🇰', '🇩🇰', 'denmark.unityplatform.org', 'Europe/Copenhagen'),
+('no', 'Norway', 'Norway 🇳🇴', '🇳🇴', 'norway.unityplatform.org', 'Europe/Oslo'),
+('se', 'Sweden', 'Sweden 🇸🇪', '🇸🇪', 'sweden.unityplatform.org', 'Europe/Stockholm'),
+('eu', 'Europe', 'Europe 🇪🇺', '🇪🇺', 'europe.unityplatform.org', 'Europe/Brussels');
 ```
 
 **Purpose:** Global registry of all territories (pods)  
@@ -150,7 +150,7 @@ Get all active territories (public endpoint, no auth required)
         "code": "dk",
         "name": "Denmark",
         "display_name": "Denmark 🇩🇰",
-        "domain": "denmark.unityplan.org",
+        "domain": "denmark.unityplatform.org",
         "is_accepting_registrations": true,
         "flag_emoji": "🇩🇰",
         "timezone": "Europe/Copenhagen"
@@ -159,7 +159,7 @@ Get all active territories (public endpoint, no auth required)
         "code": "no",
         "name": "Norway",
         "display_name": "Norway 🇳🇴",
-        "domain": "norway.unityplan.org",
+        "domain": "norway.unityplatform.org",
         "is_accepting_registrations": true,
         "flag_emoji": "🇳🇴",
         "timezone": "Europe/Oslo"
@@ -189,9 +189,9 @@ Get detailed information about a territory
       "code": "dk",
       "name": "Denmark",
       "display_name": "Denmark 🇩🇰",
-      "description": "UnityPlan pod for Denmark",
-      "domain": "denmark.unityplan.org",
-      "admin_email": "admin@denmark.unityplan.org",
+      "description": "Unity Platform pod for Denmark",
+      "domain": "denmark.unityplatform.org",
+      "admin_email": "admin@denmark.unityplatform.org",
       "flag_emoji": "🇩🇰",
       "timezone": "Europe/Copenhagen",
       "is_active": true,

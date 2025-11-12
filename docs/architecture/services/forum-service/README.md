@@ -88,7 +88,7 @@ Matrix Federation Network
 
 ### **User Flow**
 
-1. User creates account on UnityPlan
+1. User creates account on unityplatform
 2. forum-service creates Matrix account (same username)
 3. User joins community
 4. forum-service creates/joins Matrix room for community
@@ -181,10 +181,10 @@ Recommendation: Start with Synapse, migrate to Conduit when stable
 ### **Authentication Bridge**
 
 ```rust
-// SSO integration: UnityPlan login → Matrix login
+// SSO integration: Unity Platform login → Matrix login
 async fn provision_matrix_user(username: &str, password: &str) -> Result<String> {
     let client = Client::builder()
-        .homeserver_url("https://matrix.unityplan.org")
+        .homeserver_url("https://matrix.unityplatform.org")
         .build()
         .await?;
     

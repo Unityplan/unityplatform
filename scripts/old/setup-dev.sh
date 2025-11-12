@@ -1,9 +1,9 @@
 #!/bin/bash
-# Setup script for UnityPlan development environment
+# Setup script for Unity Platform development environment
 
 set -e
 
-echo "🚀 UnityPlan Development Environment Setup"
+echo "🚀 Unity Platform Development Environment Setup"
 echo "=========================================="
 echo ""
 

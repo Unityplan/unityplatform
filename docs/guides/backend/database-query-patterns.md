@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Last Updated:** November 8, 2025  
-**Applies To:** All Rust microservices in UnityPlan platform
+**Applies To:** All Rust microservices in Unity Platform
 
 ---
 
@@ -37,7 +37,7 @@ let user = sqlx::query_as!(
 
 ### Multi-Pod Architecture
 
-UnityPlan uses a **distributed multi-pod architecture** where:
+Unity Platform uses a **distributed multi-pod architecture** where:
 
 1. **Each territory has its own pod** (Denmark, Norway, Sweden, Europe, etc.)
 2. **Each pod has its own database instance**
@@ -230,7 +230,7 @@ When creating a new service:
 ## References
 
 - [SQLx Documentation - Runtime Queries](https://docs.rs/sqlx/latest/sqlx/macro.query.html)
-- [UnityPlan Multi-Pod Architecture](../../architecture/multi-pod-architecture.md)
+- [Unity Platform Multi-Pod Architecture](../../architecture/multi-pod-architecture.md)
 - [Territory Management Standard](../../architecture/territory-management-standard.md)
 
 ---

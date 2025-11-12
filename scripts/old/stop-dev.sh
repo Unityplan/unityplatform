@@ -1,7 +1,7 @@
 #!/bin/bash
 # Stop all development services and optionally clean data
 
-echo "🛑 Stopping UnityPlan Development Services"
+echo "🛑 Stopping Unity Platform Development Services"
 echo "========================================"
 echo ""
 

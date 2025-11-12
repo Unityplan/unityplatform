@@ -107,17 +107,17 @@ EOSQL
 }
 
 # Create schemas for all three territories
-create_territory_schema "de" "Germany" "unityplan_de"
-create_territory_schema "fr" "France" "unityplan_fr"
-create_territory_schema "es" "Spain" "unityplan_es"
+create_territory_schema "de" "Germany" "unityplatform_de"
+create_territory_schema "fr" "France" "unityplatform_fr"
+create_territory_schema "es" "Spain" "unityplatform_es"
 
 # Create a connection database for multi-territory queries (optional)
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
   -- Create metadata database
-  CREATE DATABASE unityplan_eu_meta;
+  CREATE DATABASE unityplatform_eu_meta;
 EOSQL
 
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname="unityplan_eu_meta" <<-EOSQL
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname="unityplatform_eu_meta" <<-EOSQL
   CREATE EXTENSION IF NOT EXISTS "postgres_fdw";
   
   -- This database can be used for cross-territory queries via FDW
@@ -135,16 +135,16 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname="unityplan_eu_meta"
   INSERT INTO meta.pod_info (pod_id, pod_name, territories)
   VALUES ('eu', 'Europe', ARRAY['DE', 'FR', 'ES']);
   
-  COMMENT ON DATABASE unityplan_eu_meta IS 'Metadata database for Europe multi-territory pod';
+  COMMENT ON DATABASE unityplatform_eu_meta IS 'Metadata database for Europe multi-territory pod';
 EOSQL
 
 echo "🎉 Europe Multi-Territory Pod initialization complete!"
 echo ""
 echo "📊 Created databases:"
-echo "  - unityplan_de (Germany)"
-echo "  - unityplan_fr (France)"
-echo "  - unityplan_es (Spain)"
-echo "  - unityplan_eu_meta (Metadata)"
+echo "  - unityplatform_de (Germany)"
+echo "  - unityplatform_fr (France)"
+echo "  - unityplatform_es (Spain)"
+echo "  - unityplatform_eu_meta (Metadata)"
 echo ""
 echo "Each database has:"
 echo "  - global schema (replicated data)"

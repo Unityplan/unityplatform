@@ -29,6 +29,32 @@ The invitation-service manages the entire invitation lifecycle: creation, valida
 
 ---
 
+## 🔐 Authentication
+
+This service uses **JWT-based authentication** via shared middleware from `shared-lib`.
+
+### **Validation Strategy**
+
+- **Standard requests:** JWT signature validation only (~0.01ms)
+- **Token creation:** Requires admin role verification (JWT + database check)
+
+### **Middleware**
+
+```rust
+use shared_lib::middleware::jwt_auth_middleware;
+
+HttpServer::new(|| {
+    App::new()
+        .wrap(jwt_auth_middleware)  // All routes protected
+        .service(create_invitation)  // Admin only
+        .service(list_my_invitations)
+})
+```
+
+**See [shared-lib/AUTHENTICATION.md](../shared-lib/AUTHENTICATION.md) for complete authentication architecture.**
+
+---
+
 ## 🗄️ Database Schema
 
 ### **Tables Owned by invitation-service**
@@ -245,7 +271,7 @@ Create a new invitation token (requires authentication)
     "created_by": "uuid",
     "max_uses": 1,
     "expires_at": "2025-11-19T10:00:00Z",
-    "invite_url": "https://unityplan.org/join?invite=A7K9-M2X4-P5W8-Q1Z3"
+    "invite_url": "https://unityplatform.org/join?invite=A7K9-M2X4-P5W8-Q1Z3"
   }
 }
 ```

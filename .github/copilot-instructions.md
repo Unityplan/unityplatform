@@ -2,10 +2,12 @@
 
 ## Project Overview
 
-**Platform:** User sovereignty-first learning and collaboration platform  
+**Platform Name:** Unity Platform  
+**Platform Type:** User sovereignty-first learning and collaboration platform  
 **Version:** 0.1.0-alpha.1 (MVP Phase 1 - Early Development)  
 **Status:** Infrastructure complete, backend services in development  
-**Example Deployment:** unityplan.org (test project using this platform)
+**Example Deployment:** unityplan.org (test project using this platform)  
+**Database Name:** `unityplatform` (PostgreSQL database - note: lowercase, no space)
 
 This workspace contains a microservices platform with:
 

@@ -73,7 +73,7 @@ export function LoginPage() {
                 <Card className="w-full">
                     <CardHeader>
                         <CardTitle className="text-foreground">Welcome Back</CardTitle>
-                        <CardDescription className="text-muted-foreground">Sign in to your UnityPlan account</CardDescription>
+                        <CardDescription className="text-muted-foreground">Sign in to your Unity Platform account</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Form {...form}>
@@ -184,7 +184,7 @@ export function LoginPage() {
 
                 {/* Platform branding */}
                 <div className="mt-6 text-center text-sm text-muted-foreground">
-                    Powered by UnityPlan Platform <span className="font-mono">v0.1.0-alpha.1</span>
+                    Powered by Unity Platform Platform <span className="font-mono">v0.1.0-alpha.1</span>
                 </div>
             </div>
         </CenteredLayout>

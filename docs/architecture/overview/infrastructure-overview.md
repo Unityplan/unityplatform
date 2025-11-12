@@ -1,6 +1,6 @@
 # Platform Infrastructure Architecture
 
-> **Note:** "unityplan.org" references in this document are examples from the test deployment only.
+> **Note:** "unityplatform.org" references in this document are examples from the test deployment only.
 
 ## 📋 Table of Contents
 
@@ -1133,7 +1133,7 @@ Client                    Traefik                  Let's Encrypt
 │Browser │               │         │               │  ACME CA   │
 └───┬────┘               └────┬────┘               └─────┬──────┘
     │                         │                          │
-    │ https://unityplan.org   │                          │
+    │ https://unityplatform.org   │                          │
     ├────────────────────────>│                          │
     │                         │                          │
     │                         │ No valid cert, request   │
@@ -1165,11 +1165,11 @@ Client                    Traefik                  Let's Encrypt
 Certificate Storage:
 ┌──────────────────────────────────────────────────────┐
 │  /etc/traefik/certs/                                 │
-│    ├── unityplan.org.crt                             │
-│    ├── unityplan.org.key                             │
-│    ├── matrix.unityplan.org.crt                      │
-│    ├── matrix.unityplan.org.key                      │
-│    └── api.unityplan.org.crt                         │
+│    ├── unityplatform.org.crt                             │
+│    ├── unityplatform.org.key                             │
+│    ├── matrix.unityplatform.org.crt                      │
+│    ├── matrix.unityplatform.org.key                      │
+│    └── api.unityplatform.org.crt                         │
 │                                                      │
 │  Auto-renewal: 30 days before expiration             │
 │  Backup: Daily to secure storage                     │
@@ -1525,7 +1525,7 @@ Replication:
 Territory: Denmark
 ┌──────────────────────────────────────────────────────┐
 │  Matrix Synapse Server                               │
-│  Domain: matrix.dk.unityplan.org                     │
+│  Domain: matrix.dk.unityplatform.org                     │
 │                                                      │
 │  ┌────────────────────────────────────────────────┐ │
 │  │  Client-Server API (:8008)                     │ │
@@ -1550,7 +1550,7 @@ Territory: Denmark
 Territory: Canada
 ┌──────────────────────────────────────────────────────┐
 │  Matrix Synapse Server                               │
-│  Domain: matrix.ca.unityplan.org                     │
+│  Domain: matrix.ca.unityplatform.org                     │
 │  (Same structure as Denmark)                         │
 └──────────────────────────────────────────────────────┘
 
@@ -1593,7 +1593,7 @@ Forum Topic Created
 │                                                        │
 │  4. Link forum topic to Matrix room                    │
 │     UPDATE territory_dk.forum_topics                   │
-│     SET matrix_room_id = "!xyz:dk.unityplan.org"       │
+│     SET matrix_room_id = "!xyz:dk.unityplatform.org"       │
 │     WHERE id = "abc-123"                               │
 └────────────────────────────────────────────────────────┘
 │
@@ -1601,7 +1601,7 @@ Forum Topic Created
 ┌────────────────────────────────────────────────────────┐
 │  Matrix Server                                         │
 │                                                        │
-│  Room created: !xyz:dk.unityplan.org                   │
+│  Room created: !xyz:dk.unityplatform.org                   │
 │  All messages sync bidirectionally                     │
 └────────────────────────────────────────────────────────┘
 
@@ -1695,7 +1695,7 @@ services:
     environment:
       - DATABASE_URL=postgres://postgres:password@postgres:5432/platform
       - NATS_URL=nats://nats:4222
-      - OIDC_ISSUER=https://auth.unityplan.org
+      - OIDC_ISSUER=https://auth.unityplatform.org
     networks:
       - service-network
       - data-network
@@ -1775,7 +1775,7 @@ services:
   matrix-synapse:
     image: matrixdotorg/synapse:latest
     environment:
-      - SYNAPSE_SERVER_NAME=matrix.unityplan.org
+      - SYNAPSE_SERVER_NAME=matrix.unityplatform.org
       - SYNAPSE_REPORT_STATS=no
     volumes:
       - matrix-data:/data

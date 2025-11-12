@@ -125,7 +125,7 @@ Each territory operates with **full autonomy** over:
 
 #### 🆔 Territory ID Format Standard
 
-UnityPlan uses a standardized territory identification system that respects sovereignty for both countries and First Nations.
+Unity Platform uses a standardized territory identification system that respects sovereignty for both countries and First Nations.
 
 ##### **Countries** (ISO 3166-1 Alpha-2)
 
@@ -4578,7 +4578,7 @@ services:
       - "49152-65535:49152-65535/udp"  # Relay ports
     environment:
       - TURN_SHARED_SECRET=${TURN_SECRET}
-      - TURN_REALM=turn.unityplan.org
+      - TURN_REALM=turn.unityplatform.org
       - TURN_EXTERNAL_IP=${SERVER_PUBLIC_IP}
     volumes:
       - ./coturn.conf:/etc/coturn/turnserver.conf

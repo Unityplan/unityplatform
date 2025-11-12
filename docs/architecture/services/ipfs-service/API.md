@@ -31,7 +31,7 @@ file=@avatar.png
   "data": {
     "cid": "QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
     "url": "ipfs://QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
-    "gateway_url": "https://ipfs.unityplan.org/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
+    "gateway_url": "https://ipfs.unityplatform.org/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
     "size_bytes": 45678,
     "mime_type": "image/png",
     "uploaded_at": "2025-11-12T10:00:00Z"
@@ -163,7 +163,7 @@ file=@avatar.png
 **URI Format:**
 
 - `ipfs://{cid}` - Protocol URI
-- `https://ipfs.unityplan.org/ipfs/{cid}` - Gateway URL
+- `https://ipfs.unityplatform.org/ipfs/{cid}` - Gateway URL
 - `https://gateway.ipfs.io/ipfs/{cid}` - Public gateway
 
 ---

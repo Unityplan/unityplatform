@@ -12,6 +12,7 @@
 **Single file:** `docker-compose.yml` (now archived as `docker-compose.monolith.yml.old`)
 
 All services in one file:
+
 - PostgreSQL, Redis, NATS
 - IPFS, Matrix
 - Prometheus, Grafana, Jaeger
@@ -20,6 +21,7 @@ All services in one file:
 - All exporters
 
 **Problems:**
+
 - ❌ Everything starts together (slow, resource-heavy)
 - ❌ Can't scale to multiple territories
 - ❌ No separation between dev/prod
@@ -48,6 +50,7 @@ All services in one file:
    - Used for: Europe (EU) - Germany, France, Spain
 
 **Benefits:**
+
 - ✅ Start only what you need (Phase 1: just Forgejo + Registry)
 - ✅ Per-territory isolation (DK, NO, SE, EU have separate pods)
 - ✅ Clear separation (dev tools vs monitoring vs production)
@@ -93,6 +96,7 @@ scripts/old/setup-dev.sh
 **Good news:** Data volumes are preserved!
 
 Old volumes:
+
 ```
 ./docker/postgres-data     → Preserved
 ./docker/redis-data        → Preserved
@@ -106,6 +110,7 @@ Old volumes:
 **For Phase 1:** You don't need this old data (starting fresh with Forgejo).
 
 **For multi-pod deployment:** We'll create new per-pod volumes:
+
 - `pod-dk-postgres-data`
 - `pod-dk-redis-data`
 - `pod-dk-nats-data`
@@ -168,6 +173,7 @@ Old volumes:
 ### New Architecture (Per-Pod)
 
 **Denmark (DK) - Base Ports:**
+
 | Service | Port | Container |
 |---------|------|-----------|
 | PostgreSQL | 5432 | service-postgres-dk |
@@ -177,6 +183,7 @@ Old volumes:
 | NATS Monitor | 8222 | service-nats-dk |
 
 **Norway (NO) - +1 Offset:**
+
 | Service | Port | Container |
 |---------|------|-----------|
 | PostgreSQL | 5433 | service-postgres-no |
@@ -186,6 +193,7 @@ Old volumes:
 | NATS Monitor | 8223 | service-nats-no |
 
 **Sweden (SE) - +2 Offset:**
+
 | Service | Port | Container |
 |---------|------|-----------|
 | PostgreSQL | 5434 | service-postgres-se |
@@ -193,6 +201,7 @@ Old volumes:
 | NATS Client | 4224 | service-nats-se |
 
 **Europe (EU) - +3 Offset (Multi-Territory):**
+
 | Service | Port | Container |
 |---------|------|-----------|
 | PostgreSQL | 5435 | service-postgres-eu |
@@ -200,6 +209,7 @@ Old volumes:
 | NATS Client | 4225 | service-nats-eu |
 
 **Global Services (Unchanged):**
+
 | Service | Port | Container |
 |---------|------|-----------|
 | Prometheus | 9090 | monitoring-prometheus |
@@ -215,10 +225,11 @@ Old volumes:
 ### Old Architecture
 
 **Single `.env` file** for everything:
+
 ```bash
-POSTGRES_USER=unityplan
-POSTGRES_PASSWORD=unityplan_dev_password
-POSTGRES_DB=unityplan_dev
+POSTGRES_USER=unityplatform
+POSTGRES_PASSWORD=unityplatform_dev_password
+POSTGRES_DB=unityplatform_dev
 ```
 
 ### New Architecture
@@ -234,14 +245,15 @@ pods/europe/.env.staging   # EU staging environment
 ```
 
 **Example:** `pods/denmark/.env`
+
 ```bash
 POD_ID=dk
 TERRITORY_ID=DK
 TERRITORY_NAME=Denmark
 
 POSTGRES_PORT=5432
-POSTGRES_DB=unityplan_dk
-POSTGRES_USER=unityplan
+POSTGRES_DB=unityplatform_dk
+POSTGRES_USER=unityplatform
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
 REDIS_PORT=6379
@@ -257,38 +269,46 @@ NATS_MONITOR_PORT=8222
 ### Old Scripts (Archived)
 
 ❌ **`scripts/old/start-dev.sh`**
+
 - Used old `docker-compose.yml`
 - Started everything together
 - No pod support
 
 ❌ **`scripts/old/stop-dev.sh`**
+
 - Used old `docker-compose.yml`
 - Stopped everything together
 
 ❌ **`scripts/old/setup-dev.sh`**
+
 - Created directories for monolithic setup
 - Not needed with new architecture
 
 ### New Scripts (Active)
 
 ✅ **`scripts/start-new-architecture.sh`**
+
 - Flexible: start phase1, dev-tools, monitoring, specific pod, or all
 - Options: `--phase1`, `--dev-tools`, `--monitoring`, `--pod <id>`, `--all-pods`, `--full`
 
 ✅ **`scripts/stop-new-architecture.sh`**
+
 - Stop specific components or everything
 - Options: `--dev-tools`, `--monitoring`, `--pod <id>`, `--all-pods`, `--all`, `--clean`
 
 ✅ **`scripts/start-phase1-dev.sh`**
+
 - Phase 1 specific: starts Forgejo + Registry only
 - Provides next steps and documentation links
 
 ✅ **`scripts/deploy-multi-pod.sh`**
+
 - Deploy all production pods (DK, NO, SE, EU)
 - Creates mesh network
 - Verifies connectivity
 
 ✅ **`scripts/verify-multi-pod.sh`**
+
 - Health checks for all pods
 - NATS cluster verification
 - Exporters check
@@ -327,10 +347,10 @@ cd services
 cargo build --release
 
 # Build Docker image
-docker build -t localhost:5000/unityplan/auth-service:latest .
+docker build -t localhost:5000/unityplatform/auth-service:latest .
 
 # Push to local registry
-docker push localhost:5000/unityplan/auth-service:latest
+docker push localhost:5000/unityplatform/auth-service:latest
 
 # Test locally (without pods running)
 cargo test
@@ -352,8 +372,8 @@ git push forgejo main
 ./scripts/start-new-architecture.sh --pod dk
 
 # Build and deploy service
-docker build -t localhost:5000/unityplan/auth-service:latest .
-docker push localhost:5000/unityplan/auth-service:latest
+docker build -t localhost:5000/unityplatform/auth-service:latest .
+docker push localhost:5000/unityplatform/auth-service:latest
 
 # Update pod
 docker compose -f docker-compose.pod.yml -p pod-dk pull auth
@@ -377,6 +397,7 @@ curl http://localhost:8080/api/auth/health
 ### "Port already in use"
 
 **Old architecture containers still running?**
+
 ```bash
 # List all containers
 docker ps -a
@@ -391,6 +412,7 @@ docker compose -f docker-compose.monolith.yml.old down
 ### "Cannot connect to Forgejo"
 
 **Service starting slowly?**
+
 ```bash
 # Check logs
 docker logs dev-forgejo
@@ -405,6 +427,7 @@ curl http://localhost:3000
 ### "Old data volumes interfering"
 
 **Want fresh start?**
+
 ```bash
 # Stop everything
 ./scripts/stop-new-architecture.sh --all
@@ -413,8 +436,8 @@ curl http://localhost:3000
 docker volume prune
 
 # Remove specific volumes
-docker volume rm unityplan_postgres-data
-docker volume rm unityplan_redis-data
+docker volume rm unityplatform_postgres-data
+docker volume rm unityplatform_redis-data
 
 # Start fresh
 ./scripts/start-new-architecture.sh --phase1
@@ -423,6 +446,7 @@ docker volume rm unityplan_redis-data
 ### "Missing .env files"
 
 **Pod environments not created?**
+
 ```bash
 # Check if pod env files exist
 ls pods/*/env

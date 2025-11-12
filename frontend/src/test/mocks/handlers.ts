@@ -80,7 +80,7 @@ export const handlers = [
     return HttpResponse.json({
       id: params.userId,
       username: 'otheruser',
-      email: 'other@unityplan.dk',
+      email: 'other@unityplatform.dk',
       full_name: 'Other User',
       territory_code: 'dk',
       is_active: true,

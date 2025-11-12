@@ -25,7 +25,7 @@ type PrivacySettings = {
 };
 
 // Local storage key for mock privacy settings
-const PRIVACY_SETTINGS_KEY = 'unityplan_privacy_settings';
+const PRIVACY_SETTINGS_KEY = 'unityplatform_privacy_settings';
 
 /**
  * Privacy Settings Page

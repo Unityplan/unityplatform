@@ -1,4 +1,4 @@
-# UnityPlan Port Allocation
+# Unity Platform Port Allocation
 
 ## Standard Port Assignment
 
@@ -59,7 +59,7 @@
 
 ```bash
 SERVER_PORT=8001
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 JWT_SECRET=your-secret-key
 JWT_ACCESS_TOKEN_EXPIRY=900  # 15 minutes
@@ -70,7 +70,7 @@ JWT_REFRESH_TOKEN_EXPIRY=604800  # 7 days
 
 ```bash
 PORT=8002
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 REDIS_URL=redis://localhost:6379
 ```
@@ -79,7 +79,7 @@ REDIS_URL=redis://localhost:6379
 
 ```bash
 PORT=8003
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 ```
 
@@ -87,7 +87,7 @@ NATS_URL=nats://localhost:4222
 
 ```bash
 PORT=8004
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 ```
 
@@ -95,13 +95,13 @@ NATS_URL=nats://localhost:4222
 
 ```bash
 PORT=8005
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USERNAME=notifications@unityplan.org
+SMTP_USERNAME=notifications@unityplatform.org
 SMTP_PASSWORD=secure_password
-FROM_EMAIL=notifications@unityplan.org
+FROM_EMAIL=notifications@unityplatform.org
 ```
 
 ### Phase 2 Services (Planned)
@@ -110,7 +110,7 @@ FROM_EMAIL=notifications@unityplan.org
 
 ```bash
 PORT=8006
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 ```
 
@@ -118,7 +118,7 @@ NATS_URL=nats://localhost:4222
 
 ```bash
 PORT=8007
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 ```
 
@@ -126,7 +126,7 @@ NATS_URL=nats://localhost:4222
 
 ```bash
 PORT=8008
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 ```
 
@@ -134,9 +134,9 @@ NATS_URL=nats://localhost:4222
 
 ```bash
 PORT=8011
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
-MATRIX_HOMESERVER_URL=https://matrix.unityplan.org
+MATRIX_HOMESERVER_URL=https://matrix.unityplatform.org
 MATRIX_ACCESS_TOKEN=your-matrix-token
 ```
 
@@ -144,7 +144,7 @@ MATRIX_ACCESS_TOKEN=your-matrix-token
 
 ```bash
 PORT=8012
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 LIBRETRANSLATE_URL=http://localhost:5000
 ```
@@ -153,10 +153,10 @@ LIBRETRANSLATE_URL=http://localhost:5000
 
 ```bash
 PORT=8013
-DATABASE_URL=postgres://user:password@localhost:5432/unityplan
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 IPFS_API_URL=http://localhost:5001
-IPFS_GATEWAY_URL=https://ipfs.unityplan.org
+IPFS_GATEWAY_URL=https://ipfs.unityplatform.org
 ```
 
 ### Frontend

@@ -2,13 +2,14 @@
 
 **Purpose:** Self-hosted Git repository with Model Context Protocol for AI-assisted development  
 **Phase:** Phase 1 (MVP Development)  
-**MCP Integration:** https://codeberg.org/goern/forgejo-mcp
+**MCP Integration:** <https://codeberg.org/goern/forgejo-mcp>
 
 ---
 
 ## Overview
 
-Forgejo provides version control for the UnityPlan platform with:
+Forgejo provides version control for the Unity Platform with:
+
 - ✅ Self-hosted Git repositories
 - ✅ MCP server integration for AI coding assistance
 - ✅ Web UI for repository management
@@ -30,16 +31,17 @@ docker compose -f docker-compose.dev.yml ps
 ```
 
 **Access:**
-- Web UI: http://localhost:3000
+
+- Web UI: <http://localhost:3000>
 - SSH: `ssh://git@localhost:2222`
 
 ### 2. Initial Setup
 
-1. Open http://localhost:3000
+1. Open <http://localhost:3000>
 2. Click "Register" (first user becomes admin)
 3. Create admin account:
    - Username: `admin`
-   - Email: `admin@unityplan.local`
+   - Email: `admin@unityplatform.local`
    - Password: (choose strong password)
 
 4. Initial configuration (pre-filled):
@@ -50,20 +52,20 @@ docker compose -f docker-compose.dev.yml ps
 
 5. Click "Install Forgejo"
 
-### 3. Create UnityPlan Repository
+### 3. Create Unity Platform Repository
 
 ```bash
 # Method 1: Web UI
 # 1. Click "+" → "New Repository"
-# 2. Name: unityplan_platform
-# 3. Description: UnityPlan Global Learning Platform
+# 2. Name: unityplatform_platform
+# 3. Description: Unity Platform Global Learning Platform
 # 4. Visibility: Private
 # 5. Initialize with README: No (we have existing code)
 
 # Method 2: CLI
 # Add forgejo as remote
-cd /home/henrik/code/data/projects/unityplan_platform/workspace
-git remote add forgejo http://localhost:3000/admin/unityplan_platform.git
+cd /home/henrik/code/data/projects/unityplatform_platform/workspace
+git remote add forgejo http://localhost:3000/admin/unityplatform_platform.git
 
 # Push existing code
 git push forgejo main
@@ -76,6 +78,7 @@ git push forgejo main
 ### What is forgejo-mcp?
 
 The `forgejo-mcp` server allows AI assistants (like GitHub Copilot) to:
+
 - Read repository structure
 - Search code across branches
 - Fetch file contents
@@ -115,7 +118,7 @@ Create MCP config file:
 
 ### Generate API Token
 
-1. Login to Forgejo: http://localhost:3000
+1. Login to Forgejo: <http://localhost:3000>
 2. Settings → Applications → Generate New Token
 3. Token name: `MCP Integration`
 4. Permissions:
@@ -158,11 +161,11 @@ cargo build --release
 cargo test
 
 # 4. Build Docker image
-docker build -t localhost:5000/unityplan/auth-service:latest \
+docker build -t localhost:5000/unityplatform/auth-service:latest \
   -f services/auth-service/Dockerfile .
 
 # 5. Push to local registry
-docker push localhost:5000/unityplan/auth-service:latest
+docker push localhost:5000/unityplatform/auth-service:latest
 
 # 6. Deploy to local pod
 docker compose -f docker-compose.pod.yml -p pod-dk \
@@ -199,6 +202,7 @@ Add automated pipelines when:
 ### CI/CD Options for Forgejo
 
 **Option 1: Forgejo Actions** (built-in, GitHub Actions compatible)
+
 ```yaml
 # .forgejo/workflows/build.yml
 name: Build and Test
@@ -216,6 +220,7 @@ jobs:
 ```
 
 **Option 2: Woodpecker CI** (lightweight, Docker-native)
+
 ```yaml
 # .woodpecker.yml
 pipeline:
@@ -229,11 +234,12 @@ pipeline:
     image: plugins/docker
     settings:
       registry: localhost:5000
-      repo: localhost:5000/unityplan/auth-service
+      repo: localhost:5000/unityplatform/auth-service
       tags: [latest, ${CI_COMMIT_SHA:0:8}]
 ```
 
 **Option 3: Drone CI** (similar to Woodpecker, more features)
+
 - See `project_docs/10-application-deployment-cicd.md` for full Drone setup
 
 ---
@@ -244,16 +250,16 @@ pipeline:
 
 ```bash
 # Build image
-docker build -t localhost:5000/unityplan/api-gateway:v0.1.0 \
+docker build -t localhost:5000/unityplatform/api-gateway:v0.1.0 \
   -f services/api-gateway/Dockerfile .
 
 # Push to local registry
-docker push localhost:5000/unityplan/api-gateway:v0.1.0
+docker push localhost:5000/unityplatform/api-gateway:v0.1.0
 
 # Tag as latest
-docker tag localhost:5000/unityplan/api-gateway:v0.1.0 \
-  localhost:5000/unityplan/api-gateway:latest
-docker push localhost:5000/unityplan/api-gateway:latest
+docker tag localhost:5000/unityplatform/api-gateway:v0.1.0 \
+  localhost:5000/unityplatform/api-gateway:latest
+docker push localhost:5000/unityplatform/api-gateway:latest
 ```
 
 ### Use Images in Compose
@@ -262,7 +268,7 @@ docker push localhost:5000/unityplan/api-gateway:latest
 # docker-compose.pod.yml
 services:
   api-gateway:
-    image: localhost:5000/unityplan/api-gateway:${VERSION:-latest}
+    image: localhost:5000/unityplatform/api-gateway:${VERSION:-latest}
     # ... rest of config
 ```
 
@@ -275,18 +281,18 @@ curl http://localhost:5000/v2/_catalog
 # Output:
 # {
 #   "repositories": [
-#     "unityplan/api-gateway",
-#     "unityplan/auth-service",
-#     "unityplan/community-service"
+#     "unityplatform/api-gateway",
+#     "unityplatform/auth-service",
+#     "unityplatform/community-service"
 #   ]
 # }
 
 # List tags for a repository
-curl http://localhost:5000/v2/unityplan/api-gateway/tags/list
+curl http://localhost:5000/v2/unityplatform/api-gateway/tags/list
 
 # Output:
 # {
-#   "name": "unityplan/api-gateway",
+#   "name": "unityplatform/api-gateway",
 #   "tags": ["latest", "v0.1.0", "develop"]
 # }
 ```
@@ -295,7 +301,7 @@ curl http://localhost:5000/v2/unityplan/api-gateway/tags/list
 
 ```bash
 # Delete image tag
-curl -X DELETE http://localhost:5000/v2/unityplan/api-gateway/manifests/<digest>
+curl -X DELETE http://localhost:5000/v2/unityplatform/api-gateway/manifests/<digest>
 
 # Run garbage collection (prune unused layers)
 docker exec dev-registry registry garbage-collect /etc/docker/registry/config.yml
@@ -308,6 +314,7 @@ docker exec dev-registry registry garbage-collect /etc/docker/registry/config.ym
 Once `forgejo-mcp` is configured, your AI assistant can use:
 
 ### Repository Tools
+
 - `forgejo_list_repos` - List all repositories
 - `forgejo_get_repo` - Get repository details
 - `forgejo_search_code` - Search code across branches
@@ -315,12 +322,14 @@ Once `forgejo-mcp` is configured, your AI assistant can use:
 - `forgejo_get_tree` - Get directory tree
 
 ### Issue/PR Tools
+
 - `forgejo_list_issues` - List issues
 - `forgejo_create_issue` - Create new issue
 - `forgejo_list_pulls` - List pull requests
 - `forgejo_get_pull` - Get PR details
 
 ### Commit Tools
+
 - `forgejo_create_file` - Create file via API commit
 - `forgejo_update_file` - Update file via API commit
 - `forgejo_get_commits` - List commit history
@@ -331,7 +340,7 @@ Once `forgejo-mcp` is configured, your AI assistant can use:
 // AI assistant can execute:
 await forgejo_create_file({
   owner: "admin",
-  repo: "unityplan_platform",
+  repo: "unityplatform_platform",
   path: "services/auth-service/src/jwt.rs",
   content: "// JWT token validation...",
   message: "feat: add JWT validation module",
@@ -412,12 +421,14 @@ npx @goern/forgejo-mcp 2>&1 | tee mcp.log
 ---
 
 **Next Steps:**
+
 1. Start Forgejo: `docker compose -f docker-compose.dev.yml up -d forgejo registry`
-2. Create admin account: http://localhost:3000
+2. Create admin account: <http://localhost:3000>
 3. Push code to Forgejo
 4. Install `forgejo-mcp` and configure API token
 5. Start building Rust backend services!
 
 **Related Documentation:**
+
 - [Application Deployment & CI/CD](../project_docs/10-application-deployment-cicd.md) - Full CI/CD setup for Phase 2
 - [Development Tools](./development-tools.md) - All dev environment tools

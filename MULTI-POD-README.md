@@ -1,6 +1,6 @@
 # Multi-Pod Deployment - Quick Start
 
-Complete multi-pod architecture setup for UnityPlan platform.
+Complete multi-pod architecture setup for unityplatform platform.
 
 ## 📋 Overview
 
@@ -28,20 +28,20 @@ This deployment creates 3 territory pods (Denmark, Norway, Sweden) with:
 
 ### Project Naming Convention
 
-All pods use the naming pattern: `unityplan-pod-${POD_ID}` where POD_ID is the territory code (dk, no, se, eu).
+All pods use the naming pattern: `unityplatform-pod-${POD_ID}` where POD_ID is the territory code (dk, no, se, eu).
 
 This is defined in `docker-compose.pod.yml`:
 
 ```yaml
-name: unityplan-pod-${POD_ID}
+name: unityplatform-pod-${POD_ID}
 ```
 
 **Example stacks:**
 
-- `unityplan-pod-dk` (Denmark)
-- `unityplan-pod-no` (Norway)
-- `unityplan-pod-se` (Sweden)
-- `unityplan-pod-eu` (Europe multi-territory)
+- `unityplatform-pod-dk` (Denmark)
+- `unityplatform-pod-no` (Norway)
+- `unityplatform-pod-se` (Sweden)
+- `unityplatform-pod-eu` (Europe multi-territory)
 
 ```
 
@@ -92,7 +92,7 @@ Each pod (docker-compose.pod.yml) contains:
 
 ## 🌍 Multi-Territory Pods
 
-UnityPlan supports **multi-territory pods** where multiple small territories share infrastructure:
+unityplatform supports **multi-territory pods** where multiple small territories share infrastructure:
 
 ### Example: Europe Pod (Germany, France, Spain)
 
@@ -102,7 +102,7 @@ docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu \
   --env-file pods/europe/.env up -d
 
 # This creates:
-# - 3 separate PostgreSQL databases (unityplan_de, unityplan_fr, unityplan_es)
+# - 3 separate PostgreSQL databases (unityplatform_de, unityplatform_fr, unityplatform_es)
 # - Shared Redis with key prefixing (de:*, fr:*, es:*)
 # - Shared NATS topics (territory.de.*, territory.fr.*, territory.es.*)
 # - Shared IPFS node (content-addressed, naturally deduplicated)
@@ -128,7 +128,7 @@ docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu \
 
 ```bash
 # 1. Create mesh network
-docker network create unityplan-mesh-network
+docker network create unityplatform-mesh-network
 
 # 2. Start development tools
 docker compose -f docker-compose.dev.yml up -d
@@ -158,17 +158,17 @@ curl http://192.168.60.133:8222/varz | jq '.cluster'
 curl http://192.168.60.133:9090/api/v1/targets | jq '.data.activeTargets[] | select(.health != "up")'
 
 # Test database connectivity
-docker exec service-postgres-dk psql -U unityplan -d unityplan_dk -c "SELECT 1;"
-docker exec service-postgres-no psql -U unityplan -d unityplan_no -c "SELECT 1;"
-docker exec service-postgres-se psql -U unityplan -d unityplan_se -c "SELECT 1;"
+docker exec service-postgres-dk psql -U unityplatform -d unityplatform_dk -c "SELECT 1;"
+docker exec service-postgres-no psql -U unityplatform -d unityplatform_no -c "SELECT 1;"
+docker exec service-postgres-se psql -U unityplatform -d unityplatform_se -c "SELECT 1;"
 
 # Test multi-territory pod (if deployed)
-docker exec service-postgres-eu psql -U unityplan -d unityplan_de -c "SELECT 1;"  # Germany
-docker exec service-postgres-eu psql -U unityplan -d unityplan_fr -c "SELECT 1;"  # France
-docker exec service-postgres-eu psql -U unityplan -d unityplan_es -c "SELECT 1;"  # Spain
+docker exec service-postgres-eu psql -U unityplatform -d unityplatform_de -c "SELECT 1;"  # Germany
+docker exec service-postgres-eu psql -U unityplatform -d unityplatform_fr -c "SELECT 1;"  # France
+docker exec service-postgres-eu psql -U unityplatform -d unityplatform_es -c "SELECT 1;"  # Spain
 
 # List all databases in Europe pod
-docker exec service-postgres-eu psql -U unityplan -c "\l"
+docker exec service-postgres-eu psql -U unityplatform -c "\l"
 ```
 
 ## 🧪 Testing Cross-Pod Messaging
@@ -207,7 +207,7 @@ docker compose -f docker-compose.monitoring.yml down
 docker compose -f docker-compose.dev.yml down
 
 # Remove mesh network
-docker network rm unityplan-mesh-network
+docker network rm unityplatform-mesh-network
 ```
 
 ## 📊 Access Points

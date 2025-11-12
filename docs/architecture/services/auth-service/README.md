@@ -30,6 +30,82 @@ The auth-service is responsible for user authentication, JWT token management, a
 
 ---
 
+## 🔐 Authentication Architecture
+
+### **JWT Token Issuance**
+
+This service **issues JWT tokens** that all other services validate.
+
+**Login Flow:**
+
+```rust
+// 1. User logs in with credentials
+POST /v1/auth/login
+{
+  "username": "alice",
+  "password": "********"
+}
+
+// 2. auth-service validates credentials
+// 3. auth-service issues JWT + refresh token
+{
+  "access_token": "eyJhbGc...",  // JWT (15 min TTL)
+  "refresh_token": "uuid",        // Refresh token (30 days, stored in DB)
+  "user": { ... }
+}
+```
+
+### **JWT Structure**
+
+**Claims issued by auth-service:**
+
+```json
+{
+  "sub": "550e8400-e29b-41d4-a716-446655440000",  // user_id
+  "territory": "dk",                               // territory_code
+  "exp": 1731427200,                               // expires in 15 minutes
+  "iat": 1731426300,                               // issued at
+  "jti": "a1b2c3d4-e5f6-7890"                     // JWT ID (for revocation)
+}
+```
+
+### **Other Services**
+
+**All other services validate JWTs locally** without calling auth-service:
+
+```rust
+// user-service, settings-service, community-service, etc.
+use shared_lib::middleware::jwt_auth_middleware;
+
+HttpServer::new(|| {
+    App::new()
+        .wrap(jwt_auth_middleware)  // Validates JWT signature locally
+        .service(my_handler)
+})
+```
+
+**No API calls to auth-service for validation!** JWT signature proves authenticity.
+
+### **Token Refresh**
+
+When access token expires, client uses refresh token:
+
+```rust
+POST /v1/auth/refresh
+{
+  "refresh_token": "uuid"
+}
+
+// auth-service checks database, issues new access token
+{
+  "access_token": "eyJhbGc...",  // New JWT (15 min TTL)
+}
+```
+
+**See [shared-lib/AUTHENTICATION.md](../shared-lib/AUTHENTICATION.md) for complete authentication strategy.**
+
+---
+
 ## 🗄️ Database Schema
 
 ### **Tables Owned by auth-service**
@@ -586,7 +662,7 @@ SERVER_HOST=0.0.0.0
 SERVER_PORT=8001
 
 # Database
-DATABASE_URL=postgresql://user:pass@postgres:5432/unityplan
+DATABASE_URL=postgresql://user:pass@postgres:5432/unityplatform
 
 # JWT
 JWT_SECRET=your-secret-key-min-32-chars
@@ -594,7 +670,7 @@ JWT_ACCESS_EXPIRY=900       # 15 minutes
 JWT_REFRESH_EXPIRY=604800   # 7 days
 
 # CORS
-CORS_ALLOWED_ORIGINS=http://localhost:5173,https://unityplan.dk
+CORS_ALLOWED_ORIGINS=http://localhost:5173,https://unityplatform.dk
 
 # Territory
 TERRITORY_CODE=dk
@@ -662,9 +738,9 @@ services:
 Each territory runs its own auth-service:
 
 ```
-Denmark Pod:  auth.dk.unityplan.org  → auth-service:8001 (territory_dk)
-Norway Pod:   auth.no.unityplan.org  → auth-service:8001 (territory_no)
-Sweden Pod:   auth.se.unityplan.org  → auth-service:8001 (territory_se)
+Denmark Pod:  auth.dk.unityplatform.org  → auth-service:8001 (territory_dk)
+Norway Pod:   auth.no.unityplatform.org  → auth-service:8001 (territory_no)
+Sweden Pod:   auth.se.unityplatform.org  → auth-service:8001 (territory_se)
 ```
 
 **Global Registry:** Replicated across all pods for username/email uniqueness

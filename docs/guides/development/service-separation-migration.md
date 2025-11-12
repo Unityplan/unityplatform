@@ -81,11 +81,13 @@ PATCH  /v1/settings/{user_id}/privacy
 ```
 
 **Files to create:**
+
 - `services/settings-service/src/handlers/settings.rs`
 - `services/settings-service/src/handlers/privacy.rs`
 - `services/settings-service/src/models/settings.rs`
 
 **Copy from user-service:**
+
 - Models: `UserSettings`, `PrivacySettings`, update requests
 - Validation logic
 - Database queries
@@ -93,6 +95,7 @@ PATCH  /v1/settings/{user_id}/privacy
 #### **Step 1.3: Update user-service**
 
 **Remove settings endpoints:**
+
 ```rust
 // services/user-service/src/main.rs
 // DELETE these routes:
@@ -101,6 +104,7 @@ PATCH  /v1/settings/{user_id}/privacy
 ```
 
 **Update GDPR export to call settings-service:**
+
 ```rust
 // services/user-service/src/handlers/data_export.rs
 
@@ -180,6 +184,7 @@ curl -X POST http://localhost:8002/v1/users/{id}/data/export
 ```
 
 **Checklist:**
+
 - [ ] settings-service endpoints implemented
 - [ ] Tests passing (settings-service)
 - [ ] user-service updated to call settings-service API
@@ -329,6 +334,7 @@ pub async fn follow_user(...) -> Result<HttpResponse, AppError> {
 ```
 
 **Update GDPR export:**
+
 ```rust
 // Call notification-service API for notification settings
 let notification_settings = reqwest::get(
@@ -340,6 +346,7 @@ let notification_settings = reqwest::get(
 ```
 
 **Checklist:**
+
 - [ ] notification-service endpoints implemented
 - [ ] NATS event subscriptions working
 - [ ] user-service publishes events
@@ -374,6 +381,7 @@ POST   /v1/invitations/{token}/use          // Mark as used
 ```
 
 **Rate Limiting:**
+
 ```rust
 // Max 10 invitations per day per user
 async fn create_invitation(...) -> Result<HttpResponse, AppError> {
@@ -460,6 +468,7 @@ pub async fn register(...) -> Result<HttpResponse, AppError> {
 ```
 
 **Checklist:**
+
 - [ ] invitation-service endpoints implemented
 - [ ] Rate limiting working (10/day)
 - [ ] Invitation validation API working
@@ -560,6 +569,7 @@ curl -X POST http://localhost:8002/v1/users/{id}/data/export
 ```
 
 **Checklist:**
+
 - [ ] All inter-service calls working
 - [ ] NATS events publishing/subscribing
 - [ ] Multi-pod deployment tested
@@ -662,6 +672,7 @@ scrape_configs:
 ```
 
 **Grafana Dashboards:**
+
 - Service health (all 5 services)
 - Request latency per service
 - Inter-service call latency
@@ -707,12 +718,14 @@ scrape_configs:
 ### **Rolling Migration (Zero Downtime)**
 
 **Week 1:**
+
 1. Deploy settings-service (parallel to user-service)
 2. Test both services serving settings
 3. Switch frontend to settings-service
 4. Remove settings from user-service
 
 **Week 2:**
+
 1. Deploy notification-service
 2. Start NATS event publishing
 3. Test notification creation
@@ -720,6 +733,7 @@ scrape_configs:
 5. Remove notification settings from user-service
 
 **Week 3:**
+
 1. Deploy invitation-service
 2. Test invitation validation API
 3. Update auth-service to call invitation-service
@@ -727,6 +741,7 @@ scrape_configs:
 5. Deploy admin panel for invitation management
 
 **Week 4:**
+
 1. Full integration testing
 2. Performance testing
 3. Multi-pod deployment

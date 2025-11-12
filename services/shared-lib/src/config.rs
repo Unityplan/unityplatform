@@ -48,7 +48,7 @@ impl AppConfig {
             .set_default("server.port", 8080)?
             .set_default("database.max_connections", 20)?
             .set_default("database.min_connections", 5)?
-            .set_default("nats.cluster_name", "unityplan-global")?
+            .set_default("nats.cluster_name", "unityplatform-global")?
             .set_default("auth.jwt_expiration_hours", 24)?;
 
         // Override with environment variables

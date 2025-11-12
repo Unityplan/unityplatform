@@ -116,7 +116,7 @@
 
 **Matrix Homeserver:**
 
-- Runs on `matrix.unityplan.org`
+- Runs on `matrix.unityplatform.org`
 - Federation enabled (connect with other Matrix servers)
 - Single Sign-On with auth-service
 

@@ -29,6 +29,35 @@ The community-service manages communities (groups), memberships, roles, and comm
 
 ---
 
+## 🔐 Authentication
+
+This service uses **JWT-based authentication** via shared middleware from `shared-lib`.
+
+### **Validation Strategy**
+
+- **Public routes:** No authentication (list public communities)
+- **Standard requests:** JWT signature validation only (~0.01ms)
+- **Admin operations:** Role verification (JWT + database check for community roles)
+
+### **Middleware**
+
+```rust
+use shared_lib::middleware::jwt_auth_middleware;
+
+HttpServer::new(|| {
+    App::new()
+        .service(list_public_communities)  // No auth
+        .wrap(jwt_auth_middleware)  // Protects all other routes
+        .service(create_community)
+        .service(join_community)
+        .service(manage_roles)  // Additional role check in handler
+})
+```
+
+**See [shared-lib/AUTHENTICATION.md](../shared-lib/AUTHENTICATION.md) for complete authentication architecture.**
+
+---
+
 ## 🗄️ Database Schema
 
 ### **Tables Owned by community-service**
@@ -205,7 +234,7 @@ Get community details
     "name": "Rust Developers Denmark",
     "slug": "rust-developers-dk",
     "description": "A community for Rust developers in Denmark",
-    "avatar_url": "https://cdn.unityplan.org/avatars/community-uuid.jpg",
+    "avatar_url": "https://cdn.unityplatform.org/avatars/community-uuid.jpg",
     "visibility": "public",
     "member_count": 42,
     "created_by": "uuid",

@@ -23,7 +23,7 @@
 
 ## Overview
 
-The UnityPlan platform is designed to scale globally while maintaining **user sovereignty** and **data locality**. The multi-pod architecture enables:
+The Unity Platform is designed to scale globally while maintaining **user sovereignty** and **data locality**. The multi-pod architecture enables:
 
 - **Geographic distribution** - Each country/territory operates its own pod
 - **Data sovereignty** - User data stays within territorial boundaries
@@ -144,7 +144,7 @@ services:
 
 ### Pod Deployment Models
 
-UnityPlan supports two pod deployment models:
+Unity Platform supports two pod deployment models:
 
 #### **Model 1: Single-Territory Pod** (Dedicated Infrastructure)
 
@@ -152,14 +152,14 @@ UnityPlan supports two pod deployment models:
 
 ```yaml
 Pod Denmark (DK):
-  - PostgreSQL: unityplan_dk database
+  - PostgreSQL: unityplatform_dk database
   - Redis: dk:* key namespace
   - NATS: territory.dk.* topics
   - User Base: 1M+ users
   - Resource: Dedicated VPS/Cloud instance
 
 Pod Norway (NO):
-  - PostgreSQL: unityplan_no database
+  - PostgreSQL: unityplatform_no database
   - Redis: no:* key namespace
   - NATS: territory.no.* topics
   - User Base: 500K+ users
@@ -187,9 +187,9 @@ Pod Norway (NO):
 ```yaml
 Pod Europe (EU):
   - PostgreSQL: 
-      * unityplan_de (Germany)
-      * unityplan_fr (France)
-      * unityplan_es (Spain)
+      * unityplatform_de (Germany)
+      * unityplatform_fr (France)
+      * unityplatform_es (Spain)
   - Redis: de:*, fr:*, es:* key namespaces
   - NATS: territory.de.*, territory.fr.*, territory.es.* topics
   - Combined User Base: 300K users
@@ -197,9 +197,9 @@ Pod Europe (EU):
 
 Pod Asia-Pacific (AP):
   - PostgreSQL:
-      * unityplan_sg (Singapore)
-      * unityplan_my (Malaysia)
-      * unityplan_th (Thailand)
+      * unityplatform_sg (Singapore)
+      * unityplatform_my (Malaysia)
+      * unityplatform_th (Thailand)
   - Combined User Base: 200K users
   - Resource: Single VPS/Cloud instance in Singapore
 ```
@@ -239,9 +239,9 @@ POD_ID=eu
 TERRITORY_CODES=DE,FR,ES  # Multiple territories
 
 # Single PostgreSQL with 3 databases
-POSTGRES_DB_DE=unityplan_de
-POSTGRES_DB_FR=unityplan_fr
-POSTGRES_DB_ES=unityplan_es
+POSTGRES_DB_DE=unityplatform_de
+POSTGRES_DB_FR=unityplatform_fr
+POSTGRES_DB_ES=unityplatform_es
 
 # Shared Redis (key prefixing)
 # Keys: de:session:abc, fr:cache:xyz, es:user:123
@@ -272,15 +272,15 @@ TERRITORY_ES_LANGUAGE=es
 **Database Schema Example:**
 
 ```sql
--- unityplan_de database
+-- unityplatform_de database
 CREATE SCHEMA global;        -- Replicated data
 CREATE SCHEMA territory_DE;  -- Germany-specific data
 
--- unityplan_fr database
+-- unityplatform_fr database
 CREATE SCHEMA global;        -- Replicated data
 CREATE SCHEMA territory_FR;  -- France-specific data
 
--- unityplan_es database
+-- unityplatform_es database
 CREATE SCHEMA global;        -- Replicated data
 CREATE SCHEMA territory_ES;  -- Spain-specific data
 ```
@@ -406,7 +406,7 @@ Pod SE exporters → Pod SE Prometheus ────────┘
 services:
   service-postgres-${POD_ID}:
     environment:
-      POSTGRES_DB: unityplan_${POD_ID}
+      POSTGRES_DB: unityplatform_${POD_ID}
       
   service-redis-${POD_ID}:
     # Territory cache
@@ -489,7 +489,7 @@ services:
 
 ```sql
 -- Pod Denmark Database
-unityplan_dk
+unityplatform_dk
 ├── public (extensions, shared functions)
 ├── global (read-only replica from central)
 │   ├── territories
@@ -503,7 +503,7 @@ unityplan_dk
     └── local_policies
 
 -- Pod Norway Database
-unityplan_no
+unityplatform_no
 ├── public
 ├── global (read-only replica)
 └── territory_NO (read-write, Norway data)
@@ -516,7 +516,7 @@ unityplan_no
 
 #### 🆔 Territory ID Format
 
-UnityPlan uses a standardized territory identification system that respects sovereignty for both countries and First Nations.
+Unity Platform uses a standardized territory identification system that respects sovereignty for both countries and First Nations.
 
 ##### **Countries** (ISO 3166-1 Alpha-2)
 
@@ -682,7 +682,7 @@ service-nats-dk:
     - "-m=8222"                               # Monitoring port
     - "--store_dir=/data"                     # JetStream storage
     - "--cluster=nats://0.0.0.0:6222"        # Cluster port
-    - "--cluster_name=unityplan-global"      # Cluster name
+    - "--cluster_name=unityplatform-global"      # Cluster name
     - "--routes=nats://service-nats-no:6222,nats://service-nats-se:6222"
   ports:
     - "4222:4222"   # Client
@@ -700,7 +700,7 @@ service-nats-no:
     - "-m=8222"
     - "--store_dir=/data"
     - "--cluster=nats://0.0.0.0:6222"
-    - "--cluster_name=unityplan-global"
+    - "--cluster_name=unityplatform-global"
     - "--routes=nats://service-nats-dk:6222,nats://service-nats-se:6222"
   ports:
     - "4223:4222"   # Different host port (same host dev)
@@ -749,7 +749,7 @@ nats stream add TERRITORY_DK \
 ```yaml
 service-ipfs-dk:
   environment:
-    - IPFS_SWARM_KEY=/key/swarm/psk/1.0.0/.../unityplan-private-swarm
+    - IPFS_SWARM_KEY=/key/swarm/psk/1.0.0/.../unityplatform-private-swarm
     - LIBP2P_FORCE_PNET=1
   # Peers automatically discover each other
   # Territory-specific content pinned locally
@@ -1013,7 +1013,7 @@ AllowedIPs = 10.0.3.0/24
 
 - Hetzner/DigitalOcean VPS in EU regions
 - WireGuard VPN between servers
-- DNS setup (pod-dk.unityplan.org, pod-no.unityplan.org)
+- DNS setup (pod-dk.unityplatform.org, pod-no.unityplatform.org)
 - Monitoring central location
 
 **Validation:**
@@ -1123,5 +1123,5 @@ This multi-pod architecture provides:
 
 ---
 
-**Document Maintainer:** UnityPlan Platform Team  
+**Document Maintainer:** Unity Platform Team  
 **Review Schedule:** Quarterly or after major architecture changes

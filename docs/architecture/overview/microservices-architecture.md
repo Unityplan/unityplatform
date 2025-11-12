@@ -699,12 +699,12 @@ Each territory (Denmark, Norway, Sweden, Europe) runs:
 
 ```
 Denmark Pod:
-  auth.dk.unityplan.org → auth-service:8001 (territory_dk)
-  user.dk.unityplan.org → user-service:8002 (territory_dk)
+  auth.dk.unityplatform.org → auth-service:8001 (territory_dk)
+  user.dk.unityplatform.org → user-service:8002 (territory_dk)
 
 Norway Pod:
-  auth.no.unityplan.org → auth-service:8001 (territory_no)
-  user.no.unityplan.org → user-service:8002 (territory_no)
+  auth.no.unityplatform.org → auth-service:8001 (territory_no)
+  user.no.unityplatform.org → user-service:8002 (territory_no)
 ```
 
 ### **Cross-Pod Federation**

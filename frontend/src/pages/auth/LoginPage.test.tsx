@@ -22,7 +22,7 @@ describe('LoginPage', () => {
         renderWithProviders(<LoginPage />);
 
         expect(screen.getByText('Welcome Back')).toBeDefined();
-        expect(screen.getByText('Sign in to your UnityPlan account')).toBeDefined();
+        expect(screen.getByText('Sign in to your Unity Platform account')).toBeDefined();
         expect(screen.getByLabelText(/username/i)).toBeDefined();
         expect(screen.getByLabelText(/password/i)).toBeDefined();
         expect(screen.getByLabelText(/territory/i)).toBeDefined();

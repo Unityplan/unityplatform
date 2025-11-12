@@ -1,6 +1,6 @@
 # Multi-Pod Deployment Guide
 
-**Purpose:** Step-by-step guide for deploying UnityPlan in multi-pod configuration  
+**Purpose:** Step-by-step guide for deploying Unity Platform in multi-pod configuration  
 **Target:** Phase 2 Development (Q1 2026)  
 **Prerequisites:** Docker, Docker Compose v2+
 
@@ -31,7 +31,7 @@ docker compose up -d
 
 ```bash
 # 1. Create mesh network (shared across all stacks)
-docker network create unityplan-mesh-network
+docker network create unityplatform-mesh-network
 
 # 2. Start development tools
 docker compose -f docker-compose.dev.yml up -d
@@ -63,7 +63,7 @@ curl http://192.168.60.133:8222/varz | jq '.cluster'
 curl http://192.168.60.133:8223/varz | jq '.cluster'
 
 # Check network connectivity
-docker network inspect unityplan-mesh-network
+docker network inspect unityplatform-mesh-network
 
 # Access services
 # - Dev Dashboard: http://192.168.60.133:8888
@@ -123,13 +123,13 @@ Host: 192.168.60.133
 
 ```bash
 # Navigate to project root
-cd /home/henrik/code/data/projects/unityplan_platform/workspace
+cd /home/henrik/code/data/projects/unityplatform_platform/workspace
 
 # Create mesh network
-docker network create unityplan-mesh-network
+docker network create unityplatform-mesh-network
 
 # Verify network
-docker network ls | grep unityplan
+docker network ls | grep unityplatform
 ```
 
 #### 2. Start Development Stack
@@ -376,7 +376,7 @@ docker compose -f docker-compose.pod.yml -p pod-se \
 
 ```
 ┌─────────────────────────────────────┐
-│     unityplan-global-net            │
+│     unityplatform-global-net            │
 │  (Dev + Monitoring services)        │
 │  - dev-dashboard                    │
 │  - monitoring-prometheus            │
@@ -396,7 +396,7 @@ docker compose -f docker-compose.pod.yml -p pod-se \
                └────────┬────────┴────────┬───────┘
                         │                 │
                ┌────────▼─────────────────▼────────┐
-               │   unityplan-mesh-network          │
+               │   unityplatform-mesh-network          │
                │ (Cross-pod communication)         │
                │  - NATS clustering                │
                │  - IPFS swarm                     │
@@ -409,14 +409,14 @@ docker compose -f docker-compose.pod.yml -p pod-se \
 
 ```bash
 # Create all networks
-docker network create unityplan-mesh-network
-docker network create unityplan-global-net
+docker network create unityplatform-mesh-network
+docker network create unityplatform-global-net
 
 # Inspect network
-docker network inspect unityplan-mesh-network
+docker network inspect unityplatform-mesh-network
 
 # List containers on mesh network
-docker network inspect unityplan-mesh-network --format '{{range .Containers}}{{.Name}} {{end}}'
+docker network inspect unityplatform-mesh-network --format '{{range .Containers}}{{.Name}} {{end}}'
 
 # Test connectivity between pods
 docker exec service-nats-dk ping service-nats-no
@@ -441,7 +441,7 @@ curl http://192.168.60.133:8224/varz | jq '.cluster'
 
 # Expected output:
 {
-  "cluster_name": "unityplan-global",
+  "cluster_name": "unityplatform-global",
   "addr": "0.0.0.0:6222",
   "cluster_port": 6222,
   "urls": [
@@ -507,7 +507,7 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'unityplan-central'
+    cluster: 'unityplatform-central'
 
 # No federation in single-host mode - directly scrape exporters
 scrape_configs:
@@ -569,6 +569,7 @@ Grafana is already configured to use Prometheus via provisioning. No additional 
 ### Issue: NATS Cluster Not Forming
 
 **Symptoms:**
+
 ```bash
 curl http://192.168.60.133:8222/varz | jq '.cluster.urls'
 # Returns: []
@@ -577,24 +578,28 @@ curl http://192.168.60.133:8222/varz | jq '.cluster.urls'
 **Solutions:**
 
 1. **Check mesh network connectivity:**
+
    ```bash
    docker exec service-nats-dk ping service-nats-no
    docker exec service-nats-dk nslookup service-nats-no
    ```
 
 2. **Verify NATS routes configuration:**
+
    ```bash
    docker logs service-nats-dk | grep "routes"
    docker logs service-nats-no | grep "routes"
    ```
 
 3. **Ensure correct network attachment:**
+
    ```bash
    docker inspect service-nats-dk | jq '.[0].NetworkSettings.Networks'
    # Should show both pod-dk-net and mesh-network
    ```
 
 4. **Restart NATS services in order:**
+
    ```bash
    docker compose -f docker-compose.pod.yml -p pod-dk restart nats
    docker compose -f docker-compose.pod.yml -p pod-no restart nats
@@ -605,6 +610,7 @@ curl http://192.168.60.133:8222/varz | jq '.cluster.urls'
 ### Issue: Port Conflicts on Single Host
 
 **Symptoms:**
+
 ```
 Error: Bind for 0.0.0.0:9100 failed: port is already allocated
 ```
@@ -626,22 +632,25 @@ Error: Bind for 0.0.0.0:9100 failed: port is already allocated
 ### Issue: Database Connection Failed
 
 **Symptoms:**
+
 ```
-FATAL: database "unityplan_dk" does not exist
+FATAL: database "unityplatform_dk" does not exist
 ```
 
 **Solutions:**
 
 1. **Initialize database schema:**
+
    ```bash
    # Connect to pod database
-   docker exec -it service-postgres-dk psql -U unityplan -d unityplan_dk
+   docker exec -it service-postgres-dk psql -U Unity Platform -d unityplatform_dk
    
    # Run initialization script manually if not auto-executed
    \i /docker-entrypoint-initdb.d/init.sql
    ```
 
 2. **Check postgres logs:**
+
    ```bash
    docker logs service-postgres-dk
    ```
@@ -651,6 +660,7 @@ FATAL: database "unityplan_dk" does not exist
 ### Issue: Prometheus Not Scraping Exporters
 
 **Symptoms:**
+
 ```
 Targets in Prometheus UI show as "down"
 ```
@@ -658,17 +668,20 @@ Targets in Prometheus UI show as "down"
 **Solutions:**
 
 1. **Verify exporter accessibility:**
+
    ```bash
    curl http://192.168.60.133:9187/metrics | head
    curl http://192.168.60.133:9121/metrics | head
    ```
 
 2. **Check Prometheus config:**
+
    ```bash
    docker exec monitoring-prometheus cat /etc/prometheus/prometheus.yml
    ```
 
 3. **Reload Prometheus:**
+
    ```bash
    curl -X POST http://192.168.60.133:9090/-/reload
    ```
@@ -688,4 +701,4 @@ Targets in Prometheus UI show as "down"
 
 **Document Version:** 1.0  
 **Last Updated:** November 5, 2025  
-**Maintainer:** UnityPlan Platform Team
+**Maintainer:** Unity Platform Team

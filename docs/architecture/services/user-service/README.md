@@ -30,6 +30,70 @@ The user-service is responsible for managing user profiles, identity data, socia
 
 ---
 
+## 🔐 Authentication
+
+This service uses **JWT-based authentication** via shared middleware from `shared-lib`.
+
+### **Validation Strategy**
+
+- **99% of requests:** JWT signature validation only (~0.01ms, no database)
+- **Critical operations:** Optional database check for real-time user status (account deletion, GDPR requests)
+
+### **Middleware**
+
+```rust
+use shared_lib::middleware::jwt_auth_middleware;
+
+HttpServer::new(|| {
+    App::new()
+        .wrap(jwt_auth_middleware)  // All routes protected
+        .service(get_profile)
+        .service(update_profile)
+})
+```
+
+### **Handler Access**
+
+```rust
+async fn update_profile(
+    auth: AuthUser,  // Extracted by middleware - already validated
+    data: Json<ProfileData>
+) -> Result<HttpResponse> {
+    // auth.id already validated by JWT, no DB check needed
+    update_profile_in_db(auth.id, data).await
+}
+```
+
+### **Critical Operations**
+
+For security-sensitive operations (GDPR exports, account deletion), the service performs an additional database check:
+
+```rust
+async fn request_data_export(
+    auth: AuthUser,
+    pool: Data<PgPool>
+) -> Result<HttpResponse> {
+    // Verify user still exists and is active
+    let user = sqlx::query!(
+        "SELECT id, deleted_at FROM territory_dk.users WHERE id = $1",
+        auth.id
+    ).fetch_optional(pool.get_ref()).await?;
+    
+    match user {
+        Some(u) if u.deleted_at.is_none() => {
+            // User active - proceed with export
+        },
+        _ => return Err(Error::UserNotFound)
+    }
+    
+    // Create data export request...
+}
+```
+
+**See [shared-lib/AUTHENTICATION.md](../shared-lib/AUTHENTICATION.md) for complete authentication architecture.**
+
+---
+
 ## 🗄️ Database Schema
 
 ### **Tables Owned by user-service**

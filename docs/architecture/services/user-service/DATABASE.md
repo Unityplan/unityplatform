@@ -92,7 +92,7 @@ CREATE INDEX idx_users_profiles_search ON territory_{code}.users_profiles USING 
 Profile data (bio, interests, location) is personal - NEVER leaves territory pod.
 
 **Cross-Territory Access:**  
-Other users fetch profiles via API: `GET https://denmark.unityplan.org/api/v1/profiles/{user_id}`
+Other users fetch profiles via API: `GET https://denmark.unityplatform.org/api/v1/profiles/{user_id}`
 
 ---
 
@@ -513,7 +513,7 @@ VALUES (alice_id, bob_id, 'follow');
 **Bob's Follower Count:**
 
 ```
-GET https://norway.unityplan.org/api/v1/profiles/{bob_id}/followers
+GET https://norway.unityplatform.org/api/v1/profiles/{bob_id}/followers
 → Queries all pods for connections where following_id = bob_id
 → Aggregates count
 ```
@@ -528,7 +528,7 @@ Follower/following counts cached in user profile (updated via NATS events).
 **Scenario:** User in Sweden views Alice's profile (Denmark)
 
 ```
-GET https://denmark.unityplan.org/api/v1/profiles/{alice_id}
+GET https://denmark.unityplatform.org/api/v1/profiles/{alice_id}
 → Routed to Denmark pod (Alice's home)
 → Returns profile data
 → Privacy settings enforced (public/followers/private)

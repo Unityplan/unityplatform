@@ -6,6 +6,52 @@
 
 ---
 
+## Authentication
+
+All endpoints require JWT authentication unless marked as **Public**.
+
+### **Authentication Header**
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### **JWT Claims**
+
+```json
+{
+  "sub": "550e8400-e29b-41d4-a716-446655440000",  // user_id
+  "territory": "dk",                               // territory_code
+  "exp": 1731427200,                               // expiration timestamp
+  "iat": 1731426300                                // issued at timestamp
+}
+```
+
+### **Validation Strategy**
+
+- **Standard requests:** JWT signature validation only (~0.01ms, no database query)
+- **Critical operations:** JWT + database check for real-time user status
+
+### **Error Responses**
+
+```json
+// 401 Unauthorized - Missing or invalid token
+{
+  "error": "unauthorized",
+  "message": "Missing or invalid Authorization header"
+}
+
+// 403 Forbidden - User deleted/inactive (critical operations only)
+{
+  "error": "forbidden",
+  "message": "Account inactive or deleted"
+}
+```
+
+**See [shared-lib/AUTHENTICATION.md](../shared-lib/AUTHENTICATION.md) for complete authentication documentation.**
+
+---
+
 ## Table of Contents
 
 1. [User Profile Endpoints](#user-profile-endpoints) (3 endpoints)
@@ -40,7 +86,7 @@
     "display_name": "Alice Anderson",
     "bio": "Rust developer from Denmark",
     "location": "Copenhagen",
-    "avatar_url": "https://ipfs.unityplan.org/ipfs/QmXxx",
+    "avatar_url": "https://ipfs.unityplatform.org/ipfs/QmXxx",
     "website": "https://alice.dev",
     "created_at": "2025-11-01T10:00:00Z",
     "updated_at": "2025-11-12T10:00:00Z"
@@ -571,7 +617,7 @@ file: <image binary>
 {
   "success": true,
   "data": {
-    "avatar_url": "https://ipfs.unityplan.org/ipfs/QmXxx"
+    "avatar_url": "https://ipfs.unityplatform.org/ipfs/QmXxx"
   }
 }
 ```

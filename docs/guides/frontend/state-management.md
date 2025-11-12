@@ -1,6 +1,6 @@
 # State Management Guide
 
-Complete guide to state management in UnityPlan using TanStack Query and Zustand.
+Complete guide to state management in Unity Platform using TanStack Query and Zustand.
 
 **Philosophy:** TanStack Query for server data, Zustand for client state  
 **Last Updated:** November 9, 2025

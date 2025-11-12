@@ -1,6 +1,6 @@
 # Development Tools Guide
 
-This document describes general development tools available in the UnityPlan development environment.
+This document describes general development tools available in the Unity Platform development environment.
 
 **Last Updated:** November 9, 2025
 
@@ -18,9 +18,9 @@ Lightweight database management interface for PostgreSQL.
 
 - System: PostgreSQL
 - Server: postgres
-- Username: unityplan
+- Username: unityplatform
 - Password: (from .env)
-- Database: unityplan_dev
+- Database: unityplatform_dev
 
 **Features:**
 
@@ -90,7 +90,7 @@ MailHog captures all outgoing emails for testing - no emails are actually sent.
 // Configure SMTP in your email service
 SMTP_HOST=localhost
 SMTP_PORT=1025
-SMTP_FROM=noreply@unityplan.local
+SMTP_FROM=noreply@unityplatform.local
 ```
 
 **Frontend Configuration:**
@@ -160,7 +160,7 @@ curl http://localhost:16686/                  # Jaeger
 curl http://localhost:8222/healthz            # NATS
 
 # Database & cache
-docker compose exec postgres psql -U unityplan -d unityplan_dev -c 'SELECT 1;'
+docker compose exec postgres psql -U Unity Platform -d unityplatform_dev -c 'SELECT 1;'
 docker compose exec redis redis-cli ping
 
 # Email testing
@@ -228,8 +228,8 @@ docker compose -f docker-compose.dev.yml down -v
 
 ```bash
 # Drop and recreate database
-docker compose exec postgres psql -U unityplan -c "DROP DATABASE unityplan_dev;"
-docker compose exec postgres psql -U unityplan -c "CREATE DATABASE unityplan_dev;"
+docker compose exec postgres psql -U Unity Platform -c "DROP DATABASE unityplatform_dev;"
+docker compose exec postgres psql -U Unity Platform -c "CREATE DATABASE unityplatform_dev;"
 
 # Run migrations
 cd services/shared-lib
@@ -315,7 +315,7 @@ docker compose restart postgres
 3. Test connection:
 
    ```bash
-   docker compose exec postgres psql -U unityplan -d unityplan_dev
+   docker compose exec postgres psql -U Unity Platform -d unityplatform_dev
    ```
 
 4. Check logs: `docker compose logs postgres`

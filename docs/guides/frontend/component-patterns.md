@@ -1,6 +1,6 @@
 # Component Patterns Guide
 
-Best practices and patterns for building React components in UnityPlan.
+Best practices and patterns for building React components in unityplatform.
 
 **Stack:** React 18, shadcn/ui, TailwindCSS  
 **Last Updated:** November 9, 2025

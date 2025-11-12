@@ -1,6 +1,6 @@
+use crate::error::Result;
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::time::Duration;
-use crate::error::Result;
 
 #[derive(Clone)]
 pub struct Database {
@@ -8,7 +8,11 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn new(database_url: &str, max_connections: u32, min_connections: u32) -> Result<Self> {
+    pub async fn new(
+        database_url: &str,
+        max_connections: u32,
+        min_connections: u32,
+    ) -> Result<Self> {
         let pool = PgPoolOptions::new()
             .max_connections(max_connections)
             .min_connections(min_connections)
@@ -30,9 +34,7 @@ impl Database {
     }
 
     pub async fn ping(&self) -> Result<()> {
-        sqlx::query("SELECT 1")
-            .execute(&self.pool)
-            .await?;
+        sqlx::query("SELECT 1").execute(&self.pool).await?;
         Ok(())
     }
 
@@ -50,10 +52,12 @@ mod tests {
     #[ignore] // Requires database to be running
     async fn test_database_connection() {
         let db = Database::new(
-            "postgres://unityplan:unityplan_dev_password_dk@localhost:5432/unityplan_dk",
+            "postgres://unityplatform:unityplatform_dev_password_dk@localhost:5432/unityplatform_dk",
             5,
-            2
-        ).await.unwrap();
+            2,
+        )
+        .await
+        .unwrap();
 
         assert!(db.ping().await.is_ok());
         db.close().await;

@@ -268,7 +268,7 @@ CREATE SCHEMA IF NOT EXISTS territory_dk;
 
 ```bash
 cd services/shared-lib
-sqlx migrate run --database-url "postgresql://user:pass@localhost:5432/unityplan_dk"
+sqlx migrate run --database-url "postgresql://user:pass@localhost:5432/unityplatform_dk"
 ```
 
 **Result:**
@@ -296,13 +296,13 @@ CREATE SCHEMA IF NOT EXISTS territory_se;
 
 ```bash
 # Deploy to Denmark pod
-sqlx migrate run --database-url "postgresql://user:pass@denmark-db:5432/unityplan_dk"
+sqlx migrate run --database-url "postgresql://user:pass@denmark-db:5432/unityplatform_dk"
 
 # Deploy to Norway pod
-sqlx migrate run --database-url "postgresql://user:pass@norway-db:5432/unityplan_no"
+sqlx migrate run --database-url "postgresql://user:pass@norway-db:5432/unityplatform_no"
 
 # Deploy to Sweden pod
-sqlx migrate run --database-url "postgresql://user:pass@sweden-db:5432/unityplan_se"
+sqlx migrate run --database-url "postgresql://user:pass@sweden-db:5432/unityplatform_se"
 ```
 
 **Result:**
@@ -498,11 +498,11 @@ async fn test_user_deletion_cleans_global_registry() {
 
 ```bash
 # Register alice in DK
-curl -X POST http://denmark.unityplan.org/api/v1/auth/register \
+curl -X POST http://denmark.unityplatform.org/api/v1/auth/register \
   -d '{"username": "alice", "email": "alice@dk.com", "password": "Test123!@#"}'
 
 # Try to register alice in NO (should fail with 409 Conflict)
-curl -X POST http://norway.unityplan.org/api/v1/auth/register \
+curl -X POST http://norway.unityplatform.org/api/v1/auth/register \
   -d '{"username": "alice", "email": "alice@no.com", "password": "Test123!@#"}'
 ```
 

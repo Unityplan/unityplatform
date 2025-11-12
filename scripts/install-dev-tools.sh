@@ -2,10 +2,10 @@
 
 set -e
 
-echo "🔧 UnityPlan Development Tools Installation"
+echo "🔧 Unity Platform Development Tools Installation"
 echo "==========================================="
 echo ""
-echo "This script will install all necessary development tools for the UnityPlan platform:"
+echo "This script will install all necessary development tools for the Unity Platform:"
 echo "  - Rust toolchain (rustup, cargo)"
 echo "  - SQLx CLI (database migrations)"
 echo "  - Node.js & npm (for frontend development)"
@@ -376,7 +376,7 @@ echo "   docker compose -f docker-compose.pod.yml --env-file pods/denmark/.env u
 echo ""
 echo "5. Run database migrations:"
 echo "   cd services"
-echo "   export DATABASE_URL=\"postgres://unityplan:unityplan_dev_password@localhost:5432/unityplan_dk\""
+echo "   export DATABASE_URL=\"postgres://unityplatform:unityplatform_dev_password@localhost:5432/unityplatform\""
 echo "   sqlx migrate run"
 echo ""
 echo "6. Build and test Rust services:"

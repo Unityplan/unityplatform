@@ -143,6 +143,7 @@ Using the natural ecosystem metaphor:
    ```
 
 2. **Holochain (Phase 3):**
+
    ```
 
 - User controls their own cryptographic keypair
@@ -308,13 +309,13 @@ cd services/shared-lib
 sqlx migrate run
 
 # Verify structure
-psql -U postgres -d unityplan_dk -c "
+psql -U postgres -d unityplatform_dk -c "
   \d global.user_identities;
   \d territory_dk.users;
 "
 
 # Test user creation
-psql -U postgres -d unityplan_dk -c "
+psql -U postgres -d unityplatform_dk -c "
   -- Create user in territory
   INSERT INTO territory_dk.users (username, email, password_hash, public_key_hash)
   VALUES ('testuser', 'test@example.com', 'hash', 'test_hash_123');

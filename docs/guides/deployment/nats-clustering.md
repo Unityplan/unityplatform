@@ -1,6 +1,6 @@
 # NATS Clustering Configuration
 
-**Purpose:** Complete NATS clustering setup for UnityPlan multi-pod architecture  
+**Purpose:** Complete NATS clustering setup for Unity Platform multi-pod architecture  
 **Scope:** Cross-pod messaging, JetStream replication, topic design  
 **Status:** Production-ready configuration
 
@@ -20,7 +20,7 @@
 
 ## Overview
 
-UnityPlan uses NATS clustering to enable:
+Unity Platform uses NATS clustering to enable:
 
 - **Cross-pod communication**: Messages between territories
 - **Event distribution**: Global events replicated to all pods
@@ -30,7 +30,7 @@ UnityPlan uses NATS clustering to enable:
 ### Cluster Properties
 
 ```
-Cluster Name:     unityplan-global
+Cluster Name:     unityplatform-global
 Topology:         Full mesh (all nodes connected)
 JetStream:        Enabled on all nodes
 Replication:      R3 for global streams, R1 for territory streams
@@ -44,7 +44,7 @@ Replication:      R3 for global streams, R1 for territory streams
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   unityplan-mesh-network                    │
+│                   unityplatform-mesh-network                    │
 │                     (Docker Network)                        │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
@@ -107,7 +107,7 @@ nats:
   container_name: service-nats-${POD_ID}
   hostname: service-nats-${POD_ID}
   command:
-    - "--cluster_name=unityplan-global"
+    - "--cluster_name=unityplatform-global"
     - "--cluster=nats://0.0.0.0:6222"
     - "--routes=${NATS_ROUTES}"
     - "--http_port=8222"
@@ -142,7 +142,7 @@ NATS_ROUTES=nats://service-nats-no:6223,nats://service-nats-se:6224
 
 | Flag | Value | Purpose |
 |------|-------|---------|
-| `--cluster_name` | `unityplan-global` | Shared cluster identifier |
+| `--cluster_name` | `unityplatform-global` | Shared cluster identifier |
 | `--cluster` | `nats://0.0.0.0:6222` | Listen address for cluster traffic |
 | `--routes` | `nats://service-nats-no:6223,...` | Seed routes to other nodes |
 | `--http_port` | `8222` | Monitoring endpoint |
@@ -181,6 +181,7 @@ nats stream info GLOBAL_EVENTS
 ```
 
 **Output:**
+
 ```
 Information for Stream GLOBAL_EVENTS
 
@@ -200,7 +201,7 @@ Configuration:
 
 Cluster Information:
 
-                 Name: unityplan-global
+                 Name: unityplatform-global
                Leader: service-nats-dk
               Replica: service-nats-no, current, seen 0.00s ago
               Replica: service-nats-se, current, seen 0.00s ago
@@ -344,7 +345,7 @@ nats sub "cross.dk.>"
 
 ```bash
 # Generate operator key
-nsc add operator UnityPlan
+nsc add operator unityplatform
 
 # Create accounts for each territory
 nsc add account DK
@@ -533,14 +534,14 @@ scrape_configs:
       - targets: ['monitoring-nats-exporter-dk:7777']
         labels:
           pod: 'denmark'
-          cluster: 'unityplan-global'
+          cluster: 'unityplatform-global'
   
   - job_name: 'nats-no'
     static_configs:
       - targets: ['monitoring-nats-exporter-no:7778']
         labels:
           pod: 'norway'
-          cluster: 'unityplan-global'
+          cluster: 'unityplatform-global'
 ```
 
 #### Key Metrics
@@ -596,7 +597,7 @@ nats stream restore GLOBAL_EVENTS /backup/global_events_20251105.tar.gz
 docker compose -f docker-compose.pod.yml -p pod-dk stop nats
 
 # Backup volume
-docker run --rm -v unityplan_nats-data:/data -v $(pwd)/backup:/backup \
+docker run --rm -v unityplatform_nats-data:/data -v $(pwd)/backup:/backup \
   alpine tar czf /backup/nats-data-dk-$(date +%Y%m%d).tar.gz -C /data .
 
 # Restart NATS
@@ -608,6 +609,7 @@ docker compose -f docker-compose.pod.yml -p pod-dk start nats
 #### Adding New Pod (e.g., Finland)
 
 1. **Create pod environment file:**
+
    ```bash
    # pods/finland/.env
    POD_ID=fi
@@ -619,18 +621,21 @@ docker compose -f docker-compose.pod.yml -p pod-dk start nats
    ```
 
 2. **Update existing pods' routes:**
+
    ```bash
    # Add to DK, NO, SE .env files:
    NATS_ROUTES=...,nats://service-nats-fi:6225
    ```
 
 3. **Deploy new pod:**
+
    ```bash
    docker compose -f docker-compose.pod.yml -p pod-fi \
      --env-file pods/finland/.env up -d
    ```
 
 4. **Verify cluster:**
+
    ```bash
    curl http://192.168.60.133:8222/varz | jq '.cluster.urls'
    # Should now show 3 routes (NO, SE, FI)
@@ -639,11 +644,13 @@ docker compose -f docker-compose.pod.yml -p pod-dk start nats
 #### Remove Pod from Cluster
 
 1. **Stop pod:**
+
    ```bash
    docker compose -f docker-compose.pod.yml -p pod-se down
    ```
 
 2. **Update remaining pods' routes:**
+
    ```bash
    # Remove SE from DK and NO .env files
    NATS_ROUTES=nats://service-nats-no:6223  # DK
@@ -651,6 +658,7 @@ docker compose -f docker-compose.pod.yml -p pod-dk start nats
    ```
 
 3. **Restart remaining pods:**
+
    ```bash
    docker compose -f docker-compose.pod.yml -p pod-dk restart nats
    docker compose -f docker-compose.pod.yml -p pod-no restart nats
@@ -689,4 +697,4 @@ docker compose -f docker-compose.pod.yml -p pod-dk start nats
 
 **Document Version:** 1.0  
 **Last Updated:** November 5, 2025  
-**Maintainer:** UnityPlan Platform Team
+**Maintainer:** Unity Platform Team

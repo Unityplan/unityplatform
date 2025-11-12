@@ -7,7 +7,7 @@
 
 ## 🎯 Overview
 
-UnityPlan follows industry best practices for version management across a distributed microservices architecture. This document defines the versioning strategy for all components of the platform.
+Unity Platform follows industry best practices for version management across a distributed microservices architecture. This document defines the versioning strategy for all components of the platform.
 
 ---
 
@@ -48,7 +48,7 @@ For development and testing:
 
 **Release Stage Definitions:**
 
-- **Alpha** (`-alpha.N`): 
+- **Alpha** (`-alpha.N`):
   - Early development
   - Incomplete features
   - Internal testing only
@@ -78,6 +78,7 @@ For development and testing:
 **Current Platform Stage:** `0.1.0-alpha.1` (Infrastructure only, no services)
 
 **Progression Plan:**
+
 ```
 0.1.0-alpha.1  → Infrastructure + database (current)
 0.1.0-alpha.2  → Auth service working
@@ -100,6 +101,7 @@ The overall platform has a single version tracking major milestones:
 - **Scope:** Major feature releases, phase completions
 
 **Platform Version History:**
+
 ```
 0.1.0 - MVP Phase 1 (In Progress)
 1.0.0 - Production Ready (Planned)
@@ -118,6 +120,7 @@ version = "0.1.0"
 ```
 
 **Services are versioned independently** because:
+
 - Each service has its own release cycle
 - Bug fixes in one service don't affect others
 - Clear dependency tracking between services
@@ -134,6 +137,7 @@ version = "0.1.0"
 ```
 
 **Breaking changes in shared-lib** require:
+
 1. Bump major version of shared-lib
 2. Update all dependent services
 3. Document migration path
@@ -165,6 +169,7 @@ REST APIs are versioned in the URL path:
 ```
 
 **API Versioning Rules:**
+
 - v1, v2, v3... (no decimals)
 - Breaking changes require new version
 - Old versions supported for at least 6 months
@@ -250,6 +255,7 @@ Each service maintains its own `CHANGELOG.md`:
 ### Changelog Categories
 
 Use these standard categories:
+
 - **Added**: New features
 - **Changed**: Changes to existing functionality
 - **Deprecated**: Features to be removed
@@ -262,7 +268,7 @@ Use these standard categories:
 Platform-level changes tracked in root `CHANGELOG.md`:
 
 ```markdown
-# UnityPlan Platform CHANGELOG
+# Unity Platform CHANGELOG
 
 ## [0.1.0] - 2025-11-05
 ### Added
@@ -282,9 +288,9 @@ Platform-level changes tracked in root `CHANGELOG.md`:
 <registry>/<service>:<tag>
 
 Examples:
-unityplan/auth-service:0.1.0
-unityplan/auth-service:0.1.0-abc1234  # with git hash
-unityplan/auth-service:latest
+unityplatform/auth-service:0.1.0
+unityplatform/auth-service:0.1.0-abc1234  # with git hash
+unityplatform/auth-service:latest
 ```
 
 ### Image Tags
@@ -293,17 +299,17 @@ Each service image gets multiple tags:
 
 ```bash
 # Version tag
-docker tag auth-service unityplan/auth-service:0.1.0
+docker tag auth-service unityplatform/auth-service:0.1.0
 
 # Version + git hash tag
-docker tag auth-service unityplan/auth-service:0.1.0-abc1234
+docker tag auth-service unityplatform/auth-service:0.1.0-abc1234
 
 # Latest tag (production)
-docker tag auth-service unityplan/auth-service:latest
+docker tag auth-service unityplatform/auth-service:latest
 
 # Environment-specific tags
-docker tag auth-service unityplan/auth-service:dev
-docker tag auth-service unityplan/auth-service:staging
+docker tag auth-service unityplatform/auth-service:dev
+docker tag auth-service unityplatform/auth-service:staging
 ```
 
 ### Image Versioning Strategy
@@ -321,7 +327,7 @@ docker tag auth-service unityplan/auth-service:staging
 Central version registry at project root:
 
 ```markdown
-# UnityPlan Version Matrix
+# Unity Platform Version Matrix
 
 | Service | Version | Status |
 |---------|---------|--------|
@@ -346,7 +352,7 @@ platform_version: 0.1.0
 services:
   auth-service:
     version: 0.1.0
-    image: unityplan/auth-service:0.1.0
+    image: unityplatform/auth-service:0.1.0
     deployed: 2025-11-05T20:00:00Z
 ```
 
@@ -388,8 +394,8 @@ git tag user-service-v0.2.0 -m "Add user preferences feature"
 git push origin user-service-v0.2.0
 
 # Build and tag Docker image
-docker build -t unityplan/user-service:0.2.0 -f services/user-service/Dockerfile .
-docker push unityplan/user-service:0.2.0
+docker build -t unityplatform/user-service:0.2.0 -f services/user-service/Dockerfile .
+docker push unityplatform/user-service:0.2.0
 
 # Update VERSIONS.md
 # | user-service | 0.2.0 | Active |
@@ -400,7 +406,7 @@ docker push unityplan/user-service:0.2.0
 ```bash
 # Update pod deployment config
 # pods/denmark/docker-compose.yml
-# image: unityplan/user-service:0.2.0
+# image: unityplatform/user-service:0.2.0
 
 # Deploy
 ./scripts/deploy-pod.sh denmark
@@ -421,17 +427,20 @@ docker push unityplan/user-service:0.2.0
 Changes that require a MAJOR version bump:
 
 **API Changes:**
+
 - Removing endpoints
 - Changing request/response formats
 - Changing authentication requirements
 - Removing query parameters
 
 **Database Changes:**
+
 - Dropping tables or columns
 - Changing column types (incompatible)
 - Removing indexes that queries depend on
 
 **Service Changes:**
+
 - Changing environment variable names
 - Changing configuration format
 - Removing features
@@ -454,6 +463,7 @@ Changes that require a MAJOR version bump:
    - Update documentation
 
 4. **Version Bump**
+
    ```bash
    # From 0.9.5 to 1.0.0
    # Update Cargo.toml
@@ -552,5 +562,5 @@ tracing::info!(
 
 ---
 
-**Maintained by:** UnityPlan Development Team  
+**Maintained by:** Unity Platform Development Team  
 **Last Review:** November 5, 2025

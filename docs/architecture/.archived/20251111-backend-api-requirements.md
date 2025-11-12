@@ -40,10 +40,10 @@ interface User {
 
 - **Username:** Primary human-readable identifier (globally unique across all pods/territories)
 - **Never changes:** Username remains the same even when user migrates between territories
-- **Matrix ID:** Derived from username@territory (e.g., `@alice:unityplan.dk`)
+- **Matrix ID:** Derived from username@territory (e.g., `@alice:unityplatform.dk`)
 - **Territory Migration:** Matrix ID changes, but username stays constant
-  - Before: `@alice:unityplan.dk` (primary Matrix ID)
-  - After: `@alice:unityplan.no` (new primary), `@alice:unityplan.dk` (alias - still works)
+  - Before: `@alice:unityplatform.dk` (primary Matrix ID)
+  - After: `@alice:unityplatform.no` (new primary), `@alice:unityplatform.dk` (alias - still works)
 - **Email:** Optional field used only for external notifications, NOT for authentication
 - See [Identity System Architecture](identity-system.md) for complete details
 

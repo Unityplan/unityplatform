@@ -1,4 +1,4 @@
-# UnityPlan Scripts
+# Unity Platform Scripts
 
 ## 🚀 Quick Start Development Scripts (RECOMMENDED)
 

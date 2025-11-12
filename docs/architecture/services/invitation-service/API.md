@@ -140,7 +140,7 @@
     "created_by": "uuid",
     "max_uses": 1,
     "expires_at": "2025-11-19T10:00:00Z",
-    "invite_url": "https://unityplan.org/join?invite=A7K9-M2X4-P5W8-Q1Z3"
+    "invite_url": "https://unityplatform.org/join?invite=A7K9-M2X4-P5W8-Q1Z3"
   }
 }
 ```

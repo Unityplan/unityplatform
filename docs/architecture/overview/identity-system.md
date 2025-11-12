@@ -2,7 +2,7 @@
 
 ## Overview
 
-UnityPlan implements a **privacy-first, sovereignty-focused identity system** that supports:
+Unity Platform implements a **privacy-first, sovereignty-focused identity system** that supports:
 
 - Optional email (no forced external system identification)
 - Globally unique usernames across all pods/territories
@@ -29,7 +29,7 @@ UnityPlan implements a **privacy-first, sovereignty-focused identity system** th
 ### 3. Federation-Ready
 
 - Username@territory format compatible with federated systems
-- Matrix protocol integration: `@username:unityplan.{territory}`
+- Matrix protocol integration: `@username:unityplatform.{territory}`
 - Territory migration preserves identity with alias support
 
 ## Database Schema
@@ -187,7 +187,7 @@ pub fn generate_public_key_hash(agent_public_key: &[u8]) -> String {
    - Username: "alice" (globally reserved)
    - Territory user: dk-user-456
    - Federated ID: alice@denmark
-   - Matrix ID: @alice:unityplan.dk
+   - Matrix ID: @alice:unityplatform.dk
 ```
 
 ## Territory Migration
@@ -290,14 +290,14 @@ territory_no.users:
 ### Matrix ID Format
 
 ```
-Primary Matrix ID: @{username}:unityplan.{territory}
+Primary Matrix ID: @{username}:unityplatform.{territory}
 ```
 
 **Examples:**
 
-- User in Denmark: `@alice:unityplan.dk`
-- User in Norway: `@alice:unityplan.no`
-- User in Sweden: `@alice:unityplan.se`
+- User in Denmark: `@alice:unityplatform.dk`
+- User in Norway: `@alice:unityplatform.no`
+- User in Sweden: `@alice:unityplatform.se`
 
 ### Territory Migration with Matrix
 
@@ -305,14 +305,14 @@ Primary Matrix ID: @{username}:unityplan.{territory}
 
 ```
 1. User starts in Denmark:
-   Matrix ID: @alice:unityplan.dk
+   Matrix ID: @alice:unityplatform.dk
    
 2. User moves to Norway:
-   New primary ID: @alice:unityplan.no
-   Alias (old conversations): @alice:unityplan.dk
+   New primary ID: @alice:unityplatform.no
+   Alias (old conversations): @alice:unityplatform.dk
    
 3. Old contacts continue working:
-   - Messages to @alice:unityplan.dk route to @alice:unityplan.no
+   - Messages to @alice:unityplatform.dk route to @alice:unityplatform.no
    - User can respond from either ID
    - Gradual migration of contacts to new ID
 ```
@@ -324,17 +324,17 @@ Primary Matrix ID: @{username}:unityplan.{territory}
 fn generate_matrix_id(username: &str, territory_code: &str) -> String {
     // Map territory code to domain
     let domain = match territory_code {
-        "dk" => "unityplan.dk",
-        "no" => "unityplan.no",
-        "se" => "unityplan.se",
-        _ => "unityplan.org", // Fallback
+        "dk" => "unityplatform.dk",
+        "no" => "unityplatform.no",
+        "se" => "unityplatform.se",
+        _ => "unityplatform.org", // Fallback
     };
     
     format!("@{}:{}", username, domain)
 }
 
-// alice in Denmark → @alice:unityplan.dk
-// alice in Norway → @alice:unityplan.no
+// alice in Denmark → @alice:unityplatform.dk
+// alice in Norway → @alice:unityplatform.no
 ```
 
 **Alias Management:**
@@ -666,7 +666,7 @@ async fn migrate_territory(
 - ✅ Username@territory federation
 - ✅ Public key hash placeholder (SHA-256 of username::territory::uuid)
 - ✅ Territory migration support
-- ✅ Matrix protocol compatible (`@username:unityplan.{territory}`)
+- ✅ Matrix protocol compatible (`@username:unityplatform.{territory}`)
 - ✅ Invitation system with/without email
 
 **Future Holochain Migration:**

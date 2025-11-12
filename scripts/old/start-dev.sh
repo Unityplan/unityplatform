@@ -1,9 +1,9 @@
 #!/bin/bash
-# Start all development services
+# Start development services
 
 set -e
 
-echo "🚀 Starting UnityPlan Development Services"
+echo "🚀 Starting Unity Platform Development Services"
 echo "========================================"
 echo ""
 

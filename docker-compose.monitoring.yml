@@ -3,7 +3,7 @@
 # Deployment: Once per environment, scrapes all pods
 # Usage: docker compose -f docker-compose.monitoring.yml up -d
 
-name: unityplan-monitoring
+name: unityplatform-monitoring
 
 services:
   # Prometheus - Central metrics collection with federation
@@ -134,8 +134,8 @@ services:
 networks:
   global-net:
     driver: bridge
-    name: unityplan-global-net
+    name: unityplatform-global-net
   
   mesh-network:
     external: true
-    name: unityplan-mesh-network
+    name: unityplatform-mesh-network

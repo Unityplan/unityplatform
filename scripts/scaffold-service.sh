@@ -84,7 +84,7 @@ sed -i "s/SERVICE_CRATE_NAME/$CRATE_NAME/g" "$SERVICE_DIR/Cargo.toml"
 
 # Create .env
     cat > .env << 'ENV_EOF'
-DATABASE_URL=postgresql://unityplan:unityplan_dev_password_dk@localhost:5432/unityplan
+DATABASE_URL=postgresql://unityplatform:unityplatform_dev_password_dk@localhost:5432/unityplatform
 TERRITORY_CODE=dk
 SERVER_HOST=0.0.0.0
 SERVER_PORT=${PORT}

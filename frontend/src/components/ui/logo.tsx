@@ -8,7 +8,7 @@ export function Logo(props: React.ComponentProps<"svg">) {
             className="h-8 w-auto"
             {...props}
         >
-            {/* Placeholder logo - replace with actual UnityPlan logo */}
+            {/* Placeholder logo - replace with actual Unity Platform logo */}
             <text
                 x="100"
                 y="35"
@@ -17,7 +17,7 @@ export function Logo(props: React.ComponentProps<"svg">) {
                 fontFamily="system-ui, -apple-system, sans-serif"
                 textAnchor="middle"
             >
-                UnityPlan
+                Unity Platform
             </text>
         </svg>
     );

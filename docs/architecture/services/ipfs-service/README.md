@@ -86,7 +86,7 @@ community_id: "uuid" (optional)
     "id": "uuid",
     "cid": "QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco",
     "ipfs_url": "ipfs://QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco",
-    "gateway_url": "https://ipfs.unityplan.org/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco",
+    "gateway_url": "https://ipfs.unityplatform.org/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco",
     "filename": "avatar.jpg",
     "mime_type": "image/jpeg",
     "file_size": 245760,
@@ -110,7 +110,7 @@ GET /v1/ipfs/files/{cid}
   "success": true,
   "data": {
     "cid": "QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco",
-    "gateway_url": "https://ipfs.unityplan.org/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco",
+    "gateway_url": "https://ipfs.unityplatform.org/ipfs/QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco",
     "filename": "avatar.jpg",
     "mime_type": "image/jpeg",
     "file_size": 245760,
@@ -142,7 +142,7 @@ GET /v1/ipfs/files/me
         "mime_type": "image/jpeg",
         "file_size": 245760,
         "uploaded_at": "2025-11-12T10:00:00Z",
-        "gateway_url": "https://ipfs.unityplan.org/ipfs/QmXxx"
+        "gateway_url": "https://ipfs.unityplatform.org/ipfs/QmXxx"
       }
     ],
     "total_size": 1048576,  // Total bytes used
@@ -254,7 +254,7 @@ If we unpin, file stays if others pin it
 ### **IPFS Gateway**
 
 ```
-User requests file: https://ipfs.unityplan.org/ipfs/QmXxx
+User requests file: https://ipfs.unityplatform.org/ipfs/QmXxx
      ↓
 Gateway queries IPFS network
      ↓

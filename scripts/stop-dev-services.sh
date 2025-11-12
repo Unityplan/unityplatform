@@ -1,10 +1,13 @@
 #!/bin/bash
 
-# Stop all development services for UnityPlan Platform
+#!/bin/bash
+
+# Stop all development services for Unity Platform
+# Clean shutdown of all development services
 
 set -e
 
-echo "🛑 Stopping UnityPlan Development Environment"
+echo "🛑 Stopping Unity Platform Development Environment"
 echo "=============================================="
 echo ""
 

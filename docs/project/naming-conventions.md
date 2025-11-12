@@ -24,7 +24,7 @@
 - "The platform's multi-tenant architecture..."
 - "Install Unity Platform on your server"
 
-### unityplan.org (Example Deployment)
+### unityplatform.org (Example Deployment)
 
 **What it is:** A specific deployment/project using Unity Platform for testing and development purposes.
 
@@ -38,14 +38,14 @@
 **Examples (acceptable):**
 
 ```javascript
-// Example deployment (unityplan.org test project)
+// Example deployment (unityplatform.org test project)
 const API_URL = 'https://api.denmark.example.org';
 ```
 
 **Examples (avoid in docs):**
 
-- ❌ "UnityPlan is a platform for..." → ✅ "Unity Platform is a platform for..."
-- ❌ "Connect to unityplan.org" → ✅ "Connect to your-domain.org"
+- ❌ "Unity Platform is a platform for..." → ✅ "Unity Platform is a platform for..."
+- ❌ "Connect to unityplatform.org" → ✅ "Connect to your-domain.org"
 
 ---
 
@@ -64,9 +64,9 @@ Use neutral terminology that applies to any deployment:
 
 **Avoid:**
 
-- "UnityPlan provides..."
-- "Connect to unityplan.org"
-- "The unityplan.dk server"
+- "Unity Platform provides..."
+- "Connect to unityplatform.org"
+- "The unityplatform.dk server"
 
 ### Example Code and URLs
 
@@ -85,7 +85,7 @@ When providing examples, use generic example domains:
 
 **Avoid:**
 
-- `unityplan.org` (unless explicitly noting it's the test project)
+- `unityplatform.org` (unless explicitly noting it's the test project)
 - Real production URLs in documentation
 
 ---
@@ -108,8 +108,8 @@ VALUES (
 VALUES (
     'dk', 
     'Denmark',
-    'https://denmark.unityplan.org',
-    'https://api.denmark.unityplan.org'
+    'https://denmark.unityplatform.org',
+    'https://api.denmark.unityplatform.org'
 );
 ```
 
@@ -124,18 +124,18 @@ VALUES (
 
 // ❌ Avoid: Test project specific
 {
-  "api_url": "https://api.unityplan.org/v1",
-  "matrix_server": "https://matrix.dk.unityplan.org"
+  "api_url": "https://api.unityplatform.org/v1",
+  "matrix_server": "https://matrix.dk.unityplatform.org"
 }
 ```
 
 ---
 
-## When to Mention unityplan.org
+## When to Mention unityplatform.org
 
 **Acceptable contexts:**
 
-1. **README.md** - Can mention it as "Example Deployment: unityplan.org"
+1. **README.md** - Can mention it as "Example Deployment: unityplatform.org"
 2. **Development setup** - When referring to the actual test environment
 3. **Release notes** - Deployment-specific information
 4. **With clear labeling** - Always mark as "example" or "test deployment"
@@ -144,7 +144,7 @@ VALUES (
 
 ```markdown
 > **Note:** This guide uses example.org URLs. 
-> The test deployment uses unityplan.org.
+> The test deployment uses unityplatform.org.
 ```
 
 ---
@@ -162,7 +162,7 @@ VALUES (
 
 ```
 // Only in deployment-specific configs
-@alice:unityplan.dk
+@alice:unityplatform.dk
 ```
 
 ---
@@ -179,7 +179,7 @@ platform-config.yml
 territory-dk.env
 
 # ❌ Avoid project-specific names
-unityplan-config.yml
+unityplatform-config.yml
 ```
 
 **Variables:**
@@ -190,7 +190,7 @@ let territory_url = config.get_territory_url("dk");
 let platform_name = "Unity Platform";
 
 // ❌ Avoid hardcoding project name
-let unityplan_url = "https://unityplan.org";
+let unityplatform_url = "https://unityplatform.org";
 ```
 
 ---
@@ -199,10 +199,10 @@ let unityplan_url = "https://unityplan.org";
 
 Before committing documentation:
 
-- [ ] Platform name is "Unity Platform" (not "UnityPlan Platform")
-- [ ] Example URLs use `example.org` (not `unityplan.org`)
+- [ ] Platform name is "Unity Platform" (not "Unity Platform")
+- [ ] Example URLs use `example.org` (not `unityplatform.org`)
 - [ ] Code examples are generic and reusable
-- [ ] Any `unityplan.org` references are clearly labeled as test deployment
+- [ ] Any `unityplatform.org` references are clearly labeled as test deployment
 - [ ] Variable names use generic terminology
 - [ ] Database seed data uses example domains
 

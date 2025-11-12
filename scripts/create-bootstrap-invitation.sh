@@ -22,14 +22,14 @@ DAYS="${3:-365}"
 if [ -z "$EMAIL" ]; then
     echo -e "${RED}Error: Email is required${NC}"
     echo "Usage: $0 <territory_code> <email> [days]"
-    echo "Example: $0 dk admin@unityplan.dk 365"
+    echo "Example: $0 dk admin@unityplatform.dk 365"
     exit 1
 fi
 
 # Database connection details
 DB_CONTAINER="service-postgres-${TERRITORY_CODE}"
-DB_NAME="unityplan_${TERRITORY_CODE}"
-DB_USER="unityplan"
+DB_NAME="unityplatform"
+DB_USER="unityplatform"
 # For single-territory pods, use generic "territory" schema
 # For multi-territory pods, use "territory_XX" schema
 SCHEMA_NAME="territory"

@@ -1,6 +1,6 @@
 # Frontend Development Guide
 
-Complete guide for building the UnityPlan React frontend application.
+Complete guide for building the Unity Platform React frontend application.
 
 **Tech Stack:** React 18, Vite, TanStack Router/Query, Zustand, shadcn/ui  
 **Status:** Stage 5 in progress  
@@ -469,8 +469,8 @@ VITE_API_TIMEOUT=30000
 **.env.production:**
 
 ```bash
-VITE_AUTH_SERVICE_URL=https://auth.unityplan.com
-VITE_USER_SERVICE_URL=https://api.unityplan.com
+VITE_AUTH_SERVICE_URL=https://auth.unityplatform.com
+VITE_USER_SERVICE_URL=https://api.unityplatform.com
 VITE_API_TIMEOUT=30000
 ```
 

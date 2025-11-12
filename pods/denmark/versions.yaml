@@ -40,9 +40,9 @@
 POD_ID=dk
 TERRITORY_CODE=DK
 TERRITORY_NAME=Denmark
-POSTGRES_DB=unityplan_dk
-POSTGRES_USER=unityplan
-NATS_CLUSTER_NAME=unityplan-dk
+POSTGRES_DB=unityplatform_dk
+POSTGRES_USER=unityplatform
+NATS_CLUSTER_NAME=unityplatform-dk
 ```
 
 ---
@@ -65,8 +65,8 @@ NATS_CLUSTER_NAME=unityplan-dk
 
 ## 🌐 Networks
 
-- unityplan-pod-dk-net (pod internal)
-- unityplan-mesh-network (cross-pod communication)
+- unityplatform-pod-dk-net (pod internal)
+- unityplatform-mesh-network (cross-pod communication)
 
 ---
 
@@ -93,5 +93,5 @@ NATS_CLUSTER_NAME=unityplan-dk
 
 ---
 
-**Maintained by:** UnityPlan Operations Team  
+**Maintained by:** unityplatform Operations Team  
 **Next Update:** When backend services are deployed

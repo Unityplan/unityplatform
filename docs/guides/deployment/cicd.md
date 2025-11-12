@@ -69,6 +69,7 @@ Each pod contains **infrastructure services** + **application services**:
 ### Why Per-Pod Application Deployment?
 
 **Benefits:**
+
 - ✅ **Complete isolation**: Territory data never leaves its pod
 - ✅ **Independent scaling**: Scale Denmark's backend without affecting Norway
 - ✅ **Fault tolerance**: Pod failure doesn't cascade
@@ -76,6 +77,7 @@ Each pod contains **infrastructure services** + **application services**:
 - ✅ **Territory sovereignty**: Each territory controls its application layer
 
 **Alternative (Centralized) - Not Used:**
+
 - ❌ One set of backend services routes to multiple databases (complex, single point of failure)
 - ❌ Shared frontend serves all territories (violates data locality)
 
@@ -90,16 +92,16 @@ Each pod contains **infrastructure services** + **application services**:
 ```
 ┌─────────────────────────────────────────────────────┐
 │  User Browser                                       │
-│  https://dk.unityplan.org                          │
+│  https://dk.unityplatform.org                          │
 └────────────┬────────────────────────────────────────┘
              │
              ▼
 ┌─────────────────────────────────────────────────────┐
 │  Traefik Reverse Proxy (Global)                    │
 │  Routes by subdomain:                              │
-│  - dk.unityplan.org  → frontend-dk:80              │
-│  - no.unityplan.org  → frontend-no:80              │
-│  - de.europe.unityplan.org → frontend-eu:80        │
+│  - dk.unityplatform.org  → frontend-dk:80              │
+│  - no.unityplatform.org  → frontend-no:80              │
+│  - de.europe.unityplatform.org → frontend-eu:80        │
 └────────────┬────────────────────────────────────────┘
              │
              ▼
@@ -128,7 +130,7 @@ Each pod contains **infrastructure services** + **application services**:
 # docker-compose.pod.yml (excerpt)
 services:
   frontend:
-    image: ${DOCKER_REGISTRY}/unityplan/frontend:${VERSION:-latest}
+    image: ${DOCKER_REGISTRY}/unityplatform/frontend:${VERSION:-latest}
     container_name: app-frontend-${POD_ID}
     ports:
       - "${FRONTEND_PORT:-3000}:80"
@@ -145,7 +147,7 @@ services:
       - mesh-network  # For Traefik routing
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend-${POD_ID}.rule=Host(`${TERRITORY_ID}.unityplan.org`)"
+      - "traefik.http.routers.frontend-${POD_ID}.rule=Host(`${TERRITORY_ID}.unityplatform.org`)"
       - "traefik.http.routers.frontend-${POD_ID}.entrypoints=web,websecure"
       - "traefik.http.services.frontend-${POD_ID}.loadbalancer.server.port=80"
     restart: unless-stopped
@@ -214,7 +216,7 @@ nginx -g "daemon off;"
 ```
 ┌───────────────────────────────────────────────────────────────┐
 │  External Request                                             │
-│  https://dk.unityplan.org/api/communities                    │
+│  https://dk.unityplatform.org/api/communities                    │
 └────────────┬──────────────────────────────────────────────────┘
              │
              ▼
@@ -272,13 +274,13 @@ services:
   
   # API Gateway - HTTP Entry Point
   api-gateway:
-    image: ${DOCKER_REGISTRY}/unityplan/api-gateway:${VERSION:-latest}
+    image: ${DOCKER_REGISTRY}/unityplatform/api-gateway:${VERSION:-latest}
     container_name: service-api-gateway-${POD_ID}
     ports:
       - "${API_PORT:-8080}:8080"
     environment:
       - RUST_LOG=info,actix_web=debug
-      - DATABASE_URL=postgres://unityplan:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgres://unityplatform:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/${POSTGRES_DB}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@service-redis-${POD_ID}:6379
       - NATS_URL=nats://service-nats-${POD_ID}:4222
       - TERRITORY_ID=${TERRITORY_ID}
@@ -301,11 +303,11 @@ services:
 
   # Auth Service - Authentication & Authorization
   auth:
-    image: ${DOCKER_REGISTRY}/unityplan/auth-service:${VERSION:-latest}
+    image: ${DOCKER_REGISTRY}/unityplatform/auth-service:${VERSION:-latest}
     container_name: service-auth-${POD_ID}
     environment:
       - RUST_LOG=info
-      - DATABASE_URL=postgres://unityplan:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgres://unityplatform:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/${POSTGRES_DB}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@service-redis-${POD_ID}:6379
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRY=3600
@@ -321,11 +323,11 @@ services:
 
   # Community Service - Posts, Discussions, Forums
   community:
-    image: ${DOCKER_REGISTRY}/unityplan/community-service:${VERSION:-latest}
+    image: ${DOCKER_REGISTRY}/unityplatform/community-service:${VERSION:-latest}
     container_name: service-community-${POD_ID}
     environment:
       - RUST_LOG=info
-      - DATABASE_URL=postgres://unityplan:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgres://unityplatform:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/${POSTGRES_DB}
       - NATS_URL=nats://service-nats-${POD_ID}:4222
       - REDIS_URL=redis://:${REDIS_PASSWORD}@service-redis-${POD_ID}:6379
       - TERRITORY_ID=${TERRITORY_ID}
@@ -339,11 +341,11 @@ services:
 
   # User Service - Profiles, Preferences
   user:
-    image: ${DOCKER_REGISTRY}/unityplan/user-service:${VERSION:-latest}
+    image: ${DOCKER_REGISTRY}/unityplatform/user-service:${VERSION:-latest}
     container_name: service-user-${POD_ID}
     environment:
       - RUST_LOG=info
-      - DATABASE_URL=postgres://unityplan:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgres://unityplatform:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/${POSTGRES_DB}
       - IPFS_URL=http://service-ipfs-${POD_ID}:5001
       - NATS_URL=nats://service-nats-${POD_ID}:4222
       - TERRITORY_ID=${TERRITORY_ID}
@@ -357,11 +359,11 @@ services:
 
   # Event Service - Event Sourcing, Audit Trail
   event:
-    image: ${DOCKER_REGISTRY}/unityplan/event-service:${VERSION:-latest}
+    image: ${DOCKER_REGISTRY}/unityplatform/event-service:${VERSION:-latest}
     container_name: service-event-${POD_ID}
     environment:
       - RUST_LOG=info
-      - DATABASE_URL=postgres://unityplan:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgres://unityplatform:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/${POSTGRES_DB}
       - NATS_URL=nats://service-nats-${POD_ID}:4222
       - TERRITORY_ID=${TERRITORY_ID}
     depends_on:
@@ -373,7 +375,7 @@ services:
 
   # WebSocket Gateway - Real-time Updates
   websocket:
-    image: ${DOCKER_REGISTRY}/unityplan/websocket-gateway:${VERSION:-latest}
+    image: ${DOCKER_REGISTRY}/unityplatform/websocket-gateway:${VERSION:-latest}
     container_name: service-websocket-${POD_ID}
     ports:
       - "${WEBSOCKET_PORT:-9000}:9000"
@@ -392,7 +394,7 @@ services:
 
   # Frontend - Static React App
   frontend:
-    image: ${DOCKER_REGISTRY}/unityplan/frontend:${VERSION:-latest}
+    image: ${DOCKER_REGISTRY}/unityplatform/frontend:${VERSION:-latest}
     container_name: app-frontend-${POD_ID}
     ports:
       - "${FRONTEND_PORT:-3000}:80"
@@ -408,7 +410,7 @@ services:
       - mesh-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend-${POD_ID}.rule=Host(`${TERRITORY_ID}.unityplan.org`)"
+      - "traefik.http.routers.frontend-${POD_ID}.rule=Host(`${TERRITORY_ID}.unityplatform.org`)"
     restart: unless-stopped
 ```
 
@@ -432,15 +434,15 @@ impl TerritoryRouter {
         // For multi-territory pods (e.g., Europe)
         if pod_id == "eu" {
             pools.insert("DE".to_string(), 
-                PgPool::connect("postgres://...@postgres-eu:5432/unityplan_de").await?);
+                PgPool::connect("postgres://...@postgres-eu:5432/unityplatform_de").await?);
             pools.insert("FR".to_string(), 
-                PgPool::connect("postgres://...@postgres-eu:5432/unityplan_fr").await?);
+                PgPool::connect("postgres://...@postgres-eu:5432/unityplatform_fr").await?);
             pools.insert("ES".to_string(), 
-                PgPool::connect("postgres://...@postgres-eu:5432/unityplan_es").await?);
+                PgPool::connect("postgres://...@postgres-eu:5432/unityplatform_es").await?);
         } else {
             // Single-territory pod
             pools.insert(pod_id.to_uppercase(), 
-                PgPool::connect(&format!("postgres://...@postgres-{}:5432/unityplan_{}", 
+                PgPool::connect(&format!("postgres://...@postgres-{}:5432/unityplatform_{}", 
                     pod_id, pod_id)).await?);
         }
         
@@ -455,7 +457,7 @@ impl TerritoryRouter {
 
 // Detect territory from subdomain or JWT token
 pub fn extract_territory_id(req: &HttpRequest) -> Result<String> {
-    // Option 1: From subdomain (de.europe.unityplan.org)
+    // Option 1: From subdomain (de.europe.unityplatform.org)
     if let Some(host) = req.headers().get("host") {
         if let Ok(host_str) = host.to_str() {
             if let Some(subdomain) = host_str.split('.').next() {
@@ -508,8 +510,9 @@ async fn get_communities(
 ### Overview
 
 **Staging mirrors production** but with:
+
 - Smaller resource allocation (50% of production)
-- Separate domains: `staging.unityplan.org`
+- Separate domains: `staging.unityplatform.org`
 - Same code, different data
 - Auto-deployed from `develop` branch
 
@@ -558,7 +561,7 @@ LOG_LEVEL=debug
 ENABLE_PROFILING=true
 
 # Same structure as production
-POSTGRES_DB=unityplan_dk
+POSTGRES_DB=unityplatform_dk
 REDIS_PASSWORD=${REDIS_PASSWORD_STAGING}
 JWT_SECRET=${JWT_SECRET_STAGING}
 ```
@@ -579,7 +582,7 @@ set -e
 echo "🚀 Deploying Staging Environment"
 
 # Create staging network
-docker network create unityplan-staging-mesh || true
+docker network create unityplatform-staging-mesh || true
 
 # Deploy staging pods
 for POD in denmark norway sweden europe; do
@@ -594,7 +597,7 @@ for POD in denmark norway sweden europe; do
     echo "✅ staging-pod-${POD} deployed"
 done
 
-echo "🎉 Staging environment ready at https://staging.unityplan.org"
+echo "🎉 Staging environment ready at https://staging.unityplatform.org"
 ```
 
 ### Staging Compose File
@@ -615,7 +618,7 @@ services:
     image: postgres:${POSTGRES_VERSION:-16-alpine}
     container_name: staging-postgres-${POD_ID}
     environment:
-      - POSTGRES_USER=unityplan
+      - POSTGRES_USER=unityplatform
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
       # Reduced limits
@@ -682,10 +685,10 @@ networks:
 ┌─────────────────────────────────────────────────────────┐
 │  Docker Registry                                        │
 │  global-registry:5000                                   │
-│  - unityplan/frontend:v1.2.3                            │
-│  - unityplan/api-gateway:v1.2.3                         │
-│  - unityplan/auth-service:v1.2.3                        │
-│  - unityplan/community-service:v1.2.3                   │
+│  - unityplatform/frontend:v1.2.3                            │
+│  - unityplatform/api-gateway:v1.2.3                         │
+│  - unityplatform/auth-service:v1.2.3                        │
+│  - unityplatform/community-service:v1.2.3                   │
 └──────┬──────────────────────────────────────────────────┘
        │
        ├──────────────────┬──────────────────┐
@@ -719,7 +722,7 @@ services:
       - DRONE_GITEA_SERVER=${GITEA_SERVER:-http://gitea:3000}
       - DRONE_GITEA_CLIENT_ID=${GITEA_CLIENT_ID}
       - DRONE_GITEA_CLIENT_SECRET=${GITEA_CLIENT_SECRET}
-      - DRONE_SERVER_HOST=drone.unityplan.local
+      - DRONE_SERVER_HOST=drone.unityplatform.local
       - DRONE_SERVER_PROTO=http
       - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
       - DRONE_USER_CREATE=username:admin,admin:true
@@ -775,7 +778,7 @@ services:
       - GITEA__database__DB_TYPE=postgres
       - GITEA__database__HOST=service-postgres-dk:5432
       - GITEA__database__NAME=gitea
-      - GITEA__database__USER=unityplan
+      - GITEA__database__USER=unityplatform
       - GITEA__database__PASSWD=${POSTGRES_PASSWORD}
     volumes:
       - gitea-data:/data
@@ -818,7 +821,7 @@ steps:
     image: plugins/docker
     settings:
       registry: registry:5000
-      repo: registry:5000/unityplan/api-gateway
+      repo: registry:5000/unityplatform/api-gateway
       tags:
         - latest
         - ${DRONE_COMMIT_SHA:0:8}
@@ -834,7 +837,7 @@ steps:
     image: plugins/docker
     settings:
       registry: registry:5000
-      repo: registry:5000/unityplan/auth-service
+      repo: registry:5000/unityplatform/auth-service
       tags: [latest, ${DRONE_COMMIT_SHA:0:8}]
       dockerfile: services/auth-service/Dockerfile
       context: services/auth-service
@@ -843,7 +846,7 @@ steps:
     image: plugins/docker
     settings:
       registry: registry:5000
-      repo: registry:5000/unityplan/community-service
+      repo: registry:5000/unityplatform/community-service
       tags: [latest, ${DRONE_COMMIT_SHA:0:8}]
       dockerfile: services/community-service/Dockerfile
       context: services/community-service
@@ -914,7 +917,7 @@ steps:
     image: plugins/docker
     settings:
       registry: registry:5000
-      repo: registry:5000/unityplan/frontend
+      repo: registry:5000/unityplatform/frontend
       tags:
         - latest
         - ${DRONE_COMMIT_SHA:0:8}
@@ -985,7 +988,7 @@ steps:
        │
        ▼
 ┌─────────────────────────────────────────────────────────┐
-│ 5. QA testing on staging.unityplan.org                  │
+│ 5. QA testing on staging.unityplatform.org                  │
 │    - Manual testing                                     │
 │    - Automated E2E tests                                │
 └──────┬──────────────────────────────────────────────────┘
@@ -1053,7 +1056,7 @@ steps:
        ▼
 ┌─────────────────────────────────────────────────────────┐
 │ 5. Immediate promote to production                      │
-│    - drone build promote unityplan/platform 123 prod    │
+│    - drone build promote unityplatform/platform 123 prod    │
 └──────┬──────────────────────────────────────────────────┘
        │
        ▼
@@ -1086,7 +1089,7 @@ if [ -z "$PREVIOUS_VERSION" ]; then
 fi
 
 # Pull previous version
-docker pull registry:5000/unityplan/$SERVICE:$PREVIOUS_VERSION
+docker pull registry:5000/unityplatform/$SERVICE:$PREVIOUS_VERSION
 
 # Update pod to use previous version
 docker compose -f docker-compose.pod.yml -p pod-$POD_ID \
@@ -1181,6 +1184,7 @@ echo "✅ Pod rollback complete"
 ---
 
 **Next Steps:**
+
 1. Implement Rust backend services (Phase 1.3)
 2. Build frontend React app with TanStack Router
 3. Deploy Drone CI/CD server
@@ -1188,6 +1192,7 @@ echo "✅ Pod rollback complete"
 5. Test deployment workflows
 
 **Related Documentation:**
+
 - [Multi-Pod Architecture](./5-multi-pod-architecture.md)
 - [Multi-Pod Deployment Guide](./6-multi-pod-deployment-guide.md)
 - [Territory Management Standard](./9-territory-management-standard.md)

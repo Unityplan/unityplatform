@@ -65,7 +65,7 @@
 ```
 ### Database Naming Strategy
 
-**Database Name:** `unityplan` (single database with schema-based multi-tenancy)
+**Database Name:** `unityplatform` (single database with schema-based multi-tenancy)
 
 **Schema Structure:**
 - `global` - Cross-territory shared data (territories, global username/email registry)

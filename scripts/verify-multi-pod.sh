@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# UnityPlan Multi-Pod Verification Script
+# Unity Platform Multi-Pod Verification Script
 # Purpose: Quick health check for multi-pod deployment
 # Usage: ./scripts/verify-multi-pod.sh
 
@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 
 # Show help
 show_help() {
-    echo "✅ UnityPlan Multi-Pod Verification"
+    echo "✅ Unity Platform Multi-Pod Verification"
     echo "==================================="
     echo ""
     echo "Usage: ./scripts/verify-multi-pod.sh [OPTIONS]"
@@ -46,7 +46,7 @@ fi
 HOST_IP="192.168.60.133"
 
 echo -e "${BLUE}==================================="
-echo "UnityPlan Multi-Pod Verification"
+echo "Unity Platform Multi-Pod Verification"
 echo -e "===================================${NC}\n"
 
 # ====================================================================
@@ -124,9 +124,9 @@ echo "-----------------------------------"
 
 db_status=0
 for pod in dk no se; do
-  if docker exec service-postgres-${pod} pg_isready -U unityplan > /dev/null 2>&1; then
+  if docker exec service-postgres-${pod} pg_isready -U unityplatform > /dev/null 2>&1; then
     # Get database size
-    db_size=$(docker exec service-postgres-${pod} psql -U unityplan -d unityplan_${pod} -tAc "SELECT pg_size_pretty(pg_database_size('unityplan_${pod}'));" 2>/dev/null || echo "N/A")
+    db_size=$(docker exec service-postgres-${pod} psql -U unityplatform -d unityplatform_${pod} -tAc "SELECT pg_size_pretty(pg_database_size('unityplatform_${pod}'));" 2>/dev/null || echo "N/A")
     echo -e "${GREEN}✓${NC} pod-${pod}: ready (size: ${db_size})"
     db_status=$((db_status + 1))
   else
@@ -199,18 +199,18 @@ done
 echo -e "\n${BLUE}🔌 Docker Networks${NC}"
 echo "-----------------------------------"
 
-if docker network inspect unityplan-mesh-network > /dev/null 2>&1; then
-  mesh_containers=$(docker network inspect unityplan-mesh-network | jq '.[] .Containers | length')
-  echo -e "${GREEN}✓${NC} unityplan-mesh-network: ${mesh_containers} containers connected"
+if docker network inspect unityplatform-mesh-network > /dev/null 2>&1; then
+  mesh_containers=$(docker network inspect unityplatform-mesh-network | jq '.[] .Containers | length')
+  echo -e "${GREEN}✓${NC} unityplatform-mesh-network: ${mesh_containers} containers connected"
 else
-  echo -e "${RED}✗${NC} unityplan-mesh-network: Not found"
+  echo -e "${RED}✗${NC} unityplatform-mesh-network: Not found"
 fi
 
-if docker network inspect unityplan-global-net > /dev/null 2>&1; then
-  global_containers=$(docker network inspect unityplan-global-net | jq '.[] .Containers | length')
-  echo -e "${GREEN}✓${NC} unityplan-global-net: ${global_containers} containers connected"
+if docker network inspect unityplatform-global-net > /dev/null 2>&1; then
+  global_containers=$(docker network inspect unityplatform-global-net | jq '.[] .Containers | length')
+  echo -e "${GREEN}✓${NC} unityplatform-global-net: ${global_containers} containers connected"
 else
-  echo -e "${YELLOW}⚠${NC} unityplan-global-net: Not found (may be auto-created)"
+  echo -e "${YELLOW}⚠${NC} unityplatform-global-net: Not found (may be auto-created)"
 fi
 
 # ====================================================================
@@ -227,7 +227,7 @@ passed_checks=0
 [ "$healthy" -eq "$total" ] 2>/dev/null && passed_checks=$((passed_checks + 1))
 [ $db_status -eq 3 ] && passed_checks=$((passed_checks + 1))
 [ $redis_status -eq 3 ] && passed_checks=$((redis_status + 1))
-docker network inspect unityplan-mesh-network > /dev/null 2>&1 && passed_checks=$((passed_checks + 1))
+docker network inspect unityplatform-mesh-network > /dev/null 2>&1 && passed_checks=$((passed_checks + 1))
 
 if [ $passed_checks -eq $total_checks ]; then
   echo -e "${GREEN}✅ All systems operational ($passed_checks/$total_checks checks passed)${NC}"

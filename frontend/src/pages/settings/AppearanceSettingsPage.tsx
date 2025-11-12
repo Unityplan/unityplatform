@@ -119,7 +119,7 @@ export function AppearanceSettingsPage() {
                     <div className="space-y-2">
                         <h1 className="text-3xl font-bold tracking-tight">Appearance</h1>
                         <p className="text-muted-foreground">
-                            Customize how UnityPlan looks and feels
+                            Customize how Unity Platform looks and feels
                         </p>
                     </div>
                     <Button

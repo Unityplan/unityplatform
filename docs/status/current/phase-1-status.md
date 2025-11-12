@@ -1,24 +1,24 @@
 # Phase 1 MVP - Implementation Status
 
-**Last Updated:** November 9, 2025  
+**Last Updated:** November 12, 2025  
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
-**Progress:** 50% (Stages 1-4: 100%, Stage 5: 97%, Stages 6-13: 0%)  
+**Progress:** 15% (Stage 1: 67%, Stage 2: 100%, Stages 3-13: 0%)  
 **Release Stage:** Alpha (0.1.0-alpha.1)  
-**Recent Update:** Authentication system fully functional with API versioning and optimized startup performance
+**Recent Update:** Backend services restart - implementing comprehensive middleware patterns for all microservices
 
 ---
 
 ## 📊 Overall Progress
 
 ```
-[█████████░░░░░░░░░░░] 50% Complete (Stages 1-4: 100%, Stage 5: 97%, Stages 6-13: 0%)
+[███░░░░░░░░░░░░░░░░░] 15% Complete (Stage 1: 67%, Stage 2: 100%, Stages 3-13: 0%)
 
-Stage 1:  Foundation & Infrastructure        [██████████] 100%
+Stage 1:  Foundation & Infrastructure        [██████░░░░] 67%
 Stage 2:  Database Schema & Migrations       [██████████] 100%
-Stage 3:  Authentication Service             [██████████] 100%
-Stage 4:  User Service                       [██████████] 100%
-Stage 5:  Frontend Auth & Profile            [█████████░] 97%
+Stage 3:  Authentication Service             [░░░░░░░░░░] 0%
+Stage 4:  User Service                       [░░░░░░░░░░] 0%
+Stage 5:  Frontend Auth & Profile            [░░░░░░░░░░] 0%
 Stage 6:  Territory & Badge Services         [░░░░░░░░░░] 0%
 Stage 7:  Course Service (LMS)               [░░░░░░░░░░] 0%
 Stage 8:  Matrix Protocol Integration        [░░░░░░░░░░] 0%
@@ -33,50 +33,45 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 ## 🎯 Current Sprint
 
-**Sprint:** Sprint 5 - Frontend Authentication UI  
-**Sprint Goal:** Build authentication and profile management frontend  
-**Sprint Dates:** November 9, 2025  
+**Sprint:** Sprint 3 - Backend Service Architecture  
+**Sprint Goal:** Implement shared middleware patterns and rebuild backend services with proper architecture  
+**Sprint Dates:** November 12, 2025  
 **Team Members:** Henrik  
-**Status:** 🚧 In Progress (97% complete)
+**Status:** 🚧 In Progress (0% complete)
 
 ### Active Tasks
 
-- 🚧 Step 5.7: UI Components (Avatar, UserCard, ProfileHeader, PrivacySettingsForm)
+- 🚧 **Middleware Implementation**: Create comprehensive middleware patterns in shared-lib
+  - Request ID tracking
+  - Structured logging
+  - Error handling
+  - Security headers
+  - CORS configuration
+  - Rate limiting
+  - Input validation
+  - Health checks
+  - Graceful shutdown
+  - Circuit breakers
+  - Event schemas
+- 🚧 **Service Communication**: Implement inter-service communication patterns
+- 🚧 **Caching Strategy**: Implement multi-layer caching (moka, Redis)
+- 🚧 **Error Standards**: Standardize error handling across all services
 
 ### Completed This Sprint
 
-- ✅ **Full authentication system working end-to-end**
-- ✅ **API versioning (/api/v1) implemented across all services**
-- ✅ **Port standardization (auth:8001, user:8002)**
-- ✅ **Configurable CORS for multi-pod deployment**
-- ✅ **Startup performance optimized (6x faster: 50s → 8s)**
-- ✅ **Bootstrap invitation system fixed and validated**
-- ✅ **Development workflow automation scripts**
-- ✅ Login form field name corrected (email → username)
-- ✅ User registered via proper invitation flow
-- ✅ Password hashing and verification working (Argon2id)
-- ✅ shadcn/ui components installed (button, input, card, form, label, checkbox, select)
-- ✅ TailwindCSS v4 and shadcn/ui configuration verified against official docs
-- ✅ Path aliases configured in both tsconfig.json and tsconfig.app.json
-- ✅ TypeScript compilation successful (0 errors)
-- ✅ Auth store created with Zustand + persist middleware
-- ✅ UI store created with theme management
-- ✅ API client with token refresh interceptor
-- ✅ Auth API functions (register, login, logout, refresh, getCurrentUser, validateInvitation)
-- ✅ User API functions (profile, avatar, privacy, connections, blocks)
-- ✅ LoginPage component created with react-hook-form + zod validation
-- ✅ RegisterPage component created with two-step invitation + registration flow
-- ✅ PasswordResetPage component created with two-step request + reset flow
-- ✅ ProfileViewPage component created with user info display
-- ✅ ProfileEditPage component created with profile + avatar + privacy settings editing
-- ✅ TanStack Router setup with file-based routing
-- ✅ AuthGuard component for protecting routes
-- ✅ Dashboard route created (protected)
-- ✅ All routes configured with automatic generation
-- ✅ Router devtools installed for development
-- ✅ 460 packages installed, 0 vulnerabilities
+- None yet - just starting backend service architecture
 
-### Completed Previously (Sprints 1-4)
+### Documentation Completed
+
+- ✅ **Comprehensive middleware documentation created**
+  - `docs/architecture/services/shared-lib/MIDDLEWARE.md` (12 middleware patterns)
+  - `docs/architecture/services/INTER-SERVICE-COMMUNICATION.md` (service communication patterns)
+  - `docs/architecture/services/CACHING-STRATEGY.md` (multi-layer caching strategy)
+  - `docs/architecture/services/ERROR-HANDLING.md` (standardized error handling)
+- ✅ **All documentation includes Phase 1 vs Phase 2 comparison tables**
+- ✅ **Complete Rust code examples for all patterns**
+
+### Previously Completed (Infrastructure & Database)
 
 - ✅ Full development environment deployed
 - ✅ Monitoring stack configured (Prometheus, Grafana, Jaeger)
@@ -84,49 +79,19 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ✅ Grafana dashboards created and working
 - ✅ Forgejo MCP integration configured
 - ✅ Documentation reorganized into consolidated docs/ structure
+  - ✅ `docs/architecture/` - System design and technical architecture
+  - ✅ `docs/architecture/services/` - Service-level architecture documentation
+  - ✅ `docs/architecture/services/shared-lib/MIDDLEWARE.md` - 12 comprehensive middleware patterns
+  - ✅ `docs/architecture/services/INTER-SERVICE-COMMUNICATION.md` - Service communication patterns
+  - ✅ `docs/architecture/services/CACHING-STRATEGY.md` - Multi-layer caching strategy
+  - ✅ `docs/architecture/services/ERROR-HANDLING.md` - Standardized error handling
+  - ✅ All documentation includes Phase 1 vs Phase 2 comparison tables
 - ✅ Rust workspace created (services/Cargo.toml)
-- ✅ shared-lib crate implemented with config, database, error, nats modules
 - ✅ Database schema designed with global and territory_dk schemas
 - ✅ SQLx migrations created and applied
 - ✅ Multi-territory architecture implemented (schema-based isolation)
 - ✅ Territory management standard followed (ISO 3166-1 Alpha-2 codes)
 - ✅ SQLTools configured for database management
-- ✅ Auth-service crate created and running
-- ✅ User registration endpoint (POST /api/auth/register)
-- ✅ User login endpoint (POST /api/auth/login)
-- ✅ JWT token generation and validation
-- ✅ Password hashing with Argon2
-- ✅ Dynamic schema routing (multi-territory support)
-- ✅ Invitation system database schema (migration 20251106000003)
-- ✅ Invitation models and validation service
-- ✅ Registration requires invitation token (breaking change)
-- ✅ Bootstrap invitation script for territory admins
-- ✅ Invitation CRUD API endpoints (create, list, revoke, validate, get usage)
-- ✅ JWT middleware for protected routes
-- ✅ Audit trail for invitation usage
-- ✅ **Database schema separation into global and territory schemas**
-- ✅ **Generic territory schema template (reusable across all pods)**
-- ✅ **Test infrastructure refactored with TestContext pattern (100% parallel test success)**
-- ✅ **Comprehensive test cleanup (19/19 tests passing, 0 warnings)**
-- ✅ **Token refresh and logout endpoints implemented**
-- ✅ **GET /auth/me endpoint for current user info**
-- ✅ **JWT middleware protecting all endpoints**
-- ✅ **Sprint 4: User-service crate created and configured**
-- ✅ **Sprint 4: Database migration for user profiles (20251108000004)**
-- ✅ **Sprint 4: All models implemented (UserProfile, PrivacySettings, UserConnection, UserBlock)**
-- ✅ **Sprint 4: All handlers implemented (profile, avatar, connections)**
-- ✅ **Sprint 4: Storage service with image processing (4 avatar sizes)**
-- ✅ **Sprint 4: All database queries converted to runtime verification**
-- ✅ **Sprint 4: Database query patterns documentation created**
-- ✅ **Sprint 4: Service compiles successfully (0 errors)**
-- ✅ **Sprint 4: Multi-pod architecture compliance verified**
-- ✅ **Sprint 4: Comprehensive test suite (22 passing tests)**
-- ✅ **Sprint 4: TestContext pattern implemented (parallel-safe tests)**
-- ✅ **Sprint 4: Bug fixes during testing** (block prevention, duplicate follow handling)
-- ✅ **Sprint 4: Library interface created** (src/lib.rs for test imports)
-- ✅ **Sprint 4: Test execution: 22/22 passing in 1.4s**
-- ✅ **Platform security model confirmed: invitation-only, no public access**
-- ✅ **Auth service Stage 3 complete - ready for production**
 
 ### Blockers
 
@@ -138,8 +103,8 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 ### Stage 1: Foundation & Infrastructure Setup
 
-**Status:** � Nearly Complete  
-**Progress:** 30/33 tasks completed (90%)  
+**Status:** 🚧 In Progress  
+**Progress:** 22/33 tasks completed (67%)  
 **Started:** November 4, 2025  
 **Completed:** N/A  
 
@@ -158,16 +123,16 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 - ✅ Redis service configured with persistence
 - ✅ Adminer database UI configured
 
-#### Step 1.3: Rust Backend Foundation (8/8) ✅
+#### Step 1.3: Rust Backend Foundation (0/8)
 
-- ✅ Create Rust workspace (services/Cargo.toml)
-- ✅ Create shared library crate
-- ✅ Create configuration system
-- ✅ Create database connection module
-- ✅ Create NATS client module
-- ✅ Create shared error types
-- ✅ Set up logging and tracing
-- ✅ Test infrastructure connectivity
+- ⬜ Create Rust workspace (services/Cargo.toml)
+- ⬜ Create shared library crate
+- ⬜ Create configuration system
+- ⬜ Create database connection module
+- ⬜ Create NATS client module
+- ⬜ Create shared error types
+- ⬜ Set up logging and tracing
+- ⬜ Test infrastructure connectivity
 
 #### Step 1.4: Multi-Pod Infrastructure (12/12) ✅
 
@@ -237,14 +202,12 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 **Notes:**  
 
 - ✅ **Schema separation complete**: Global identity/federation layer now separate from territory user data
-- ✅ **Generic territory schema**: Uses `territory` schema name (not `territory_dk`) for single-territory pods
 - ✅ **Reusable template**: Territory schema can be deployed to any new pod
 - ✅ **Future-ready**: Prepared for multi-territory pods (territory_de, territory_fr, etc.)
-- ✅ **Application code updated**: All handlers and middleware use `get_schema_name()` helper
-- ✅ **All tests passing**: 17/17 tests pass with new schema structure (4.17s)
 - Database uses schema-based isolation (global + territory)
 - Territory code follows ISO 3166-1 Alpha-2 standard (DK, NO, SE)
 - SQLTools configured for database management
+- Application services will use `get_schema_name()` helper for multi-territory support
 
 **Blockers:**  
 
@@ -254,76 +217,69 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 ### Stage 3: Authentication Service
 
-**Status:** ✅ Complete  
-**Progress:** 27/27 tasks completed (100%)  
-**Started:** November 5, 2025  
-**Completed:** November 8, 2025
+**Status:** 🚧 Not Started  
+**Progress:** 0/27 tasks completed (0%)  
+**Started:** Not yet  
+**Completed:** Not yet  
 **Dependencies:** Stage 2 (Database Schema)
 
-#### Step 3.1: Auth Service Scaffolding (2/2) ✅
+#### Step 3.1: Auth Service Scaffolding (0/2)
 
-- ✅ Create auth-service crate
-- ✅ Create service structure
+- ⬜ Create auth-service crate
+- ⬜ Create service structure
 
-#### Step 3.2: Auth Database Schema (2/2) ✅
+#### Step 3.2: Auth Database Schema (0/2)
 
-- ✅ Add auth tables to territory schema template
-- ✅ Run migration and update territory creation function
+- ⬜ Add auth tables to territory schema template
+- ⬜ Run migration and update territory creation function
 
-#### Step 3.3: JWT Token Service (5/5) ✅
+#### Step 3.3: JWT Token Service (0/5)
 
-- ✅ Implement TokenService struct
-- ✅ generate_access_token function
-- ✅ generate_refresh_token function
-- ✅ verify_access_token function
-- ✅ verify_refresh_token function
+- ⬜ Implement TokenService struct
+- ⬜ generate_access_token function
+- ⬜ generate_refresh_token function
+- ⬜ verify_access_token function
+- ⬜ verify_refresh_token function
 
-#### Step 3.4: Auth Handlers Implementation (5/5) ✅
+#### Step 3.4: Auth Handlers Implementation (0/5)
 
-- ✅ POST /auth/register - User registration (with invitation validation)
-- ✅ POST /auth/login - User login
-- ✅ POST /auth/refresh - Refresh access token
-- ✅ POST /auth/logout - Logout user
-- ✅ GET /auth/me - Get current user info
+- ⬜ POST /auth/register - User registration (with invitation validation)
+- ⬜ POST /auth/login - User login
+- ⬜ POST /auth/refresh - Refresh access token
+- ⬜ POST /auth/logout - Logout user
+- ⬜ GET /auth/me - Get current user info
 
-#### Step 3.5: JWT Middleware (3/3) ✅
+#### Step 3.5: JWT Middleware (0/3)
 
-- ✅ Implement JWT authentication middleware
-- ✅ require_auth() middleware wrapper (via JwtAuth Transform)
-- ✅ Platform security model confirmed (no optional auth needed - invitation-only platform)
+- ⬜ Implement JWT authentication middleware
+- ⬜ require_auth() middleware wrapper (via JwtAuth Transform)
+- ⬜ Platform security model confirmed (no optional auth needed - invitation-only platform)
 
-#### Step 3.6: Invitation System (7/7) ✅
+#### Step 3.6: Invitation System (0/7)
 
-- ✅ Database migration (invitation_tokens, invitation_uses tables)
-- ✅ Invitation models and validation
-- ✅ Invitation CRUD API endpoints
-- ✅ Bootstrap script for initial admin invitations
-- ✅ Audit trail for invitation usage
-- ✅ Integration tests for invitation flows
-- ✅ Platform access control validated
+- ⬜ Database migration (invitation_tokens, invitation_uses tables)
+- ⬜ Invitation models and validation
+- ⬜ Invitation CRUD API endpoints
+- ⬜ Bootstrap script for initial admin invitations
+- ⬜ Audit trail for invitation usage
+- ⬜ Integration tests for invitation flows
+- ⬜ Platform access control validated
 
-#### Step 3.7: Auth Service Testing (4/4) ✅
+#### Step 3.7: Auth Service Testing (0/4)
 
-- ✅ **Comprehensive test suite with TestContext pattern (26 tests passing)**
-- ✅ **Parallel test execution (100% success rate)**
-- ✅ **Clean test isolation (no wildcards, exact ID tracking)**
-- ✅ **Manual testing completed (all endpoints verified via curl)**
-
-**Note:** Load testing moved to Stage 12 (Testing & Deployment)
+- ⬜ Comprehensive test suite with TestContext pattern
+- ⬜ Parallel test execution
+- ⬜ Clean test isolation
+- ⬜ Manual testing (all endpoints verified via curl)
 
 **Notes:**  
 
-- ✅ **Stage 3 Complete - Production Ready**
-- ✅ Core authentication working (register, login, JWT tokens)
-- ✅ Invitation-only registration system implemented
-- ✅ JWT middleware protecting all endpoints
-- ✅ Multi-territory support validated (dynamic schema routing)
-- ✅ Database schema refactored for separation and reusability
-- ✅ Test infrastructure production-ready with 100% parallel test success
-- ✅ Zero compiler warnings, clean codebase
-- ✅ Token refresh and logout endpoints complete
-- ✅ Platform security model: Invitation-only, no public access, authenticated-only
-- ✅ Load testing moved to Stage 12 for consolidated performance testing
+- Will implement comprehensive middleware patterns from documentation
+- Focus on Phase 1 development configuration (localhost, permissive CORS)
+- All 12 middleware patterns documented and ready for implementation
+- Service communication patterns defined
+- Caching strategy documented
+- Error handling standards established
 
 **Blockers:**  
 
@@ -333,74 +289,62 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 ### Stage 4: User Service
 
-**Status:** ✅ Complete  
-**Progress:** 23/23 tasks completed (100%)  
-**Started:** November 8, 2025  
-**Completed:** November 9, 2025  
+**Status:** 🚧 Not Started  
+**Progress:** 0/23 tasks completed (0%)  
+**Started:** Not yet  
+**Completed:** Not yet  
 **Dependencies:** Stage 3 (Authentication Service)
 
-#### Step 4.1: User Service Scaffolding (2/2) ✅
+#### Step 4.1: User Service Scaffolding (0/2)
 
-- ✅ Create user-service crate
-- ✅ Create service structure
+- ⬜ Create user-service crate
+- ⬜ Create service structure
 
-#### Step 4.2: User Database Schema Extensions (1/1) ✅
+#### Step 4.2: User Database Schema Extensions (0/1)
 
-- ✅ Add user profile tables to territory schema (migration 20251108000004)
+- ⬜ Add user profile tables to territory schema (migration 20251108000004)
 
-#### Step 4.3: User Profile Handlers (4/4) ✅
+#### Step 4.3: User Profile Handlers (0/4)
 
-- ✅ GET /users/me - Get current user's full profile
-- ✅ GET /users/{user_id} - Get another user's public profile
-- ✅ PUT /users/me - Update current user's profile
-- ✅ DELETE /users/me - Delete account
+- ⬜ GET /users/me - Get current user's full profile
+- ⬜ GET /users/{user_id} - Get another user's public profile
+- ⬜ PUT /users/me - Update current user's profile
+- ⬜ DELETE /users/me - Delete account
 
-#### Step 4.4: Avatar Upload Handler (3/3) ✅
+#### Step 4.4: Avatar Upload Handler (0/3)
 
-- ✅ POST /users/me/avatar - Upload avatar
-- ✅ DELETE /users/me/avatar - Remove avatar
-- ✅ GET /avatars/{user_id}/{filename} - Serve avatar file
+- ⬜ POST /users/me/avatar - Upload avatar
+- ⬜ DELETE /users/me/avatar - Remove avatar
+- ⬜ GET /avatars/{user_id}/{filename} - Serve avatar file
 
-#### Step 4.5: Privacy Settings Handler (1/1) ✅
+#### Step 4.5: Privacy Settings Handler (0/1)
 
-- ✅ PUT /users/me/privacy - Update privacy settings
+- ⬜ PUT /users/me/privacy - Update privacy settings
 
-#### Step 4.6: User Connections Handlers (7/7) ✅
+#### Step 4.6: User Connections Handlers (0/7)
 
-- ✅ POST /users/{user_id}/follow - Follow user
-- ✅ DELETE /users/{user_id}/follow - Unfollow user
-- ✅ GET /users/{user_id}/followers - Get followers list
-- ✅ GET /users/{user_id}/following - Get following list
-- ✅ POST /users/{user_id}/block - Block user
-- ✅ DELETE /users/{user_id}/block - Unblock user
-- ✅ GET /users/me/blocks - Get blocked users list
+- ⬜ POST /users/{user_id}/follow - Follow user
+- ⬜ DELETE /users/{user_id}/follow - Unfollow user
+- ⬜ GET /users/{user_id}/followers - Get followers list
+- ⬜ GET /users/{user_id}/following - Get following list
+- ⬜ POST /users/{user_id}/block - Block user
+- ⬜ DELETE /users/{user_id}/block - Unblock user
+- ⬜ GET /users/me/blocks - Get blocked users list
 
-#### Step 4.7: User Search Handler (1/1) ✅
+#### Step 4.7: User Search Handler (0/1)
 
-- ✅ GET /users/search - Search users
+- ⬜ GET /users/search - Search users
 
-#### Step 4.8: User Service Testing (3/3) ✅
+#### Step 4.8: User Service Testing (0/3)
 
-- ✅ **Comprehensive test suite (22 passing tests)**
-  - 7 profile integration tests (CRUD, privacy controls, email visibility)
-  - 7 connection integration tests (follow/unfollow, lists, duplicates)
-  - 8 block integration tests (block/unblock, connection removal, prevention)
-- ✅ **TestContext pattern for safe parallel execution** (unique usernames, precise cleanup)
-- ✅ **Bug fixes during testing** (block checks, duplicate follow handling)
+- ⬜ Comprehensive test suite with TestContext pattern
+- ⬜ Profile, connection, and block integration tests
+- ⬜ Bug fixes during testing
 
 **Notes:**  
 
-- ✅ **Stage 4 Complete - Production Ready**
-- ✅ **All database queries use runtime verification** (multi-pod architecture compatible)
-- ✅ **Query pattern documentation created** (`docs/guides/development/database-query-patterns.md`)
-- ✅ **All 11 query functions converted** from compile-time macros to runtime queries
-- ✅ **Service compiles successfully** (0 errors, 6 minor warnings)
-- ✅ **Multi-pod compatible**: Single binary can deploy to all territories
-- ✅ **Comprehensive test coverage**: 22 tests passing in 1.4s (parallel execution)
-- ✅ **Tests follow best practices**: TestContext pattern, no wildcard cleanup, unique test data
-- Database schema: 3 tables (user_profiles, user_connections, user_blocks)
-- Storage: Local filesystem for avatars (will migrate to IPFS in Stage 9)
-- Image processing: 4 avatar sizes (32x32, 64x64, 128x128, 256x256)
+- Will use runtime-verified database queries (multi-pod compatible)
+- Temporary local filesystem storage for avatars (migrate to IPFS in Stage 9)
 - Privacy controls: Profile visibility, email/name display, message permissions
 - Social features: Follow/unfollow, block/unblock, connections lists
 
@@ -412,49 +356,49 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 ### Stage 5: Frontend Auth & Profile
 
-**Status:** � In Progress  
-**Progress:** 12/20 tasks completed (60%)  
-**Started:** November 9, 2025  
+**Status:** 🚧 Not Started  
+**Progress:** 0/20 tasks completed (0%)  
+**Started:** Not yet  
 **Completed:** Not yet  
 **Dependencies:** Stages 3 & 4 (Auth and User Services)
 
-#### Step 5.1: Project Scaffolding (7/7) ✅
+#### Step 5.1: Project Scaffolding (0/7)
 
-- ✅ Create Vite + React + TypeScript project
-- ✅ Install core dependencies (TanStack Router/Query, Zustand, Axios, forms)
-- ✅ Install UI dependencies (TailwindCSS v4, @tailwindcss/vite, shadcn/ui)
-- ✅ Install testing dependencies (Vitest, Testing Library, jsdom)
-- ✅ Configure TailwindCSS v4 (postcss.config.js, index.css with OKLCH theming)
-- ✅ Configure Vitest (vitest.config.ts, test setup)
-- ✅ Set up environment variables (.env.development, .env.production)
+- ⬜ Create Vite + React + TypeScript project
+- ⬜ Install core dependencies (TanStack Router/Query, Zustand, Axios, forms)
+- ⬜ Install UI dependencies (TailwindCSS v4, @tailwindcss/vite, shadcn/ui)
+- ⬜ Install testing dependencies (Vitest, Testing Library, jsdom)
+- ⬜ Configure TailwindCSS v4 (postcss.config.js, index.css with OKLCH theming)
+- ⬜ Configure Vitest (vitest.config.ts, test setup)
+- ⬜ Set up environment variables (.env.development, .env.production)
 
-#### Step 5.2: Auth Store (Zustand) (1/1) ✅
+#### Step 5.2: Auth Store (Zustand) (0/1)
 
-- ✅ Create auth store (src/stores/authStore.ts) with persistence
-- ✅ Create UI store (src/stores/uiStore.ts) with theme management
+- ⬜ Create auth store (src/stores/authStore.ts) with persistence
+- ⬜ Create UI store (src/stores/uiStore.ts) with theme management
 
-#### Step 5.3: API Client Functions (2/2) ✅
+#### Step 5.3: API Client Functions (0/2)
 
-- ✅ Create auth API client (src/api/auth.ts) with 6 endpoints
-- ✅ Create user API client (src/api/users.ts) with 11 endpoints
-- ✅ Create API client with token refresh interceptor (src/lib/api-client.ts)
+- ⬜ Create auth API client (src/api/auth.ts) with 6 endpoints
+- ⬜ Create user API client (src/api/users.ts) with 11 endpoints
+- ⬜ Create API client with token refresh interceptor (src/lib/api-client.ts)
 
-#### Step 5.4: Auth Pages (3/3) ✅
+#### Step 5.4: Auth Pages (0/3)
 
-- ✅ Create login page (LoginPage.tsx with react-hook-form + zod)
-- ✅ Create register page (RegisterPage.tsx with two-step invitation validation)
-- ✅ Create password reset page (PasswordResetPage.tsx with two-step flow)
+- ⬜ Create login page (LoginPage.tsx with react-hook-form + zod)
+- ⬜ Create register page (RegisterPage.tsx with two-step invitation validation)
+- ⬜ Create password reset page (PasswordResetPage.tsx with two-step flow)
 
-#### Step 5.5: Profile Pages (2/2) ✅
+#### Step 5.5: Profile Pages (0/2)
 
-- ✅ Create profile view page (ProfileViewPage.tsx)
-- ✅ Create profile edit page (ProfileEditPage.tsx)
+- ⬜ Create profile view page (ProfileViewPage.tsx)
+- ⬜ Create profile edit page (ProfileEditPage.tsx)
 
-#### Step 5.6: Protected Routes (3/3) ✅
+#### Step 5.6: Protected Routes (0/3)
 
-- ✅ Create route guard component (AuthGuard.tsx)
-- ✅ Configure TanStack Router with file-based routing
-- ✅ Create 8 route files (root, index, login, register, reset-password, dashboard, profile, profile.edit)
+- ⬜ Create route guard component (AuthGuard.tsx)
+- ⬜ Configure TanStack Router with file-based routing
+- ⬜ Create 8 route files (root, index, login, register, reset-password, dashboard, profile, profile.edit)
 
 #### Step 5.7: UI Components (0/4)
 
@@ -471,33 +415,12 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
 
 **Notes:**  
 
-- Frontend scaffolding complete (460 packages, 0 vulnerabilities)
-- Dev server running on port 5173 (avoids conflicts with Forgejo:3000, Grafana:3001)
-- TailwindCSS v4 configured with OKLCH color theming (verified against official docs)
-- shadcn/ui components installed and configured (verified against official docs)
-- Path aliases working correctly (@/ → src/)
-- TypeScript compilation: 0 errors
-- **Authentication system fully functional end-to-end**
-- **API versioning (/api/v1) implemented across all services**
-- **Port standardization complete (auth:8001, user:8002)**
-- **Configurable CORS for multi-pod deployment**
-- **Development workflow automation (one-command startup)**
-- **Startup performance optimized 6x (50s → 8s using pre-built binaries)**
-- **Bootstrap invitation system validated**
-- **Login working**: Username-based authentication (privacy-first)
-- Comprehensive frontend documentation created (TAILWIND-V4-MIGRATION.md)
-- All configuration files verified: vite.config.ts, tsconfig.json, tsconfig.app.json, postcss.config.js, components.json, tsr.config.json
-- Auth infrastructure complete: stores, API clients, token management
-- All auth pages complete: LoginPage, RegisterPage, PasswordResetPage
-- All profile pages complete: ProfileViewPage, ProfileEditPage
-- **TanStack Router configured**: File-based routing with automatic route generation
-  - Routes: /, /login, /register, /reset-password, /dashboard, /profile, /profile/edit
-  - Protected routes use AuthGuard component
-  - Auto-generated routeTree.gen.ts from src/routes/
-  - @tanstack/router-plugin integrated with Vite
-  - Router devtools enabled in development mode
+- Will be implemented after backend services are complete
+- Frontend will consume API endpoints from auth and user services
 
 **Blockers:**
+
+- Waiting for backend services (Stages 3 & 4) to be implemented
 
 - None
 

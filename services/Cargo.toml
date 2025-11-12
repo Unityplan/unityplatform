@@ -2,31 +2,19 @@
 resolver = "2"
 members = [
     "shared-lib",
-    # Phase 1 Services
-    "auth-service",
-    "user-service",
-    "settings-service",
-    "invitation-service",
-    "notification-service",
-    # Phase 2 Services (scaffolded)
-    "community-service",
-    "badge-service",
-    "territory-service",
-    "event-service",
-    "course-service",
-    "forum-service",
-    "translation-service",
-    "ipfs-service",
+    # Services will be added as they are rebuilt with new architecture
+    # See: docs/architecture/services/shared-lib/MIDDLEWARE.md
+    # See: docs/architecture/MIGRATIONS-MASTER.md
 ]
 
 [workspace.package]
 version = "0.1.0-alpha.1"
 edition = "2021"
-authors = ["UnityPlan Team <dev@unityplan.org>"]
+authors = ["unityplatform Team <dev@unityplan.org>"]
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/unityplan/platform"
 repository = "https://github.com/unityplan/platform"
-documentation = "https://docs.unityplan.org"
+documentation = "https://docs.unityplatform.dk"
 keywords = ["education", "collaboration", "decentralized", "multi-tenant"]
 categories = ["web-programming", "authentication"]
 

@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🛑 UnityPlan - Stop Services"
+echo "🛑 Unity Platform - Stop Services"
 echo "=============================="
 echo ""
 

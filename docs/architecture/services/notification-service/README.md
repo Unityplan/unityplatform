@@ -30,6 +30,38 @@ The notification-service manages all user notifications across the platform, inc
 
 ---
 
+## 🔐 Authentication
+
+This service uses **JWT-based authentication** via shared middleware from `shared-lib`.
+
+### **Validation Strategy**
+
+- **Standard requests:** JWT signature validation only (~0.01ms)
+- **Event-driven notifications:** No authentication (triggered by NATS events from trusted services)
+
+### **Middleware**
+
+```rust
+use shared_lib::middleware::jwt_auth_middleware;
+
+HttpServer::new(|| {
+    App::new()
+        .wrap(jwt_auth_middleware)  // Protects user-facing routes
+        .service(get_notifications)
+        .service(mark_as_read)
+})
+
+// NATS event handlers run without HTTP auth
+async fn handle_user_followed_event(event: UserFollowedEvent) {
+    // Create notification for followed user
+    create_notification(event.following_id, "New follower", ...).await;
+}
+```
+
+**See [shared-lib/AUTHENTICATION.md](../shared-lib/AUTHENTICATION.md) for complete authentication architecture.**
+
+---
+
 ## 🗄️ Database Schema
 
 ### **Tables Owned by notification-service**
@@ -633,10 +665,10 @@ enabled = true
 provider = "smtp"  # smtp/sendgrid/mailgun
 smtp_host = "smtp.gmail.com"
 smtp_port = 587
-smtp_username = "notifications@unityplan.org"
+smtp_username = "notifications@unityplatform.org"
 smtp_password = "secure_password"
-from_email = "notifications@unityplan.org"
-from_name = "UnityPlan"
+from_email = "notifications@unityplatform.org"
+from_name = "unityplatform"
 ```
 
 ### **Email Template Example**
@@ -646,12 +678,12 @@ Subject: {{username}} started following you
 
 Hi there,
 
-{{username}} started following you on UnityPlan!
+{{username}} started following you on unityplatform!
 
 View their profile: {{link}}
 
 ---
-UnityPlan - User Sovereignty First
+Unity Platform - User Sovereignty First
 Manage your notification settings: {{settings_link}}
 ```
 

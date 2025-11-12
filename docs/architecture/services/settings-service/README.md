@@ -27,6 +27,32 @@ The settings-service manages all user preferences and settings, including appear
 
 ---
 
+## 🔐 Authentication
+
+This service uses **JWT-based authentication** via shared middleware from `shared-lib`.
+
+### **Validation Strategy**
+
+- **All requests:** JWT signature validation only (~0.01ms, no database query)
+- **No critical operations:** Settings updates don't require additional database checks
+
+### **Middleware**
+
+```rust
+use shared_lib::middleware::jwt_auth_middleware;
+
+HttpServer::new(|| {
+    App::new()
+        .wrap(jwt_auth_middleware)  // All routes protected
+        .service(get_settings)
+        .service(update_settings)
+})
+```
+
+**See [shared-lib/AUTHENTICATION.md](../shared-lib/AUTHENTICATION.md) for complete authentication architecture.**
+
+---
+
 ## 🗄️ Database Schema
 
 ### **Tables Owned by settings-service**

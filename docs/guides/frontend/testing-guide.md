@@ -1,6 +1,6 @@
 # Frontend Testing Guide
 
-Comprehensive guide for testing the UnityPlan React frontend application.
+Comprehensive guide for testing the Unity Platform React frontend application.
 
 **Testing Stack:** Vitest, Testing Library, Playwright  
 **Coverage Target:** >80%  

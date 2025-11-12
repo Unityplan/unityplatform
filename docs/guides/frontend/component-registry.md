@@ -1,6 +1,6 @@
 # Component Registry Guide
 
-Guide for managing UI components in UnityPlan frontend.
+Guide for managing UI components in Unity Platform frontend.
 
 **Status:** Using shadcn/ui (copy-paste components)  
 **Future:** May create local registry for custom components  
@@ -254,7 +254,7 @@ npm set registry http://localhost:4873/
 **Example structure:**
 
 ```
-unityplan-monorepo/
+unityplatform-monorepo/
 ├── apps/
 │   ├── web/              # Main frontend
 │   ├── mobile/           # Future mobile app
@@ -298,7 +298,7 @@ mv frontend/src/components/UserCard.tsx packages/ui/src/components/
 ```json
 // packages/ui/package.json
 {
-  "name": "@unityplan/ui",
+  "name": "@unityplatform/ui",
   "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

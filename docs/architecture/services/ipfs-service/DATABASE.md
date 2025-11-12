@@ -57,7 +57,7 @@ CREATE INDEX idx_file_uploads_context ON territory_{code}.file_uploads(upload_co
 
 - Content-addressed (CID)
 - Pinned on territory's IPFS node
-- Public gateway: `https://ipfs.unityplan.org/ipfs/{cid}`
+- Public gateway: `https://ipfs.unityplatform.org/ipfs/{cid}`
 
 ---
 

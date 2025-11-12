@@ -8,7 +8,7 @@
 
 ## 📋 Executive Summary
 
-UnityPlan's frontend is built on a **production-grade, future-ready SPA stack** optimized for 2025:
+unityplatform's frontend is built on a **production-grade, future-ready SPA stack** optimized for 2025:
 
 **Core Stack:**
 

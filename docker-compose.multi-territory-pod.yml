@@ -18,7 +18,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       # Primary database (first territory)
-      POSTGRES_DB: ${POSTGRES_DB_DE:-unityplan_de}
+      POSTGRES_DB: ${POSTGRES_DB_DE:-unityplatform_de}
       # Pass territory configs for init script
       TERRITORY_DE_TIMEZONE: ${TERRITORY_DE_TIMEZONE}
       TERRITORY_DE_LOCALE: ${TERRITORY_DE_LOCALE}
@@ -72,7 +72,7 @@ services:
     container_name: service-nats-${POD_ID}
     hostname: service-nats-${POD_ID}
     command:
-      - "--cluster_name=unityplan-global"
+      - "--cluster_name=unityplatform-global"
       - "--cluster=nats://0.0.0.0:6222"
       - "--routes=${NATS_ROUTES}"
       - "--http_port=8222"
@@ -140,7 +140,7 @@ services:
     hostname: monitoring-postgres-exporter-${POD_ID}
     environment:
       # Monitor all three databases
-      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/unityplan_de?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@service-postgres-${POD_ID}:5432/unityplatform_de?sslmode=disable"
     ports:
       - "${POSTGRES_EXPORTER_PORT}:9187"
     networks:
@@ -231,7 +231,7 @@ networks:
   
   mesh-network:
     external: true
-    name: unityplan-mesh-network
+    name: unityplatform-mesh-network
 
 # ===================================================================
 # VOLUMES

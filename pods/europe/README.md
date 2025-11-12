@@ -8,20 +8,20 @@
 
 ## 📋 Overview
 
-The Europe pod demonstrates UnityPlan's **multi-territory deployment model**, where multiple smaller territories share infrastructure while maintaining complete data isolation.
+The Europe pod demonstrates unityplatform's **multi-territory deployment model**, where multiple smaller territories share infrastructure while maintaining complete data isolation.
 
 ### Architecture
 
 ```
 Pod Europe (Single VPS/Instance)
 ├── PostgreSQL Instance
-│   ├── unityplan_de (Germany database)
+│   ├── unityplatform_de (Germany database)
 │   │   ├── global schema (replicated)
 │   │   └── territory_DE schema (isolated)
-│   ├── unityplan_fr (France database)
+│   ├── unityplatform_fr (France database)
 │   │   ├── global schema (replicated)
 │   │   └── territory_FR schema (isolated)
-│   └── unityplan_es (Spain database)
+│   └── unityplatform_es (Spain database)
 │       ├── global schema (replicated)
 │       └── territory_ES schema (isolated)
 ├── Redis (Shared)
@@ -44,7 +44,7 @@ Pod Europe (Single VPS/Instance)
 
 ```bash
 # 1. Ensure mesh network exists
-docker network create unityplan-mesh-network
+docker network create unityplatform-mesh-network
 
 # 2. Deploy Europe pod
 docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu \
@@ -57,6 +57,7 @@ docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu ps
 ### What Gets Created
 
 **Containers:**
+
 - `service-postgres-eu` - PostgreSQL with 3 databases
 - `service-redis-eu` - Shared Redis cache
 - `service-nats-eu` - NATS cluster node
@@ -69,6 +70,7 @@ docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu ps
 - `monitoring-cadvisor-eu`
 
 **Volumes:**
+
 - `eu-postgres-data` - All 3 territory databases
 - `eu-redis-data`
 - `eu-nats-data`
@@ -76,6 +78,7 @@ docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu ps
 - `eu-matrix-data`
 
 **Ports (Host:Container):**
+
 - PostgreSQL: `5435:5432`
 - Redis: `6382:6379`
 - NATS Client: `4225:4222`
@@ -93,7 +96,7 @@ docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu ps
 
 ```sql
 -- Germany
-unityplan_de
+unityplatform_de
 ├── global (replicated data)
 │   └── territories (all territories info)
 └── territory_DE (Germany-specific data)
@@ -102,7 +105,7 @@ unityplan_de
     └── posts
 
 -- France
-unityplan_fr
+unityplatform_fr
 ├── global (replicated data)
 └── territory_FR (France-specific data)
     ├── users
@@ -110,7 +113,7 @@ unityplan_fr
     └── posts
 
 -- Spain
-unityplan_es
+unityplatform_es
 ├── global (replicated data)
 └── territory_ES (Spain-specific data)
     ├── users
@@ -118,7 +121,7 @@ unityplan_es
     └── posts
 
 -- Metadata (cross-territory queries)
-unityplan_eu_meta
+unityplatform_eu_meta
 └── meta
     └── pod_info (pod metadata)
 ```
@@ -127,19 +130,19 @@ unityplan_eu_meta
 
 ```bash
 # Germany database
-docker exec -it service-postgres-eu psql -U unityplan -d unityplan_de
+docker exec -it service-postgres-eu psql -U unityplatform -d unityplatform_de
 
 # France database
-docker exec -it service-postgres-eu psql -U unityplan -d unityplan_fr
+docker exec -it service-postgres-eu psql -U unityplatform -d unityplatform_fr
 
 # Spain database
-docker exec -it service-postgres-eu psql -U unityplan -d unityplan_es
+docker exec -it service-postgres-eu psql -U unityplatform -d unityplatform_es
 
 # Metadata database
-docker exec -it service-postgres-eu psql -U unityplan -d unityplan_eu_meta
+docker exec -it service-postgres-eu psql -U unityplatform -d unityplatform_eu_meta
 
 # List all databases
-docker exec service-postgres-eu psql -U unityplan -c "\l"
+docker exec service-postgres-eu psql -U unityplatform -c "\l"
 ```
 
 ### Sample Queries
@@ -244,7 +247,7 @@ nats sub --server=nats://192.168.60.133:4225 "territory.>"
 docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu ps
 
 # PostgreSQL health
-docker exec service-postgres-eu pg_isready -U unityplan
+docker exec service-postgres-eu pg_isready -U unityplatform
 
 # Redis health
 docker exec service-redis-eu redis-cli -a redis_dev_password ping
@@ -260,19 +263,19 @@ curl http://192.168.60.133:8225/varz | jq '.cluster'
 
 ```bash
 # Verify all 4 databases created
-docker exec service-postgres-eu psql -U unityplan -c "\l" | grep unityplan_
+docker exec service-postgres-eu psql -U unityplatform -c "\l" | grep unityplatform_
 
 # Expected output:
-# unityplan_de
-# unityplan_fr
-# unityplan_es
-# unityplan_eu_meta
+# unityplatform_de
+# unityplatform_fr
+# unityplatform_es
+# unityplatform_eu_meta
 
 # Check Germany schema
-docker exec service-postgres-eu psql -U unityplan -d unityplan_de -c "\dn"
+docker exec service-postgres-eu psql -U unityplatform -d unityplatform_de -c "\dn"
 
 # Verify territory data
-docker exec service-postgres-eu psql -U unityplan -d unityplan_de -c "SELECT * FROM global.territories WHERE id IN ('DE','FR','ES');"
+docker exec service-postgres-eu psql -U unityplatform -d unityplatform_de -c "SELECT * FROM global.territories WHERE id IN ('DE','FR','ES');"
 ```
 
 ### Monitoring
@@ -317,20 +320,23 @@ TERRITORY_ES_TIMEZONE=Europe/Madrid
 **Add a new territory (e.g., Italy):**
 
 1. Update `.env`:
+
    ```bash
    TERRITORY_CODES=DE,FR,ES,IT
-   POSTGRES_DB_IT=unityplan_it
+   POSTGRES_DB_IT=unityplatform_it
    TERRITORY_IT_TIMEZONE=Europe/Rome
    TERRITORY_IT_LOCALE=it_IT.UTF-8
    TERRITORY_IT_LANGUAGE=it
    ```
 
 2. Update `init-multi-territory.sh`:
+
    ```bash
-   create_territory_schema "it" "Italy" "unityplan_it"
+   create_territory_schema "it" "Italy" "unityplatform_it"
    ```
 
 3. Recreate pod:
+
    ```bash
    docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu down
    docker volume rm eu-postgres-data
@@ -347,7 +353,7 @@ If a territory outgrows the shared pod, migrate to dedicated infrastructure:
 
 ```bash
 # 1. Dump Germany database
-docker exec service-postgres-eu pg_dump -U unityplan unityplan_de > germany_backup.sql
+docker exec service-postgres-eu pg_dump -U unityplatform unityplatform_de > germany_backup.sql
 
 # 2. Create dedicated Germany pod
 cp pods/europe/.env pods/germany/.env
@@ -357,14 +363,14 @@ cp pods/europe/.env pods/germany/.env
 docker compose -f docker-compose.pod.yml -p pod-de --env-file pods/germany/.env up -d
 
 # 4. Restore database
-cat germany_backup.sql | docker exec -i service-postgres-de psql -U unityplan -d unityplan_de
+cat germany_backup.sql | docker exec -i service-postgres-de psql -U unityplatform -d unityplatform_de
 
 # 5. Update routing (NATS, DNS, load balancer)
 # Point DE users to pod-de instead of pod-eu
 
 # 6. Remove DE from Europe pod
 # Update pods/europe/.env, remove DE config
-# Drop unityplan_de database from pod-eu
+# Drop unityplatform_de database from pod-eu
 ```
 
 ---
@@ -372,17 +378,20 @@ cat germany_backup.sql | docker exec -i service-postgres-de psql -U unityplan -d
 ## 📊 Cost Analysis
 
 **Shared Pod (Current):**
+
 - 1 VPS: ~€30/month
 - Serves 3 territories
 - Cost per territory: ~€10/month
 
 **Dedicated Pods (Alternative):**
+
 - 3 VPS: 3 × €30 = €90/month
 - Cost per territory: €30/month
 
 **Savings:** 67% with shared infrastructure
 
 **When to Split:**
+
 - Combined traffic > 80% CPU/Memory
 - One territory needs more resources
 - Regulatory requirements demand separation
@@ -399,7 +408,7 @@ cat germany_backup.sql | docker exec -i service-postgres-de psql -U unityplan -d
 docker logs service-postgres-eu
 
 # Verify init script ran
-docker exec service-postgres-eu psql -U unityplan -c "\l" | grep unityplan
+docker exec service-postgres-eu psql -U unityplatform -c "\l" | grep unityplatform
 
 # Re-run init script manually
 docker exec -i service-postgres-eu bash < pods/europe/init-multi-territory.sh
@@ -440,4 +449,4 @@ nats stream add TERRITORY_ES --subjects="territory.es.*" --replicas=1
 
 **Pod Status:** Ready for Testing  
 **Last Updated:** November 5, 2025  
-**Maintainer:** UnityPlan Platform Team
+**Maintainer:** unityplatform Platform Team

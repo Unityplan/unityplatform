@@ -1,4 +1,4 @@
-# UnityPlan Platform - Technology Stack
+# Unity Platform - Technology Stack
 
 ## 📋 Table of Contents
 
@@ -17,7 +17,7 @@
 
 ## Overview
 
-UnityPlan is built on a **microservices architecture** with a clear separation between backend services (Rust), frontend application (React), and communication infrastructure (Matrix Protocol). The stack is designed for:
+Unity Platform is built on a **microservices architecture** with a clear separation between backend services (Rust), frontend application (React), and communication infrastructure (Matrix Protocol). The stack is designed for:
 
 - **Performance**: Rust for high-throughput, low-latency services
 - **Developer Experience**: Modern tooling with Vite, TypeScript, and hot reload
@@ -228,7 +228,7 @@ impl TenantPool {
 **Schema Pattern**:
 
 ```
-database: unityplan
+database: unityplatform
 ├── schema: territory_dk (Denmark)
 │   ├── users
 │   ├── courses
@@ -1096,13 +1096,13 @@ ruma-client = "0.12"
 import { createClient } from 'matrix-js-sdk';
 
 const client = createClient({
-  baseUrl: 'https://matrix.unityplan.org',
+  baseUrl: 'https://matrix.unityplatform.org',
   accessToken: userToken,
-  userId: '@user:unityplan.org',
+  userId: '@user:unityplatform.org',
 });
 
 // Join a room
-await client.joinRoom('!roomId:unityplan.org');
+await client.joinRoom('!roomId:unityplatform.org');
 
 // Send a message
 await client.sendTextMessage(roomId, 'Hello, world!');
@@ -1319,7 +1319,7 @@ jobs:
       - uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ghcr.io/unityplan/service:${{ github.sha }}
+          tags: ghcr.io/unityplatform/service:${{ github.sha }}
 ```
 
 ---
@@ -1517,12 +1517,12 @@ import { AppWebsocket } from '@holochain/client';
 
 const client = await AppWebsocket.connect(
   'ws://localhost:8888',
-  'unityplan'
+  'unityplatform'
 );
 
 // Create an entry
 await client.callZome({
-  role_name: 'unityplan',
+  role_name: 'unityplatform',
   zome_name: 'profiles',
   fn_name: 'create_profile',
   payload: { username, bio },

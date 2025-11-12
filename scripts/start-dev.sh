@@ -4,7 +4,7 @@ set -e
 
 # Show help if --help is passed
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    echo "🚀 UnityPlan Phase 1 Development Environment"
+    echo "🚀 Unity Platform Phase 1 Development Environment"
     echo "============================================"
     echo ""
     echo "Usage: ./scripts/start-dev.sh"
@@ -21,7 +21,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     exit 0
 fi
 
-echo "🚀 Starting UnityPlan Phase 1 Development Environment"
+echo "🚀 Starting Unity Platform Phase 1 Development Environment"
 echo "=================================================="
 echo ""
 
@@ -36,9 +36,9 @@ echo "✅ Docker is running"
 echo ""
 
 # Create mesh network if it doesn't exist
-if ! docker network inspect unityplan-mesh-network > /dev/null 2>&1; then
+if ! docker network inspect unityplatform-mesh-network > /dev/null 2>&1; then
     echo "📡 Creating mesh network..."
-    docker network create unityplan-mesh-network
+    docker network create unityplatform-mesh-network
     echo "✅ Mesh network created"
 else
     echo "✅ Mesh network already exists"
@@ -80,10 +80,10 @@ echo ""
 echo "1. Configure Forgejo (first-time setup):"
 echo "   → Open http://localhost:3000"
 echo "   → Create admin account"
-echo "   → Create 'unityplan_platform' repository"
+echo "   → Create 'unityplatform_platform' repository"
 echo ""
 echo "2. Push code to Forgejo:"
-echo "   git remote add forgejo http://localhost:3000/admin/unityplan_platform.git"
+echo "   git remote add forgejo http://localhost:3000/admin/unityplatform_platform.git"
 echo "   git push forgejo main"
 echo ""
 echo "3. Install forgejo-mcp for AI assistance:"

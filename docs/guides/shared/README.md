@@ -8,7 +8,7 @@ Cross-cutting concerns and tools that apply to both backend and frontend develop
 
 ### [Versioning Strategy](./versioning-strategy.md)
 
-SemVer 2.0.0 versioning guidelines for all UnityPlan components.
+SemVer 2.0.0 versioning guidelines for all Unity Platform components.
 
 **Contents:**
 
@@ -201,7 +201,7 @@ docker compose logs -f redis
 open http://localhost:8080  # Adminer
 
 # CLI
-docker compose exec postgres psql -U unityplan -d unityplan_dev
+docker compose exec postgres psql -U Unity Platform -d unityplatform_dev
 ```
 
 ### Cache Management

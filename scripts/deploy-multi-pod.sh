@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# UnityPlan Multi-Pod Deployment Script
+# Unity Platform Multi-Pod Deployment Script
 # Purpose: Deploy multi-pod architecture in correct order
 # Usage: ./scripts/deploy-multi-pod.sh [--clean]
 
@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 
 # Show help
 show_help() {
-    echo "🚀 UnityPlan Multi-Pod Deployment"
+    echo "🚀 Unity Platform Multi-Pod Deployment"
     echo "=================================="
     echo ""
     echo "Usage: ./scripts/deploy-multi-pod.sh [OPTIONS]"
@@ -52,7 +52,7 @@ if [ "$1" = "--clean" ]; then
 fi
 
 echo -e "${BLUE}==================================="
-echo "UnityPlan Multi-Pod Deployment"
+echo "Unity Platform Multi-Pod Deployment"
 echo -e "===================================${NC}\n"
 
 # ====================================================================
@@ -71,7 +71,7 @@ if [ "$CLEAN_START" = true ]; then
   docker compose -f docker-compose.dev.yml down 2>/dev/null || true
   
   # Remove mesh network
-  docker network rm unityplan-mesh-network 2>/dev/null || true
+  docker network rm unityplatform-mesh-network 2>/dev/null || true
   
   echo -e "${GREEN}✓ Cleanup complete${NC}\n"
   sleep 2
@@ -83,12 +83,12 @@ fi
 echo -e "${BLUE}🔌 Phase 1: Network Setup${NC}"
 echo "-----------------------------------"
 
-if docker network inspect unityplan-mesh-network > /dev/null 2>&1; then
-  echo -e "${GREEN}✓${NC} unityplan-mesh-network already exists"
+if docker network inspect unityplatform-mesh-network > /dev/null 2>&1; then
+  echo -e "${GREEN}✓${NC} unityplatform-mesh-network already exists"
 else
-  echo "Creating unityplan-mesh-network..."
-  docker network create unityplan-mesh-network
-  echo -e "${GREEN}✓${NC} unityplan-mesh-network created"
+  echo "Creating unityplatform-mesh-network..."
+  docker network create unityplatform-mesh-network
+  echo -e "${GREEN}✓${NC} unityplatform-mesh-network created"
 fi
 
 echo ""
@@ -166,7 +166,7 @@ docker compose -f docker-compose.pod.yml \
 
 # Wait for PostgreSQL health check
 echo "Waiting for PostgreSQL to be healthy..."
-timeout 60 bash -c 'until docker exec service-postgres-dk pg_isready -U unityplan > /dev/null 2>&1; do sleep 2; done' || {
+timeout 60 bash -c 'until docker exec service-postgres-dk pg_isready -U unityplatform > /dev/null 2>&1; do sleep 2; done' || {
   echo -e "${RED}✗${NC} PostgreSQL failed to become healthy"
   exit 1
 }
@@ -192,7 +192,7 @@ docker compose -f docker-compose.pod.yml \
 
 # Wait for PostgreSQL
 echo "Waiting for PostgreSQL to be healthy..."
-timeout 60 bash -c 'until docker exec service-postgres-no pg_isready -U unityplan > /dev/null 2>&1; do sleep 2; done' || {
+timeout 60 bash -c 'until docker exec service-postgres-no pg_isready -U unityplatform > /dev/null 2>&1; do sleep 2; done' || {
   echo -e "${RED}✗${NC} PostgreSQL failed to become healthy"
   exit 1
 }
@@ -230,7 +230,7 @@ docker compose -f docker-compose.pod.yml \
 
 # Wait for PostgreSQL
 echo "Waiting for PostgreSQL to be healthy..."
-timeout 60 bash -c 'until docker exec service-postgres-se pg_isready -U unityplan > /dev/null 2>&1; do sleep 2; done' || {
+timeout 60 bash -c 'until docker exec service-postgres-se pg_isready -U unityplatform > /dev/null 2>&1; do sleep 2; done' || {
   echo -e "${RED}✗${NC} PostgreSQL failed to become healthy"
   exit 1
 }

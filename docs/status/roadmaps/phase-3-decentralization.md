@@ -561,8 +561,8 @@ DID Document Example:
   }],
   "authentication": ["did:holo:...#keys-1"],
   "service": [{
-    "id": "did:holo:...#unityplan",
-    "type": "UnityPlanProfile",
+    "id": "did:holo:...#unityplatform",
+    "type": "unityplatformProfile",
     "serviceEndpoint": "holo://profile_dna/..."
   }]
 }
@@ -1004,7 +1004,7 @@ Deliverables:
 
 hApp Marketplace:
 ┌────────────────────────────────────┐
-│ UnityPlan hApp Marketplace         │
+│ Unity Platform hApp Marketplace         │
 ├────────────────────────────────────┤
 │ Featured hApps:                    │
 │ • Advanced Analytics Dashboard     │

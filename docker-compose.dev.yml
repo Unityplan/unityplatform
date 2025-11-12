@@ -117,8 +117,8 @@ volumes:
 networks:
   global-net:
     driver: bridge
-    name: unityplan-global-net
+    name: unityplatform-global-net
 
   mesh-network:
     external: true
-    name: unityplan-mesh-network
+    name: unityplatform-mesh-network

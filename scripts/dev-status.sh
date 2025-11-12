@@ -2,7 +2,11 @@
 
 # Check status of all development services
 
-echo "📊 UnityPlan Development Environment Status"
+#!/bin/bash
+
+# Display current development environment status
+
+echo "📊 Unity Platform Development Environment Status"
 echo "============================================"
 echo ""
 

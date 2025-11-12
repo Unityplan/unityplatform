@@ -290,7 +290,7 @@ cargo build --release
 docker compose ps postgres
 
 # Test connection
-docker compose exec postgres psql -U unityplan -d unityplan_dev
+docker compose exec postgres psql -U Unity Platform -d unityplatform_dev
 
 # Check connection string in .env
 cat .env | grep DATABASE_URL
@@ -318,7 +318,7 @@ If you get errors about `sqlx-data.json`:
 cargo sqlx prepare
 
 # Or set DATABASE_URL and compile online
-export DATABASE_URL=postgres://unityplan:password@localhost/unityplan_dev
+export DATABASE_URL=postgres://unityplatform:password@localhost/unityplatform_dev
 cargo build
 ```
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the step-by-step plan for building the UnityPlan backend microservices in Rust, following a test-driven, incremental approach.
+This document outlines the step-by-step plan for building the Unity Platform backend microservices in Rust, following a test-driven, incremental approach.
 
 ## ⚠️ Critical Guideline: Database Queries
 
@@ -121,7 +121,7 @@ See: [Database Query Patterns](./database-query-patterns.md) for detailed explan
 7. **Run Migrations**
 
    ```bash
-   export DATABASE_URL=postgres://unityplan:unityplan_dev_password_dk@localhost:5432/unityplan_dk
+   export DATABASE_URL=postgres://unityplatform:unityplatform_dev_password_dk@localhost:5432/unityplatform_dk
    sqlx migrate run
    ```
 
@@ -758,7 +758,7 @@ CMD ["/app/auth-service"]
       - APP__DATABASE__MAX_CONNECTIONS=20
       - APP__DATABASE__MIN_CONNECTIONS=5
       - APP__NATS__URL=nats://nats:4222
-      - APP__NATS__CLUSTER_NAME=unityplan-global
+      - APP__NATS__CLUSTER_NAME=unityplatform-global
       - APP__AUTH__JWT_SECRET=${JWT_SECRET}
       - APP__AUTH__JWT_EXPIRATION_HOURS=24
       - RUST_LOG=info,auth_service=debug
@@ -787,7 +787,7 @@ JWT_SECRET=your-super-secret-jwt-key-change-in-production
 ### 4.4 Deploy & Test
 
 ```bash
-cd /home/henrik/code/data/projects/unityplan_platform/workspace
+cd /home/henrik/code/data/projects/unityplatform_platform/workspace
 docker compose -f docker-compose.pod.yml -p pod-dk --env-file pods/denmark/.env up -d --build auth-service
 ```
 

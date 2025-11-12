@@ -23,7 +23,7 @@ import { getLocationDisplayName } from '@/lib/geocoding';
 const MOCK_POSTS = [
     {
         id: '1',
-        content: 'Just completed my first course on UnityPlan! The learning experience has been amazing. Looking forward to more challenges ahead. 🎓',
+        content: 'Just completed my first course on Unity Platform! The learning experience has been amazing. Looking forward to more challenges ahead. 🎓',
         created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
         likes: 12,
         comments: 3,
@@ -73,8 +73,8 @@ const MOCK_ACTIVITY = [
 
 
 // Local storage keys for mock data
-const MOCK_STATS_KEY = 'unityplan_mock_profile_stats';
-const MOCK_FOLLOWING_KEY = 'unityplan_mock_following';
+const MOCK_STATS_KEY = 'unityplatform_mock_profile_stats';
+const MOCK_FOLLOWING_KEY = 'unityplatform_mock_following';
 
 export function ProfileViewPage() {
     const { user } = useAuthStore();

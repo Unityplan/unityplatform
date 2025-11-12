@@ -1,5 +1,5 @@
-use async_nats::Client;
 use crate::error::{AppError, Result};
+use async_nats::Client;
 
 #[derive(Clone)]
 pub struct NatsClient {
@@ -63,11 +63,13 @@ mod tests {
     #[tokio::test]
     #[ignore] // Requires NATS to be running
     async fn test_nats_connection() {
-        let client = NatsClient::new(
-            "nats://localhost:4222",
-            "unityplan-global".to_string()
-        ).await.unwrap();
+        let client = NatsClient::new("nats://localhost:4222", "unityplatform-global".to_string())
+            .await
+            .unwrap();
 
-        assert!(client.publish("test.subject", b"test message").await.is_ok());
+        assert!(client
+            .publish("test.subject", b"test message")
+            .await
+            .is_ok());
     }
 }

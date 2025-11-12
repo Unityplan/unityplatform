@@ -52,7 +52,7 @@ function Dashboard() {
                     {/* Welcome Message */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Welcome to UnityPlan</CardTitle>
+                            <CardTitle>Welcome to Unity Platform</CardTitle>
                             <CardDescription>Getting started with the platform</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">

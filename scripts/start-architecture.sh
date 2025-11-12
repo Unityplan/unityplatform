@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🚀 UnityPlan Development Environment - New Architecture"
+echo "🚀 Unity Platform Development Environment - New Architecture"
 echo "======================================================="
 echo ""
 
@@ -85,9 +85,9 @@ done
 
 # Create mesh network if needed
 create_mesh_network() {
-    if ! docker network inspect unityplan-mesh-network > /dev/null 2>&1; then
+    if ! docker network inspect unityplatform-mesh-network > /dev/null 2>&1; then
         echo "📡 Creating mesh network..."
-        docker network create unityplan-mesh-network
+        docker network create unityplatform-mesh-network
         echo "✅ Mesh network created"
     else
         echo "✅ Mesh network already exists"
@@ -242,7 +242,7 @@ else
 fi
 
 echo "======================================================="
-echo "✅ UnityPlan Environment Started!"
+echo "✅ Unity Platform Environment Started!"
 echo "======================================================="
 echo ""
 echo "📝 Next Steps:"

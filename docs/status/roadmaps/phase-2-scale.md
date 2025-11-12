@@ -198,19 +198,19 @@ Deliverables:
 │                                                          │
 │ ☐ Regional Matrix Homeservers                           │
 │   Europe:                                               │
-│     • matrix.eu.unityplan.org                           │
+│     • matrix.eu.unityplatform.org                           │
 │     • Serves: DK, NO, SE, FI, DE, UK, FR                │
 │                                                          │
 │   Americas:                                             │
-│     • matrix.am.unityplan.org                           │
+│     • matrix.am.unityplatform.org                           │
 │     • Serves: US, CA, MX, BR                            │
 │                                                          │
 │   Asia-Pacific:                                         │
-│     • matrix.ap.unityplan.org                           │
+│     • matrix.ap.unityplatform.org                           │
 │     • Serves: AU, NZ, JP, SG                            │
 │                                                          │
 │   Africa:                                               │
-│     • matrix.af.unityplan.org                           │
+│     • matrix.af.unityplatform.org                           │
 │     • Serves: ZA, KE, NG, GH                            │
 │                                                          │
 │ ☐ Federation Configuration                              │
@@ -600,9 +600,9 @@ services:
 
 Matrix Synapse Config:
 turn_uris:
-  - "turn:turn.unityplan.org:3478?transport=udp"
-  - "turn:turn.unityplan.org:3478?transport=tcp"
-  - "turns:turn.unityplan.org:5349?transport=tcp"
+  - "turn:turn.unityplatform.org:3478?transport=udp"
+  - "turn:turn.unityplatform.org:3478?transport=tcp"
+  - "turns:turn.unityplatform.org:5349?transport=tcp"
 turn_shared_secret: "secret"
 turn_user_lifetime: 86400000
 
@@ -763,7 +763,7 @@ Tauri Configuration:
   },
   "tauri": {
     "bundle": {
-      "identifier": "org.unityplan.app",
+      "identifier": "org.unityplatform.app",
       "targets": ["ios", "android"],
       "iOS": {
         "minimumSystemVersion": "13.0"
@@ -776,7 +776,7 @@ Tauri Configuration:
 }
 
 App Store Metadata:
-• App name: UnityPlan
+• App name: unityplatform
 • Category: Education
 • Age rating: 4+
 • Privacy policy URL

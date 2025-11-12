@@ -1,6 +1,6 @@
 # TanStack Router Routes
 
-This directory contains file-based routes for the UnityPlan frontend application.
+This directory contains file-based routes for the Unity Platform frontend application.
 
 ## Route Structure
 

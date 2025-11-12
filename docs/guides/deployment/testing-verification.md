@@ -45,7 +45,7 @@ sudo apt install postgresql-client
 
 ```bash
 # Verify you're in project root
-cd /home/henrik/code/data/projects/unityplan_platform/workspace
+cd /home/henrik/code/data/projects/unityplatform_platform/workspace
 pwd  # Should show workspace directory
 
 # Check .env files exist
@@ -83,14 +83,14 @@ docker network prune -f
 
 ```bash
 # Create mesh network
-docker network create unityplan-mesh-network
+docker network create unityplatform-mesh-network
 
 # Verify
-docker network ls | grep unityplan
-# Expected: unityplan-mesh-network
+docker network ls | grep unityplatform
+# Expected: unityplatform-mesh-network
 
 # Inspect network
-docker network inspect unityplan-mesh-network
+docker network inspect unityplatform-mesh-network
 ```
 
 ### 3. Configuration Validation
@@ -184,7 +184,7 @@ docker compose -f docker-compose.pod.yml -p pod-dk \
 
 # Wait for postgres health check
 echo "Waiting for PostgreSQL to be healthy..."
-timeout 60 bash -c 'until docker exec service-postgres-dk pg_isready -U unityplan; do sleep 2; done'
+timeout 60 bash -c 'until docker exec service-postgres-dk pg_isready -U unityplatform; do sleep 2; done'
 
 # Verify all containers running
 docker compose -f docker-compose.pod.yml -p pod-dk ps
@@ -206,7 +206,7 @@ docker compose -f docker-compose.pod.yml -p pod-dk ps
 docker exec service-redis-dk redis-cli ping
 # Expected: PONG
 
-docker exec service-postgres-dk psql -U unityplan -d unityplan_dk -c "SELECT 1;"
+docker exec service-postgres-dk psql -U Unity Platform -d unityplatform_dk -c "SELECT 1;"
 # Expected: 1
 
 curl -s http://192.168.60.133:8222/varz | jq '.server_name'
@@ -225,7 +225,7 @@ docker compose -f docker-compose.pod.yml -p pod-no \
 
 # Wait for postgres
 echo "Waiting for PostgreSQL to be healthy..."
-timeout 60 bash -c 'until docker exec service-postgres-no pg_isready -U unityplan; do sleep 2; done'
+timeout 60 bash -c 'until docker exec service-postgres-no pg_isready -U unityplatform; do sleep 2; done'
 
 # Verify containers
 docker compose -f docker-compose.pod.yml -p pod-no ps
@@ -234,7 +234,7 @@ docker compose -f docker-compose.pod.yml -p pod-no ps
 docker exec service-redis-no redis-cli ping
 # Expected: PONG
 
-docker exec service-postgres-no psql -U unityplan -d unityplan_no -c "SELECT 1;"
+docker exec service-postgres-no psql -U Unity Platform -d unityplatform_no -c "SELECT 1;"
 # Expected: 1
 
 curl -s http://192.168.60.133:8223/varz | jq '.server_name'
@@ -262,7 +262,7 @@ docker compose -f docker-compose.pod.yml -p pod-se \
 
 # Wait for postgres
 echo "Waiting for PostgreSQL to be healthy..."
-timeout 60 bash -c 'until docker exec service-postgres-se pg_isready -U unityplan; do sleep 2; done'
+timeout 60 bash -c 'until docker exec service-postgres-se pg_isready -U unityplatform; do sleep 2; done'
 
 # Verify containers
 docker compose -f docker-compose.pod.yml -p pod-se ps
@@ -305,10 +305,10 @@ for pod in dk no se; do
   if [ "$pod" = "se" ]; then port=5434; fi
   
   # Connection test
-  docker exec service-postgres-${pod} psql -U unityplan -d unityplan_${pod} -c "SELECT version();" | head -3
+  docker exec service-postgres-${pod} psql -U Unity Platform -d unityplatform_${pod} -c "SELECT version();" | head -3
   
   # Schema test (if init.sql creates schema)
-  docker exec service-postgres-${pod} psql -U unityplan -d unityplan_${pod} -c "\dn"
+  docker exec service-postgres-${pod} psql -U Unity Platform -d unityplatform_${pod} -c "\dn"
   
   echo "✅ PostgreSQL pod-${pod}: PASS"
 done
@@ -577,7 +577,7 @@ for pod in dk no se; do
   echo "Testing PostgreSQL pod-${pod}..."
   
   # Simple query timing
-  docker exec service-postgres-${pod} psql -U unityplan -d unityplan_${pod} -c "\timing" -c "SELECT COUNT(*) FROM pg_database;"
+  docker exec service-postgres-${pod} psql -U Unity Platform -d unityplatform_${pod} -c "\timing" -c "SELECT COUNT(*) FROM pg_database;"
 done
 
 echo "✅ PostgreSQL Performance: COMPLETE"
@@ -609,7 +609,7 @@ echo "=== Testing Pod Isolation ==="
 
 # Try to connect to Pod Norway's postgres from Pod Denmark container
 echo "Attempting cross-pod database access (should fail)..."
-docker exec service-postgres-dk psql -h service-postgres-no -U unityplan -d unityplan_no -c "SELECT 1;" 2>&1
+docker exec service-postgres-dk psql -h service-postgres-no -U Unity Platform -d unityplatform_no -c "SELECT 1;" 2>&1
 
 # This SHOULD fail with connection error (pods are isolated)
 # Only mesh-network services (NATS, IPFS) should be cross-accessible
@@ -664,7 +664,7 @@ Run this comprehensive check:
 ```bash
 #!/bin/bash
 echo "==================================="
-echo "UnityPlan Multi-Pod Verification"
+echo "Unity Platform Multi-Pod Verification"
 echo "==================================="
 
 # Check all containers running
@@ -684,7 +684,7 @@ curl -s http://192.168.60.133:9090/api/v1/targets | jq '[.data.activeTargets[] |
 # Check databases
 echo -e "\n🗄️  Database Connections:"
 for pod in dk no se; do
-  docker exec service-postgres-${pod} psql -U unityplan -d unityplan_${pod} -tAc "SELECT 'pod-${pod}: OK';" 2>/dev/null || echo "pod-${pod}: FAIL"
+  docker exec service-postgres-${pod} psql -U Unity Platform -d unityplatform_${pod} -tAc "SELECT 'pod-${pod}: OK';" 2>/dev/null || echo "pod-${pod}: FAIL"
 done
 
 # Check Redis
@@ -699,6 +699,7 @@ echo "==================================="
 ```
 
 Save as `scripts/verify-multi-pod.sh` and run:
+
 ```bash
 chmod +x scripts/verify-multi-pod.sh
 ./scripts/verify-multi-pod.sh
@@ -720,4 +721,4 @@ chmod +x scripts/verify-multi-pod.sh
 
 **Test Plan Version:** 1.0  
 **Last Updated:** November 5, 2025  
-**Maintainer:** UnityPlan Platform Team
+**Maintainer:** Unity Platform Team

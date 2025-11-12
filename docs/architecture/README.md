@@ -93,6 +93,7 @@ Detailed implementation documentation for each microservice.
 **Location:** [services/](services/)
 
 **Documentation Pattern:** Each service contains:
+
 - **README.md** - Service overview, responsibilities, dependencies
 - **API.md** - Complete endpoint specifications with examples
 - **DATABASE.md** - Schema design with multi-pod considerations
@@ -130,18 +131,21 @@ Detailed implementation documentation for each microservice.
 **Master Plan:** [MIGRATIONS-MASTER.md](MIGRATIONS-MASTER.md)
 
 **Current Status:**
+
 - **Version:** 20251112000005
 - **Database:** PostgreSQL 15+ with TimescaleDB
 - **Migrations Applied:** 6 core migrations (30 tables)
 - **Service Ownership:** Defined per table
 
 **Key Principles:**
+
 - Data sovereignty (personal data in territory pods)
 - Global uniqueness (usernames/emails across all pods)
 - Service ownership (each service owns its tables)
 - Migration path to Holochain (future decentralization)
 
 **Service Migration Plans:**
+
 - [auth-service/MIGRATIONS.md](services/auth-service/MIGRATIONS.md) - Authentication migrations
 - [user-service/MIGRATIONS.md](services/user-service/MIGRATIONS.md) - User data migrations (planned)
 - More service-specific migration plans coming
@@ -151,24 +155,28 @@ Detailed implementation documentation for each microservice.
 ## 🏗️ Architecture Principles
 
 ### Service Independence
+
 - Each service owns its database tables
 - Clear API boundaries between services
 - NATS for event-driven communication
 - No direct database access across services
 
 ### Multi-Pod Ready
+
 - Territory-based data isolation
 - Global schema for coordination only
 - Personal data stays in user's territory
 - Cross-pod federation via NATS
 
 ### Data Sovereignty
+
 - Users choose their territory (pod)
 - All personal data in territory schema
 - GDPR-compliant data export/deletion
 - Migration between territories supported
 
 ### Holochain Migration Path
+
 - Current: PostgreSQL + NATS
 - Future: Holochain DNAs per service
 - Agent-centric data ownership
@@ -179,15 +187,18 @@ Detailed implementation documentation for each microservice.
 ## 📖 Related Documentation
 
 ### Development Guides
+
 - [Service Separation Migration](../guides/development/service-separation-migration.md) - Migration from monolith
 - [Versioning Strategy](../guides/development/versioning-strategy.md) - SemVer 2.0.0 approach
 - [Testing Strategy](../guides/development/testing-strategy.md) - Unit and integration testing
 
 ### Deployment Guides
+
 - [Multi-Pod Deployment](../guides/deployment/multi-pod-setup.md) - Territory pod setup
 - [Docker Architecture](../guides/deployment/docker-architecture.md) - Container orchestration
 
 ### Project Documentation
+
 - [Project Overview](../project/overview.md) - Platform vision and goals
 - [Technology Stack](../project/tech-stack.md) - Technology choices
 - [Current Status](../status/current/phase-1-status.md) - Development progress
@@ -197,6 +208,7 @@ Detailed implementation documentation for each microservice.
 ## 📊 Documentation Status
 
 ### Overview Documentation
+
 - ✅ Microservices architecture
 - ✅ Multi-pod architecture
 - ✅ Identity system
@@ -213,6 +225,7 @@ Detailed implementation documentation for each microservice.
 ### Service Documentation
 
 **Phase 1 (MVP):**
+
 - ✅ auth-service (100% - README, API, DATABASE, MIGRATIONS)
 - ✅ user-service (100% - README, API, DATABASE)
 - ✅ settings-service (75% - README, API, DATABASE)
@@ -220,6 +233,7 @@ Detailed implementation documentation for each microservice.
 - ✅ notification-service (75% - README, API, DATABASE)
 
 **Phase 2:**
+
 - ⏳ community-service (50% - README, API, DATABASE)
 - ⏳ badge-service (50% - README, API, DATABASE)
 - ⏳ territory-service (50% - README, API, DATABASE)
