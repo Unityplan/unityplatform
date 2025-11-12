@@ -34,37 +34,40 @@ UnityPlan implements a **privacy-first, sovereignty-focused identity system** th
 
 ## Database Schema
 
+> **📚 Detailed Schemas:** See service documentation for complete specifications:
+>
+> - [auth-service/DATABASE.md](../services/auth-service/DATABASE.md) - Global user identities
+> - [user-service/DATABASE.md](../services/user-service/DATABASE.md) - Territory user profiles
+
 ### Global Identity (Minimal, Cross-Territory)
 
-```sql
-CREATE TABLE global.user_identities (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    username VARCHAR(50) UNIQUE NOT NULL,  -- GLOBALLY UNIQUE across all pods
-    public_key_hash VARCHAR(64) UNIQUE NOT NULL,  -- Placeholder for future crypto key
-    territory_code VARCHAR(100) NOT NULL REFERENCES global.territories(code),
-    territory_user_id UUID NOT NULL,  -- Points to current territory user record
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE (territory_code, territory_user_id)
-);
-```
+**Table:** `global.user_identities`
+
+**Key Fields:**
+
+- `id` - UUID PRIMARY KEY - Permanent user identifier (never changes)
+- `username` - VARCHAR(50) UNIQUE - Globally unique username
+- `public_key_hash` - VARCHAR(64) UNIQUE - Future cryptographic identity
+- `territory_code` - VARCHAR(100) - Current territory assignment
+- `territory_user_id` - UUID - Points to current territory user record
+
+**Purpose:** Minimal global registry for username uniqueness and territory tracking
 
 ### Territory User Data (Personal, Territory-Specific)
 
-```sql
-CREATE TABLE territory_{code}.users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    username VARCHAR(50) UNIQUE NOT NULL,  -- Matches global username
-    email VARCHAR(255) UNIQUE NULL,  -- OPTIONAL - for notifications only
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(255),
-    display_name VARCHAR(100),
-    -- ... other personal data
-    is_active BOOLEAN DEFAULT TRUE NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
+**Table:** `territory_{code}.users`
+
+**Key Fields:**
+
+- `id` - UUID PRIMARY KEY - Territory-specific user ID
+- `username` - VARCHAR(50) UNIQUE - Matches global username
+- `email` - VARCHAR(255) UNIQUE NULL - Optional for notifications only
+- `password_hash` - VARCHAR(255) - Argon2 password hash
+- `full_name` - VARCHAR(255) - Personal information
+- `display_name` - VARCHAR(100) - Chosen display name
+- `is_active` - BOOLEAN - Account status
+
+**Purpose:** Personal data stored in user's chosen territory for data sovereignty
 
 ## Identity Components
 
@@ -379,24 +382,19 @@ fn generate_matrix_id(username: &str, territory_code: &str) -> String {
 
 ### Invitation Schema
 
-```sql
-CREATE TABLE territory_{code}.invitation_tokens (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    token VARCHAR(255) UNIQUE NOT NULL,
-    token_type VARCHAR(20) NOT NULL,  -- 'single_use', 'group'
-    
-    created_by_user_id UUID REFERENCES territory_{code}.users(id),
-    invited_email VARCHAR(255) NULL,  -- OPTIONAL - for email invitations
-    invited_username VARCHAR(50) NULL,  -- OPTIONAL - for targeted invitations
-    
-    max_uses INTEGER NULL,  -- NULL = unlimited
-    current_uses INTEGER DEFAULT 0 NOT NULL,
-    expires_at TIMESTAMPTZ NULL,
-    is_active BOOLEAN DEFAULT TRUE NOT NULL,
-    
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
+> **📚 Detailed Schema:** See [invitation-service/DATABASE.md](../services/invitation-service/DATABASE.md)
+
+**Table:** `territory_{code}.invitation_tokens`
+
+**Key Fields:**
+
+- `token` - VARCHAR(255) UNIQUE - Invitation code
+- `created_by` - UUID - User who created invitation
+- `max_uses` - INT - Usage limits (0 = unlimited, 1 = single-use)
+- `uses_count` - INT - Current usage count
+- `expires_at` - TIMESTAMPTZ NULL - Expiration time
+- `is_active` - BOOLEAN - Active status
+- `metadata` - JSONB - Additional data (email, purpose, community_id)
 
 ## Holochain Migration Path
 

@@ -167,12 +167,14 @@ Pod Norway (NO):
 ```
 
 **Benefits:**
+
 - Full resource isolation
 - Independent scaling
 - Simple to manage
 - Clear cost attribution per territory
 
 **Challenges:**
+
 - Higher cost for small territories
 - Underutilized resources for low-traffic territories
 
@@ -203,18 +205,21 @@ Pod Asia-Pacific (AP):
 ```
 
 **Benefits:**
+
 - Cost efficient for smaller territories
 - Low latency for geographically close countries
 - Shared infrastructure costs
 - Easy to split into dedicated pods when needed
 
 **Data Isolation:**
+
 - **PostgreSQL**: Separate databases with schema-per-territory
 - **Redis**: Key namespace prefixing (`de:user:123`, `fr:user:456`)
 - **NATS**: Topic-based routing (`territory.de.*`, `territory.fr.*`)
 - **IPFS**: Content-addressed (naturally shared, saves storage)
 
 **Migration Path:**
+
 ```
 Start: 3 territories on shared pod (EU)
   ↓
@@ -309,12 +314,14 @@ docker compose -f docker-compose.multi-territory-pod.yml -p pod-eu \
 **Real-World Examples:**
 
 **Single-Territory Pods:**
+
 - United States (pod-us)
 - India (pod-in)
 - Brazil (pod-br)
 - China (pod-cn)
 
 **Multi-Territory Pods:**
+
 - Europe: Germany, France, Spain (pod-eu)
 - Nordics: Iceland, Greenland (pod-nordic)
 - Caribbean: Jamaica, Trinidad, Barbados (pod-caribbean)
@@ -350,6 +357,7 @@ services:
 ```
 
 **Access Pattern:**
+
 - Developers use single dashboard to access any pod
 - Debugging tools have global visibility
 - No production traffic touches dev stack
@@ -380,6 +388,7 @@ services:
 ```
 
 **Metrics Flow:**
+
 ```
 Pod DK exporters → Pod DK Prometheus → Central Prometheus → Grafana
 Pod NO exporters → Pod NO Prometheus ────────┘
@@ -435,6 +444,7 @@ services:
 ```
 
 **Networks:**
+
 - `global-net` - Dev and monitoring stack
 - `pod-dk-net` - Denmark pod internal
 - `pod-no-net` - Norway pod internal
@@ -465,6 +475,7 @@ services:
 ```
 
 **WireGuard VPN Mesh:**
+
 - Each pod server has VPN peer connection to others
 - Private 10.x.x.x network for pod-to-pod traffic
 - Public IPs only for user-facing services
@@ -549,6 +560,7 @@ Format prioritizes First Nation name, followed by FN marker, followed by country
 | `SAMI-FN-NO` | Sámi people | Norway (geographic) | `None` | Independent (also in SE, FI, RU) |
 
 **Sovereignty Principles**:
+
 - ✅ First Nation name comes **first** (respects sovereignty)
 - ✅ `FN` marker clearly identifies as First Nation
 - ✅ Country code provides **geographic context** (prevents name collisions)
@@ -557,12 +569,14 @@ Format prioritizes First Nation name, followed by FN marker, followed by country
 - ✅ Self-identification respected (registered name is authoritative)
 
 **Why Keep Country Code?**
+
 1. **Prevents name collisions**: `EAGLE-FN-CA` vs `EAGLE-FN-US` are distinct
 2. **Geographic context**: Helps users understand location
 3. **No power implication**: Code is metadata, NOT hierarchy
 4. **Practical**: Matches how First Nations often identify themselves internationally
 
 **What This Means for Governance**:
+
 - TeacherRegistrar for `CA` **CANNOT** manage `HAIDA-FN-CA` (separate hierarchies)
 - TeacherRegistrar for `HAIDA-FN-CA` **CANNOT** manage `CA` (separate hierarchies)
 - Each is sovereign within their own hierarchy
@@ -591,35 +605,30 @@ Communities are nested within countries or First Nations:
 
 **Database Implementation**:
 
-```sql
--- territories table
-CREATE TABLE global.territories (
-  id VARCHAR(100) PRIMARY KEY,  -- e.g., 'DK', 'HAIDA-FN-CA', 'DK-COPENHAGEN'
-  name VARCHAR(255) NOT NULL,
-  type VARCHAR(50) NOT NULL,    -- 'country', 'first_nation', 'community'
-  parent_territory VARCHAR(100), -- NULL for top-level (countries & First Nations)
-  pod_id VARCHAR(10),           -- Which pod serves this territory
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  
-  FOREIGN KEY (parent_territory) REFERENCES global.territories(id),
-  CHECK (
-    -- Top-level sovereignty: countries and First Nations have no parent
-    (type IN ('country', 'first_nation') AND parent_territory IS NULL)
-    OR
-    -- Communities must have a parent
-    (type = 'community' AND parent_territory IS NOT NULL)
-  )
-);
+> **📚 Detailed Schema:** See [territory-service/DATABASE.md](../services/territory-service/DATABASE.md)
 
--- Example data
-INSERT INTO global.territories (id, name, type, parent_territory, pod_id) VALUES
-  ('DK', 'Denmark', 'country', NULL, 'dk'),
-  ('NO', 'Norway', 'country', NULL, 'no'),
-  ('CA', 'Canada', 'country', NULL, 'ca'),
-  ('HAIDA-FN-CA', 'Haida Nation', 'first_nation', NULL, 'haida-fn-ca'),
-  ('NAVAJO-FN-US', 'Navajo Nation', 'first_nation', NULL, 'navajo-fn-us'),
-  ('DK-COPENHAGEN', 'Copenhagen', 'community', 'DK', 'dk'),
-  ('HAIDA-FN-CA-MASSETT', 'Massett', 'community', 'HAIDA-FN-CA', 'haida-fn-ca');
+**Table:** `global.territories`
+
+**Key Fields:**
+
+- `id` - VARCHAR(100) PRIMARY KEY - Territory code (e.g., 'DK', 'HAIDA-FN-CA')
+- `name` - VARCHAR(255) - Human-readable name
+- `type` - VARCHAR(50) - Territory type ('country', 'first_nation', 'community')
+- `parent_territory` - VARCHAR(100) NULL - Parent territory (NULL for top-level)
+- `pod_id` - VARCHAR(10) - Which pod serves this territory
+- `created_at` - TIMESTAMPTZ
+
+**Hierarchy Rules:**
+
+- Top-level sovereignty: countries and First Nations have no parent (`parent_territory IS NULL`)
+- Communities must have a parent territory (`parent_territory IS NOT NULL`)
+- Unlimited nesting depth
+
+**Example Hierarchy:**
+
+```
+DK (Denmark) → DK-COPENHAGEN (Copenhagen)
+HAIDA-FN-CA (Haida Nation) → HAIDA-FN-CA-MASSETT (Massett)
 ```
 
 ### Data Residency Rules
@@ -849,6 +858,7 @@ services:
 ```
 
 **Trace Context Propagation:**
+
 - User request → Pod DK API
 - Pod DK → NATS message → Pod NO
 - Pod NO processes → response
@@ -877,11 +887,13 @@ docker compose -f docker-compose.pod.yml -p pod-no \
 ```
 
 **Pros:**
+
 - Simple setup
 - Fast iteration
 - No network complexity
 
 **Cons:**
+
 - No real latency testing
 - Resource intensive on single machine
 
@@ -900,12 +912,14 @@ VM4 (10.0.4.10): Central Monitoring
 ```
 
 **Network Simulation:**
+
 ```bash
 # Add latency between VMs (Linux tc)
 sudo tc qdisc add dev eth0 root netem delay 50ms 10ms distribution normal
 ```
 
 **Pros:**
+
 - Realistic network conditions
 - True isolation
 - Scalability testing
@@ -925,6 +939,7 @@ Frankfurt Server (3.x.x.x):    Central Monitoring
 ```
 
 **Requirements:**
+
 - WireGuard VPN mesh
 - DNS for service discovery
 - CDN for static assets
@@ -955,6 +970,7 @@ AllowedIPs = 10.0.3.0/24
 ## Migration Path
 
 ### Phase 1: MVP (Current - Nov 2025)
+
 **Status:** Single docker-compose, all services  
 **Action:** Complete MVP features, test schema-per-territory
 
@@ -968,16 +984,19 @@ AllowedIPs = 10.0.3.0/24
 ---
 
 ### Phase 2: Split Stacks (Q1 2026)
+
 **Goal:** Prepare for multi-pod deployment  
 **Action:** Split into dev/monitoring/pod compose files
 
 **Deliverables:**
+
 - `docker-compose.dev.yml`
 - `docker-compose.monitoring.yml`
 - `docker-compose.pod.yml` (template)
 - `pods/denmark/.env`, `pods/norway/.env`
 
 **Testing:**
+
 - Run 2-3 pod simulation on single host
 - Validate NATS clustering
 - Test Prometheus federation
@@ -986,16 +1005,19 @@ AllowedIPs = 10.0.3.0/24
 ---
 
 ### Phase 3: Multi-Host Staging (Q2 2026)
+
 **Goal:** Test geographic distribution  
 **Action:** Deploy to 2-3 VPS instances
 
 **Infrastructure:**
+
 - Hetzner/DigitalOcean VPS in EU regions
 - WireGuard VPN between servers
 - DNS setup (pod-dk.unityplan.org, pod-no.unityplan.org)
 - Monitoring central location
 
 **Validation:**
+
 - Latency testing (Copenhagen ↔ Oslo)
 - Failover scenarios
 - Data consistency checks
@@ -1004,10 +1026,12 @@ AllowedIPs = 10.0.3.0/24
 ---
 
 ### Phase 4: Production Multi-Region (Q3 2026)
+
 **Goal:** Launch with 3-5 territory pods  
 **Action:** Production deployment
 
 **Pods:**
+
 - Denmark (Copenhagen)
 - Norway (Oslo)
 - Sweden (Stockholm)
@@ -1015,6 +1039,7 @@ AllowedIPs = 10.0.3.0/24
 - Poland (Warsaw) - Optional
 
 **Production Checklist:**
+
 - [ ] SSL certificates (Let's Encrypt)
 - [ ] Database backups (per pod)
 - [ ] NATS JetStream replication
@@ -1045,16 +1070,19 @@ GET /health/cluster → NATS cluster status
 ### Disaster Recovery
 
 **Scenario 1: Single Pod Failure**
+
 - Users routed to nearest healthy pod
 - Data restored from backups
 - NATS replays missed events from JetStream
 
 **Scenario 2: Network Partition**
+
 - Pods operate independently (AP in CAP theorem)
 - Eventual consistency via NATS
 - Conflict resolution on partition heal
 
 **Scenario 3: Data Center Loss**
+
 - Daily backups to object storage (S3/Backblaze)
 - Restore pod in new location
 - Rejoin NATS cluster
@@ -1062,11 +1090,13 @@ GET /health/cluster → NATS cluster status
 ### Scaling Strategy
 
 **Vertical Scaling (Per Pod):**
+
 - Increase PostgreSQL resources
 - Add Redis memory
 - More CPU for NATS
 
 **Horizontal Scaling (Add Pods):**
+
 - New territory pod in 30 minutes
 - Automated setup via terraform/ansible
 - Self-register with NATS cluster
@@ -1085,6 +1115,7 @@ This multi-pod architecture provides:
 ✅ **Observability** - Centralized monitoring with federation  
 
 **Next Steps:**
+
 1. Create docker-compose splits (Phase 2 prep)
 2. Document NATS clustering setup
 3. Test 2-pod simulation locally

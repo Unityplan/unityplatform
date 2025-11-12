@@ -11,6 +11,7 @@
 The user-service owns all user profile data, connections, and GDPR compliance features. All data is stored in **territory schema only** (data sovereignty).
 
 **Data Sovereignty Principle:**
+
 - ALL user data stays in their home territory pod
 - No global schema access needed (auth-service owns username/email registries)
 - Cross-territory user lookups via API Gateway (federation)
@@ -156,6 +157,7 @@ CREATE INDEX idx_users_language_proficiency_user ON territory_{code}.users_langu
 ```
 
 **Proficiency Levels:**
+
 - `basic` - A1/A2 (CEFR)
 - `intermediate` - B1/B2
 - `advanced` - C1/C2
@@ -192,10 +194,12 @@ CREATE INDEX idx_user_connections_following ON territory_{code}.user_connections
 ```
 
 **Connection Types:**
+
 - `follow` - User A follows User B (can see posts, get notifications)
 - `block` - User A blocks User B (hides content, prevents interaction)
 
 **Business Rules:**
+
 - Blocking removes mutual follows
 - Blocking prevents future follows
 - Unblocking does NOT restore follows (user must re-follow)
@@ -204,6 +208,7 @@ CREATE INDEX idx_user_connections_following ON territory_{code}.user_connections
 Users can follow users from other territories. The connection is stored in the follower's home pod.
 
 **Example:**
+
 - Alice (Denmark) follows Bob (Norway)
 - Connection stored in `territory_dk.user_connections` (Alice's home pod)
 - Bob's follower count fetched via API from his home pod (Norway)
@@ -244,6 +249,7 @@ CREATE INDEX idx_data_exports_expires ON territory_{code}.data_exports(expires_a
 ```
 
 **Export Contents:**
+
 ```json
 {
   "user": { "username": "alice", "email": "alice@example.com" },
@@ -258,6 +264,7 @@ CREATE INDEX idx_data_exports_expires ON territory_{code}.data_exports(expires_a
 ```
 
 **Lifecycle:**
+
 1. User requests export
 2. Background job collects all user data
 3. Export saved as JSON (GDPR requirement: machine-readable)
@@ -300,6 +307,7 @@ CREATE INDEX idx_account_deletion_requests_token ON territory_{code}.account_del
 ```
 
 **Deletion Flow:**
+
 1. User requests deletion
 2. Confirmation email sent with token
 3. User confirms via email link (or expires in 24h)
@@ -307,6 +315,7 @@ CREATE INDEX idx_account_deletion_requests_token ON territory_{code}.account_del
 5. After 30 days: hard delete user + all data
 
 **Data Cleanup:**
+
 - User profile → DELETED
 - Profile links → DELETED
 - Connections → DELETED (follower/following)
@@ -399,6 +408,7 @@ CREATE INDEX idx_activities_public ON territory_{code}.activities(is_public, cre
 ```
 
 **Activity Types:**
+
 - `user.registered` - User joined platform
 - `user.followed` - User followed someone
 - `badge.earned` - User earned badge
@@ -445,6 +455,7 @@ CREATE INDEX idx_audit_log_time ON territory_{code}.audit_log(created_at DESC);
 ```
 
 **Audit Actions:**
+
 - `user.login` - User logged in
 - `user.logout` - User logged out
 - `user.password_changed` - Password updated
@@ -492,6 +503,7 @@ GET /api/v1/users/search?q=alice
 **Scenario:** Alice (Denmark) follows Bob (Norway)
 
 **Storage:**
+
 ```sql
 -- Stored in Alice's home pod (territory_dk)
 INSERT INTO territory_dk.user_connections (follower_id, following_id, connection_type)
@@ -499,6 +511,7 @@ VALUES (alice_id, bob_id, 'follow');
 ```
 
 **Bob's Follower Count:**
+
 ```
 GET https://norway.unityplan.org/api/v1/profiles/{bob_id}/followers
 → Queries all pods for connections where following_id = bob_id
@@ -522,6 +535,7 @@ GET https://denmark.unityplan.org/api/v1/profiles/{alice_id}
 ```
 
 **Privacy Enforcement:**
+
 ```rust
 async fn get_profile(user_id: Uuid, viewer_id: Option<Uuid>) -> Result<Profile> {
     let profile = fetch_profile(user_id).await?;
@@ -594,6 +608,7 @@ Slightly stale counts (eventually consistent) for fast reads.
 **User Request:** "Download my data"
 
 **Process:**
+
 1. User clicks "Export Data"
 2. Background job collects:
    - User account info
@@ -607,6 +622,7 @@ Slightly stale counts (eventually consistent) for fast reads.
 4. User downloads within 7 days
 
 **Export Format:**
+
 ```json
 {
   "export_version": "1.0",
@@ -626,6 +642,7 @@ Slightly stale counts (eventually consistent) for fast reads.
 **User Request:** "Delete my account"
 
 **Process:**
+
 1. User requests deletion
 2. Confirmation email sent
 3. User confirms (24h timeout)
@@ -633,6 +650,7 @@ Slightly stale counts (eventually consistent) for fast reads.
 5. After 30 days: hard delete
 
 **Data Cleanup:**
+
 ```sql
 -- Hard delete after 30 days
 DELETE FROM territory_dk.users WHERE id = ? AND deleted_at < NOW() - INTERVAL '30 days';
@@ -656,17 +674,21 @@ DELETE FROM global.email_registry WHERE user_id = ?;
 
 ## Service Dependencies
 
-### Depends On:
+### Depends On
+
 - **auth-service** - User authentication (creates user record)
 - **ipfs-service** - Avatar storage
 
-### Used By:
+### Used By
+
 - **All services** - User profile data (display_name, avatar_url)
 
-### NATS Events Subscribed:
+### NATS Events Subscribed
+
 - `user.registered` - Create default profile
 
-### NATS Events Published:
+### NATS Events Published
+
 - `user.followed` - User followed someone
 - `user.unfollowed` - User unfollowed someone
 - `profile.updated` - Profile data changed

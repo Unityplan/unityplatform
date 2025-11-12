@@ -11,6 +11,7 @@
 The auth-service handles user authentication and session management. It operates across both **global** and **territory** schemas to ensure username/email uniqueness while maintaining data sovereignty.
 
 **Data Sovereignty Principle:**
+
 - User credentials (password hashes) stored in territory schema (local sovereignty)
 - Username/email registries in global schema (prevent duplicates across all pods)
 - Sessions (refresh tokens) stored in territory schema (user's data stays local)
@@ -63,6 +64,7 @@ CREATE INDEX idx_username_registry_user ON global.username_registry(user_id);
 ```
 
 **Columns:**
+
 - `username` - PRIMARY KEY, globally unique across all pods
 - `user_id` - UUID of user in territory schema
 - `territory_code` - Which territory this user belongs to (e.g., 'dk', 'no')
@@ -94,6 +96,7 @@ CREATE INDEX idx_email_registry_verified ON global.email_registry(is_verified);
 ```
 
 **Columns:**
+
 - `email` - PRIMARY KEY, globally unique, lowercased
 - `user_id` - UUID of user in territory schema
 - `territory_code` - Which territory this user belongs to
@@ -153,6 +156,7 @@ CREATE INDEX idx_users_verified ON territory_{code}.users(is_verified);
 ```
 
 **Columns:**
+
 - `id` - UUID primary key (generated)
 - `username` - Territory-local unique (matches global registry)
 - `email` - OPTIONAL (for notifications only)
@@ -207,6 +211,7 @@ CREATE INDEX idx_refresh_tokens_active ON territory_{code}.refresh_tokens(user_i
 ```
 
 **Columns:**
+
 - `id` - UUID primary key
 - `token` - Hashed refresh token (SHA-256)
 - `user_id` - Foreign key to users table
@@ -299,11 +304,13 @@ Global registry provides routing information. Actual user data fetched from thei
 ### Indexes
 
 **Global Schema:**
+
 - `username_registry.username` - PRIMARY KEY (B-tree)
 - `username_registry.territory_code` - Index for territory-specific queries
 - `email_registry.email` - PRIMARY KEY (B-tree)
 
 **Territory Schema:**
+
 - `users.username` - UNIQUE index (fast login lookup)
 - `users.email` - Partial index (WHERE email IS NOT NULL)
 - `users.is_active` - Partial index (WHERE deleted_at IS NULL)
@@ -313,11 +320,13 @@ Global registry provides routing information. Actual user data fetched from thei
 ### Query Patterns
 
 **Fast Queries:**
+
 - Username availability check: `SELECT username FROM global.username_registry WHERE username = ?` (PRIMARY KEY)
 - Login: `SELECT * FROM territory_dk.users WHERE username = ?` (UNIQUE index)
 - Token validation: `SELECT * FROM territory_dk.refresh_tokens WHERE token = ?` (UNIQUE index)
 
 **Acceptable Queries:**
+
 - List user sessions: `SELECT * FROM refresh_tokens WHERE user_id = ? AND expires_at > NOW()` (composite index)
 
 ---
@@ -325,13 +334,16 @@ Global registry provides routing information. Actual user data fetched from thei
 ## Data Duplication Strategy
 
 **Global Schema:**
+
 - Username + territory mapping (minimal - just routing)
 - Email + territory mapping (minimal - just uniqueness)
 
 **Territory Schema:**
+
 - Full user data (credentials, profile, sessions)
 
 **Why This Works:**
+
 - Global registries are tiny (just usernames/emails + territory codes)
 - No sensitive data in global schema (passwords stay in territory)
 - Authentication happens locally (fast, secure)
@@ -342,24 +354,28 @@ Global registry provides routing information. Actual user data fetched from thei
 ## Holochain Migration Path
 
 **Current (PostgreSQL Multi-Pod):**
+
 ```
 Global Schema: username/email registries
 Territory Schema: users, refresh_tokens
 ```
 
 **Future (Holochain DHT):**
+
 ```
 Global DHT: username/email registries (public DHT entries)
 Local Source Chain: users, refresh_tokens (private source chain)
 ```
 
 **Migration Strategy:**
+
 1. Keep global registries in PostgreSQL (or global DHT)
 2. Move user credentials to Holochain source chain (cryptographically signed)
 3. Refresh tokens become Holochain capabilities (zome calls)
 4. Username lookups via global DHT (distributed, no central server)
 
 **Benefits:**
+
 - User owns their source chain (full sovereignty)
 - Global DHT for username discovery (decentralized)
 - Cryptographic proofs instead of password hashes
@@ -375,6 +391,7 @@ Local Source Chain: users, refresh_tokens (private source chain)
 **Output:** 64-byte hash
 
 **Why Argon2id?**
+
 - Winner of Password Hashing Competition (PHC 2015)
 - Resistant to GPU/ASIC attacks
 - Configurable memory hardness
@@ -383,11 +400,13 @@ Local Source Chain: users, refresh_tokens (private source chain)
 ### Token Security
 
 **Access Tokens:**
+
 - JWT with 15-minute expiration
 - Signed with RS256 (RSA public key cryptography)
 - No database storage (stateless)
 
 **Refresh Tokens:**
+
 - 7-day expiration
 - SHA-256 hashed before storage
 - Stored in database (can be revoked)
@@ -396,11 +415,13 @@ Local Source Chain: users, refresh_tokens (private source chain)
 ### GDPR Compliance
 
 **Right to Erasure (Article 17):**
+
 - Soft delete: `UPDATE users SET deleted_at = NOW(), is_active = false WHERE id = ?`
 - Hard delete (after 30 days): `DELETE FROM users WHERE id = ? AND deleted_at < NOW() - INTERVAL '30 days'`
 - Global registries: `DELETE FROM global.username_registry WHERE user_id = ?`
 
 **Cascading Deletes:**
+
 - `refresh_tokens` → CASCADE (delete all sessions)
 - Global registries → Manual cleanup (username becomes available)
 
@@ -408,15 +429,18 @@ Local Source Chain: users, refresh_tokens (private source chain)
 
 ## Service Dependencies
 
-### Depends On:
+### Depends On
+
 - **invitation-service** - Validate invitation tokens during registration
 - **notification-service** - Send verification emails
 
-### Used By:
+### Used By
+
 - **All services** - JWT token validation
 - **user-service** - User creation after successful registration
 
-### NATS Events Published:
+### NATS Events Published
+
 - `user.registered` - New user created (triggers settings, notification setup)
 - `user.login` - User logged in (analytics)
 - `user.logout` - User logged out

@@ -108,6 +108,7 @@ CREATE TABLE territory_{code}.course_progress (
 **User Enrollment:** Territory (personal progress)
 
 **Example:**
+
 - "Introduction to Rust" course → global.courses
 - Alice (Denmark) enrolls → territory_dk.course_enrollments
 - Alice completes Lesson 3 → territory_dk.course_progress

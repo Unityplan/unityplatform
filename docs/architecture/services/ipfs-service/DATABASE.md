@@ -54,6 +54,7 @@ CREATE INDEX idx_file_uploads_context ON territory_{code}.file_uploads(upload_co
 **File Ownership:** Files are owned by users - metadata stored in their territory.
 
 **IPFS Storage:**
+
 - Content-addressed (CID)
 - Pinned on territory's IPFS node
 - Public gateway: `https://ipfs.unityplan.org/ipfs/{cid}`
@@ -89,6 +90,7 @@ CREATE TABLE territory_{code}.user_storage_quotas (
 **Access:** Any territory can fetch via IPFS CID (decentralized)
 
 **Cross-Territory File Access:**
+
 - Alice (Denmark) uploads avatar → Pinned on Denmark IPFS node
 - Bob (Norway) views Alice's profile → Fetches avatar via CID from Denmark IPFS node
 - IPFS handles peer discovery and content routing
@@ -98,6 +100,7 @@ CREATE TABLE territory_{code}.user_storage_quotas (
 ## Garbage Collection
 
 **Unpinning Strategy:**
+
 - User deletes file → Mark `deleted_at`
 - After 30 days → Unpin from IPFS node
 - Content may still exist on IPFS network (if others pinned it)

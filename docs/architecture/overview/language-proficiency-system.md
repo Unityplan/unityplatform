@@ -64,44 +64,31 @@ enum TranslationProvider {
 
 ## Database Schema (Future)
 
+> **📚 Detailed Schemas:** See service documentation:
+>
+> - [user-service/DATABASE.md](../services/user-service/DATABASE.md) - User language preferences
+> - [translation-service/DATABASE.md](../services/translation-service/DATABASE.md) - Translation cache
+
 ### Table: `user_languages`
 
-```sql
-CREATE TABLE territory.user_languages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES territory.users(id) ON DELETE CASCADE,
-    language_code VARCHAR(10) NOT NULL,  -- ISO 639-1 or 639-3
-    language_name VARCHAR(100) NOT NULL,
-    is_primary BOOLEAN NOT NULL DEFAULT false,
-    display_order INT NOT NULL DEFAULT 0,  -- Order in list
-    
-    -- Proficiency levels
-    spoken_level VARCHAR(20),    -- native, fluent, advanced, intermediate, basic, learning
-    written_level VARCHAR(20),
-    listening_level VARCHAR(20),
-    reading_level VARCHAR(20),
-    
-    -- Metadata
-    learned_from DATE,           -- When they started learning
-    notes TEXT,                  -- Personal notes about their proficiency
-    
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
-    -- Constraints
-    CONSTRAINT user_languages_user_id_lang_code_unique 
-        UNIQUE (user_id, language_code),
-    CONSTRAINT user_languages_proficiency_check 
-        CHECK (spoken_level IN ('native', 'fluent', 'advanced', 'intermediate', 'basic', 'learning')),
-    CONSTRAINT user_languages_display_order_positive 
-        CHECK (display_order >= 0)
-);
+**Territory-specific:** `territory_{code}.user_languages`
 
--- Indexes
-CREATE INDEX idx_user_languages_user_id ON territory.user_languages(user_id);
-CREATE INDEX idx_user_languages_primary ON territory.user_languages(user_id, is_primary);
-CREATE INDEX idx_user_languages_order ON territory.user_languages(user_id, display_order);
-```
+**Key Fields:**
+
+- `id` - UUID PRIMARY KEY
+- `user_id` - UUID - Reference to territory user
+- `language_code` - VARCHAR(10) - ISO 639-1 or 639-3
+- `language_name` - VARCHAR(100) - Human-readable name
+- `is_primary` - BOOLEAN - Primary language flag
+- `display_order` - INT - Display order in list
+- `spoken_level` - VARCHAR(20) - Speaking proficiency
+- `written_level` - VARCHAR(20) - Writing proficiency
+- `listening_level` - VARCHAR(20) - Listening proficiency
+- `reading_level` - VARCHAR(20) - Reading proficiency
+- `learned_from` - DATE - When they started learning
+- `notes` - TEXT - Personal proficiency notes
+
+**Proficiency Levels:** native, fluent, advanced, intermediate, basic, learning
 
 ## How Translation Works
 
@@ -246,30 +233,21 @@ Full list: <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>
 
 ### Translation Memory
 
-```sql
--- Territory-scoped translation cache
-CREATE TABLE territory.translation_cache (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    source_text_hash VARCHAR(64) NOT NULL,  -- SHA-256 of source text
-    source_language VARCHAR(10) NOT NULL,
-    target_language VARCHAR(10) NOT NULL,
-    translated_text TEXT NOT NULL,
-    translation_provider VARCHAR(50),
-    quality_score FLOAT,  -- 0.0 - 1.0 (from provider or community rating)
-    
-    -- Metadata
-    usage_count INT DEFAULT 1,
-    last_used_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
-    -- Constraints
-    CONSTRAINT translation_cache_unique 
-        UNIQUE (source_text_hash, source_language, target_language)
-);
+**Table:** `territory_{code}.translation_cache`
 
-CREATE INDEX idx_translation_cache_hash ON territory.translation_cache(source_text_hash);
-CREATE INDEX idx_translation_cache_langs ON territory.translation_cache(source_language, target_language);
-```
+**Key Fields:**
+
+- `id` - UUID PRIMARY KEY
+- `source_text_hash` - VARCHAR(64) - SHA-256 of source text
+- `source_language` - VARCHAR(10) - Source language code
+- `target_language` - VARCHAR(10) - Target language code
+- `translated_text` - TEXT - Cached translation
+- `translation_provider` - VARCHAR(50) - Provider used (LibreTranslate, DeepL, etc.)
+- `quality_score` - FLOAT - Translation quality (0.0-1.0)
+- `usage_count` - INT - Number of times used
+- `last_used_at` - TIMESTAMPTZ - Last access time
+
+**Purpose:** Territory-scoped translation cache for faster translation and reduced API calls
 
 ## Related Documentation
 

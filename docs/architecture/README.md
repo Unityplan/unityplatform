@@ -8,9 +8,11 @@
 ## 📚 Core Architecture Documents
 
 ### **1. [Microservices Architecture](microservices-architecture.md)** ⭐ START HERE
+
 Complete overview of the microservices architecture, service boundaries, dependencies, and Holochain migration path.
 
 **Covers:**
+
 - Service independence principles
 - Multi-pod ready architecture
 - Service dependency matrix
@@ -25,6 +27,7 @@ Complete overview of the microservices architecture, service boundaries, depende
 Each service has comprehensive documentation in its own folder:
 
 ### **auth-service/** (Port 8001) 🔐
+
 - [ ] README.md - Service overview
 - [ ] database-schema.md - Tables owned (users, sessions, global registries)
 - [ ] api-specification.md - Authentication endpoints
@@ -36,6 +39,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **user-service/** (Port 8002) 👤
+
 - [x] [README.md](services/user-service/README.md) - Service overview ✅
 - [ ] database-schema.md - Profiles, links, connections, GDPR tables
 - [ ] api-specification.md - 28 endpoints documented
@@ -47,6 +51,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **settings-service/** (Port 8003) ⚙️
+
 - [ ] README.md - Service overview
 - [ ] database-schema.md - users_settings, users_privacy_settings
 - [ ] api-specification.md - Settings management endpoints
@@ -59,6 +64,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **invitation-service/** (Port 8004) 🎫
+
 - [ ] README.md - Service overview
 - [ ] database-schema.md - invitation_tokens, invitation_uses, global registry
 - [ ] api-specification.md - Invitation management endpoints
@@ -71,6 +77,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **notification-service/** (Port 8005) 🔔
+
 - [ ] README.md - Service overview
 - [ ] database-schema.md - notifications, notification_settings, templates
 - [ ] api-specification.md - Notification endpoints
@@ -84,6 +91,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **community-service/** (Port 8006) 👥
+
 - [ ] README.md - Service overview
 - [ ] database-schema.md - communities, community_members, settings
 - [ ] api-specification.md - Community management endpoints
@@ -96,6 +104,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **badge-service/** (Port 8007) 🏅
+
 - [ ] README.md - Service overview
 - [ ] database-schema.md - badges, user_badges, badge_progress
 - [ ] api-specification.md - Badge and achievement endpoints
@@ -108,6 +117,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **territory-service/** (Port 8008) 🌍
+
 - [ ] README.md - Service overview
 - [ ] database-schema.md - global.territories, territory_settings, stats
 - [ ] api-specification.md - Territory management endpoints
@@ -121,6 +131,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **event-service/** (Port 8009) 📅
+
 - [ ] README.md - Service overview
 - [ ] database-schema.md - events, event_participants, rsvps
 - [ ] api-specification.md - Event management endpoints
@@ -132,6 +143,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **course-service/** (Port 8010) 📚
+
 - [ ] README.md - Service overview (LMS)
 - [ ] database-schema.md - courses, lessons, enrollments, progress
 - [ ] api-specification.md - Learning management endpoints
@@ -143,6 +155,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **forum-service/** (Port 8011) 💬
+
 - [ ] README.md - Service overview
 - [ ] matrix-integration.md - Matrix protocol integration
 - [ ] api-specification.md - Forum endpoints (wrapper around Matrix)
@@ -154,6 +167,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **translation-service/** (Port 8012) 🌐
+
 - [ ] README.md - Service overview
 - [ ] database-schema.md - translations, translation_contributions
 - [ ] api-specification.md - Translation management endpoints
@@ -165,6 +179,7 @@ Each service has comprehensive documentation in its own folder:
 ---
 
 ### **ipfs-service/** (Port 8013) 📦
+
 - [ ] README.md - Service overview
 - [ ] ipfs-integration.md - IPFS node configuration
 - [ ] api-specification.md - File storage endpoints

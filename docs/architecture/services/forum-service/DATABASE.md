@@ -12,6 +12,7 @@
 **PostgreSQL:** Metadata, indexing, search
 
 **Data Flow:**
+
 1. Messages stored in Matrix homeserver (Synapse)
 2. Metadata (room info, participants) stored in PostgreSQL
 3. Search index built from Matrix data
@@ -83,12 +84,14 @@ CREATE TABLE territory_{code}.forum_memberships (
 **Database:** Separate Synapse PostgreSQL database
 
 **PostgreSQL Tables (Synapse):**
+
 - `rooms` - Room metadata
 - `events` - Messages (JSON)
 - `room_memberships` - Participants
 - `room_aliases` - Room names
 
 **UnityPlan Tables:**
+
 - Metadata index (for fast search)
 - User participation tracking
 - Cross-territory room registry
@@ -101,6 +104,7 @@ CREATE TABLE territory_{code}.forum_memberships (
 **Future:** Matrix (real-time) + Holochain (permanent storage)
 
 **Benefits:**
+
 - Messages cryptographically signed (Holochain)
 - Permanent archive (DHT storage)
 - User owns message history (source chain)
@@ -110,10 +114,12 @@ CREATE TABLE territory_{code}.forum_memberships (
 ## Multi-Pod Considerations
 
 **Forum Room Location:**
+
 - Public rooms → global schema (accessible to all)
 - Community rooms → territory schema (local to community)
 
 **Message Storage:**
+
 - Matrix homeserver (federated)
 - Holochain DHT (permanent archive)
 

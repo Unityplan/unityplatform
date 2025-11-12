@@ -152,29 +152,26 @@ Attacker would need to:
 
 **Database Schema:**
 
-```sql
--- User profile additions
-ALTER TABLE user_profiles ADD COLUMN recovery_friends JSONB; -- Array of user IDs
-ALTER TABLE user_profiles ADD COLUMN recovery_question TEXT;
-ALTER TABLE user_profiles ADD COLUMN recovery_answer_hash TEXT;
+> **📚 Implementation Note:** These tables will be implemented in [auth-service/DATABASE.md](../services/auth-service/DATABASE.md) during Phase 2 development.
 
--- Friend recovery tokens
-CREATE TABLE friend_recovery_tokens (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    friend_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token VARCHAR(64) NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMPTZ NOT NULL,
-    used BOOLEAN DEFAULT FALSE,
-    used_at TIMESTAMPTZ,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_friend FOREIGN KEY (friend_id) REFERENCES users(id)
-);
+**User Profile Additions:**
 
-CREATE INDEX idx_friend_recovery_tokens_token ON friend_recovery_tokens(token);
-CREATE INDEX idx_friend_recovery_tokens_user ON friend_recovery_tokens(user_id);
-```
+- `recovery_friends` - JSONB - Array of trusted friend user IDs
+- `recovery_question` - TEXT - Personal validation question
+- `recovery_answer_hash` - TEXT - Hashed answer to recovery question
+
+**Friend Recovery Tokens Table:** `friend_recovery_tokens`
+
+**Key Fields:**
+
+- `id` - UUID PRIMARY KEY
+- `user_id` - UUID - User requesting recovery
+- `friend_id` - UUID - Friend who received recovery request
+- `token` - VARCHAR(64) UNIQUE - Recovery token sent to friend
+- `created_at` - TIMESTAMPTZ - Token creation time
+- `expires_at` - TIMESTAMPTZ - Token expiration (24 hours)
+- `used` - BOOLEAN - Whether token has been used
+- `used_at` - TIMESTAMPTZ NULL - When token was used
 
 **Rate Limiting:**
 
@@ -307,48 +304,42 @@ Manager has two paths:
 
 **Database Schema:**
 
-```sql
--- User profile additions
-ALTER TABLE user_profiles ADD COLUMN manager_recovery_question TEXT;
-ALTER TABLE user_profiles ADD COLUMN manager_recovery_answer_hash TEXT;
+> **📚 Implementation Note:** These tables will be implemented in [auth-service/DATABASE.md](../services/auth-service/DATABASE.md) during Phase 2 development.
 
--- Manager recovery requests
-CREATE TABLE manager_recovery_requests (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    manager_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    request_reason TEXT NOT NULL,
-    validation_answer TEXT, -- User's answer (if configured)
-    status VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending, approved, rejected, expired
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    resolved_at TIMESTAMPTZ,
-    resolution_method VARCHAR(50), -- validation_match, admin_override, additional_verification
-    notes TEXT, -- Manager's notes
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_manager FOREIGN KEY (manager_id) REFERENCES users(id)
-);
+**User Profile Additions:**
 
-CREATE INDEX idx_manager_recovery_status ON manager_recovery_requests(status);
-CREATE INDEX idx_manager_recovery_user ON manager_recovery_requests(user_id);
-CREATE INDEX idx_manager_recovery_manager ON manager_recovery_requests(manager_id);
+- `manager_recovery_question` - TEXT - Manager validation question
+- `manager_recovery_answer_hash` - TEXT - Hashed answer
 
--- Password reset audit log
-CREATE TABLE password_reset_audit (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    reset_method VARCHAR(50) NOT NULL, -- email, friend_recovery, manager_assisted
-    initiated_by UUID REFERENCES users(id), -- NULL for self-service, manager_id for assisted
-    ip_address INET,
-    user_agent TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    success BOOLEAN NOT NULL,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_initiator FOREIGN KEY (initiated_by) REFERENCES users(id)
-);
+**Manager Recovery Requests Table:** `manager_recovery_requests`
 
-CREATE INDEX idx_password_reset_audit_user ON password_reset_audit(user_id);
-CREATE INDEX idx_password_reset_audit_date ON password_reset_audit(created_at);
-```
+**Key Fields:**
+
+- `id` - UUID PRIMARY KEY
+- `user_id` - UUID - User requesting recovery
+- `manager_id` - UUID NULL - Manager handling request
+- `request_reason` - TEXT - Why user needs recovery
+- `validation_answer` - TEXT NULL - User's answer (if configured)
+- `status` - VARCHAR(20) - 'pending', 'approved', 'rejected', 'expired'
+- `created_at` - TIMESTAMPTZ - Request creation time
+- `resolved_at` - TIMESTAMPTZ NULL - When request was resolved
+- `resolution_method` - VARCHAR(50) - 'validation_match', 'admin_override', 'additional_verification'
+- `notes` - TEXT - Manager's decision notes
+
+**Password Reset Audit Table:** `password_reset_audit`
+
+**Key Fields:**
+
+- `id` - UUID PRIMARY KEY
+- `user_id` - UUID - User whose password was reset
+- `reset_method` - VARCHAR(50) - 'email', 'friend_recovery', 'manager_assisted'
+- `initiated_by` - UUID NULL - NULL for self-service, manager_id for assisted
+- `ip_address` - INET - Request IP address
+- `user_agent` - TEXT - Browser/device info
+- `created_at` - TIMESTAMPTZ - Reset timestamp
+- `success` - BOOLEAN - Whether reset succeeded
+
+**Purpose:** Complete audit trail for password resets (security compliance)
 
 **Rate Limiting:**
 

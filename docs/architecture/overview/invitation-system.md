@@ -99,73 +99,37 @@ The platform uses an **invitation-only registration system** to maintain communi
 
 ## Database Schema
 
-### **1. Territory Invitation Tokens** (territory_*.invitation_tokens)
+> **📚 Detailed Schema:** See [invitation-service/DATABASE.md](../services/invitation-service/DATABASE.md) for complete table specifications, indexes, and multi-pod considerations.
+
+### **1. Territory Invitation Tokens** (territory_{code}.invitation_tokens)
 
 Stores invitation tokens within each territory schema. Each token is created by a territory user.
 
-```sql
-CREATE TABLE territory_dk.invitation_tokens (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    token VARCHAR(64) UNIQUE NOT NULL,  -- Cryptographically random
-    token_type VARCHAR(20) NOT NULL CHECK (token_type IN ('single_use', 'group')),
-    
-    -- Restrictions
-    email VARCHAR(255),  -- Optional: for email delivery OR NULL for link/QR sharing
-    max_uses INT NOT NULL DEFAULT 1,
-    used_count INT NOT NULL DEFAULT 0,
-    
-    -- Metadata
-    created_by_user_id UUID NOT NULL REFERENCES territory_dk.users(id),
-    community_id UUID REFERENCES territory_dk.communities(id),  -- ⭐ Optional community assignment
-    purpose TEXT,  -- Optional description
-    metadata JSONB,  -- Additional data (group name, course info, delivery method, etc.)
-    
-    -- Lifecycle
-    expires_at TIMESTAMPTZ NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    revoked_at TIMESTAMPTZ,
-    revoked_by_user_id UUID REFERENCES territory_dk.users(id),
-    
-    -- Timestamps
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
-    -- Constraints
-    CHECK (
-        (token_type = 'single_use' AND max_uses = 1) OR
-        (token_type = 'group' AND max_uses > 1)
-    ),
-    CHECK (used_count <= max_uses)
-);
+**Key Fields:**
 
-CREATE INDEX idx_invitation_tokens_token ON territory_dk.invitation_tokens(token);
-CREATE INDEX idx_invitation_tokens_email ON territory_dk.invitation_tokens(email) WHERE email IS NOT NULL;
-CREATE INDEX idx_invitation_tokens_created_by ON territory_dk.invitation_tokens(created_by_user_id);
-CREATE INDEX idx_invitation_tokens_active ON territory_dk.invitation_tokens(is_active, expires_at);
-```
+- `token` - VARCHAR(255) UNIQUE - 16-character token (e.g., `A7K9-M2X4-P5W8-Q1Z3`)
+- `created_by` - UUID - User who created the invitation
+- `max_uses` - INT - Usage limits (1 = single-use, 0 = unlimited)
+- `uses_count` - INT - Current usage count
+- `expires_at` - TIMESTAMPTZ - Expiration timestamp (NULL = never expires)
+- `is_active` - BOOLEAN - Active status
+- `metadata` - JSONB - Additional data (purpose, community_id, etc.)
 
-### **2. Global Token Registry** (global.invitation_token_registry) ⭐ NEW
+**Token Format:** Excludes confusing characters (0, O, I, 1) for readability
 
-**Purpose:** Secure token-to-territory mapping. Prevents users from selecting wrong territory.
+### **2. Global Token Registry** (global.invitation_token_registry)
+
+**Purpose:** Secure token-to-territory mapping. Prevents users from registering in wrong territory.
 
 **Security Model:** Territory binding is **database-enforced**, not client-provided.
 
-```sql
-CREATE TABLE global.invitation_token_registry (
-    token VARCHAR(255) PRIMARY KEY,  -- Same token as in territory schema
-    territory_code VARCHAR(10) NOT NULL REFERENCES global.territories(code) ON DELETE CASCADE,
-    territory_token_id UUID NOT NULL,  -- FK to territory_X.invitation_tokens.id
-    
-    -- Metadata
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
-    -- Ensure token is globally unique across all territories
-    CONSTRAINT uq_global_invitation_token UNIQUE (token)
-);
+> **📚 Detailed Schema:** See [invitation-service/DATABASE.md](../services/invitation-service/DATABASE.md#global-invitation-token-registry)
 
-CREATE INDEX idx_global_invitation_registry_token ON global.invitation_token_registry(token);
-CREATE INDEX idx_global_invitation_registry_territory ON global.invitation_token_registry(territory_code);
-```
+**Key Fields:**
+
+- `token` - VARCHAR(255) PRIMARY KEY - The invitation token (globally unique)
+- `territory_code` - VARCHAR(10) - Territory this token belongs to
+- `territory_token_id` - UUID - Reference to territory-specific token record
 
 **How it works:**
 
@@ -174,22 +138,19 @@ CREATE INDEX idx_global_invitation_registry_territory ON global.invitation_token
 3. Client **cannot manipulate** territory selection (database-enforced)
 4. Backend then validates full token details in the appropriate territory schema
 
-### **3. Territory Invitation Uses** (territory_*.invitation_uses)
+### **3. Territory Invitation Uses** (territory_{code}.invitation_uses)
 
-```sql
--- Track who used which invitation (audit trail)
-CREATE TABLE territory_dk.invitation_uses (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    invitation_token_id UUID NOT NULL REFERENCES territory_dk.invitation_tokens(id),
-    user_id UUID NOT NULL REFERENCES territory_dk.users(id),
-    used_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    ip_address INET,  -- Optional: track IP for security
-    user_agent TEXT   -- Optional: track browser/device
-);
+Tracks which users have used each invitation token (audit trail).
 
-CREATE INDEX idx_invitation_uses_token ON territory_dk.invitation_uses(invitation_token_id);
-CREATE INDEX idx_invitation_uses_user ON territory_dk.invitation_uses(user_id);
-```
+**Key Fields:**
+
+- `invitation_id` - UUID - Reference to invitation token
+- `used_by` - UUID - User who used the invitation
+- `used_at` - TIMESTAMPTZ - When invitation was used
+- `ip_address` - INET - IP address (security audit)
+- `user_agent` - TEXT - Browser/device info
+
+**Purpose:** Invitation tree visualization and trust graph analysis
 
 ---
 
@@ -197,33 +158,31 @@ CREATE INDEX idx_invitation_uses_user ON territory_dk.invitation_uses(user_id);
 
 ### **Secure Flow (Invitation-Based with Territory Binding)** ✅
 
-```
-User Flow:
-  1. User receives invitation: "Join Denmark Territory" + token inv_abc123
-  2. User opens registration page
-  3. User enters invitation token (NO territory selection)
-  4. Frontend validates token via GET /api/auth/invitations/validate/{token}
-  5. Backend looks up territory from global.invitation_token_registry
-  6. Backend returns: { territory: "Denmark", community: "Copenhagen Guild" }
-  7. Frontend displays: "You're joining Denmark Territory → Copenhagen Guild"
-  8. User completes registration (username, password, etc.)
-  9. Backend derives territory from token (client cannot manipulate)
-  10. User created in correct territory schema with community assignment
+**User Flow:**
 
-Backend Processing:
-  1. Query global.invitation_token_registry for territory_code
-  2. Validate token exists in territory_{code}.invitation_tokens
-  3. Check token is active and not expired
-  4. For single_use with email: Verify provided email matches token.email
-  5. For single_use without email: Skip email validation (privacy mode)
-  6. For group: Check used_count < max_uses
-  7. Create user account in territory_{code}.users
-  8. If token has community_id: assign user to that community
-  9. Increment token.used_count
-  10. Record invitation use in invitation_uses table
-  11. If single_use OR group token reached max_uses: mark token as inactive
-  12. Return access/refresh tokens
-```
+1. User receives invitation: "Join Denmark Territory" + token `A7K9-M2X4-P5W8-Q1Z3`
+2. User opens registration page
+3. User enters invitation token (NO territory selection dropdown)
+4. Frontend validates token via `POST /api/v1/invitations/validate`
+5. Backend looks up territory from `global.invitation_token_registry`
+6. Backend returns: `{ "valid": true, "territory": "dk", "metadata": {...} }`
+7. Frontend displays: "You're joining Denmark Territory"
+8. User completes registration (username, password, etc.)
+9. Backend derives territory from token (client cannot manipulate)
+10. User created in correct territory schema
+
+**Backend Processing:**
+
+1. Query `global.invitation_token_registry` for `territory_code`
+2. Validate token exists in `territory_{code}.invitation_tokens`
+3. Check token is active and not expired
+4. Check usage limits (for single-use: `uses_count < 1`, for multi-use: `uses_count < max_uses`)
+5. Create user account in `territory_{code}.users` (via auth-service)
+6. Increment `token.uses_count`
+7. Record invitation use in `invitation_uses` table
+8. If usage limit reached: mark token as inactive
+9. Publish NATS event: `invitation.used`
+10. Return access/refresh tokens
 
 **Security Benefits:**
 

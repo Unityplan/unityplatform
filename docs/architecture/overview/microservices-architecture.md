@@ -10,21 +10,25 @@
 ## 🎯 Architecture Principles
 
 ### 1. **Service Independence**
+
 - Each service owns its data (bounded context)
 - No direct database access across services
 - Communication via APIs or message bus (NATS)
 
 ### 2. **Multi-Pod Ready**
+
 - Each service can scale independently per territory
 - Services communicate via territory-aware routing
 - Shared-nothing architecture (except global registry)
 
 ### 3. **Holochain Migration Path**
+
 - Service boundaries map to future Holochain DNAs
 - Data models compatible with Holochain entry types
 - Event sourcing patterns where applicable
 
 ### 4. **Clear Ownership**
+
 - Each table belongs to exactly ONE service
 - Cross-service queries use API calls, not direct SQL
 - No overlapping functionality between services
@@ -78,6 +82,7 @@
 **Bounded Context:** Authentication & Authorization
 
 **Responsibilities:**
+
 - User authentication (login/logout)
 - JWT token generation and validation
 - Password management (hashing, reset)
@@ -85,6 +90,7 @@
 - 2FA/TOTP (future)
 
 **Database Tables (Owns):**
+
 ```sql
 territory_{code}.users
   - id, username, email, password_hash, full_name
@@ -107,6 +113,7 @@ global.email_registry (if email provided)
 ```
 
 **API Endpoints:**
+
 ```
 POST   /api/v1/auth/register          - Register (requires invitation token from invitation-service)
 POST   /api/v1/auth/login             - Authenticate user
@@ -118,11 +125,13 @@ POST   /api/v1/auth/password/confirm  - Confirm password reset
 ```
 
 **Service Dependencies:**
+
 - **Calls:** invitation-service (validate invitation during registration)
 - **Called by:** All services (JWT validation)
 - **Events:** Publishes `user.registered`, `user.logged_in`, `user.logged_out`
 
 **Holochain Mapping:**
+
 - DNA: `authentication`
 - Entry Types: `User`, `Session`, `PasswordResetToken`
 
@@ -133,6 +142,7 @@ POST   /api/v1/auth/password/confirm  - Confirm password reset
 **Bounded Context:** User Profile & Identity
 
 **Responsibilities:**
+
 - User profile management (display name, bio, avatar)
 - Profile links (external social/web links)
 - Language proficiency tracking
@@ -140,6 +150,7 @@ POST   /api/v1/auth/password/confirm  - Confirm password reset
 - GDPR compliance (data export, account deletion)
 
 **Database Tables (Owns):**
+
 ```sql
 territory_{code}.users_profiles
   - user_id, display_name, avatar_url, bio, about
@@ -171,6 +182,7 @@ territory_{code}.account_deletion_requests (GDPR)
 ```
 
 **API Endpoints:**
+
 ```
 # Profile
 GET    /v1/profiles/{id}                    - Get profile
@@ -209,11 +221,13 @@ DELETE /v1/users/{id}/account/delete                   - Cancel deletion
 ```
 
 **Service Dependencies:**
+
 - **Calls:** settings-service (include settings in GDPR export)
 - **Called by:** Frontend, other services (profile lookups)
 - **Events:** Publishes `profile.updated`, `user.followed`, `user.blocked`
 
 **Holochain Mapping:**
+
 - DNA: `profiles`
 - Entry Types: `Profile`, `ProfileLink`, `LanguageProficiency`, `Connection`
 
@@ -224,12 +238,14 @@ DELETE /v1/users/{id}/account/delete                   - Cancel deletion
 **Bounded Context:** User Preferences & Settings
 
 **Responsibilities:**
+
 - Appearance settings (theme, colors, layout)
 - Language settings (locale, translation)
 - Privacy settings (profile visibility)
 - Settings synchronization across devices
 
 **Database Tables (Owns):**
+
 ```sql
 territory_{code}.users_settings
   - user_id, theme_mode, color_scheme
@@ -247,6 +263,7 @@ territory_{code}.users_privacy_settings
 ```
 
 **API Endpoints:**
+
 ```
 # User Settings
 GET    /v1/settings/{user_id}               - Get all settings
@@ -266,11 +283,13 @@ PATCH  /v1/settings/{user_id}/privacy       - Update privacy
 ```
 
 **Service Dependencies:**
+
 - **Calls:** None (leaf service)
 - **Called by:** user-service (GDPR export), frontend
 - **Events:** Publishes `settings.updated`
 
 **Holochain Mapping:**
+
 - DNA: `settings`
 - Entry Types: `UserSettings`, `PrivacySettings`
 - Note: Settings are user-sovereign, stored in user's source chain
@@ -282,6 +301,7 @@ PATCH  /v1/settings/{user_id}/privacy       - Update privacy
 **Bounded Context:** Invitation & Access Control
 
 **Responsibilities:**
+
 - Invitation token creation and management
 - Token validation (for registration)
 - Usage tracking and audit logs
@@ -289,6 +309,7 @@ PATCH  /v1/settings/{user_id}/privacy       - Update privacy
 - Rate limiting (invitations per user)
 
 **Database Tables (Owns):**
+
 ```sql
 territory_{code}.invitation_tokens
   - id, token, token_type (single_use/group)
@@ -306,6 +327,7 @@ global.invitation_token_registry
 ```
 
 **API Endpoints:**
+
 ```
 GET    /v1/invitations/validate/{token}     - Validate token (public, used by auth)
 POST   /v1/invitations                      - Create invitation (authenticated)
@@ -317,11 +339,13 @@ POST   /v1/invitations/{token}/use          - Mark as used (internal, called by 
 ```
 
 **Service Dependencies:**
+
 - **Calls:** None (leaf service)
 - **Called by:** auth-service (during registration), frontend (admin panel)
 - **Events:** Publishes `invitation.created`, `invitation.used`, `invitation.revoked`
 
 **Holochain Mapping:**
+
 - DNA: `invitations`
 - Entry Types: `InvitationToken`, `InvitationUse`
 - Note: Critical for territory sovereignty and access control
@@ -333,6 +357,7 @@ POST   /v1/invitations/{token}/use          - Mark as used (internal, called by 
 **Bounded Context:** Notifications & Alerts
 
 **Responsibilities:**
+
 - In-app notification delivery
 - Email notifications (via SMTP)
 - Push notifications (future)
@@ -341,6 +366,7 @@ POST   /v1/invitations/{token}/use          - Mark as used (internal, called by 
 - Email digest generation
 
 **Database Tables (Owns):**
+
 ```sql
 territory_{code}.notifications
   - id, user_id, type (message/follower/community/mention/like/system)
@@ -363,6 +389,7 @@ territory_{code}.notification_templates
 ```
 
 **API Endpoints:**
+
 ```
 # Notifications
 GET    /v1/notifications                    - List notifications (paginated)
@@ -380,11 +407,13 @@ POST   /v1/notifications/send               - Create notification (internal)
 ```
 
 **Service Dependencies:**
+
 - **Calls:** None (leaf service)
 - **Called by:** All services (via NATS events or direct API)
 - **Events:** Subscribes to all `*.created`, `*.updated` events from other services
 
 **Holochain Mapping:**
+
 - DNA: `notifications`
 - Entry Types: `Notification`, `NotificationSettings`
 - Note: Notifications are ephemeral, may not need full Holochain persistence
@@ -396,12 +425,14 @@ POST   /v1/notifications/send               - Create notification (internal)
 **Bounded Context:** Communities & Groups
 
 **Responsibilities:**
+
 - Community creation and management
 - Membership management
 - Community settings and permissions
 - Community roles (admin/moderator/member)
 
 **Database Tables (Owns):**
+
 ```sql
 territory_{code}.communities
   - id, name, slug, description
@@ -421,6 +452,7 @@ territory_{code}.community_settings
 ```
 
 **API Endpoints:**
+
 ```
 GET    /v1/communities                      - List communities
 POST   /v1/communities                      - Create community
@@ -433,11 +465,13 @@ DELETE /v1/communities/{id}/members/{user_id} - Remove member
 ```
 
 **Service Dependencies:**
+
 - **Calls:** user-service (profile lookups), notification-service (member notifications)
 - **Called by:** Frontend, invitation-service (community auto-assignment)
 - **Events:** Publishes `community.created`, `member.joined`, `member.removed`
 
 **Holochain Mapping:**
+
 - DNA: `communities`
 - Entry Types: `Community`, `CommunityMember`, `CommunitySettings`
 
@@ -448,6 +482,7 @@ DELETE /v1/communities/{id}/members/{user_id} - Remove member
 **Bounded Context:** Gamification & Achievements
 
 **Responsibilities:**
+
 - Badge definitions and metadata
 - Badge awarding logic
 - Achievement tracking
@@ -455,6 +490,7 @@ DELETE /v1/communities/{id}/members/{user_id} - Remove member
 - Badge display and verification
 
 **Database Tables (Owns):**
+
 ```sql
 territory_{code}.badges
   - id, name, description, icon_url
@@ -474,6 +510,7 @@ territory_{code}.badge_progress
 ```
 
 **API Endpoints:**
+
 ```
 GET    /v1/badges                           - List all badges
 GET    /v1/badges/{id}                      - Get badge details
@@ -484,11 +521,13 @@ GET    /v1/users/{user_id}/progress/{badge_id} - Get progress
 ```
 
 **Service Dependencies:**
+
 - **Calls:** user-service (user verification), notification-service (award notifications)
 - **Called by:** All services (via events for automatic badge awards)
 - **Events:** Publishes `badge.awarded`, subscribes to achievement triggers
 
 **Holochain Mapping:**
+
 - DNA: `badges`
 - Entry Types: `Badge`, `UserBadge`, `BadgeProgress`
 
@@ -499,6 +538,7 @@ GET    /v1/users/{user_id}/progress/{badge_id} - Get progress
 **Bounded Context:** Territory & Pod Management
 
 **Responsibilities:**
+
 - Territory registration and configuration
 - Pod deployment and management
 - Territory-level settings
@@ -506,6 +546,7 @@ GET    /v1/users/{user_id}/progress/{badge_id} - Get progress
 - Territory member directory
 
 **Database Tables (Owns):**
+
 ```sql
 global.territories
   - code (ISO 3166-1 Alpha-2), name, full_name
@@ -525,6 +566,7 @@ territory_{code}.territory_stats
 ```
 
 **API Endpoints:**
+
 ```
 GET    /v1/territories                      - List all territories
 GET    /v1/territories/{code}               - Get territory details
@@ -533,11 +575,13 @@ GET    /v1/territories/{code}/stats         - Get statistics
 ```
 
 **Service Dependencies:**
+
 - **Calls:** None (top-level service)
 - **Called by:** auth-service (territory validation), frontend
 - **Events:** Publishes `territory.created`, `territory.updated`
 
 **Holochain Mapping:**
+
 - DNA: `territories` (meta-level)
 - Entry Types: `Territory`, `TerritorySettings`
 - Note: Critical for multi-pod federation
@@ -564,6 +608,7 @@ translation      → (none - leaf)
 ```
 
 **Key Principles:**
+
 - Leaf services have no dependencies (can deploy independently)
 - Higher-level services depend on lower-level services
 - No circular dependencies
@@ -574,9 +619,11 @@ translation      → (none - leaf)
 ## 🔄 Inter-Service Communication
 
 ### **Synchronous (REST API)**
+
 Used for: Queries, lookups, immediate responses
 
 Example:
+
 ```
 auth-service → invitation-service.validateToken(token)
 user-service → settings-service.getSettings(user_id)
@@ -584,9 +631,11 @@ community-service → user-service.getProfile(user_id)
 ```
 
 ### **Asynchronous (NATS Events)**
+
 Used for: Notifications, side effects, eventual consistency
 
 Example:
+
 ```
 user-service publishes: { event: "user.followed", user_id, target_id }
 notification-service subscribes → creates notification
@@ -598,6 +647,7 @@ badge-service subscribes → checks if badge criteria met
 ## 🗄️ Database Architecture
 
 ### **Global Schema** (shared across territories)
+
 ```sql
 global.territories               -- Territory registry
 global.username_registry         -- Username uniqueness
@@ -606,6 +656,7 @@ global.invitation_token_registry -- Token uniqueness
 ```
 
 ### **Territory Schema** (per pod: territory_dk, territory_no, etc.)
+
 Each service owns its tables within the territory schema:
 
 ```
@@ -636,13 +687,16 @@ territory_{code}.user_badges                -- badge-service
 ## 🚀 Multi-Pod Deployment
 
 ### **Per-Territory Deployment**
+
 Each territory (Denmark, Norway, Sweden, Europe) runs:
+
 - Full set of microservices (auth, user, settings, etc.)
 - Territory-specific database schema
 - Isolated message bus (NATS)
 - Shared global registry (replicated)
 
 ### **Service Discovery**
+
 ```
 Denmark Pod:
   auth.dk.unityplan.org → auth-service:8001 (territory_dk)
@@ -654,6 +708,7 @@ Norway Pod:
 ```
 
 ### **Cross-Pod Federation**
+
 ```
 User in DK follows user in NO:
 1. user-service (DK) → makes API call to user-service (NO)
@@ -667,21 +722,25 @@ User in DK follows user in NO:
 ## 🔮 Holochain Migration Path
 
 ### **Phase 1: PostgreSQL (Current)**
+
 - Microservices with PostgreSQL
 - REST APIs
 - NATS for async communication
 
 ### **Phase 2: Hybrid**
+
 - Keep PostgreSQL for queries (read model)
 - Add Holochain for writes (source of truth)
 - Event sourcing pattern
 
 ### **Phase 3: Holochain Native**
+
 - Each service becomes a Holochain DNA
 - PostgreSQL becomes optional (caching/indexing)
 - P2P communication between DNAs
 
 ### **Service → DNA Mapping**
+
 ```
 auth-service        → authentication.happ
 user-service        → profiles.happ
@@ -699,6 +758,7 @@ badge-service       → badges.happ
 To move from current consolidated approach to proper microservices:
 
 ### **Phase 1: Settings Separation** (Week 1)
+
 - [ ] Create settings-service handlers
 - [ ] Move users_settings tables to settings-service ownership
 - [ ] Move users_privacy_settings to settings-service
@@ -707,6 +767,7 @@ To move from current consolidated approach to proper microservices:
 - [ ] Update frontend to call settings-service endpoints
 
 ### **Phase 2: Notification Separation** (Week 2)
+
 - [ ] Create notification-service handlers
 - [ ] Move users_notification_settings to notification-service
 - [ ] Create notifications table
@@ -715,6 +776,7 @@ To move from current consolidated approach to proper microservices:
 - [ ] Update frontend notification components
 
 ### **Phase 3: Invitation Separation** (Week 2)
+
 - [ ] Move invitation logic from auth-service to invitation-service
 - [ ] Update auth-service to call invitation-service API
 - [ ] Create invitation admin panel endpoints
@@ -722,6 +784,7 @@ To move from current consolidated approach to proper microservices:
 - [ ] Add rate limiting
 
 ### **Phase 4: Integration & Testing** (Week 3)
+
 - [ ] End-to-end testing of all services
 - [ ] Performance testing (multi-service calls)
 - [ ] Documentation updates
@@ -733,6 +796,7 @@ To move from current consolidated approach to proper microservices:
 ## 📝 Documentation Structure
 
 Each service should have:
+
 ```
 docs/architecture/services/{service-name}/
   ├── README.md                 # Service overview
@@ -747,6 +811,7 @@ docs/architecture/services/{service-name}/
 ---
 
 **Next Steps:**
+
 1. Create per-service documentation folders
 2. Extract current implementations into proper service boundaries
 3. Update database migrations to reflect service ownership
@@ -755,6 +820,7 @@ docs/architecture/services/{service-name}/
 6. Deploy to multi-pod architecture
 
 This architecture ensures:
+
 - ✅ Clean service boundaries (no overlaps)
 - ✅ Multi-pod scalability
 - ✅ Holochain migration path

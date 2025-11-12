@@ -55,6 +55,7 @@ Notifications are personal - stored in user's territory pod.
 ## NATS Events
 
 **Subscribes:**
+
 - `user.followed` → Create follower notification
 - `badge.awarded` → Create badge notification
 - `invitation.used` → Create invitation used notification

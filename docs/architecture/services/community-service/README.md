@@ -74,6 +74,7 @@ CREATE INDEX idx_communities_member_count ON communities(member_count DESC);
 **Purpose:** Community definitions  
 **Holochain Entry Type:** `Community` (public DHT)  
 **Visibility:**
+
 - `public` - Listed in directory, anyone can join
 - `private` - Listed in directory, requires approval
 - `hidden` - Not listed, invitation only
@@ -106,6 +107,7 @@ CREATE INDEX idx_community_members_role ON community_members(community_id, role)
 **Purpose:** Community membership tracking  
 **Holochain Entry Type:** `CommunityMember` (link: Community → Member)  
 **Roles:**
+
 - `owner` - Community creator, full control
 - `admin` - Can manage members, settings
 - `moderator` - Can moderate content

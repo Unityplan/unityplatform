@@ -78,11 +78,13 @@ CREATE TABLE territory_{code}.invitation_uses (
 ## Multi-Pod Considerations
 
 **Token Generation:**
+
 1. Generate token in territory schema
 2. Register in global schema (ensure uniqueness)
 3. Transaction: both inserts succeed or rollback
 
 **Token Validation:**
+
 1. Check global registry (exists?)
 2. Fetch from territory schema (active? not expired?)
 3. Return validation result to auth-service

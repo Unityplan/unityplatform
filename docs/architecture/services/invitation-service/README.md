@@ -168,6 +168,7 @@ Validate if an invitation token is usable (called by auth-service during registr
 ```
 
 **Validation Rules:**
+
 - Token exists in database
 - `is_active = true`
 - `expires_at > NOW()` (or NULL)
@@ -206,6 +207,7 @@ Mark invitation as used after successful registration (called by auth-service)
 ```
 
 **Actions:**
+
 - Insert into `invitation_uses`
 - Increment `invitation_tokens.uses_count`
 - If `uses_count >= max_uses`, set `is_active = false`
@@ -249,6 +251,7 @@ Create a new invitation token (requires authentication)
 ```
 
 **Token Generation:**
+
 - 16 random alphanumeric characters
 - Formatted as `XXXX-XXXX-XXXX-XXXX`
 - Checked against global registry for uniqueness
@@ -263,6 +266,7 @@ Create a new invitation token (requires authentication)
 Get all invitations created by the authenticated user
 
 **Query Parameters:**
+
 - `status` - Filter by status (active/used/expired/revoked)
 - `page` - Page number
 - `limit` - Results per page (max 100)
@@ -352,6 +356,7 @@ Revoke an invitation (creator can revoke own, admins can revoke any)
 ```
 
 **Actions:**
+
 - Set `is_active = false`
 - Set `revoked_at = NOW()`
 - Set `revoked_by = current_user_id`
@@ -513,6 +518,7 @@ Alice (inviter)
 ```
 
 This creates a **decentralized reputation system**:
+
 - If Bob's invitees spam, Bob's reputation decreases
 - Trust flows through invitation chains
 - No central authority needed
@@ -520,15 +526,18 @@ This creates a **decentralized reputation system**:
 #### **Migration Strategy**
 
 **Phase 1:** PostgreSQL storage
+
 - Current implementation with PostgreSQL
 - Invitation tokens stored in database
 
 **Phase 2:** Dual storage (PostgreSQL + Holochain)
+
 - Write to both PostgreSQL and Holochain
 - Read from PostgreSQL (fast queries)
 - Holochain builds trust graph
 
 **Phase 3:** Holochain native
+
 - Read/write directly from Holochain DHT
 - PostgreSQL removed
 - Pure decentralized trust graph

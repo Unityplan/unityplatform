@@ -111,6 +111,7 @@ CREATE TABLE global.auto_translations (
 **No Territory Storage:** Translations benefit everyone
 
 **Example:**
+
 - Danish community contributes "navigation.home = "Hjem""
 - Norwegian community uses same translation (or contributes better one)
 - Best translation wins (crowdsourced quality)

@@ -18,6 +18,7 @@ This document defines the **Territory ID Format Standard** for UnityPlan. This f
 - Documentation references
 
 Any changes to this format will require:
+
 1. Architecture review board approval
 2. Migration plan for existing data
 3. Backwards compatibility strategy
@@ -96,6 +97,7 @@ Format prioritizes First Nation name, followed by FN marker, followed by country
 | `SAMI-FN-NO` | Sámi people | Norway (geographic) | `None` | Independent (also in SE, FI, RU) |
 
 **Sovereignty Principles**:
+
 - ✅ First Nation name comes **first** (respects sovereignty)
 - ✅ `FN` marker clearly identifies as First Nation
 - ✅ Country code provides **geographic context** (prevents name collisions)
@@ -104,12 +106,14 @@ Format prioritizes First Nation name, followed by FN marker, followed by country
 - ✅ Self-identification respected (registered name is authoritative)
 
 **Why Keep Country Code?**
+
 1. **Prevents name collisions**: `EAGLE-FN-CA` vs `EAGLE-FN-US` are distinct
 2. **Geographic context**: Helps users understand location
 3. **No power implication**: Code is metadata, NOT hierarchy
 4. **Practical**: Matches how First Nations often identify themselves internationally
 
 **What This Means for Governance**:
+
 - TeacherRegistrar for `CA` **CANNOT** manage `HAIDA-FN-CA` (separate hierarchies)
 - TeacherRegistrar for `HAIDA-FN-CA` **CANNOT** manage `CA` (separate hierarchies)
 - Each is sovereign within their own hierarchy
@@ -142,42 +146,33 @@ Communities are nested within countries or First Nations:
 
 ## 🗄️ Database Schema
 
+> **📚 Detailed Schema:** See [territory-service/DATABASE.md](../services/territory-service/DATABASE.md)
+
 ### Territories Table
 
-```sql
--- Global territories table (replicated to all pods)
-CREATE TABLE global.territories (
-  id VARCHAR(100) PRIMARY KEY,           -- e.g., 'DK', 'HAIDA-FN-CA', 'DK-COPENHAGEN'
-  name VARCHAR(255) NOT NULL,            -- Display name
-  type VARCHAR(50) NOT NULL,             -- 'country', 'first_nation', 'community'
-  parent_territory VARCHAR(100),         -- NULL for top-level (countries & First Nations)
-  pod_id VARCHAR(50),                    -- Which pod serves this territory
-  timezone VARCHAR(100),                 -- IANA timezone (e.g., 'Europe/Copenhagen')
-  locale VARCHAR(10),                    -- Default locale (e.g., 'da_DK')
-  default_language VARCHAR(10),          -- ISO 639-1 language code (e.g., 'da')
-  metadata JSONB,                        -- Additional territory-specific data
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
-  FOREIGN KEY (parent_territory) REFERENCES global.territories(id),
-  
-  -- Sovereignty constraint: countries and First Nations have no parent
-  CHECK (
-    (type IN ('country', 'first_nation') AND parent_territory IS NULL)
-    OR
-    (type = 'community' AND parent_territory IS NOT NULL)
-  )
-);
+**Table:** `global.territories` (replicated to all pods)
 
--- Indexes for efficient queries
-CREATE INDEX idx_territories_type ON global.territories(type);
-CREATE INDEX idx_territories_parent ON global.territories(parent_territory);
-CREATE INDEX idx_territories_pod ON global.territories(pod_id);
+**Key Fields:**
 
--- Example data
-INSERT INTO global.territories (id, name, type, parent_territory, pod_id, timezone, locale, default_language) VALUES
-  -- Countries
-  ('DK', 'Denmark', 'country', NULL, 'dk', 'Europe/Copenhagen', 'da_DK', 'da'),
+- `id` - VARCHAR(100) PRIMARY KEY - Territory code (e.g., 'DK', 'HAIDA-FN-CA')
+- `name` - VARCHAR(255) - Display name
+- `type` - VARCHAR(50) - Territory type ('country', 'first_nation', 'community')
+- `parent_territory` - VARCHAR(100) NULL - Parent territory reference
+- `pod_id` - VARCHAR(50) - Which pod serves this territory
+- `timezone` - VARCHAR(100) - IANA timezone (e.g., 'Europe/Copenhagen')
+- `locale` - VARCHAR(10) - Default locale (e.g., 'da_DK')
+- `default_language` - VARCHAR(10) - ISO 639-1 code (e.g., 'da')
+- `metadata` - JSONB - Additional territory-specific data
+
+**Sovereignty Constraint:**
+
+- Countries and First Nations: `type IN ('country', 'first_nation') AND parent_territory IS NULL`
+- Communities: `type = 'community' AND parent_territory IS NOT NULL`
+
+**Example Hierarchies:**
+
+```
+DK (Denmark) → DK-COPENHAGEN (Copenhagen)
   ('NO', 'Norway', 'country', NULL, 'no', 'Europe/Oslo', 'no_NO', 'no'),
   ('SE', 'Sweden', 'country', NULL, 'se', 'Europe/Stockholm', 'sv_SE', 'sv'),
   ('CA', 'Canada', 'country', NULL, 'ca', 'America/Toronto', 'en_CA', 'en'),
@@ -189,11 +184,8 @@ INSERT INTO global.territories (id, name, type, parent_territory, pod_id, timezo
   ('CREE-FN-CA', 'Cree Nation', 'first_nation', NULL, 'cree-fn-ca', 'America/Winnipeg', 'en_CA', 'cr'),
   ('SAMI-FN-NO', 'Sámi people', 'first_nation', NULL, 'sami-fn-no', 'Europe/Oslo', 'se_NO', 'se'),
   
-  -- Communities (nested)
-  ('DK-COPENHAGEN', 'Copenhagen', 'community', 'DK', 'dk', 'Europe/Copenhagen', 'da_DK', 'da'),
-  ('NO-OSLO', 'Oslo', 'community', 'NO', 'no', 'Europe/Oslo', 'no_NO', 'no'),
-  ('HAIDA-FN-CA-MASSETT', 'Massett', 'community', 'HAIDA-FN-CA', 'haida-fn-ca', 'America/Vancouver', 'en_CA', 'en'),
-  ('NAVAJO-FN-US-WINDOW-ROCK', 'Window Rock', 'community', 'NAVAJO-FN-US', 'navajo-fn-us', 'America/Phoenix', 'en_US', 'nv');
+HAIDA-FN-CA (Haida Nation) → HAIDA-FN-CA-MASSETT (Massett)
+NO (Norway) → NO-OSLO (Oslo)
 ```
 
 ---
@@ -368,7 +360,7 @@ Response:
 
 - **Project Overview**: `project_docs/2-project-overview.md` (Territory Definition section)
 - **Multi-Pod Architecture**: `project_docs/5-multi-pod-architecture.md` (Territory ID Format section)
-- **ISO 3166-1 Standard**: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+- **ISO 3166-1 Standard**: <https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2>
 - **Indigenous Self-Determination**: Platform design principle
 
 ---

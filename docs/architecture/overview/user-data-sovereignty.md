@@ -9,6 +9,7 @@
 ## 🌸 Core Principle: Users Belong to Their Pods
 
 Using the natural ecosystem metaphor:
+
 - **Flowers (users)** bloom in their specific pod (territory)
 - **Seeds (user data)** stay in that pod's soil (territory schema)
 - **Pollen (cryptographic hash)** can travel via mycorrhizal network (global schema)
@@ -18,79 +19,68 @@ Using the natural ecosystem metaphor:
 
 **WRONG:** `global.users` table containing personal data
 
-```sql
--- ❌ INCORRECT: Personal data in global schema
-CREATE TABLE global.users (
-    id UUID PRIMARY KEY,
-    email VARCHAR(255),      -- Personal data!
-    username VARCHAR(50),    -- Personal data!
-    password_hash VARCHAR,   -- Personal data!
-    display_name VARCHAR,    -- Personal data!
-    bio TEXT,                -- Personal data!
-    ...
-);
-```
-
 **Why this violates data sovereignty:**
+
 - Users are flowers that bloom in specific pods (territories)
-- Personal data leaving territory schema violates user sovereignty
+- Personal data in global schema violates user sovereignty principle
 - Global schema should only coordinate, not store personal information
 - Incompatible with future Holochain migration (user-controlled data)
 
+**Example of incorrect design:**
+
+- Global schema with email, username, password, display_name, bio
+- Personal data duplicated across multiple pods
+- User has no control over where their data lives
+
 ## ✅ The Solution (Correct Architecture)
+
+> **📚 Detailed Schemas:** See service documentation:
+>
+> - [auth-service/DATABASE.md](../services/auth-service/DATABASE.md) - Global user identities
+> - [user-service/DATABASE.md](../services/user-service/DATABASE.md) - Territory user profiles
 
 ### Global Schema: Cryptographic Identities ONLY
 
-```sql
--- ✅ CORRECT: Only cryptographic hashes, NO personal data
-CREATE TABLE global.user_identities (
-    public_key_hash VARCHAR(64) PRIMARY KEY,  -- Cryptographic identity
-    territory_code VARCHAR(100) NOT NULL,     -- Where user data lives
-    territory_user_id UUID NOT NULL,          -- ID within territory schema
-    created_at TIMESTAMPTZ,
-    last_seen_at TIMESTAMPTZ
-);
-```
+**Table:** `global.user_identities`
+
+**Key Fields:**
+
+- `id` - UUID PRIMARY KEY - Permanent user identifier
+- `username` - VARCHAR(50) UNIQUE - Globally unique username
+- `public_key_hash` - VARCHAR(64) UNIQUE - Future Holochain agent ID
+- `territory_code` - VARCHAR(100) - Which pod owns this user
+- `territory_user_id` - UUID - Reference to territory user record
 
 **What this stores:**
+
 - ✅ Cryptographic public key hash (future: Holochain agent ID)
 - ✅ Territory code (which pod owns this user)
-- ✅ Territory-local user ID (reference to actual user record)
-- ❌ NO email, username, name, or any personal data
+- ✅ Username (globally unique, minimal identification)
+- ❌ NO email, password, name, bio, or any personal data
 
 ### Territory Schema: ALL Personal Data
 
-```sql
--- ✅ CORRECT: All personal data in territory schema
-CREATE TABLE territory_dk.users (
-    id UUID PRIMARY KEY,
-    
-    -- Future Holochain identity
-    public_key_hash VARCHAR(64) UNIQUE,
-    
-    -- Current auth (temporary)
-    email VARCHAR(255) UNIQUE,
-    password_hash VARCHAR(255),
-    
-    -- Profile data (STAYS IN TERRITORY)
-    username VARCHAR(50) UNIQUE NOT NULL,
-    full_name VARCHAR(255),
-    display_name VARCHAR(100),
-    avatar_url TEXT,
-    bio TEXT,
-    
-    -- Privacy controls
-    email_visible BOOLEAN DEFAULT FALSE,
-    profile_public BOOLEAN DEFAULT TRUE,
-    
-    -- Status
-    is_verified BOOLEAN DEFAULT FALSE,
-    is_active BOOLEAN DEFAULT TRUE,
-    last_login_at TIMESTAMPTZ,
-    
+**Table:** `territory_{code}.users`
+
+**Key Fields:**
+
+- `id` - UUID PRIMARY KEY - Territory-specific user ID
+- `username` - VARCHAR(50) UNIQUE - Matches global username
+- `email` - VARCHAR(255) UNIQUE NULL - Optional, for notifications only
+- `password_hash` - VARCHAR(255) - Argon2 password hash
+- `full_name` - VARCHAR(255) - Personal information
+- `display_name` - VARCHAR(100) - Chosen display name
+- `avatar_url` - TEXT - Profile image
+- `bio` - TEXT - User biography
+- `email_visible` - BOOLEAN - Privacy control
+- `profile_public` - BOOLEAN - Privacy control
+- `is_active` - BOOLEAN - Account status
+
+**What this stores:**
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
 ```
 
 **What this stores:**
@@ -105,52 +95,62 @@ CREATE TABLE territory_dk.users (
 
 1. **User Registration:**
    ```
+
    POST /auth/register { email, username, password, territory_code }
-   
+
    → Create territory_dk.users record
    → Hash password with Argon2
    → Generate public_key_hash (Blake2b of email+username)
    → Insert into global.user_identities (hash, territory_code, user_id)
    → Return JWT with { public_key_hash, territory_code }
+
    ```
 
 2. **User Login:**
    ```
+
    POST /auth/login { email, password, territory_code }
-   
+
    → Query territory_{code}.users WHERE email = ?
    → Verify password hash
    → Lookup public_key_hash
    → Return JWT with { public_key_hash, territory_code }
+
    ```
 
 3. **Protected Endpoints:**
    ```
+
    JWT contains: { public_key_hash, territory_code }
-   
+
    → Extract territory_code from JWT
    → SET search_path = territory_{code}
    → Query users WHERE public_key_hash = ?
    → Return user data from territory schema
+
    ```
 
 ### Future (WebAuthn/Holochain)
 
 1. **WebAuthn (Phase 2 - Beta):**
    ```
-   - Email becomes optional
-   - User registers passkey (cryptographic keypair)
-   - public_key_hash = hash of WebAuthn public key
-   - Password recovery via backup codes (not email)
+
+- Email becomes optional
+- User registers passkey (cryptographic keypair)
+- public_key_hash = hash of WebAuthn public key
+- Password recovery via backup codes (not email)
+
    ```
 
 2. **Holochain (Phase 3):**
    ```
-   - User controls their own cryptographic keypair
-   - public_key_hash = Holochain agent public key
-   - Email fully optional (contact method only)
-   - User data stored in their Holochain DNA (pod)
-   - Cross-pod coordination via global.user_identities
+
+- User controls their own cryptographic keypair
+- public_key_hash = Holochain agent public key
+- Email fully optional (contact method only)
+- User data stored in their Holochain DNA (pod)
+- Cross-pod coordination via global.user_identities
+
    ```
 
 ## 🔄 Data Flow Examples
@@ -274,10 +274,12 @@ WHERE territory_code = 'DK' AND territory_user_id = ?;
 ### What Changes
 
 **Before Migration:**
+
 - ❌ global.users with personal data
 - ❌ Direct references to global.users(id)
 
 **After Migration:**
+
 - ✅ global.user_identities with cryptographic hashes only
 - ✅ territory_*.users with ALL personal data
 - ✅ All references use public_key_hash

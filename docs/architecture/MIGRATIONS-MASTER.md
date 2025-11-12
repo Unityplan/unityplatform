@@ -11,6 +11,7 @@
 This document defines the database migration strategy for the UnityPlan platform's microservices architecture with multi-pod deployment support.
 
 **Key Principles:**
+
 1. **Data Sovereignty** - Personal data stays in territory pods
 2. **Global Uniqueness** - Usernames/emails unique across all pods  
 3. **Performance** - Minimize cross-service queries
@@ -85,6 +86,7 @@ services/shared-lib/migrations/
 #### 1. auth-service
 
 **Migrations:**
+
 - ✅ `20251111000001` - users, refresh_tokens, global registries
 - 📋 `20251120000001` - email_verification_tokens (future)
 - 📋 `20251120000002` - password_reset_tokens (future)
@@ -97,6 +99,7 @@ services/shared-lib/migrations/
 #### 2. user-service
 
 **Migrations:**
+
 - ✅ `20251111000001` - users_profiles, users_profile_links, users_language_proficiency
 - ✅ `20251112000001` - Language proficiency schema updates
 - ✅ `20251112000004` - data_exports table (GDPR Article 20)
@@ -111,6 +114,7 @@ services/shared-lib/migrations/
 #### 3. settings-service
 
 **Migrations:**
+
 - ✅ `20251111000001` - users_settings, users_notification_settings
 - ✅ `20251112000002` - Settings schema fixes
 - ✅ `20251112000003` - Notification settings fixes
@@ -122,6 +126,7 @@ services/shared-lib/migrations/
 #### 4. invitation-service
 
 **Migrations:**
+
 - ✅ `20251111000001` - invitation_tokens, invitation_uses, global registry
 
 **No additional migrations needed.** Tables exist in core schema.
@@ -131,6 +136,7 @@ services/shared-lib/migrations/
 #### 5. notification-service
 
 **Migrations:**
+
 - ✅ `20251111000001` - notifications table
 
 **No additional migrations needed.** Tables exist in core schema.
@@ -142,6 +148,7 @@ services/shared-lib/migrations/
 #### 6. community-service
 
 **Migrations:**
+
 - ✅ `20251111000001` - communities, community_members, roles, role_assignments
 - 📋 `20251201000001` - community_invitations (future)
 - 📋 `20251201000002` - community_posts (future)
@@ -154,6 +161,7 @@ services/shared-lib/migrations/
 #### 7. badge-service
 
 **Migrations:**
+
 - ✅ `20251111000001` - badge_definitions (territory), badge_awards, badge_progress
 - 📋 `20251201000004` - global.badge_definitions (move to global schema)
 - 📋 `20251201000005` - badge_criteria table (dynamic criteria)
@@ -165,6 +173,7 @@ services/shared-lib/migrations/
 #### 8. territory-service
 
 **Migrations:**
+
 - ✅ `20251111000001` - global.territories
 - 📋 `20251201000006` - global.territory_stats (statistics)
 - 📋 `20251201000007` - global.territory_settings (feature flags)
@@ -174,6 +183,7 @@ services/shared-lib/migrations/
 #### 9. event-service
 
 **Migrations:**
+
 - ✅ `20251111000001` - community_events, event_rsvps
 - 📋 `20251201000008` - event_reminders (future)
 - 📋 `20251201000009` - event_attendance (check-in tracking)
@@ -183,6 +193,7 @@ services/shared-lib/migrations/
 #### 10. course-service
 
 **Migrations:**
+
 - 📋 `20251215000001` - global.courses (course catalog)
 - 📋 `20251215000002` - global.course_lessons (lesson content)
 - 📋 `20251215000003` - territory.course_enrollments (user enrollments)
@@ -196,6 +207,7 @@ services/shared-lib/migrations/
 #### 11. forum-service
 
 **Migrations:**
+
 - 📋 `20251220000001` - global.forum_rooms (global forum registry)
 - 📋 `20251220000002` - territory.forum_memberships (user participation)
 - 📋 `20251220000003` - territory.forum_bookmarks (saved posts)
@@ -207,6 +219,7 @@ services/shared-lib/migrations/
 #### 12. translation-service
 
 **Migrations:**
+
 - 📋 `20251220000004` - global.translation_resources (shared translations)
 - 📋 `20251220000005` - global.translation_votes (community voting)
 - 📋 `20251220000006` - global.auto_translations (LibreTranslate cache)
@@ -219,6 +232,7 @@ services/shared-lib/migrations/
 #### 13. ipfs-service
 
 **Migrations:**
+
 - ✅ `20251111000001` - file_uploads (shared with user-service)
 - 📋 `20251220000008` - territory.user_storage_quotas (quota management)
 - 📋 `20251220000009` - territory.ipfs_pins (pin tracking)
@@ -230,12 +244,14 @@ services/shared-lib/migrations/
 ### Single-Pod Deployment (Denmark Only)
 
 **Command:**
+
 ```bash
 cd services/shared-lib
 sqlx migrate run --database-url "postgresql://unityplan:password@localhost:5432/unityplan_dk"
 ```
 
 **Result:**
+
 - `global.*` schema with 4 tables
 - `territory_dk.*` schema with 30 tables
 
@@ -248,6 +264,7 @@ sqlx migrate run --database-url "postgresql://unityplan:password@localhost:5432/
 **Option A: Shared Database (Development)**
 
 **Single Database, Multiple Schemas:**
+
 ```sql
 CREATE SCHEMA IF NOT EXISTS global;
 CREATE SCHEMA IF NOT EXISTS territory_dk;
@@ -256,12 +273,14 @@ CREATE SCHEMA IF NOT EXISTS territory_se;
 ```
 
 **Command:**
+
 ```bash
 # Create all schemas in one database
 sqlx migrate run --database-url "postgresql://unityplan:password@localhost:5432/unityplan_multi"
 ```
 
 **Result:**
+
 - One database with 4 schemas
 - Easy development/testing
 - Not production-ready (single point of failure)
@@ -271,21 +290,25 @@ sqlx migrate run --database-url "postgresql://unityplan:password@localhost:5432/
 **Option B: Separate Databases (Production)**
 
 **Denmark Pod:**
+
 ```bash
 sqlx migrate run --database-url "postgresql://unityplan:password@denmark-db:5432/unityplan_dk"
 ```
 
 **Norway Pod:**
+
 ```bash
 sqlx migrate run --database-url "postgresql://unityplan:password@norway-db:5432/unityplan_no"
 ```
 
 **Sweden Pod:**
+
 ```bash
 sqlx migrate run --database-url "postgresql://unityplan:password@sweden-db:5432/unityplan_se"
 ```
 
 **Result:**
+
 - Each pod has its own database server
 - Full data sovereignty
 - Geographic distribution
@@ -300,6 +323,7 @@ sqlx migrate run --database-url "postgresql://unityplan:password@sweden-db:5432/
 **Solutions:**
 
 **Option 1: PostgreSQL Logical Replication**
+
 ```sql
 -- Primary pod (Denmark)
 CREATE PUBLICATION global_data FOR SCHEMA global;
@@ -311,11 +335,13 @@ PUBLICATION global_data;
 ```
 
 **Option 2: Application-Level Sync**
+
 - Global inserts broadcast via NATS
 - All pods update local global schema
 - Eventually consistent
 
 **Option 3: Shared Global Database**
+
 - All pods connect to centralized global schema
 - Territory schemas remain local
 - Hybrid approach
@@ -341,6 +367,7 @@ CREATE TABLE territory_dk.user_connections (
 ### Solution: Application-Level Integrity
 
 **Pattern:**
+
 ```rust
 // Check foreign key in application code
 async fn follow_user(follower_id: Uuid, following_id: Uuid, following_territory: &str) -> Result<()> {
@@ -371,6 +398,7 @@ async fn follow_user(follower_id: Uuid, following_id: Uuid, following_territory:
 ### Down Migrations
 
 **Core Schema:**
+
 ```sql
 -- 20251111000001_mvp_core_schema.down.sql
 DROP SCHEMA IF EXISTS territory_dk CASCADE;
@@ -378,12 +406,14 @@ DROP SCHEMA IF EXISTS global CASCADE;
 ```
 
 **Individual Tables:**
+
 ```sql
 -- 20251112000004_create_data_exports_table.down.sql
 DROP TABLE IF EXISTS territory_dk.data_exports;
 ```
 
 **Command:**
+
 ```bash
 sqlx migrate revert --database-url "postgresql://..."
 ```
@@ -395,6 +425,7 @@ sqlx migrate revert --database-url "postgresql://..."
 ### Local Development
 
 **Docker Compose:**
+
 ```yaml
 services:
   postgres:
@@ -408,6 +439,7 @@ services:
 ```
 
 **Run Migrations:**
+
 ```bash
 docker-compose up -d postgres
 cd services/shared-lib
@@ -419,6 +451,7 @@ sqlx migrate run
 ### Integration Tests
 
 **Test Multi-Pod Registration:**
+
 ```rust
 #[tokio::test]
 async fn test_cross_pod_username_uniqueness() {
@@ -442,6 +475,7 @@ async fn test_cross_pod_username_uniqueness() {
 ### Indexes
 
 **Global Schema:**
+
 ```sql
 -- Fast username lookups
 CREATE INDEX idx_username_registry_username ON global.username_registry(username);  -- PRIMARY KEY
@@ -452,6 +486,7 @@ CREATE INDEX idx_email_registry_email ON global.email_registry(email);  -- PRIMA
 ```
 
 **Territory Schema:**
+
 ```sql
 -- Fast user queries
 CREATE INDEX idx_users_username ON territory_dk.users(username);
@@ -472,6 +507,7 @@ CREATE INDEX idx_user_connections_following ON territory_dk.user_connections(fol
 ### Partitioning (Future)
 
 **Time-Series Tables:**
+
 ```sql
 -- Partition notifications by month
 CREATE TABLE territory_dk.notifications (
@@ -486,6 +522,7 @@ FOR VALUES FROM ('2025-12-01') TO ('2026-01-01');
 ```
 
 **Benefits:**
+
 - Faster queries (scan only relevant partitions)
 - Easier maintenance (drop old partitions)
 - Better performance for large datasets
@@ -513,11 +550,13 @@ DHT Entries → Shared data (courses, translations)
 
 **Phase 1:** PostgreSQL (current)  
 **Phase 2:** Hybrid (PostgreSQL + Holochain)
+
 - Keep global registries in PostgreSQL
 - Move user data to Holochain source chains
 - Use Holochain for course content, forums
 
 **Phase 3:** Full Holochain
+
 - Global DHT replaces global schema
 - Source chains replace territory schemas
 - PostgreSQL only for caching/search indexes
@@ -535,12 +574,14 @@ DHT Entries → Shared data (courses, translations)
 ### Sensitive Data
 
 **Personal Data (GDPR):**
+
 - Stored in territory schema only
 - User owns their pod's data
 - Right to erasure (soft delete → hard delete after 30 days)
 - Right to portability (data export to JSON)
 
 **Global Schema:**
+
 - Only metadata (usernames, emails, territories)
 - No sensitive content
 - Publicly discoverable information
@@ -578,6 +619,7 @@ DHT Entries → Shared data (courses, translations)
 ---
 
 **Next Steps:**
+
 1. Review this master plan
 2. Create service-specific MIGRATIONS.md files
 3. Test multi-pod deployment locally
@@ -585,6 +627,7 @@ DHT Entries → Shared data (courses, translations)
 5. Plan Holochain migration
 
 **References:**
+
 - [Database Schema Design](../database-schema-design.md)
 - [Multi-Pod Architecture](../multi-pod-architecture.md)
 - [User Data Sovereignty](../user-data-sovereignty.md)

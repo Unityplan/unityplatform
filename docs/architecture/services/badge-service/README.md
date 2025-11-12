@@ -69,6 +69,7 @@ CREATE INDEX idx_badges_rarity ON badges(rarity);
 **Purpose:** Badge definitions  
 **Holochain Entry Type:** `Badge` (public DHT)  
 **Example Badges:**
+
 - Early Adopter 🌟 (manual award)
 - Social Butterfly 🦋 (10 followers)
 - Invitation Champion 🎫 (5 people joined via your invitation)

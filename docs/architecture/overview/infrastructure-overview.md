@@ -1339,94 +1339,43 @@ API Security:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 6.2 Database Schema Details
+### 6.2 Database Schema Overview
 
-```sql
--- Global Schema (Authentication & Registry)
-CREATE SCHEMA global;
+> **📚 Detailed Schemas:** See service-specific documentation:
+>
+> - [auth-service/DATABASE.md](../services/auth-service/DATABASE.md) - Global user identities
+> - [user-service/DATABASE.md](../services/user-service/DATABASE.md) - Territory user profiles
+> - [territory-service/DATABASE.md](../services/territory-service/DATABASE.md) - Territory management
+> - [badge-service/DATABASE.md](../services/badge-service/DATABASE.md) - Badge definitions and awards
+> - [course-service/DATABASE.md](../services/course-service/DATABASE.md) - Course content
+> - [storage-service/DATABASE.md](../services/storage-service/DATABASE.md) - IPFS file uploads
 
-CREATE TABLE global.users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    email_verified BOOLEAN DEFAULT FALSE,
-    oidc_provider VARCHAR(50),
-    oidc_sub VARCHAR(255),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    last_login TIMESTAMPTZ,
-    status VARCHAR(20) DEFAULT 'active'
-);
+**Global Schema (Authentication & Registry):**
 
-CREATE TABLE global.territories (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    code VARCHAR(10) UNIQUE NOT NULL,
-    database_server TEXT NOT NULL,
-    matrix_server TEXT,
-    status VARCHAR(20) DEFAULT 'active',
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+- `global.user_identities` - Minimal user identities (username, territory, public key hash)
+- `global.territories` - Territory registry (code, name, pod assignment)
+- `global.audit_logs` - System-wide audit trail
 
-CREATE TABLE global.audit_logs (
-    id BIGSERIAL PRIMARY KEY,
-    timestamp TIMESTAMPTZ DEFAULT NOW(),
-    user_id UUID REFERENCES global.users(id),
-    action VARCHAR(100) NOT NULL,
-    resource_type VARCHAR(50),
-    resource_id UUID,
-    details JSONB,
-    ip_address INET
-);
+**Territory Schema Template** (`territory_{code}`):
 
--- Territory Schema Template
-CREATE SCHEMA territory_{id};
+- `territory_{code}.users` - Personal user data and profiles
+- `territory_{code}.user_badges` - Badge awards per user
+- `territory_{code}.courses` - Course content specific to territory
+- `territory_{code}.user_languages` - Language proficiency data
+- `territory_{code}.invitation_tokens` - Invitation system
 
-CREATE TABLE territory_{id}.user_profiles (
-    user_id UUID PRIMARY KEY REFERENCES global.users(id),
-    display_name VARCHAR(100),
-    avatar_url TEXT,
-    bio TEXT,
-    location VARCHAR(200),
-    birthdate DATE,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+**TimescaleDB Hypertables (Time-Series Data):**
 
-CREATE TABLE territory_{id}.user_badges (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES territory_{id}.user_profiles(user_id),
-    badge_id UUID REFERENCES public.badge_definitions(id),
-    awarded_at TIMESTAMPTZ DEFAULT NOW(),
-    expires_at TIMESTAMPTZ,
-    awarded_by UUID REFERENCES global.users(id),
-    UNIQUE(user_id, badge_id)
-);
+- `user_activity` - User activity logs (partitioned by time)
+- `system_metrics` - System performance metrics
+- `audit_events` - Event auditing with time-series optimization
 
-CREATE TABLE territory_{id}.courses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    level VARCHAR(20), -- global, territory, community
-    level_id UUID,
-    version INT DEFAULT 1,
-    prerequisites JSONB, -- array of badge IDs required
-    awards_badge_id UUID REFERENCES public.badge_definitions(id),
-    created_by UUID REFERENCES global.users(id),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+**Data Sovereignty Model:**
 
--- TimescaleDB Hypertable
-CREATE TABLE user_activity (
-    time TIMESTAMPTZ NOT NULL,
-    user_id UUID NOT NULL,
-    territory_id UUID NOT NULL,
-    action VARCHAR(50) NOT NULL,
-    details JSONB,
-    PRIMARY KEY (time, user_id)
-);
-
-SELECT create_hypertable('user_activity', 'time');
-```
+- Global schema: Only coordination data (identities, territories, audit)
+- Territory schemas: All personal data (profiles, badges, courses, languages)
+- User chooses territory during signup
+- All personal data stored in chosen territory pod
 
 ### 6.3 IPFS Integration
 
@@ -1487,18 +1436,28 @@ SELECT create_hypertable('user_activity', 'time');
        │<─────────────────────────────────────────┤
        │                                          │
 
-File Storage Schema:
-CREATE TABLE file_uploads (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    cid TEXT NOT NULL UNIQUE, -- IPFS Content ID
-    filename VARCHAR(255),
-    mime_type VARCHAR(100),
-    size_bytes BIGINT,
-    uploaded_by UUID REFERENCES global.users(id),
-    uploaded_at TIMESTAMPTZ DEFAULT NOW(),
-    pinned BOOLEAN DEFAULT TRUE,
-    description TEXT
-);
+**File Storage Schema:**
+
+> **📚 Detailed Schema:** See [storage-service/DATABASE.md](../services/storage-service/DATABASE.md)
+
+**Table:** `file_uploads`
+
+**Key Fields:**
+- `id` - UUID PRIMARY KEY
+- `cid` - TEXT UNIQUE - IPFS Content ID (hash of file content)
+- `filename` - VARCHAR(255) - Original filename
+- `mime_type` - VARCHAR(100) - File MIME type
+- `size_bytes` - BIGINT - File size
+- `uploaded_by` - UUID - User who uploaded file
+- `uploaded_at` - TIMESTAMPTZ - Upload timestamp
+- `pinned` - BOOLEAN - Whether file is pinned on IPFS node
+- `description` - TEXT - Optional file description
+
+**IPFS Integration:**
+- Files stored on IPFS node (content-addressable)
+- CID (Content ID) stored in database
+- Automatic pinning ensures file availability
+- Deduplication by content hash
 ```
 
 ### 6.4 Backup & Disaster Recovery

@@ -183,7 +183,7 @@ DELETE /v1/ipfs/files/{cid}
 
 - **Connection:** Local IPFS node via HTTP API
 - **Operations:** Add file, pin file, unpin file, get file
-- **Endpoint:** http://localhost:5001/api/v0
+- **Endpoint:** <http://localhost:5001/api/v0>
 
 ---
 
@@ -226,7 +226,7 @@ DELETE /v1/ipfs/files/{cid}
 
 Traditional web:
 
-- URL: https://example.com/avatar.jpg (location-based)
+- URL: <https://example.com/avatar.jpg> (location-based)
 - Problem: If server goes down, file is lost
 
 IPFS:
