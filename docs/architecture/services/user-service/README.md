@@ -35,6 +35,7 @@ The user-service is responsible for managing user profiles, identity data, socia
 ### **Tables Owned by user-service**
 
 #### **1. users_profiles**
+
 ```sql
 CREATE TABLE territory_{code}.users_profiles (
     user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -57,6 +58,7 @@ CREATE INDEX idx_users_profiles_display_name ON users_profiles(display_name);
 **Holochain Entry Type:** `Profile`
 
 #### **2. users_profile_links**
+
 ```sql
 CREATE TABLE territory_{code}.users_profile_links (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -84,6 +86,7 @@ CREATE INDEX idx_users_profile_links_order ON users_profile_links(user_id, displ
 **Constraints:** Max 10 links per user, URL validation
 
 #### **3. users_language_proficiency**
+
 ```sql
 CREATE TABLE territory_{code}.users_language_proficiency (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -120,6 +123,7 @@ CREATE INDEX idx_users_language_proficiency_preferred ON users_language_proficie
 **Unique:** One entry per user per language code
 
 #### **4. users_connections**
+
 ```sql
 CREATE TABLE territory_{code}.users_connections (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -146,6 +150,7 @@ CREATE INDEX idx_users_connections_blocks ON users_connections(user_id, connecti
 **Constraints:** No self-connections, automatic unfollow on block
 
 #### **5. data_exports (GDPR Article 20)**
+
 ```sql
 CREATE TABLE territory_{code}.data_exports (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -191,6 +196,7 @@ CREATE TRIGGER trigger_set_export_expiry
 **Auto-expiry:** 7 days after completion
 
 #### **6. account_deletion_requests (GDPR Article 17)**
+
 ```sql
 CREATE TABLE territory_{code}.account_deletion_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -248,9 +254,11 @@ CREATE TRIGGER trigger_set_deletion_schedule
 ### **Profile Management** (2 endpoints)
 
 #### **GET /v1/profiles/{id}**
+
 Get user profile (public or own)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -277,9 +285,11 @@ Get user profile (public or own)
 ```
 
 #### **PUT /v1/profiles/{id}**
+
 Update own profile
 
 **Request:**
+
 ```json
 {
   "display_name": "Alice Updated",
@@ -293,12 +303,15 @@ Update own profile
 ### **Profile Links** (5 endpoints)
 
 #### **GET /v1/profiles/{id}/links**
+
 List profile links (ordered)
 
 #### **POST /v1/profiles/{id}/links**
+
 Create new link (max 10)
 
 **Request:**
+
 ```json
 {
   "label": "GitHub",
@@ -309,15 +322,19 @@ Create new link (max 10)
 ```
 
 #### **PUT /v1/profiles/{id}/links/{link_id}**
+
 Update link
 
 #### **DELETE /v1/profiles/{id}/links/{link_id}**
+
 Delete link
 
 #### **PATCH /v1/profiles/{id}/links/reorder**
+
 Reorder links
 
 **Request:**
+
 ```json
 {
   "link_ids": ["uuid1", "uuid2", "uuid3"]
@@ -329,9 +346,11 @@ Reorder links
 ### **Language Proficiency** (4 endpoints)
 
 #### **GET /v1/profiles/{id}/languages**
+
 List language proficiencies
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -352,12 +371,15 @@ List language proficiencies
 ```
 
 #### **POST /v1/profiles/{id}/languages**
+
 Add language proficiency
 
 #### **PUT /v1/profiles/{id}/languages/{lang_id}**
+
 Update language proficiency
 
 #### **DELETE /v1/profiles/{id}/languages/{lang_id}**
+
 Delete language proficiency
 
 ---
@@ -365,24 +387,31 @@ Delete language proficiency
 ### **User Connections** (7 endpoints)
 
 #### **POST /v1/users/{id}/connections/follow/{target_id}**
+
 Follow user (creates active connection)
 
 #### **DELETE /v1/users/{id}/connections/follow/{target_id}**
+
 Unfollow user
 
 #### **GET /v1/users/{id}/connections/followers**
+
 Get list of followers
 
 #### **GET /v1/users/{id}/connections/following**
+
 Get list of users being followed
 
 #### **POST /v1/users/{id}/connections/block/{target_id}**
+
 Block user (automatically unfollows)
 
 #### **DELETE /v1/users/{id}/connections/block/{target_id}**
+
 Unblock user
 
 #### **GET /v1/users/{id}/connections/blocked**
+
 Get list of blocked users
 
 ---
@@ -397,6 +426,7 @@ Request complete data export
 **Rate Limit:** 1 export per hour per user
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -415,6 +445,7 @@ List all data exports
 Download export (JSON format)
 
 **Export Contents:**
+
 - User account data
 - Profile information
 - All profile links
@@ -429,6 +460,7 @@ Download export (JSON format)
 Request account deletion
 
 **Flow:**
+
 1. User requests deletion
 2. System sends confirmation email with token
 3. Token valid for 24 hours
@@ -438,6 +470,7 @@ Request account deletion
 Confirm deletion with email token
 
 **Request:**
+
 ```json
 {
   "confirmation_token": "uuid-from-email"
@@ -445,6 +478,7 @@ Confirm deletion with email token
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -464,6 +498,7 @@ Get deletion request status
 Cancel pending deletion
 
 **Request:**
+
 ```json
 {
   "reason": "Changed my mind"
@@ -477,6 +512,7 @@ Cancel pending deletion
 ### **Outbound Calls (Services user-service depends on)**
 
 #### **settings-service**
+
 - **When:** During GDPR data export
 - **Endpoint:** `GET /v1/settings/{user_id}`
 - **Purpose:** Include user settings in export package
@@ -487,21 +523,25 @@ Cancel pending deletion
 ### **Inbound Calls (Services that call user-service)**
 
 #### **auth-service**
+
 - **When:** After user registration
 - **Endpoint:** Internal - auto-create empty profile
 - **Purpose:** Initialize user profile
 
 #### **notification-service**
+
 - **When:** User follows/blocks another user
 - **Endpoint:** Get profile for notification message
 - **Purpose:** Display follower name in notification
 
 #### **community-service**
+
 - **When:** Displaying community members
 - **Endpoint:** `GET /v1/profiles/{id}` (batch)
 - **Purpose:** Show member profiles
 
 #### **Frontend**
+
 - **All endpoints:** Direct user interaction
 - **Auth:** JWT token in Authorization header
 
@@ -584,6 +624,7 @@ Cancel pending deletion
 #### **Entry Types**
 
 **1. Profile** (Public)
+
 ```rust
 #[hdk_entry_helper]
 struct Profile {
@@ -598,6 +639,7 @@ struct Profile {
 ```
 
 **2. ProfileLink** (Public)
+
 ```rust
 #[hdk_entry_helper]
 struct ProfileLink {
@@ -610,6 +652,7 @@ struct ProfileLink {
 ```
 
 **3. LanguageProficiency** (Public)
+
 ```rust
 #[hdk_entry_helper]
 struct LanguageProficiency {
@@ -623,6 +666,7 @@ struct LanguageProficiency {
 ```
 
 **4. Connection** (Private)
+
 ```rust
 #[hdk_entry_helper]
 struct Connection {
@@ -633,6 +677,7 @@ struct Connection {
 ```
 
 #### **Links**
+
 ```
 Agent → Profile (1:1)
 Profile → ProfileLink (1:many)
@@ -641,6 +686,7 @@ Agent → Connection → TargetAgent (many:many)
 ```
 
 #### **Validation Rules**
+
 - Max 10 profile links per agent
 - No self-connections
 - Automatic unfollow on block
@@ -649,16 +695,19 @@ Agent → Connection → TargetAgent (many:many)
 #### **Migration Strategy**
 
 **Phase 1:** Keep PostgreSQL, add Holochain writes
+
 - Write to both PostgreSQL and Holochain
 - Read from PostgreSQL (performance)
 - Holochain as source of truth
 
 **Phase 2:** Read from Holochain
+
 - PostgreSQL becomes cache/index
 - Use Holochain for all queries
 - Sync PostgreSQL from Holochain
 
 **Phase 3:** PostgreSQL optional
+
 - Remove PostgreSQL dependency
 - Pure Holochain queries
 - Optional local cache only
