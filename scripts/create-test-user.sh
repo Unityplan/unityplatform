@@ -29,14 +29,10 @@ echo "Full Name: ${FULL_NAME}"
 echo ""
 
 # Database connection details
-DB_NAME="unityplatform"
-DB_USER="unityplatform"
-
-# Database connection details
 DB_CONTAINER="service-postgres-${TERRITORY_CODE}"
 DB_NAME="unityplatform_${TERRITORY_CODE}"
 DB_USER="unityplatform"
-SCHEMA_NAME="territory"
+SCHEMA_NAME="territory_${TERRITORY_CODE}"
 
 echo -e "${YELLOW}Generating password hash...${NC}"
 

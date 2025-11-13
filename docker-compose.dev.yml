@@ -3,7 +3,7 @@
 # Deployment: Once per environment, connects to all pods
 # Usage: docker compose -f docker-compose.dev.yml up -d
 
-name: unityplan-dev
+name: unityplatform-dev
 
 services:
   # Development Dashboard - Links to all tools

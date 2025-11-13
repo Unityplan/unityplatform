@@ -16,7 +16,7 @@ WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
 MIGRATIONS_DIR="$WORKSPACE_DIR/services/shared-lib/migrations"
 CONTAINER_NAME="service-postgres-dk"
 DB_USER="unityplatform"
-DB_NAME="unityplatform"
+DB_NAME="unityplatform_dk"
 
 # Colors for output
 RED='\033[0;31m'

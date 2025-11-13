@@ -12,9 +12,12 @@ tokio = { workspace = true }
 
 # Web framework  
 actix-web = { workspace = true }
+actix-cors = { workspace = true }
+futures-util = { workspace = true }
 
 # Database
 sqlx = { workspace = true }
+redis = { workspace = true }
 
 # Serialization
 serde = { workspace = true }

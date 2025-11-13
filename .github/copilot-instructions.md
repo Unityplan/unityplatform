@@ -5,9 +5,10 @@
 **Platform Name:** Unity Platform  
 **Platform Type:** User sovereignty-first learning and collaboration platform  
 **Version:** 0.1.0-alpha.1 (MVP Phase 1 - Early Development)  
-**Status:** Infrastructure complete, backend services in development  
+**Status:** Infrastructure complete, auth-service operational, backend services in development  
 **Example Deployment:** unityplan.org (test project using this platform)  
-**Database Name:** `unityplatform` (PostgreSQL database - note: lowercase, no space)
+**Database Naming:** `unityplatform_${TERRITORY_CODE}` (e.g., `unityplatform_dk` for Denmark)  
+**Important:** Use `unityplatform` (not `unityplan`) for all new naming
 
 This workspace contains a microservices platform with:
 
@@ -21,7 +22,19 @@ This workspace contains a microservices platform with:
 - **Version Matrix**: See `VERSIONS.md` for all component versions
 - **Documentation**: `docs/` directory (consolidated structure)
 - **Status**: `docs/status/current/phase-1-status.md` (18% complete)
-- **Database Schema**: `services/shared-lib/migrations/` (version: 20251105000001)
+- **Database Schema**: `services/shared-lib/migrations/` (3 migrations applied)
+- **Scripts**: `scripts/README.md` for all utility scripts
+- **Local Database Credentials (DK Pod)**:
+  - Host: `localhost:5432`
+  - Database: `unityplatform_dk`
+  - User: `unityplatform`
+  - Password: `unityplatform_dev_password_dk`
+  - Connection string: `postgresql://unityplatform:unityplatform_dev_password_dk@localhost:5432/unityplatform_dk`
+- **Naming Convention**:
+  - Networks: `unityplatform-mesh-network`, `unityplatform-global-net`, `unityplatform-pod-${ID}-net`
+  - Containers: `service-postgres-${TERRITORY}`, `monitoring-*`, `dev-*`
+  - Volumes: `unityplatform-${PROJECT}_${NAME}`
+  - Projects: `unityplatform-dev`, `unityplatform-monitoring`, `unityplatform-pod-${ID}`
 
 ## Architecture
 
@@ -52,6 +65,102 @@ This workspace contains a microservices platform with:
   - File operations: Use file MCP tools when appropriate
   - Database queries: Use `pgsql_query` and `pgsql_modify` instead of `docker exec psql`
 - **Reasoning**: MCP tools provide better context, error handling, and user experience
+
+## Service Creation Pattern
+
+When creating a new Rust microservice, follow this standard pattern:
+
+### 1. **Check Documentation First**
+
+- Review `docs/architecture/services/{service-name}/` for requirements
+- Check API.md for endpoint specifications
+- Review DATABASE.md for schema requirements
+- Understand service boundaries (what it DOES and DOES NOT handle)
+
+### 2. **Learn from Archived Services**
+
+- Check `services/archived/{service-name}/` for previous implementation wisdom
+- Reuse proven patterns (password hashing, token generation, etc.)
+- **BUT**: Always modernize to use new shared-lib middleware and patterns
+
+### 3. **Standard Service Structure**
+
+```
+services/{service-name}/
+├── Cargo.toml
+├── src/
+│   ├── main.rs              # Server setup with middleware
+│   ├── lib.rs               # Public exports
+│   ├── handlers/            # HTTP request handlers
+│   │   ├── mod.rs
+│   │   └── {domain}.rs
+│   ├── models/              # Request/Response types
+│   │   ├── mod.rs
+│   │   └── {domain}.rs
+│   └── services/            # Business logic
+│       ├── mod.rs
+│       └── {domain}.rs
+```
+
+### 4. **Use New Middleware Stack**
+
+```rust
+// main.rs - Always use shared-lib middleware
+use shared_lib::{
+    AppConfig, Database, LoggingMiddleware, RequestIdMiddleware,
+    SecurityHeadersMiddleware, cors, RateLimitMiddleware,
+};
+
+HttpServer::new(move || {
+    App::new()
+        // Priority 1 middleware
+        .wrap(LoggingMiddleware::development())  // or ::production()
+        .wrap(RequestIdMiddleware)
+        // Priority 2 middleware
+        .wrap(SecurityHeadersMiddleware::development())
+        .wrap(cors::development())
+        .wrap(RateLimitMiddleware::development(redis_client.clone()))
+        // Routes
+        .service(web::scope("/api/v1/{service}").configure(routes))
+})
+```
+
+### 5. **Use Validation Extractors**
+
+```rust
+use shared_lib::ValidatedJson;
+use validator::Validate;
+
+#[derive(Deserialize, Validate)]
+struct CreateRequest {
+    #[validate(length(min = 3, max = 50))]
+    username: String,
+}
+
+async fn create(body: ValidatedJson<CreateRequest>) -> HttpResponse {
+    // body is guaranteed valid
+}
+```
+
+### 6. **Inter-Service Communication**
+
+- Use NATS for async communication between services
+- **Graceful Degradation**: Handle missing services gracefully
+- **Feature Flags**: Use environment variables to enable/disable inter-service calls during development
+- Example: auth-service registration calls invitation-service (when available)
+
+### 7. **Database Patterns**
+
+- Use shared-lib Database connection
+- Territory-aware queries: `territory_{code}.table_name`
+- Global registries: `global.username_registry`, `global.email_registry`
+- Use transactions for multi-step operations
+
+### 8. **Error Handling**
+
+- Use `shared_lib::AppError` for all errors
+- Return `shared_lib::Result<T>` from functions
+- Let middleware handle error responses automatically
 
 ## Project Structure
 

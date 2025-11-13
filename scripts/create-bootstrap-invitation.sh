@@ -28,11 +28,10 @@ fi
 
 # Database connection details
 DB_CONTAINER="service-postgres-${TERRITORY_CODE}"
-DB_NAME="unityplatform"
+DB_NAME="unityplatform_${TERRITORY_CODE}"
 DB_USER="unityplatform"
-# For single-territory pods, use generic "territory" schema
-# For multi-territory pods, use "territory_XX" schema
-SCHEMA_NAME="territory"
+# Territory schema is named with suffix: territory_XX
+SCHEMA_NAME="territory_${TERRITORY_CODE}"
 
 echo -e "${BLUE}Creating bootstrap invitation token...${NC}"
 echo "Territory: ${TERRITORY_CODE}"

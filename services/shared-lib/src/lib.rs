@@ -1,6 +1,7 @@
 pub mod config;
 pub mod database;
 pub mod error;
+pub mod middleware;
 pub mod nats;
 
 // Re-export commonly used types
@@ -8,6 +9,12 @@ pub use config::AppConfig;
 pub use database::Database;
 pub use error::{AppError, Result};
 pub use nats::NatsClient;
+
+// Re-export middleware
+pub use middleware::{
+    cors, error_response_handler, ErrorResponse, LoggingMiddleware, RateLimitMiddleware, RequestId,
+    RequestIdMiddleware, SecurityHeadersMiddleware, ValidatedJson, ValidatedPath, ValidatedQuery,
+};
 
 /// Version information embedded at build time
 pub mod version {
