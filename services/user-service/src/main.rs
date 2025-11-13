@@ -65,12 +65,11 @@ use utoipa_swagger_ui::SwaggerUi;
         )
     ),
     tags(
-        (name = "profiles", description = "User profile management"),
+        (name = "service", description = "Service health and metadata"),
+        (name = "profile", description = "User profile management"),
         (name = "profile-links", description = "External profile links (GitHub, LinkedIn, etc.)"),
         (name = "language-proficiency", description = "Language skills with 4 proficiency dimensions"),
-        (name = "connections", description = "User connections (follow/block)"),
-        (name = "search", description = "User search"),
-        (name = "health", description = "Service health check")
+        (name = "connections", description = "User connections (follow/block)")
     ),
     modifiers(&SecurityAddon)
 )]
@@ -164,19 +163,17 @@ async fn main() -> std::io::Result<()> {
             // API routes
             .service(
                 web::scope("/api/v1")
-                    // Health check (no auth required)
-                    .route("/health", web::get().to(health_check))
-                    // Profile routes (all require JWT auth)
-                    .service(
-                        web::scope("/profiles")
-                            .configure(user_service::handlers::profile::configure)
-                            .configure(user_service::handlers::profile_link::configure)
-                            .configure(user_service::handlers::language_proficiency::configure),
-                    )
+                    // Service routes
+                    .service(web::scope("/service").route("/health", web::get().to(health_check)))
                     // User routes (all require JWT auth)
                     .service(
-                        web::scope("/users")
-                            .configure(user_service::handlers::connection::configure),
+                        web::scope("/user")
+                            // Register more specific routes first
+                            .configure(user_service::handlers::profile_link::configure)
+                            .configure(user_service::handlers::language_proficiency::configure)
+                            .configure(user_service::handlers::connection::configure)
+                            // Register profile with /{id} last (greedy catch-all)
+                            .configure(user_service::handlers::profile::configure),
                     ),
             )
     })
@@ -217,8 +214,8 @@ async fn main() -> std::io::Result<()> {
 /// Health check endpoint (no authentication required)
 #[utoipa::path(
     get,
-    path = "/api/v1/health",
-    tag = "health",
+    path = "/api/v1/service/health",
+    tag = "service",
     responses(
         (status = 200, description = "Service is healthy", body = serde_json::Value,
             example = json!({

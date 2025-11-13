@@ -26,6 +26,5 @@ COMMENT ON SCHEMA territory_dk IS
 DO $$
 BEGIN
     RAISE NOTICE '✅ Migration 20251112000002 complete: Territory schema (territory_dk) created';
-    RAISE NOTICE 'ℹ️  Territory schema is ready for service-specific tables';
-    RAISE NOTICE 'ℹ️  Next: Create auth-service tables (users, refresh_tokens)';
 END $$;
+

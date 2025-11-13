@@ -10,7 +10,7 @@ use crate::services::LanguageProficiencyService;
 /// GET /api/v1/profiles/me/languages - List all language proficiencies
 #[utoipa::path(
     get,
-    path = "/api/v1/profiles/me/languages",
+    path = "/api/v1/user/profile/languages",
     tag = "language-proficiency",
     responses(
         (status = 200, description = "Language proficiencies retrieved successfully", body = Vec<LanguageProficiencyResponse>),
@@ -20,7 +20,7 @@ use crate::services::LanguageProficiencyService;
         ("bearer_auth" = [])
     )
 )]
-#[get("/me/languages")]
+#[get("")]
 async fn list_languages(auth: AuthUser, db: web::Data<Database>) -> Result<HttpResponse> {
     let languages =
         LanguageProficiencyService::get_user_languages(auth.id, &auth.territory, db.pool()).await?;
@@ -32,7 +32,7 @@ async fn list_languages(auth: AuthUser, db: web::Data<Database>) -> Result<HttpR
 /// POST /api/v1/profiles/me/languages - Create a new language proficiency
 #[utoipa::path(
     post,
-    path = "/api/v1/profiles/me/languages",
+    path = "/api/v1/user/profile/languages",
     tag = "language-proficiency",
     request_body = CreateLanguageProficiencyRequest,
     responses(
@@ -44,7 +44,7 @@ async fn list_languages(auth: AuthUser, db: web::Data<Database>) -> Result<HttpR
         ("bearer_auth" = [])
     )
 )]
-#[post("/me/languages")]
+#[post("")]
 async fn create_language(
     auth: AuthUser,
     body: ValidatedJson<CreateLanguageProficiencyRequest>,
@@ -61,7 +61,7 @@ async fn create_language(
 /// PUT /api/v1/profiles/me/languages/:id - Update a language proficiency
 #[utoipa::path(
     put,
-    path = "/api/v1/profiles/me/languages/{id}",
+    path = "/api/v1/user/profile/languages/{id}",
     tag = "language-proficiency",
     params(
         ("id" = Uuid, Path, description = "Language proficiency ID")
@@ -77,7 +77,7 @@ async fn create_language(
         ("bearer_auth" = [])
     )
 )]
-#[put("/me/languages/{id}")]
+#[put("/{id}")]
 async fn update_language(
     auth: AuthUser,
     path: web::Path<Uuid>,
@@ -101,7 +101,7 @@ async fn update_language(
 /// DELETE /api/v1/profiles/me/languages/:id - Delete a language proficiency
 #[utoipa::path(
     delete,
-    path = "/api/v1/profiles/me/languages/{id}",
+    path = "/api/v1/user/profile/languages/{id}",
     tag = "language-proficiency",
     params(
         ("id" = Uuid, Path, description = "Language proficiency ID")
@@ -115,7 +115,7 @@ async fn update_language(
         ("bearer_auth" = [])
     )
 )]
-#[delete("/me/languages/{id}")]
+#[delete("/{id}")]
 async fn delete_language(
     auth: AuthUser,
     path: web::Path<Uuid>,
@@ -129,8 +129,11 @@ async fn delete_language(
 
 /// Configure language proficiency routes
 pub fn configure(cfg: &mut web::ServiceConfig) {
-    cfg.service(list_languages)
-        .service(create_language)
-        .service(update_language)
-        .service(delete_language);
+    cfg.service(
+        web::scope("/profile/languages")
+            .service(list_languages)
+            .service(create_language)
+            .service(update_language)
+            .service(delete_language),
+    );
 }

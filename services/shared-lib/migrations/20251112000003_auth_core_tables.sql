@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS global.username_registry (
     -- Reference to territory (OK - global table)
     CONSTRAINT fk_username_territory 
         FOREIGN KEY (territory_code) 
-        REFERENCES global.territories(code) 
+        REFERENCES global.territories_registry(code) 
         ON DELETE CASCADE,
     
     -- Ensure username format
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS global.email_registry (
     -- Reference to territory (OK - global table)
     CONSTRAINT fk_email_territory 
         FOREIGN KEY (territory_code) 
-        REFERENCES global.territories(code) 
+        REFERENCES global.territories_registry(code) 
         ON DELETE CASCADE,
     
     -- Ensure email format (basic check)
@@ -215,10 +215,4 @@ CREATE TRIGGER update_users_updated_at
 DO $$
 BEGIN
     RAISE NOTICE '✅ Migration 20251112000003 complete: Auth service core tables created';
-    RAISE NOTICE 'ℹ️  Tables created:';
-    RAISE NOTICE '   - global.username_registry (global uniqueness)';
-    RAISE NOTICE '   - global.email_registry (global uniqueness)';
-    RAISE NOTICE '   - territory_dk.users (authentication data)';
-    RAISE NOTICE '   - territory_dk.refresh_tokens (JWT tokens)';
-    RAISE NOTICE 'ℹ️  Next: Create user-service tables (profiles, connections)';
 END $$;

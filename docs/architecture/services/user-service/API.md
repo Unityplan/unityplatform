@@ -2,7 +2,11 @@
 
 **Base URL:** `http://localhost:8002`  
 **Version:** v1  
-**Status:** ✅ Production Ready (28/28 endpoints complete)
+**Status:** ✅ Phase 1 Complete (18/18 endpoints implemented, tested 2025-11-13)
+
+> **API Restructure (2025-11-13):** All user-related endpoints moved under `/api/v1/user/*` for semantic clarity. Service endpoints under `/api/v1/service/*`.
+
+> **📖 Quick Reference:** See [API-IMPLEMENTED.md](./API-IMPLEMENTED.md) for concise documentation of the 18 implemented endpoints with examples. This file (API.md) contains the full specification including planned endpoints.
 
 ---
 
@@ -54,43 +58,130 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ## Table of Contents
 
-1. [User Profile Endpoints](#user-profile-endpoints) (3 endpoints)
-2. [Profile Links Endpoints](#profile-links-endpoints) (4 endpoints)
-3. [Language Proficiency Endpoints](#language-proficiency-endpoints) (4 endpoints)
-4. [User Connections Endpoints](#user-connections-endpoints) (7 endpoints)
-5. [Search Endpoints](#search-endpoints) (2 endpoints)
-6. [Avatar Management](#avatar-management) (2 endpoints)
-7. [Multi-User Operations](#multi-user-operations) (3 endpoints)
-8. [GDPR Data Export](#gdpr-data-export) (3 endpoints)
+1. [Service Endpoints](#service-endpoints) (1 endpoint) ✅ **IMPLEMENTED**
+2. [User Profile Endpoints](#user-profile-endpoints) (3 endpoints) ✅ **IMPLEMENTED**
+3. [Profile Links Endpoints](#profile-links-endpoints) (4 endpoints) ✅ **IMPLEMENTED**
+4. [Language Proficiency Endpoints](#language-proficiency-endpoints) (4 endpoints) ✅ **IMPLEMENTED**
+5. [User Connections Endpoints](#user-connections-endpoints) (7 endpoints) ✅ **6/7 IMPLEMENTED**
+6. [Search Endpoints](#search-endpoints) (2 endpoints) ⏳ **PLANNED**
+7. [Avatar Management](#avatar-management) (2 endpoints) ⏳ **PLANNED**
+8. [Multi-User Operations](#multi-user-operations) (3 endpoints) ⏳ **PLANNED**
+9. [GDPR Data Export](#gdpr-data-export) (3 endpoints) ⏳ **PLANNED**
 
 ---
 
-## User Profile Endpoints
+## Service Endpoints
 
-### 1. Get User Profile
+### Health Check
 
-**Endpoint:** `GET /api/v1/profiles/:id`  
-**Authentication:** Bearer token required  
-**Status:** ✅ Implemented
+**Endpoint:** `GET /api/v1/service/health`  
+**Authentication:** None (public)  
+**Status:** ✅ Implemented (2025-11-13)
 
-**Description:** Retrieve user profile by ID.
+**Description:** Check service health and version.
 
 **Response (200 OK):**
 
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "username": "alice",
-    "display_name": "Alice Anderson",
-    "bio": "Rust developer from Denmark",
-    "location": "Copenhagen",
-    "avatar_url": "https://ipfs.unityplatform.org/ipfs/QmXxx",
-    "website": "https://alice.dev",
-    "created_at": "2025-11-01T10:00:00Z",
-    "updated_at": "2025-11-12T10:00:00Z"
-  }
+  "service": "user-service",
+  "status": "healthy",
+  "version": "0.1.0-alpha.1"
+}
+```
+
+---
+
+## User Profile Endpoints
+
+### 1. Get Own Profile
+
+**Endpoint:** `GET /api/v1/user/profile`  
+**Authentication:** Bearer token required  
+**Status:** ✅ Implemented (2025-11-13)
+
+**Description:** Get authenticated user's own profile.
+
+**Response (200 OK):**
+
+```json
+{
+  "id": "21a7c1f4-0dc8-47f1-aa26-c9848fedb3a1",
+  "username": "alice_admin",
+  "displayName": null,
+  "avatarUrl": null,
+  "bio": "Platform administrator",
+  "about": null,
+  "location": null,
+  "website": null,
+  "interests": null,
+  "skills": null,
+  "createdAt": "2025-11-13T19:17:45.817709Z",
+  "updatedAt": "2025-11-13T19:31:50.013976Z"
+}
+```
+
+---
+
+### 2. Update Own Profile
+
+**Endpoint:** `PUT /api/v1/user/profile`  
+**Authentication:** Bearer token required  
+**Status:** ✅ Implemented (2025-11-13)
+
+**Description:** Update authenticated user's profile.
+
+**Request Body (camelCase):**
+
+```json
+{
+  "displayName": "Alice Anderson",
+  "bio": "Rust developer from Denmark",
+  "location": "Copenhagen",
+  "website": "https://alice.dev"
+}
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "id": "21a7c1f4-0dc8-47f1-aa26-c9848fedb3a1",
+  "username": "alice_admin",
+  "displayName": "Alice Anderson",
+  "bio": "Rust developer from Denmark",
+  "location": "Copenhagen",
+  "website": "https://alice.dev",
+  "updatedAt": "2025-11-13T19:31:50.013976Z"
+}
+```
+
+---
+
+### 3. Get Profile by ID
+
+**Endpoint:** `GET /api/v1/user/profile/{id}`  
+**Authentication:** Bearer token required  
+**Status:** ✅ Implemented (2025-11-13)
+
+**Description:** Retrieve any user's profile by user ID.
+
+**Response (200 OK):**
+
+```json
+{
+  "id": "21a7c1f4-0dc8-47f1-aa26-c9848fedb3a1",
+  "username": "alice_admin",
+  "displayName": "Alice Anderson",
+  "avatarUrl": null,
+  "bio": "Platform administrator",
+  "about": null,
+  "location": "Copenhagen",
+  "website": "https://alice.dev",
+  "interests": null,
+  "skills": null,
+  "createdAt": "2025-11-13T19:17:45.817709Z",
+  "updatedAt": "2025-11-13T19:31:50.013976Z"
 }
 ```
 

@@ -97,12 +97,22 @@ for migration in "${MIGRATIONS[@]}"; do
     # Copy migration to container
     docker cp "$migration" "$CONTAINER_NAME:/tmp/$MIGRATION_FILE" > /dev/null
     
-    # Run migration
-    if docker exec $CONTAINER_NAME psql -U $DB_USER -d $DB_NAME -f "/tmp/$MIGRATION_FILE" 2>&1 | grep -E "(ERROR|NOTICE|✅)"; then
-        echo -e "${GREEN}      ✓ Success${NC}"
-    else
+    # Run migration and capture output
+    MIGRATION_OUTPUT=$(docker exec $CONTAINER_NAME psql -U $DB_USER -d $DB_NAME -f "/tmp/$MIGRATION_FILE" 2>&1)
+    MIGRATION_EXIT_CODE=$?
+    
+    # Show NOTICE messages (completion messages)
+    echo "$MIGRATION_OUTPUT" | grep "NOTICE:" || true
+    
+    # Check for errors
+    if [ $MIGRATION_EXIT_CODE -ne 0 ] || echo "$MIGRATION_OUTPUT" | grep -q "ERROR:"; then
         echo -e "${RED}      ✗ Failed${NC}"
+        echo ""
+        echo "Error output:"
+        echo "$MIGRATION_OUTPUT" | grep -E "(ERROR|FATAL)"
         exit 1
+    else
+        echo -e "${GREEN}      ✓ Success${NC}"
     fi
     echo ""
 done

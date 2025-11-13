@@ -115,7 +115,7 @@ Detailed implementation documentation for each microservice.
 |---------|------|--------|------|
 | **community-service** | 8006 | ⏳ Planned | [README](services/community-service/README.md) · [API](services/community-service/API.md) · [DB](services/community-service/DATABASE.md) |
 | **badge-service** | 8007 | ⏳ Planned | [README](services/badge-service/README.md) · [API](services/badge-service/API.md) · [DB](services/badge-service/DATABASE.md) |
-| **territory-service** | 8008 | ⏳ Planned | [README](services/territory-service/README.md) · [API](services/territory-service/API.md) · [DB](services/territory-service/DATABASE.md) |
+| **territory-service** | 8008 | 🚧 In Progress (4/7 endpoints) | [README](services/territory-service/README.md) · [API](services/territory-service/API.md) · [DB](services/territory-service/DATABASE.md) |
 | **event-service** | 8009 | ⏳ Planned | [README](services/event-service/README.md) · [API](services/event-service/API.md) · [DB](services/event-service/DATABASE.md) |
 | **course-service** | 8010 | ⏳ Planned | [README](services/course-service/README.md) · [API](services/course-service/API.md) · [DB](services/course-service/DATABASE.md) |
 | **forum-service** | 8011 | ⏳ Planned | [README](services/forum-service/README.md) · [API](services/forum-service/API.md) · [DB](services/forum-service/DATABASE.md) |
@@ -132,9 +132,9 @@ Detailed implementation documentation for each microservice.
 
 **Current Status:**
 
-- **Version:** 20251112000005
+- **Version:** 20251113000005
 - **Database:** PostgreSQL 15+ with TimescaleDB
-- **Migrations Applied:** 6 core migrations (30 tables)
+- **Migrations Applied:** 5 core migrations (33 tables)
 - **Service Ownership:** Defined per table
 
 **Key Principles:**
@@ -236,7 +236,7 @@ Detailed implementation documentation for each microservice.
 
 - ⏳ community-service (50% - README, API, DATABASE)
 - ⏳ badge-service (50% - README, API, DATABASE)
-- ⏳ territory-service (50% - README, API, DATABASE)
+- 🚧 territory-service (75% - README, API, DATABASE + 4/7 endpoints implemented)
 - ⏳ event-service (50% - README, API, DATABASE)
 - ⏳ course-service (50% - README, API, DATABASE)
 - ⏳ forum-service (50% - README, API, DATABASE)
@@ -256,6 +256,37 @@ Historical documentation from the initial planning phase (November 11, 2025) bef
 **Contents:** Consolidated API planning documents that were superseded by the service-specific documentation structure. Kept for historical reference.
 
 See [.archived/README.md](.archived/README.md) for details.
+
+---
+
+## 🧪 Test Users
+
+For development and testing, the following test users are available in the database:
+
+| Username | Email | Password | Full Name | Role | Purpose |
+|----------|-------|----------|-----------|------|---------|
+| `alice_admin` | <alice@unityplatform.test> | `SecurePass123!` | Alice Anderson | Platform Manager* | Platform-level admin testing |
+| `bob_manager` | <bob@unityplatform.test> | `SecurePass123!` | Bob Builder | Territory Manager* | Territory management testing |
+| `carol_user` | <carol@unityplatform.test> | `SecurePass123!` | Carol Chen | User | Standard features testing |
+| `david_dev` | <david@unityplatform.test> | `SecurePass123!` | David Developer | User | Development features testing |
+| `emma_explorer` | <emma@unityplatform.test> | `SecurePass123!` | Emma Explorer | User | Community features testing |
+| `frank_solo` | *(none)* | `SecurePass123!` | Frank Solo | User | Email-less account testing |
+
+**Notes:**
+
+- Roles marked with * will be assigned via badge-service when implemented
+- All users are in territory `dk` (Denmark)
+- Password is the same for all test accounts: `SecurePass123!`
+- `frank_solo` demonstrates optional email functionality
+- `alice_admin` has been assigned as a territory manager for testing territory-service endpoints
+
+**Quick Login Example:**
+
+```bash
+curl -X POST http://localhost:8001/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "alice_admin", "password": "SecurePass123!", "territory": "dk"}'
+```
 
 ---
 
@@ -284,6 +315,6 @@ See [.archived/README.md](.archived/README.md) for details.
 
 ---
 
-**Last Updated:** November 12, 2025  
+**Last Updated:** November 13, 2025  
 **Maintained By:** Development Team  
 **Status:** Living Documentation (updated continuously)

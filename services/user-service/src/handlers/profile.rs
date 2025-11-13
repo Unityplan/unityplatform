@@ -7,16 +7,19 @@ use crate::services::ProfileService;
 
 /// Configure profile routes
 pub fn configure(cfg: &mut web::ServiceConfig) {
-    cfg.service(get_own_profile)
-        .service(update_own_profile)
-        .service(get_profile_by_id);
+    cfg.service(
+        web::scope("/profile")
+            .service(get_own_profile)
+            .service(update_own_profile)
+            .service(get_profile_by_id),
+    );
 }
 
-/// GET /api/v1/profiles/me - Get authenticated user's profile
+/// GET /api/v1/user/profile - Get authenticated user's profile
 #[utoipa::path(
     get,
-    path = "/api/v1/profiles/me",
-    tag = "profiles",
+    path = "/api/v1/user/profile",
+    tag = "profile",
     responses(
         (status = 200, description = "User profile retrieved successfully", body = ProfileResponse),
         (status = 401, description = "Unauthorized"),
@@ -26,17 +29,17 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         ("bearer_auth" = [])
     )
 )]
-#[get("/me")]
+#[get("")]
 async fn get_own_profile(auth: AuthUser, db: web::Data<Database>) -> Result<HttpResponse> {
     let profile = ProfileService::get_profile(auth.id, &auth.territory, db.pool()).await?;
     Ok(HttpResponse::Ok().json(profile))
 }
 
-/// PUT /api/v1/profiles/me - Update authenticated user's profile
+/// PUT /api/v1/user/profile - Update authenticated user's profile
 #[utoipa::path(
     put,
-    path = "/api/v1/profiles/me",
-    tag = "profiles",
+    path = "/api/v1/user/profile",
+    tag = "profile",
     request_body = UpdateProfileRequest,
     responses(
         (status = 200, description = "Profile updated successfully", body = ProfileResponse),
@@ -47,7 +50,7 @@ async fn get_own_profile(auth: AuthUser, db: web::Data<Database>) -> Result<Http
         ("bearer_auth" = [])
     )
 )]
-#[put("/me")]
+#[put("")]
 async fn update_own_profile(
     auth: AuthUser,
     body: ValidatedJson<UpdateProfileRequest>,
@@ -73,11 +76,11 @@ async fn update_own_profile(
     Ok(HttpResponse::Ok().json(profile))
 }
 
-/// GET /api/v1/profiles/:id - Get user profile by ID
+/// GET /api/v1/user/profile/{id} - Get user profile by ID
 #[utoipa::path(
     get,
-    path = "/api/v1/profiles/{id}",
-    tag = "profiles",
+    path = "/api/v1/user/profile/{id}",
+    tag = "profile",
     params(
         ("id" = Uuid, Path, description = "User ID")
     ),

@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "auth-service",
     "shared-lib",
+    "territory-service",
     "user-service",
     # Services will be added as they are rebuilt with new architecture
     # See: docs/architecture/services/shared-lib/MIDDLEWARE.md

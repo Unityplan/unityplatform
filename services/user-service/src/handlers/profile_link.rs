@@ -8,7 +8,7 @@ use crate::services::ProfileLinkService;
 /// GET /api/v1/profiles/me/links - List all profile links for authenticated user
 #[utoipa::path(
     get,
-    path = "/api/v1/profiles/me/links",
+    path = "/api/v1/user/profile/links",
     tag = "profile-links",
     responses(
         (status = 200, description = "Profile links retrieved successfully", body = Vec<ProfileLinkResponse>),
@@ -18,7 +18,7 @@ use crate::services::ProfileLinkService;
         ("bearer_auth" = [])
     )
 )]
-#[get("/me/links")]
+#[get("")]
 async fn list_links(auth: AuthUser, db: web::Data<Database>) -> Result<HttpResponse> {
     let links = ProfileLinkService::get_user_links(auth.id, &auth.territory, db.pool()).await?;
     let response: Vec<ProfileLinkResponse> = links.into_iter().map(Into::into).collect();
@@ -28,7 +28,7 @@ async fn list_links(auth: AuthUser, db: web::Data<Database>) -> Result<HttpRespo
 /// POST /api/v1/profiles/me/links - Create a new profile link
 #[utoipa::path(
     post,
-    path = "/api/v1/profiles/me/links",
+    path = "/api/v1/user/profile/links",
     tag = "profile-links",
     request_body = CreateProfileLinkRequest,
     responses(
@@ -40,7 +40,7 @@ async fn list_links(auth: AuthUser, db: web::Data<Database>) -> Result<HttpRespo
         ("bearer_auth" = [])
     )
 )]
-#[post("/me/links")]
+#[post("")]
 async fn create_link(
     auth: AuthUser,
     body: ValidatedJson<CreateProfileLinkRequest>,
@@ -55,7 +55,7 @@ async fn create_link(
 /// PUT /api/v1/profiles/me/links/:id - Update a profile link
 #[utoipa::path(
     put,
-    path = "/api/v1/profiles/me/links/{id}",
+    path = "/api/v1/user/profile/links/{id}",
     tag = "profile-links",
     params(
         ("id" = Uuid, Path, description = "Profile link ID")
@@ -71,7 +71,7 @@ async fn create_link(
         ("bearer_auth" = [])
     )
 )]
-#[put("/me/links/{id}")]
+#[put("/{id}")]
 async fn update_link(
     auth: AuthUser,
     path: web::Path<Uuid>,
@@ -89,7 +89,7 @@ async fn update_link(
 /// DELETE /api/v1/profiles/me/links/:id - Delete a profile link
 #[utoipa::path(
     delete,
-    path = "/api/v1/profiles/me/links/{id}",
+    path = "/api/v1/user/profile/links/{id}",
     tag = "profile-links",
     params(
         ("id" = Uuid, Path, description = "Profile link ID")
@@ -103,7 +103,7 @@ async fn update_link(
         ("bearer_auth" = [])
     )
 )]
-#[delete("/me/links/{id}")]
+#[delete("/{id}")]
 async fn delete_link(
     auth: AuthUser,
     path: web::Path<Uuid>,
@@ -116,8 +116,11 @@ async fn delete_link(
 
 /// Configure profile link routes
 pub fn configure(cfg: &mut web::ServiceConfig) {
-    cfg.service(list_links)
-        .service(create_link)
-        .service(update_link)
-        .service(delete_link);
+    cfg.service(
+        web::scope("/profile/links")
+            .service(list_links)
+            .service(create_link)
+            .service(update_link)
+            .service(delete_link),
+    );
 }

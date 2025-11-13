@@ -10,7 +10,7 @@ use crate::services::ConnectionService;
 /// Follow a user
 #[utoipa::path(
     post,
-    path = "/api/v1/users/{id}/follow",
+    path = "/api/v1/user/connections/{id}/follow",
     tag = "connections",
     security(("bearer_auth" = [])),
     params(
@@ -38,7 +38,7 @@ async fn follow_user(
 /// Unfollow a user
 #[utoipa::path(
     delete,
-    path = "/api/v1/users/{id}/follow",
+    path = "/api/v1/user/connections/{id}/follow",
     tag = "connections",
     security(("bearer_auth" = [])),
     params(
@@ -65,7 +65,7 @@ async fn unfollow_user(
 /// Block a user
 #[utoipa::path(
     post,
-    path = "/api/v1/users/{id}/block",
+    path = "/api/v1/user/connections/{id}/block",
     tag = "connections",
     security(("bearer_auth" = [])),
     params(
@@ -93,7 +93,7 @@ async fn block_user(
 /// Unblock a user
 #[utoipa::path(
     delete,
-    path = "/api/v1/users/{id}/block",
+    path = "/api/v1/user/connections/{id}/block",
     tag = "connections",
     security(("bearer_auth" = [])),
     params(
@@ -136,7 +136,7 @@ fn default_limit() -> i64 {
 /// Get followers of a user
 #[utoipa::path(
     get,
-    path = "/api/v1/users/{id}/followers",
+    path = "/api/v1/user/connections/{id}/followers",
     tag = "connections",
     security(("bearer_auth" = [])),
     params(
@@ -167,7 +167,7 @@ async fn get_followers(
 /// Get users that a user is following
 #[utoipa::path(
     get,
-    path = "/api/v1/users/{id}/following",
+    path = "/api/v1/user/connections/{id}/following",
     tag = "connections",
     security(("bearer_auth" = [])),
     params(
@@ -212,7 +212,7 @@ struct UserSearchQuery {
 /// Search for users
 #[utoipa::path(
     get,
-    path = "/api/v1/users/search",
+    path = "/api/v1/user/connections/search",
     tag = "connections",
     security(("bearer_auth" = [])),
     params(
@@ -249,11 +249,14 @@ async fn search_users(
 
 /// Configure connection routes
 pub fn configure(cfg: &mut web::ServiceConfig) {
-    cfg.route("/search", web::get().to(search_users))
-        .route("/{id}/follow", web::post().to(follow_user))
-        .route("/{id}/follow", web::delete().to(unfollow_user))
-        .route("/{id}/block", web::post().to(block_user))
-        .route("/{id}/block", web::delete().to(unblock_user))
-        .route("/{id}/followers", web::get().to(get_followers))
-        .route("/{id}/following", web::get().to(get_following));
+    cfg.service(
+        web::scope("/connections")
+            .route("/search", web::get().to(search_users))
+            .route("/{id}/follow", web::post().to(follow_user))
+            .route("/{id}/follow", web::delete().to(unfollow_user))
+            .route("/{id}/block", web::post().to(block_user))
+            .route("/{id}/block", web::delete().to(unblock_user))
+            .route("/{id}/followers", web::get().to(get_followers))
+            .route("/{id}/following", web::get().to(get_following)),
+    );
 }
