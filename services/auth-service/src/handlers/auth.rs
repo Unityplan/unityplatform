@@ -257,12 +257,16 @@ pub async fn refresh(
         let refresh_token_table = format!("territory_{}.refresh_tokens", territory);
 
         // Get all non-revoked, non-expired tokens for this territory
-        let tokens = sqlx::query(&format!(
+        // Skip territories that don't exist (table not found)
+        let tokens = match sqlx::query(&format!(
             "SELECT id, token_hash, user_id, expires_at FROM {} WHERE revoked = FALSE AND expires_at > NOW()",
             refresh_token_table
         ))
         .fetch_all(pool)
-        .await?;
+        .await {
+            Ok(tokens) => tokens,
+            Err(_) => continue, // Skip this territory if table doesn't exist
+        };
 
         // Check each token hash to find a match
         for token_row in tokens {
@@ -320,12 +324,17 @@ pub async fn logout(
         let refresh_token_table = format!("territory_{}.refresh_tokens", territory);
 
         // Get all non-revoked tokens and check hash
-        let tokens = sqlx::query(&format!(
+        // Skip territories that don't exist (table not found)
+        let tokens = match sqlx::query(&format!(
             "SELECT id, token_hash FROM {} WHERE revoked = FALSE",
             refresh_token_table
         ))
         .fetch_all(pool)
-        .await?;
+        .await
+        {
+            Ok(tokens) => tokens,
+            Err(_) => continue, // Skip this territory if table doesn't exist
+        };
 
         for token_row in tokens {
             let token_id: Uuid = token_row.get("id");
