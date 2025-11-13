@@ -50,7 +50,7 @@ pub enum CircuitBreakerError<E> {
     /// Circuit is open, request rejected
     #[error("Circuit breaker is open - service unavailable")]
     Open,
-    
+
     /// Underlying call failed
     #[error("Call failed: {0}")]
     CallFailed(E),
@@ -204,7 +204,7 @@ impl CircuitBreaker {
     /// Check if timeout has elapsed and transition to HalfOpen if needed
     async fn check_timeout(&self) {
         let last_failure = self.last_failure_time.read().await;
-        
+
         if let Some(last_time) = *last_failure {
             if last_time.elapsed() >= self.timeout {
                 // Timeout elapsed - transition to HalfOpen
@@ -261,13 +261,13 @@ impl CircuitBreaker {
     pub async fn reset(&self) {
         let mut count = self.failure_count.write().await;
         *count = 0;
-        
+
         let mut state = self.state.write().await;
         *state = CircuitState::Closed;
-        
+
         let mut last_failure = self.last_failure_time.write().await;
         *last_failure = None;
-        
+
         tracing::info!("Circuit breaker manually reset");
     }
 }
@@ -279,9 +279,9 @@ mod tests {
     #[tokio::test]
     async fn test_circuit_breaker_closed_on_success() {
         let breaker = CircuitBreaker::new(3, Duration::from_secs(1));
-        
+
         let result = breaker.call(async { Ok::<_, String>("success") }).await;
-        
+
         assert!(result.is_ok());
         assert_eq!(breaker.state().await, CircuitState::Closed);
         assert_eq!(breaker.failure_count().await, 0);
@@ -290,12 +290,12 @@ mod tests {
     #[tokio::test]
     async fn test_circuit_breaker_opens_after_threshold() {
         let breaker = CircuitBreaker::new(3, Duration::from_secs(1));
-        
+
         // First 3 failures should open the circuit
         for _ in 0..3 {
             let _ = breaker.call(async { Err::<String, _>("error") }).await;
         }
-        
+
         assert_eq!(breaker.state().await, CircuitState::Open);
         assert_eq!(breaker.failure_count().await, 3);
     }
@@ -303,32 +303,32 @@ mod tests {
     #[tokio::test]
     async fn test_circuit_breaker_rejects_when_open() {
         let breaker = CircuitBreaker::new(3, Duration::from_secs(1));
-        
+
         // Open the circuit
         for _ in 0..3 {
             let _ = breaker.call(async { Err::<String, _>("error") }).await;
         }
-        
+
         // Next call should be rejected
         let result = breaker.call(async { Ok::<_, String>("success") }).await;
-        
+
         assert!(matches!(result, Err(CircuitBreakerError::Open)));
     }
 
     #[tokio::test]
     async fn test_circuit_breaker_transitions_to_half_open() {
         let breaker = CircuitBreaker::new(3, Duration::from_millis(100));
-        
+
         // Open the circuit
         for _ in 0..3 {
             let _ = breaker.call(async { Err::<String, _>("error") }).await;
         }
-        
+
         assert_eq!(breaker.state().await, CircuitState::Open);
-        
+
         // Wait for timeout
         tokio::time::sleep(Duration::from_millis(150)).await;
-        
+
         // Should transition to HalfOpen on next call
         breaker.check_timeout().await;
         assert_eq!(breaker.state().await, CircuitState::HalfOpen);
@@ -337,18 +337,18 @@ mod tests {
     #[tokio::test]
     async fn test_circuit_breaker_closes_on_recovery() {
         let breaker = CircuitBreaker::new(3, Duration::from_millis(100));
-        
+
         // Open the circuit
         for _ in 0..3 {
             let _ = breaker.call(async { Err::<String, _>("error") }).await;
         }
-        
+
         // Wait for timeout
         tokio::time::sleep(Duration::from_millis(150)).await;
-        
+
         // Successful call in HalfOpen should close circuit
         let result = breaker.call(async { Ok::<_, String>("success") }).await;
-        
+
         assert!(result.is_ok());
         assert_eq!(breaker.state().await, CircuitState::Closed);
         assert_eq!(breaker.failure_count().await, 0);
@@ -357,17 +357,17 @@ mod tests {
     #[tokio::test]
     async fn test_circuit_breaker_reset() {
         let breaker = CircuitBreaker::new(3, Duration::from_secs(1));
-        
+
         // Open the circuit
         for _ in 0..3 {
             let _ = breaker.call(async { Err::<String, _>("error") }).await;
         }
-        
+
         assert_eq!(breaker.state().await, CircuitState::Open);
-        
+
         // Reset
         breaker.reset().await;
-        
+
         assert_eq!(breaker.state().await, CircuitState::Closed);
         assert_eq!(breaker.failure_count().await, 0);
     }
@@ -375,31 +375,31 @@ mod tests {
     #[tokio::test]
     async fn test_development_defaults() {
         let breaker = CircuitBreaker::development();
-        
+
         // Should open after 3 failures
         for _ in 0..3 {
             let _ = breaker.call(async { Err::<String, _>("error") }).await;
         }
-        
+
         assert_eq!(breaker.state().await, CircuitState::Open);
     }
 
     #[tokio::test]
     async fn test_production_defaults() {
         let breaker = CircuitBreaker::production();
-        
+
         // Should stay closed after 3 failures
         for _ in 0..3 {
             let _ = breaker.call(async { Err::<String, _>("error") }).await;
         }
-        
+
         assert_eq!(breaker.state().await, CircuitState::Closed);
-        
+
         // Should open after 5 failures
         for _ in 0..2 {
             let _ = breaker.call(async { Err::<String, _>("error") }).await;
         }
-        
+
         assert_eq!(breaker.state().await, CircuitState::Open);
     }
 }

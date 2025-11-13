@@ -1,7 +1,9 @@
 [workspace]
 resolver = "2"
-members = ["auth-service",
+members = [
+    "auth-service",
     "shared-lib",
+    "user-service",
     # Services will be added as they are rebuilt with new architecture
     # See: docs/architecture/services/shared-lib/MIDDLEWARE.md
     # See: docs/architecture/MIGRATIONS-MASTER.md
@@ -31,6 +33,7 @@ tokio-util = "0.7"
 actix-web = "4.9"
 actix-cors = "0.7"
 actix-rt = "2.10"
+futures = "0.3"
 futures-util = "0.3"
 
 # Database

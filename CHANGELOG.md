@@ -11,6 +11,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **User Service** (v0.1.0-alpha.1) - Complete user profile and social features
+  - 18 RESTful endpoints across 4 feature groups
+  - **Profile Management (3 endpoints)**:
+    - GET /api/v1/profiles/me - Get authenticated user's profile (auto-created on first access)
+    - PUT /api/v1/profiles/me - Update profile (display_name, avatar_url, bio, about, location, website, interests[], skills[])
+    - GET /api/v1/profiles/:id - View other users' profiles
+  - **Profile Links (4 endpoints)**:
+    - CRUD operations for external links (GitHub, LinkedIn, portfolio, etc.)
+    - Maximum 10 links per user with display ordering
+    - URL validation and optional icon support
+  - **Language Proficiency (4 endpoints)**:
+    - Four-dimensional skill tracking: spoken, written, reading, listening
+    - Six proficiency levels: native, fluent, advanced, intermediate, basic, learning
+    - Preferred language flagging for default communication
+    - Duplicate prevention per language code
+  - **Connections (7 endpoints)**:
+    - Follow/unfollow users with mutual follow tracking
+    - Block/unblock users (automatically removes mutual follows)
+    - List followers and following (paginated)
+    - User search by username/display name with connection status
+  - Security: Defense-in-depth authorization (JWT + handler + service + database WHERE clauses)
+  - Database migration 20251113000004: 6 tables, 26 indexes, 2 triggers
+  - Full OpenAPI/Swagger documentation at /swagger-ui/
+  - All middleware integrated: logging, request ID, security headers, CORS, rate limiting, validation
+  - Comprehensive testing: profiles, links, languages, follow/block, search
+
+### Added
+
 - **Frontend Auth & Profile UI** (Sprint 5 - In Progress)
   - React 19.1.1 + Vite 7.2.2 + TypeScript 5.x project scaffolding
   - TailwindCSS v4.1.17 with @tailwindcss/vite plugin (CSS-based config)

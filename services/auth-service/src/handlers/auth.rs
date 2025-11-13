@@ -403,7 +403,7 @@ pub async fn validate(
 /// Health check endpoint
 #[utoipa::path(
     get,
-    path = "/api/v1/auth/health",
+    path = "/api/v1/health",
     responses(
         (status = 200, description = "Service is healthy", body = HealthResponse),
     ),

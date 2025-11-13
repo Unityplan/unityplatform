@@ -125,13 +125,18 @@ async fn main() -> std::io::Result<()> {
             )
             // Routes
             .service(
-                web::scope("/api/v1/auth")
-                    .service(handlers::register)
-                    .service(handlers::login)
-                    .service(handlers::refresh)
-                    .service(handlers::logout)
-                    .service(handlers::validate)
-                    .service(handlers::health),
+                web::scope("/api/v1")
+                    // Health endpoint (top-level for consistency across services)
+                    .service(handlers::health)
+                    // Auth endpoints
+                    .service(
+                        web::scope("/auth")
+                            .service(handlers::register)
+                            .service(handlers::login)
+                            .service(handlers::refresh)
+                            .service(handlers::logout)
+                            .service(handlers::validate),
+                    ),
             )
     })
     .bind(&bind_address)?
