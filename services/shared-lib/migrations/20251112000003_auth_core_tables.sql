@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS territory_dk.users (
     
     -- Authentication credentials
     username VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255),  -- OPTIONAL (for notifications only)
     password_hash VARCHAR(255) NOT NULL,
     
     -- Account status
@@ -116,12 +116,13 @@ CREATE TABLE IF NOT EXISTS territory_dk.users (
     -- Constraints
     CHECK (char_length(username) >= 3 AND char_length(username) <= 50),
     CHECK (username ~ '^[a-z0-9_]+$'),
-    CHECK (email ~ '^[^@]+@[^@]+\.[^@]+$'),
+    CHECK (email IS NULL OR email ~ '^[^@]+@[^@]+\.[^@]+$'),  -- Email format only if provided
     CHECK (deleted_at IS NULL OR active = FALSE)
 );
 
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_users_email ON territory_dk.users(email) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_users_email ON territory_dk.users(email) WHERE email IS NOT NULL AND deleted_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON territory_dk.users(email) WHERE email IS NOT NULL AND deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_users_username ON territory_dk.users(username) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_users_active ON territory_dk.users(active) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_users_created_at ON territory_dk.users(created_at);
@@ -132,6 +133,8 @@ COMMENT ON TABLE territory_dk.users IS
     'User authentication data. JWT contains all user info to minimize database queries (99% of requests use JWT only).';
 COMMENT ON COLUMN territory_dk.users.password_hash IS 
     'Argon2id password hash (recommended for 2024+)';
+COMMENT ON COLUMN territory_dk.users.email IS 
+    'Optional email for notifications. NULL allowed for privacy-focused or username-only registration.';
 COMMENT ON COLUMN territory_dk.users.email_verified IS 
     'Email verification status. Users cannot login until verified = true.';
 COMMENT ON COLUMN territory_dk.users.deleted_at IS 

@@ -1,3 +1,4 @@
+use base64::Engine;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
@@ -62,12 +63,15 @@ impl TokenService {
             .map_err(|e| AppError::Internal(format!("Failed to generate token: {}", e)))
     }
 
-    /// Generate a refresh token UUID (stored in database, 7 day expiration)
+    /// Generate a refresh token (secure random string, 7 day expiration)
     ///
     /// # Returns
-    /// * `Uuid` - A unique refresh token identifier
-    pub fn generate_refresh_token() -> Uuid {
-        Uuid::new_v4()
+    /// * `String` - A 32-byte base64url encoded random string
+    pub fn generate_refresh_token() -> String {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        let bytes: [u8; 32] = rng.gen();
+        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes)
     }
 
     /// Validate and decode a JWT token
@@ -131,8 +135,11 @@ mod tests {
         let token1 = TokenService::generate_refresh_token();
         let token2 = TokenService::generate_refresh_token();
 
-        // Should be unique UUIDs
+        // Should be unique random strings
         assert_ne!(token1, token2);
+        // Should be 43 characters (32 bytes base64url encoded)
+        assert_eq!(token1.len(), 43);
+        assert_eq!(token2.len(), 43);
     }
 
     #[test]

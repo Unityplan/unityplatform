@@ -11,8 +11,8 @@ pub struct RegisterRequest {
     pub username: String,
 
     #[validate(email)]
-    #[schema(example = "john@example.com")]
-    pub email: String,
+    #[schema(example = "john@example.com", nullable = true)]
+    pub email: Option<String>,
 
     #[validate(length(min = 8, max = 128))]
     #[schema(example = "secure_password_123", min_length = 8, max_length = 128)]
@@ -46,15 +46,15 @@ pub struct LoginRequest {
 /// Token refresh request
 #[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct RefreshRequest {
-    #[schema(example = "550e8400-e29b-41d4-a716-446655440000")]
-    pub refresh_token: Uuid,
+    #[schema(example = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6")]
+    pub refresh_token: String,
 }
 
 /// Logout request
 #[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct LogoutRequest {
-    #[schema(example = "550e8400-e29b-41d4-a716-446655440000")]
-    pub refresh_token: Uuid,
+    #[schema(example = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6")]
+    pub refresh_token: String,
 }
 
 /// Authentication response (returned on login/register)
@@ -63,8 +63,8 @@ pub struct AuthResponse {
     #[schema(example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")]
     pub access_token: String,
 
-    #[schema(example = "550e8400-e29b-41d4-a716-446655440000")]
-    pub refresh_token: Uuid,
+    #[schema(example = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6")]
+    pub refresh_token: String,
 
     #[schema(example = "Bearer")]
     pub token_type: String,
@@ -74,7 +74,7 @@ pub struct AuthResponse {
 }
 
 impl AuthResponse {
-    pub fn new(access_token: String, refresh_token: Uuid) -> Self {
+    pub fn new(access_token: String, refresh_token: String) -> Self {
         Self {
             access_token,
             refresh_token,

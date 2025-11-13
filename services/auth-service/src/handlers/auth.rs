@@ -68,15 +68,18 @@ pub async fn register(
         return Err(AppError::Conflict("Username already exists".to_string()));
     }
 
-    // Check if email already exists in global registry
-    let email_exists: bool =
-        sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM global.email_registry WHERE email = $1)")
-            .bind(&req.email)
-            .fetch_one(pool)
-            .await?;
+    // Check if email already exists in global registry (only if email provided)
+    if let Some(ref email) = req.email {
+        let email_exists: bool = sqlx::query_scalar(
+            "SELECT EXISTS(SELECT 1 FROM global.email_registry WHERE email = $1)",
+        )
+        .bind(email)
+        .fetch_one(pool)
+        .await?;
 
-    if email_exists {
-        return Err(AppError::Conflict("Email already exists".to_string()));
+        if email_exists {
+            return Err(AppError::Conflict("Email already exists".to_string()));
+        }
     }
 
     // Hash password
@@ -90,20 +93,21 @@ pub async fn register(
     let territory_table = format!("territory_{}.users", req.territory);
 
     sqlx::query(&format!(
-        "INSERT INTO {} (user_id, username, email, password_hash, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, NOW(), NOW())",
+        "INSERT INTO {} (id, username, email, password_hash, territory_code, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())",
         territory_table
     ))
     .bind(user_id)
     .bind(&req.username)
     .bind(&req.email)
     .bind(&password_hash)
+    .bind(&req.territory)
     .execute(&mut *tx)
     .await?;
 
     // Register username globally
     sqlx::query(
-        "INSERT INTO global.username_registry (username, user_id, territory, created_at)
+        "INSERT INTO global.username_registry (username, user_id, territory_code, registered_at)
          VALUES ($1, $2, $3, NOW())",
     )
     .bind(&req.username)
@@ -112,16 +116,18 @@ pub async fn register(
     .execute(&mut *tx)
     .await?;
 
-    // Register email globally
-    sqlx::query(
-        "INSERT INTO global.email_registry (email, user_id, territory, created_at)
-         VALUES ($1, $2, $3, NOW())",
-    )
-    .bind(&req.email)
-    .bind(user_id)
-    .bind(&req.territory)
-    .execute(&mut *tx)
-    .await?;
+    // Register email globally (only if email provided)
+    if let Some(ref email) = req.email {
+        sqlx::query(
+            "INSERT INTO global.email_registry (email, user_id, territory_code, registered_at)
+             VALUES ($1, $2, $3, NOW())",
+        )
+        .bind(email)
+        .bind(user_id)
+        .bind(&req.territory)
+        .execute(&mut *tx)
+        .await?;
+    }
 
     // Commit transaction
     tx.commit().await?;
@@ -130,16 +136,19 @@ pub async fn register(
     let access_token = token_service.generate_access_token(user_id, &req.territory)?;
     let refresh_token = TokenService::generate_refresh_token();
 
+    // Hash the refresh token for storage (never store plain tokens)
+    let token_hash = PasswordService::hash(&refresh_token)?;
+
     // Store refresh token
     let refresh_token_table = format!("territory_{}.refresh_tokens", req.territory);
     let expires_at = Utc::now() + Duration::days(7);
 
     sqlx::query(&format!(
-        "INSERT INTO {} (token_id, user_id, expires_at, created_at)
+        "INSERT INTO {} (token_hash, user_id, expires_at, created_at)
          VALUES ($1, $2, $3, NOW())",
         refresh_token_table
     ))
-    .bind(refresh_token)
+    .bind(&token_hash)
     .bind(user_id)
     .bind(expires_at)
     .execute(pool)
@@ -174,7 +183,7 @@ pub async fn login(
     let territory_table = format!("territory_{}.users", req.territory);
 
     let user = sqlx::query(&format!(
-        "SELECT user_id, password_hash FROM {} WHERE username = $1",
+        "SELECT id, password_hash FROM {} WHERE username = $1 AND deleted_at IS NULL",
         territory_table
     ))
     .bind(&req.username)
@@ -183,7 +192,7 @@ pub async fn login(
 
     let user = user.ok_or_else(|| AppError::Unauthorized("Invalid credentials".to_string()))?;
 
-    let user_id: Uuid = user.get("user_id");
+    let user_id: Uuid = user.get("id");
     let password_hash: String = user.get("password_hash");
 
     // Verify password
@@ -197,16 +206,19 @@ pub async fn login(
     let access_token = token_service.generate_access_token(user_id, &req.territory)?;
     let refresh_token = TokenService::generate_refresh_token();
 
+    // Hash the refresh token for storage (never store plain tokens)
+    let token_hash = PasswordService::hash(&refresh_token)?;
+
     // Store refresh token
     let refresh_token_table = format!("territory_{}.refresh_tokens", req.territory);
     let expires_at = Utc::now() + Duration::days(7);
 
     sqlx::query(&format!(
-        "INSERT INTO {} (token_id, user_id, expires_at, created_at)
+        "INSERT INTO {} (token_hash, user_id, expires_at, created_at)
          VALUES ($1, $2, $3, NOW())",
         refresh_token_table
     ))
-    .bind(refresh_token)
+    .bind(&token_hash)
     .bind(user_id)
     .bind(expires_at)
     .execute(pool)
@@ -244,33 +256,39 @@ pub async fn refresh(
     for territory in territories {
         let refresh_token_table = format!("territory_{}.refresh_tokens", territory);
 
-        let token = sqlx::query(&format!(
-            "SELECT user_id, expires_at FROM {} WHERE token_id = $1",
+        // Get all non-revoked, non-expired tokens for this territory
+        let tokens = sqlx::query(&format!(
+            "SELECT id, token_hash, user_id, expires_at FROM {} WHERE revoked = FALSE AND expires_at > NOW()",
             refresh_token_table
         ))
-        .bind(req.refresh_token)
-        .fetch_optional(pool)
+        .fetch_all(pool)
         .await?;
 
-        if let Some(token) = token {
-            let user_id: Uuid = token.get("user_id");
-            let expires_at: chrono::DateTime<Utc> = token.get("expires_at");
+        // Check each token hash to find a match
+        for token_row in tokens {
+            let token_hash: String = token_row.get("token_hash");
 
-            // Check if token is expired
-            if expires_at < Utc::now() {
-                return Err(AppError::Unauthorized("Refresh token expired".to_string()));
+            // Verify the provided token against the stored hash
+            if PasswordService::verify(&req.refresh_token, &token_hash).unwrap_or(false) {
+                let user_id: Uuid = token_row.get("user_id");
+                let expires_at: chrono::DateTime<Utc> = token_row.get("expires_at");
+
+                // Double-check expiration (already filtered in query, but be explicit)
+                if expires_at < Utc::now() {
+                    return Err(AppError::Unauthorized("Refresh token expired".to_string()));
+                }
+
+                // Generate new access token
+                let access_token = token_service.generate_access_token(user_id, territory)?;
+
+                let response = serde_json::json!({
+                    "access_token": access_token,
+                    "token_type": "Bearer",
+                    "expires_in": 900,
+                });
+
+                return Ok(HttpResponse::Ok().json(response));
             }
-
-            // Generate new access token
-            let access_token = token_service.generate_access_token(user_id, territory)?;
-
-            let response = serde_json::json!({
-                "access_token": access_token,
-                "token_type": "Bearer",
-                "expires_in": 900,
-            });
-
-            return Ok(HttpResponse::Ok().json(response));
         }
     }
 
@@ -295,21 +313,43 @@ pub async fn logout(
     let req = body.into_inner();
     let pool = db.pool();
 
-    // Delete refresh token from all territory tables
+    // Revoke refresh token from all territory tables
     let territories = vec!["dk", "no", "se", "eu"]; // TODO: Get from config
 
     for territory in territories {
         let refresh_token_table = format!("territory_{}.refresh_tokens", territory);
 
-        sqlx::query(&format!(
-            "DELETE FROM {} WHERE token_id = $1",
+        // Get all non-revoked tokens and check hash
+        let tokens = sqlx::query(&format!(
+            "SELECT id, token_hash FROM {} WHERE revoked = FALSE",
             refresh_token_table
         ))
-        .bind(req.refresh_token)
-        .execute(pool)
+        .fetch_all(pool)
         .await?;
+
+        for token_row in tokens {
+            let token_id: Uuid = token_row.get("id");
+            let token_hash: String = token_row.get("token_hash");
+
+            // If this token matches, revoke it
+            if PasswordService::verify(&req.refresh_token, &token_hash).unwrap_or(false) {
+                sqlx::query(&format!(
+                    "UPDATE {} SET revoked = TRUE, revoked_at = NOW() WHERE id = $1",
+                    refresh_token_table
+                ))
+                .bind(token_id)
+                .execute(pool)
+                .await?;
+
+                // Found and revoked the token, return success
+                return Ok(HttpResponse::Ok().json(serde_json::json!({
+                    "message": "Logged out successfully"
+                })));
+            }
+        }
     }
 
+    // Token not found, but still return success (idempotent operation)
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "message": "Logged out successfully"
     })))
@@ -354,7 +394,7 @@ pub async fn validate(
 /// Health check endpoint
 #[utoipa::path(
     get,
-    path = "/health",
+    path = "/api/v1/auth/health",
     responses(
         (status = 200, description = "Service is healthy", body = HealthResponse),
     ),

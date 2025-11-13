@@ -130,9 +130,9 @@ async fn main() -> std::io::Result<()> {
                     .service(handlers::login)
                     .service(handlers::refresh)
                     .service(handlers::logout)
-                    .service(handlers::validate),
+                    .service(handlers::validate)
+                    .service(handlers::health),
             )
-            .service(handlers::health)
     })
     .bind(&bind_address)?
     .run()

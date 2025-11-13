@@ -66,6 +66,7 @@ async-nats = "0.37"
 jsonwebtoken = "9.3"
 argon2 = "0.5"
 rand = "0.8"
+base64 = "0.22"
 
 # Prometheus metrics
 prometheus = "0.13"
