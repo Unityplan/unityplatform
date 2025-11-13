@@ -68,7 +68,7 @@ mod tests {
             .unwrap();
 
         assert!(client
-            .publish("test.subject", b"test message")
+            .publish("test.subject", "test message".to_string())
             .await
             .is_ok());
     }

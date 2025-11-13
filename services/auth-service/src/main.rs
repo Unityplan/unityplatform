@@ -139,22 +139,25 @@ async fn main() -> std::io::Result<()> {
 
     // Get server handle for graceful shutdown
     let server_handle = server.handle();
-    
+
     // Spawn server task
     let server_task = tokio::spawn(server);
-    
+
     // Wait for shutdown signal (Ctrl+C or SIGTERM)
     shutdown_signal().await;
-    
+
     // Get grace period from environment (default 30s production, 10s dev)
     let grace_period = shutdown_grace_period();
-    
-    tracing::info!("⏳ Starting graceful shutdown ({}s grace period)", grace_period);
+
+    tracing::info!(
+        "⏳ Starting graceful shutdown ({}s grace period)",
+        grace_period
+    );
     tracing::info!("🔄 Finishing in-flight requests...");
-    
+
     // Stop accepting new requests but finish existing ones
     server_handle.stop(true).await;
-    
+
     // Wait for server to finish with timeout
     tokio::select! {
         _ = server_task => {
@@ -164,13 +167,13 @@ async fn main() -> std::io::Result<()> {
             tracing::warn!("⚠️  Shutdown timeout reached, forcing exit");
         }
     }
-    
+
     // Cleanup resources
     tracing::info!("🧹 Cleaning up resources...");
     // Database connections are automatically closed when dropped
     // Redis connections are automatically closed when dropped
-    
+
     tracing::info!("👋 Auth service stopped gracefully");
-    
+
     Ok(())
 }
