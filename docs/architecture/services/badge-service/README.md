@@ -2,26 +2,29 @@
 
 **Port:** 8007  
 **Version:** 0.1.0-alpha.1  
-**Status:** ⏳ Scaffolded (0/6 endpoints) - Phase 2  
-**Bounded Context:** Gamification & Achievements
+**Status:** ✅ Implemented (7/7 core endpoints) - Phase 1 Complete  
+**Bounded Context:** Gamification, Achievements & Permission System
 
 ---
 
 ## 📋 Overview
 
-The badge-service manages the gamification system: badges, achievements, user progress, and badge awards.
+The badge-service manages the gamification system (badges, achievements, user progress) and serves as the foundation for the permission system by granting role-based permissions through badges.
 
 ### **Responsibilities**
 
-- ⏳ Define badges (name, icon, criteria)
-- ⏳ Award badges to users
-- ⏳ Track badge progress
-- ⏳ List available badges
-- ⏳ Display user's earned badges
-- ⏳ Badge rarity and statistics
+- ✅ Define badges (name, icon, criteria, permissions)
+- ✅ Award badges to users (manual and automatic)
+- ✅ Track badge progress
+- ✅ List available badges
+- ✅ Display user's earned badges
+- ✅ Badge rarity and statistics
+- ✅ **Permission Management** - Badges grant permissions for role-based access control
+- ✅ **Service Badge Registration** - Services register their role badges on startup
 
 ### **Not Responsible For**
 
+- ❌ Permission checking (handled by PermissionChecker in shared-lib)
 - ❌ Leaderboards (future: separate service)
 - ❌ Points/XP system (not planned for MVP)
 - ❌ Competitions (not planned for MVP)
@@ -450,39 +453,106 @@ validate_create_link_user_badge(link: Link) {
 
 ## ✅ Implementation Status
 
-### **Completed**
+### **Completed (Phase 1)**
 
-- ✅ Database schema designed
-- ✅ Service scaffolded
+- ✅ Database schema designed and migrated
+- ✅ Service scaffolded with full architecture compliance
+- ✅ All 7 core endpoints implemented
+- ✅ Badge definitions (7 initial badges seeded)
+- ✅ Auto-award logic (user.registered event)
+- ✅ Progress tracking
+- ✅ NATS integration (user.registered events)
+- ✅ Service badge registration endpoint
+- ✅ Permission-granting badges (role badges)
+- ✅ Integration with permission middleware
 
-### **Pending** (Phase 2)
+### **Pending (Phase 2)**
 
-- ⏳ All 6 endpoints
-- ⏳ Badge definitions (seed data)
-- ⏳ Auto-award logic
-- ⏳ Progress tracking
-- ⏳ NATS integration
-- ⏳ Tests
+- ⏳ Additional NATS events (course.completed, etc.)
+- ⏳ Badge publishing events (badge.awarded, badge.revoked)
+- ⏳ Comprehensive test suite
+- ⏳ Badge expiration/renewal logic
+- ⏳ Badge statistics endpoint
 
 ---
 
-## 🎖️ Initial Badges
+## 🔐 Permission System Integration
+
+### **Role Badges**
+
+Badges with `category: "role"` can grant permissions stored in the `grants_permissions` JSONB field. These permissions are checked by the PermissionChecker middleware in services.
+
+**Example Role Badges:**
+
+- **Platform Manager** 👑 - `portal:*` (all portal permissions)
+- **Territory Manager** 🌍 - `territory:manage`, `territory:settings:manage`
+- **Portal Developer** 💻 - `portal:services:develop`, `portal:services:deploy`
+- **Portal Infrastructure Manager** ⚙️ - `portal:infrastructure:manage`
+
+### **Service Badge Registration**
+
+Services register their role badges on startup via `POST /api/v1/badges/register`:
+
+```rust
+// Example from territory-service
+async fn register_territory_manager_badge(config: &AppConfig) {
+    let badge_payload = json!({
+        "slug": "territory-manager",
+        "name": "Territory Manager",
+        "description": "Grants full management access to territory",
+        "icon": "🌍",
+        "category": "role",
+        "criteriaType": "manual",
+        "rarity": "epic",
+        "grantsPermissions": [
+            "territory:manage",
+            "territory:settings:manage"
+        ]
+    });
+    
+    // POST to badge-service
+}
+```
+
+**Benefits:**
+
+- Each service owns its role definitions
+- Badges registered automatically on startup
+- Idempotent - won't create duplicates
+- Decoupled from badge-service deployment
+
+**See:** `docs/guides/development/permission-system-usage.md` for complete guide
+
+---
+
+## 🎖️ Initial Badges (Seeded)
 
 ### **Seed Data**
 
 ```sql
-INSERT INTO badges (name, slug, description, icon, criteria_type, criteria_value, rarity) VALUES
-('Early Adopter', 'early-adopter', 'Joined during alpha', '🌟', 'manual', NULL, 'epic'),
-('First Steps', 'first-steps', 'Complete your profile', '👣', 'manual', NULL, 'common'),
-('Social Butterfly', 'social-butterfly', 'Have 10 followers', '🦋', 'follower_count', 10, 'common'),
-('Popular', 'popular', 'Have 100 followers', '⭐', 'follower_count', 100, 'rare'),
-('Invitation Champion', 'invitation-champion', '5 users joined via your invitation', '🎫', 'invitation_count', 5, 'rare'),
-('Community Builder', 'community-builder', 'Created 3 communities', '🏘️', 'community_count', 3, 'epic');
+-- Platform & Territory Management
+INSERT INTO global.badge_registry (slug, name, description, icon, category, criteria_type, rarity, grants_permissions) VALUES
+('platform-manager', 'Platform Manager', 'Manages platform-wide settings...', '👑', 'role', 'manual', 'legendary', '["portal:*"]'),
+('territory-manager', 'Territory Manager', 'Manages territory-specific settings...', '🌍', 'role', 'manual', 'epic', '["territory:manage"]'),
+
+-- Code of Conduct & Onboarding
+('code-of-conduct', 'Code of Conduct', 'Agreed to platform code of conduct', '📜', 'code_of_conduct', 'manual', 'common', '[]'),
+
+-- Achievements
+('early-adopter', 'Early Adopter', 'Joined during alpha phase', '🌟', 'special', 'manual', 'rare', '[]'),
+('community-builder', 'Community Builder', 'Created a community', '�️', 'achievement', 'manual', 'rare', '[]'),
+('course-instructor', 'Course Instructor', 'Created a course', '👨‍�', 'role', 'manual', 'rare', '["course:create"]'),
+('beta-tester', 'Beta Tester', 'Participated in beta testing', '🧪', 'special', 'manual', 'common', '[]');
 ```
 
 ---
 
-**Last Updated:** November 12, 2025  
+**Last Updated:** November 14, 2025  
 **Service Owner:** Core Team  
-**Status:** Phase 2 (Gamification layer)  
-**Dependencies:** user-service, notification-service
+**Status:** Phase 1 Complete ✅  
+**Dependencies:** user-service, shared-lib (PermissionChecker)  
+**See Also:**
+
+- `docs/architecture/services/badge-service/API.md` - API documentation
+- `docs/architecture/services/shared-lib/PERMISSION.md` - Permission system details
+- `docs/guides/development/permission-system-usage.md` - Usage guide

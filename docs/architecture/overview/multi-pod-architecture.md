@@ -493,7 +493,7 @@ unityplatform_dk
 ├── public (extensions, shared functions)
 ├── global (read-only replica from central)
 │   ├── territories
-│   ├── badge_definitions
+│   ├── badge_registry
 │   └── global_policies
 └── territory_DK (read-write, Denmark data)
     ├── users

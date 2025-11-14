@@ -3,8 +3,10 @@ pub mod config;
 pub mod database;
 pub mod error;
 pub mod jwt;
+pub mod metrics;
 pub mod middleware;
 pub mod nats;
+pub mod permission;
 pub mod shutdown;
 
 // Re-export commonly used types
@@ -13,7 +15,9 @@ pub use config::AppConfig;
 pub use database::Database;
 pub use error::{AppError, Result};
 pub use jwt::{AuthUser, Claims};
+pub use metrics::MetricsCollector;
 pub use nats::NatsClient;
+pub use permission::{PermissionChecker, RequireAnyPermission, RequirePermission};
 pub use shutdown::{shutdown_grace_period, shutdown_signal};
 
 // Re-export middleware

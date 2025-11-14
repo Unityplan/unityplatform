@@ -1,19 +1,22 @@
 # Middleware Implementation Guide - Unity Platform
 
 **Version:** 0.1.0-alpha.1  
-**Date:** November 12, 2025  
-**Status:** Implementation Planning
+**Date:** November 14, 2025  
+**Status:** ✅ Implemented (Phase 1 Complete)
 
 ---
 
 ## Overview
 
-This guide documents all middleware and cross-cutting concerns for Unity Platform services, with specific guidance for:
+This guide documents all middleware and cross-cutting concerns for Unity Platform services. All middleware is **implemented and ready to use** in `services/shared-lib/src/middleware/`.
 
-- **Phase 1**: Development (localhost, no gateway, single Denmark pod)
-- **Phase 2**: Production (multi-pod, API gateway, distributed deployment)
+**Implementation Status:**
 
-All middleware lives in `services/shared-lib/src/middleware/` and is imported by individual services.
+- ✅ **All core middleware implemented** (Nov 12, 2025)
+- ✅ **Phase 1 (Development)** - Ready for use
+- 📋 **Phase 2 (Production)** - Configuration differences documented
+
+Individual services import these from shared-lib and MUST use all required middleware.
 
 ---
 
@@ -38,7 +41,7 @@ All middleware lives in `services/shared-lib/src/middleware/` and is imported by
 
 ### 1. **Request ID Tracking (Distributed Tracing)**
 
-**Status:** ❌ Missing  
+**Status:** ✅ Implemented  
 **Priority:** HIGH  
 **File:** `shared-lib/src/middleware/request_id.rs`
 
@@ -175,7 +178,7 @@ async fn my_handler(req: HttpRequest) -> Result<HttpResponse> {
 
 ### 2. **Rate Limiting Middleware**
 
-**Status:** ❌ Missing  
+**Status:** ✅ Implemented  
 **Priority:** HIGH  
 **File:** `shared-lib/src/middleware/rate_limit.rs`
 
@@ -285,7 +288,7 @@ res.headers_mut().insert(
 
 ### 3. **CORS Middleware Configuration**
 
-**Status:** ❌ Missing  
+**Status:** ✅ Implemented  
 **Priority:** HIGH  
 **File:** `shared-lib/src/middleware/cors.rs`
 
@@ -365,7 +368,7 @@ HttpServer::new(|| {
 
 ### 4. **Error Handling & Response Formatting**
 
-**Status:** ❌ Missing  
+**Status:** ✅ Implemented  
 **Priority:** HIGH  
 **File:** `shared-lib/src/middleware/error_handler.rs`
 
@@ -523,16 +526,21 @@ pub fn error_handler(
 
 ### 5. **Logging & Metrics Middleware**
 
-**Status:** ❌ Missing  
+**Status:** ✅ Implemented  
 **Priority:** HIGH  
-**File:** `shared-lib/src/middleware/logging.rs`
+**Files:**
+
+- `shared-lib/src/middleware/logging.rs` - Request/response logging with automatic metrics collection
+- `shared-lib/src/metrics.rs` - Prometheus metrics collector
 
 **Purpose:**
 
 - Debug production issues
 - Performance monitoring
 - Audit trails
-- Prometheus metrics
+- Automatic Prometheus metrics collection
+- HTTP request tracking (count, duration, status)
+- Error tracking by type
 
 #### Phase Differences
 
@@ -544,41 +552,100 @@ pub fn error_handler(
 | **Metrics Backend** | Optional (local Prometheus) | Required (Prometheus + Grafana) |
 | **Sensitive Data** | May be logged | Redacted (emails, tokens, IPs) |
 | **Performance Impact** | Not critical | Optimized (async logging) |
+| **Metrics Collection** | Automatic via LoggingMiddleware | Automatic via LoggingMiddleware |
 
 **Implementation:**
 
+#### MetricsCollector (New - Nov 14, 2025)
+
 ```rust
-// shared-lib/src/middleware/logging.rs
-use actix_web::{
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
-    Error,
-};
-use futures_util::future::LocalBoxFuture;
-use std::future::{ready, Ready};
-use std::time::Instant;
-use tracing::{info, warn};
+// shared-lib/src/metrics.rs
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use std::collections::HashMap;
+use parking_lot::RwLock;
 
-pub struct LoggingMiddleware;
-
-impl<S, B> Transform<S, ServiceRequest> for LoggingMiddleware
-where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    S::Future: 'static,
-    B: 'static,
-{
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type InitError = ();
-    type Transform = LoggingMiddlewareService<S>;
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
-
-    fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(LoggingMiddlewareService { service }))
-    }
+/// Metrics collector for automatic Prometheus metrics
+#[derive(Clone, Debug)]
+pub struct MetricsCollector {
+    service_name: String,
+    version: String,
+    http_requests: Arc<RwLock<HashMap<String, AtomicU64>>>,
+    http_durations: Arc<RwLock<HashMap<String, Vec<f64>>>>,
+    errors: Arc<RwLock<HashMap<String, AtomicU64>>>,
 }
 
-pub struct LoggingMiddlewareService<S> {
-    service: S,
+impl MetricsCollector {
+    /// Create a new metrics collector
+    pub fn new(service_name: impl Into<String>, version: impl Into<String>) -> Self {
+        Self {
+            service_name: service_name.into(),
+            version: version.into(),
+            http_requests: Arc::new(RwLock::new(HashMap::new())),
+            http_durations: Arc::new(RwLock::new(HashMap::new())),
+            errors: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
+
+    /// Record an HTTP request (called automatically by LoggingMiddleware)
+    pub fn record_request(&self, method: &str, path: &str, status: u16, duration_seconds: f64) {
+        // Records: method, path, status → count
+        //          method, path → duration histogram
+    }
+
+    /// Record an error (call from error handlers)
+    pub fn record_error(&self, error_type: &str) {
+        // Increments error counter for this type
+    }
+
+    /// Generate Prometheus-format metrics text
+    pub fn generate_prometheus_metrics(
+        &self, 
+        db_pool_size: Option<u32>, 
+        db_pool_idle: Option<usize>
+    ) -> String {
+        // Returns complete Prometheus text format with:
+        // - service_info{version="x.x.x"}
+        // - db_pool_size, db_pool_idle, db_pool_active
+        // - http_requests_total{method,path,status}
+        // - http_request_duration_seconds histogram
+        // - errors_total{type}
+    }
+}
+```
+
+#### LoggingMiddleware with Metrics
+
+```rust
+// shared-lib/src/middleware/logging.rs
+use crate::metrics::MetricsCollector;
+
+#[derive(Debug, Clone)]
+pub struct LoggingMiddleware {
+    verbose: bool,
+    metrics: Option<MetricsCollector>,
+}
+
+impl LoggingMiddleware {
+    /// Development logging - verbose with detailed request information
+    pub fn development() -> Self {
+        Self { verbose: true, metrics: None }
+    }
+
+    /// Development logging with automatic metrics collection
+    pub fn development_with_metrics(metrics: MetricsCollector) -> Self {
+        Self { verbose: true, metrics: Some(metrics) }
+    }
+
+    /// Production logging - minimal, only essential information
+    pub fn production() -> Self {
+        Self { verbose: false, metrics: None }
+    }
+
+    /// Production logging with automatic metrics collection
+    pub fn production_with_metrics(metrics: MetricsCollector) -> Self {
+        Self { verbose: false, metrics: Some(metrics) }
+    }
 }
 
 impl<S, B> Service<ServiceRequest> for LoggingMiddlewareService<S>
@@ -587,47 +654,36 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
-
-    forward_ready!(service);
-
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let start = Instant::now();
-        let method = req.method().clone();
+        let method = req.method().to_string();
         let path = req.path().to_string();
-        let request_id = req.extensions()
-            .get::<crate::middleware::RequestId>()
-            .map(|r| r.0.clone())
-            .unwrap_or_default();
+        let metrics = self.metrics.clone();
         
         let fut = self.service.call(req);
         
         Box::pin(async move {
             let res = fut.await?;
-            
-            let duration = start.elapsed();
             let status = res.status();
-            
-            if status.is_success() {
-                info!(
-                    request_id = %request_id,
-                    method = %method,
-                    path = %path,
-                    status = %status.as_u16(),
-                    duration_ms = %duration.as_millis(),
-                    "Request completed"
+            let duration = start.elapsed();
+
+            // Automatically record metrics if collector is available
+            if let Some(ref collector) = metrics {
+                collector.record_request(
+                    &method,
+                    &path,
+                    status.as_u16(),
+                    duration.as_secs_f64()
                 );
+            }
+
+            // Log based on status code
+            if status.is_server_error() {
+                tracing::error!(/* ... */);
+            } else if status.is_client_error() {
+                tracing::warn!(/* ... */);
             } else {
-                warn!(
-                    request_id = %request_id,
-                    method = %method,
-                    path = %path,
-                    status = %status.as_u16(),
-                    duration_ms = %duration.as_millis(),
-                    "Request failed"
-                );
+                tracing::info!(/* ... */);
             }
             
             Ok(res)
@@ -636,37 +692,107 @@ where
 }
 ```
 
-**Metrics (Prometheus):**
+**Usage in Services:**
 
 ```rust
-// shared-lib/src/metrics.rs
-use lazy_static::lazy_static;
-use prometheus::{Histogram, IntCounter, Registry};
+use shared_lib::{LoggingMiddleware, MetricsCollector};
 
-lazy_static! {
-    pub static ref HTTP_REQUESTS_TOTAL: IntCounter = IntCounter::new(
-        "http_requests_total",
-        "Total HTTP requests"
-    ).unwrap();
-    
-    pub static ref HTTP_REQUEST_DURATION: Histogram = Histogram::new(
-        "http_request_duration_seconds",
-        "HTTP request duration in seconds"
-    ).unwrap();
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    // Initialize metrics collector
+    let metrics_collector = MetricsCollector::new(
+        "service_name", 
+        env!("CARGO_PKG_VERSION")
+    );
+
+    HttpServer::new(move || {
+        App::new()
+            // Logging middleware automatically collects metrics
+            .wrap(LoggingMiddleware::development_with_metrics(
+                metrics_collector.clone()
+            ))
+            .wrap(RequestIdMiddleware)
+            // ... other middleware
+            
+            // Make metrics collector available to metrics endpoint
+            .app_data(web::Data::new(metrics_collector.clone()))
+            
+            // Routes
+            .service(
+                web::scope("/api/v1")
+                    .route("/metrics", web::get().to(metrics_endpoint))
+                    // ... other routes
+            )
+    })
+    .bind(("0.0.0.0", 8000))?
+    .run()
+    .await
 }
 
-pub fn register_metrics(registry: &Registry) -> Result<(), prometheus::Error> {
-    registry.register(Box::new(HTTP_REQUESTS_TOTAL.clone()))?;
-    registry.register(Box::new(HTTP_REQUEST_DURATION.clone()))?;
-    Ok(())
+// Metrics endpoint handler
+async fn metrics_endpoint(
+    db: web::Data<Database>,
+    collector: web::Data<MetricsCollector>,
+) -> HttpResponse {
+    let pool_size = db.pool().size();
+    let pool_idle = db.pool().num_idle();
+    
+    let metrics_text = collector.generate_prometheus_metrics(
+        Some(pool_size), 
+        Some(pool_idle)
+    );
+    
+    HttpResponse::Ok()
+        .content_type("text/plain; version=0.0.4")
+        .body(metrics_text)
 }
 ```
+
+**Standard Prometheus Metrics Exposed:**
+
+All services using `MetricsCollector` automatically expose these metrics at `/api/v1/metrics`:
+
+1. **Service Info** (gauge):
+
+   ```
+   {service}_info{version="x.x.x"} 1
+   ```
+
+2. **Database Pool Metrics** (gauges, if database is used):
+
+   ```
+   {service}_db_pool_size
+   {service}_db_pool_idle
+   {service}_db_pool_active
+   ```
+
+3. **HTTP Request Metrics** (counter & histogram):
+
+   ```
+   {service}_http_requests_total{method="GET",path="/api/v1/users",status="200"}
+   {service}_http_request_duration_seconds{method="GET",path="/api/v1/users"}
+   ```
+
+4. **Error Metrics** (counter):
+
+   ```
+   {service}_errors_total{type="DatabaseError"}
+   ```
+
+**Benefits:**
+
+- ✅ **Zero instrumentation needed** - Metrics automatically collected by middleware
+- ✅ **Consistent format** - All services expose identical metric structure
+- ✅ **Performance tracking** - Request duration histogram with multiple buckets
+- ✅ **Error monitoring** - Track error types and frequencies
+- ✅ **Database health** - Pool utilization metrics
+- ✅ **Prometheus compatible** - Direct integration with Prometheus/Grafana
 
 ---
 
 ### 6. **Input Validation Middleware**
 
-**Status:** ❌ Missing  
+**Status:** ✅ Implemented  
 **Priority:** MEDIUM  
 **File:** `shared-lib/src/middleware/validation.rs`
 
@@ -734,7 +860,7 @@ HttpServer::new(|| {
 
 ### 7. **Security Headers Middleware**
 
-**Status:** ❌ Missing  
+**Status:** ✅ Implemented  
 **Priority:** HIGH  
 **File:** `shared-lib/src/middleware/security_headers.rs`
 
@@ -884,9 +1010,9 @@ where
 
 ### 8. **Health Check Endpoints**
 
-**Status:** ❌ Missing  
+**Status:** 📋 Service-Level Pattern (each service implements)  
 **Priority:** HIGH  
-**File:** All services need these endpoints
+**File:** Implemented in each service's handlers
 
 **Purpose:**
 
@@ -1021,7 +1147,7 @@ readinessProbe:
 
 ### 9. **Graceful Shutdown**
 
-**Status:** ❌ Missing  
+**Status:** ✅ Implemented  
 **Priority:** HIGH  
 **File:** `shared-lib/src/shutdown.rs`
 
@@ -1135,7 +1261,7 @@ async fn main() -> std::io::Result<()> {
 
 ### 10. **Circuit Breaker (Inter-Service Calls)**
 
-**Status:** ❌ Missing  
+**Status:** ✅ Implemented  
 **Priority:** MEDIUM  
 **File:** `shared-lib/src/circuit_breaker.rs`
 
@@ -1282,9 +1408,9 @@ async fn check_user_in_norway_pod(user_id: Uuid) -> Result<bool> {
 
 ### 11. **Event Schema Validation**
 
-**Status:** ❌ Missing  
+**Status:** 📋 Service-Level Pattern (each service defines own events)  
 **Priority:** MEDIUM  
-**File:** `shared-lib/src/events/mod.rs`
+**File:** Services define event types in models/
 
 **Purpose:**
 
@@ -1552,37 +1678,45 @@ HttpServer::new(|| {
 - [Error Handling](./ERROR-HANDLING.md)
 - [Observability](./OBSERVABILITY.md)
 - [Authentication](./AUTHENTICATION.md)
+- [Dependency Management](../../../guides/development/dependency-management.md) - Workspace dependency standards
 
 ---
 
 ## Implementation Checklist
 
-### Phase 1 (Critical)
+### ✅ Phase 1 Complete (All Implemented)
 
-- [ ] Request ID tracking
-- [ ] Logging & metrics (console)
-- [ ] Error handling (detailed errors)
-- [ ] JWT authentication
-- [ ] Health checks (basic)
-- [ ] Graceful shutdown
-- [ ] CORS (permissive)
-- [ ] Security headers (basic)
+- ✅ Request ID tracking - `middleware/request_id.rs`
+- ✅ Logging & metrics - `middleware/logging.rs`
+- ✅ Error handling - `middleware/error_handler.rs`
+- ✅ JWT authentication - `jwt.rs`
+- ✅ CORS (permissive) - `middleware/cors.rs`
+- ✅ Security headers (basic) - `middleware/security_headers.rs`
+- ✅ Input validation - `middleware/validation.rs`
+- ✅ Rate limiting - `middleware/rate_limit.rs`
+- ✅ Graceful shutdown - `shutdown.rs`
+- ✅ Circuit breaker - `circuit_breaker.rs`
+- ✅ NATS client - `nats.rs`
+- ✅ Database pool - `database.rs`
 
-### Phase 1 (Important)
+### 📋 Service-Level Patterns (Each Service Implements)
 
-- [ ] Input validation
-- [ ] Event schemas
-- [ ] Middleware execution order documentation
+- 📋 Health checks (`/health`, `/ready`, `/metrics` endpoints)
+- 📋 Event schemas (defined in service models/)
+- 📋 OpenAPI documentation (via utoipa)
 
-### Phase 2 Only
+### Phase 2 Configuration Changes (Future)
 
-- [ ] Rate limiting (strict enforcement)
-- [ ] Circuit breaker (cross-pod calls)
-- [ ] Distributed tracing (Jaeger/OpenTelemetry)
-- [ ] Structured logging (JSON to Loki)
-- [ ] Advanced security headers (HSTS, strict CSP)
+- [ ] Rate limiting (strict enforcement) - Currently optional in dev
+- [ ] CORS (strict whitelist) - Currently permissive
+- [ ] Security headers (HSTS, strict CSP) - Currently relaxed
+- [ ] Distributed tracing (Jaeger/OpenTelemetry) - Currently console only
+- [ ] Structured logging (JSON to Loki) - Currently pretty-print console
+- [ ] Metrics backend (Prometheus + Grafana) - Currently optional
+
+**Note:** All middleware is implemented and ready. Phase 2 changes are configuration adjustments for production deployment, not new code.
 
 ---
 
-**Last Updated:** November 12, 2025  
-**Status:** Ready for implementation
+**Last Updated:** November 14, 2025  
+**Status:** ✅ All middleware implemented and ready for use

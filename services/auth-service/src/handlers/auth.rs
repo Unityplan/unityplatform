@@ -5,11 +5,43 @@ use crate::models::{
 use crate::services::{PasswordService, TokenService};
 use actix_web::{get, post, web, HttpRequest, HttpResponse};
 use chrono::{Duration, Utc};
-use shared_lib::{AppError, Database, Result, ValidatedJson};
+use serde::{Deserialize, Serialize};
+use shared_lib::{AppError, Database, NatsClient, Result, ValidatedJson};
 use sqlx::Row;
 use std::env;
 use utoipa;
 use uuid::Uuid;
+
+/// Event envelope for NATS events (from NATS-EVENTS.md specification)
+#[derive(Debug, Serialize, Deserialize)]
+struct PlatformEvent<T> {
+    event_id: Uuid,
+    event_type: String,
+    timestamp: chrono::DateTime<Utc>,
+    territory: Option<String>,
+    payload: T,
+}
+
+impl<T> PlatformEvent<T> {
+    fn new(event_type: String, territory: Option<String>, payload: T) -> Self {
+        Self {
+            event_id: Uuid::new_v4(),
+            event_type,
+            timestamp: Utc::now(),
+            territory,
+            payload,
+        }
+    }
+}
+
+/// Event payload for user.registered event
+#[derive(Debug, Serialize, Deserialize)]
+struct UserRegisteredPayload {
+    user_id: Uuid,
+    username: String,
+    territory: String,
+    // NO email - security best practice (PII minimization)
+}
 
 /// Register a new user
 #[utoipa::path(
@@ -28,6 +60,7 @@ pub async fn register(
     body: ValidatedJson<RegisterRequest>,
     db: web::Data<Database>,
     token_service: web::Data<TokenService>,
+    nats: web::Data<NatsClient>,
 ) -> Result<HttpResponse> {
     let req = body.into_inner();
 
@@ -153,6 +186,37 @@ pub async fn register(
     .bind(expires_at)
     .execute(pool)
     .await?;
+
+    // Publish user.registered event to NATS
+    // Following NATS-EVENTS.md security best practices:
+    // - No PII (email excluded)
+    // - Use user_id reference instead of sensitive data
+    let event = PlatformEvent::new(
+        "user.registered".to_string(),
+        Some(req.territory.clone()),
+        UserRegisteredPayload {
+            user_id,
+            username: req.username.clone(),
+            territory: req.territory.clone(),
+        },
+    );
+
+    if let Err(e) = nats
+        .publish("global.user.registered", serde_json::to_vec(&event)?)
+        .await
+    {
+        // Log error but don't fail registration if NATS unavailable (graceful degradation)
+        tracing::warn!(
+            "Failed to publish user.registered event for user {}: {}",
+            user_id,
+            e
+        );
+    } else {
+        tracing::info!(
+            "Published global.user.registered event for user {}",
+            user_id
+        );
+    }
 
     let response = AuthResponse::new(access_token, refresh_token);
 
@@ -410,19 +474,68 @@ pub async fn validate(
     tag = "Health"
 )]
 #[get("/health")]
-pub async fn health(db: web::Data<Database>) -> Result<HttpResponse> {
-    let pool = db.pool();
-
-    // Test database connection
-    let db_status = match sqlx::query("SELECT 1").fetch_one(pool).await {
-        Ok(_) => "healthy",
-        Err(_) => "unhealthy",
-    };
-
+pub async fn health() -> Result<HttpResponse> {
     let response = HealthResponse {
         status: "ok".to_string(),
-        database: db_status.to_string(),
+        service: "auth-service".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
     };
 
     Ok(HttpResponse::Ok().json(response))
+}
+
+/// Readiness check endpoint - verifies database connectivity
+#[utoipa::path(
+    get,
+    path = "/api/v1/ready",
+    responses(
+        (status = 200, description = "Service is ready", body = HealthResponse),
+        (status = 503, description = "Service is not ready"),
+    ),
+    tag = "Health"
+)]
+#[get("/ready")]
+pub async fn ready(db: web::Data<Database>) -> Result<HttpResponse> {
+    let pool = db.pool();
+
+    // Test database connection
+    match sqlx::query("SELECT 1").fetch_one(pool).await {
+        Ok(_) => {
+            let response = HealthResponse {
+                status: "ready".to_string(),
+                service: "auth-service".to_string(),
+                version: env!("CARGO_PKG_VERSION").to_string(),
+            };
+            Ok(HttpResponse::Ok().json(response))
+        }
+        Err(e) => {
+            tracing::error!("Database connectivity check failed: {}", e);
+            Err(AppError::Database(e))
+        }
+    }
+}
+
+/// Metrics endpoint - Prometheus format
+#[utoipa::path(
+    get,
+    path = "/api/v1/metrics",
+    responses(
+        (status = 200, description = "Prometheus metrics", content_type = "text/plain"),
+    ),
+    tag = "Health"
+)]
+#[get("/metrics")]
+pub async fn metrics(
+    db: web::Data<Database>,
+    collector: web::Data<shared_lib::MetricsCollector>,
+) -> HttpResponse {
+    let pool = db.pool();
+    let pool_size = pool.size();
+    let pool_idle = pool.num_idle();
+
+    let metrics_text = collector.generate_prometheus_metrics(Some(pool_size), Some(pool_idle));
+
+    HttpResponse::Ok()
+        .content_type("text/plain; version=0.0.4")
+        .body(metrics_text)
 }

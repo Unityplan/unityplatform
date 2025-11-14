@@ -31,6 +31,12 @@ pkill -f "auth-service" || echo "  (not running)"
 echo "Stopping user-service..."
 pkill -f "user-service" || echo "  (not running)"
 
+echo "Stopping badge-service..."
+pkill -f "badge-service" || echo "  (not running)"
+
+echo "Stopping territory-service..."
+pkill -f "territory-service" || echo "  (not running)"
+
 # Stop Docker Infrastructure
 echo "Stopping Docker infrastructure..."
 docker compose -f docker-compose.pod.yml --env-file pods/denmark/.env down

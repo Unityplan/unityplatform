@@ -1315,7 +1315,7 @@ API Security:
 │  │                                                          │  │
 │  │  public (reference data):                                │  │
 │  │    - translations                                        │  │
-│  │    - badge_definitions                                   │  │
+│  │    - badge_registry                                      │  │
 │  │    - tool_types                                          │  │
 │  │                                                          │  │
 │  │  territory_{id} (per territory):                         │  │

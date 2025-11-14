@@ -10,11 +10,11 @@
 
 ### Global Schema
 
-**Table:** `global.badge_definitions` (Future)  
+**Table:** `global.badge_registry` (Future)  
 **Purpose:** Shared badge catalog across all pods
 
 ```sql
-CREATE TABLE global.badge_definitions (
+CREATE TABLE global.badge_registry (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     name VARCHAR(100) NOT NULL,

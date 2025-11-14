@@ -1,7 +1,7 @@
 # Shared Library (shared-lib)
 
 **Version:** 0.1.0-alpha.1  
-**Status:** In Development  
+**Status:** Production Ready  
 **Language:** Rust  
 **Purpose:** Shared code, utilities, and middleware for all Unity Platform services
 
@@ -12,20 +12,24 @@
 The `shared-lib` crate provides common functionality used across all microservices in the Unity Platform, including:
 
 - **Authentication middleware** (JWT validation)
+- **Permission system** (badge-based RBAC)
 - **Database utilities** (connection pools, migrations)
 - **Error handling** (standardized error types)
 - **NATS client** (message bus integration)
 - **Configuration** (environment-based config)
 - **Logging** (structured logging with tracing)
+- **Middleware** (security, rate limiting, CORS, validation)
 
 ---
 
 ## Documentation
 
 - **[AUTHENTICATION.md](AUTHENTICATION.md)** - JWT validation strategy, middleware patterns, security best practices
+- **[PERMISSION.md](PERMISSION.md)** - Badge-based permission system, RBAC middleware, role management ✨ NEW
+- **[MIDDLEWARE.md](MIDDLEWARE.md)** - Request logging, security headers, rate limiting, CORS
+- **[NATS-EVENTS.md](NATS-EVENTS.md)** - Message bus integration, event patterns
 - **[DATABASE.md](DATABASE.md)** - Database connection management, migration strategy (TODO)
 - **[ERRORS.md](ERRORS.md)** - Error handling patterns, custom error types (TODO)
-- **[NATS.md](NATS.md)** - Message bus integration, event patterns (TODO)
 
 ---
 
@@ -49,7 +53,38 @@ HttpServer::new(|| {
 
 ---
 
-### 2. Database Utilities
+### 2. Permission System ✨ NEW
+
+**Badge-based role-based access control (RBAC).**
+
+```rust
+use shared_lib::{PermissionChecker, permission::{RequirePermission, RequireAnyPermission}};
+
+// Initialize
+let permission_checker = PermissionChecker::new(database.clone(), "dk".to_string());
+
+// Protect routes
+App::new()
+    .app_data(web::Data::new(permission_checker))
+    .service(
+        web::scope("/admin")
+            .wrap(RequirePermission::new("portal:manage"))
+            .route("/settings", web::post().to(update_settings))
+    )
+```
+
+**Features:**
+
+- Badge-based permission grants
+- Hierarchical permissions (`portal:*` grants all `portal:X`)
+- 5-minute cache with TTL
+- Service-owned role badge registration
+
+**See [PERMISSION.md](PERMISSION.md) for complete guide.**
+
+---
+
+### 3. Database Utilities
 
 **PostgreSQL connection pool management.**
 

@@ -2,8 +2,16 @@
 
 # Start all development services for Unity Platform
 # This script starts infrastructure, backend services, and frontend
+# Usage: ./start-dev-services.sh [--build]
+#   --build    Rebuild Rust services in release mode before starting
 
 set -e
+
+# Parse arguments
+BUILD_SERVICES=false
+if [[ "$1" == "--build" ]]; then
+    BUILD_SERVICES=true
+fi
 
 echo "🚀 Starting Unity Platform Development Environment"
 echo "=============================================="
@@ -82,16 +90,26 @@ echo ""
 # 2. Start Backend Services
 echo -e "${BLUE}🦀 Step 2: Starting Rust Backend Services${NC}"
 
+# Build services if --build flag provided
+if [ "$BUILD_SERVICES" = true ]; then
+    echo -e "${YELLOW}🔨 Building Rust services in release mode...${NC}"
+    cd "$WORKSPACE_ROOT/services"
+    cargo build --release
+    echo -e "${GREEN}✅ Build complete${NC}"
+    cd "$WORKSPACE_ROOT"
+    echo ""
+fi
+
 # Check if services are already running
 if check_port 8001; then
     echo -e "  ${YELLOW}⚠ auth-service already running on port 8001${NC}"
 else
     echo "Starting auth-service on port 8001..."
+    cd "$WORKSPACE_ROOT/services/auth-service"
+    set -a
+    source .env
+    set +a
     cd "$WORKSPACE_ROOT"
-    RUST_LOG=info,auth_service=debug \
-    DATABASE_URL="postgresql://unityplatform:unityplatform_dev_password_dk@localhost:5432/unityplatform_dk" \
-    SERVER_PORT=8001 \
-    CORS_ALLOWED_ORIGINS="http://localhost:5173,http://localhost:3000" \
     ./services/target/release/auth-service > "$WORKSPACE_ROOT/logs/auth-service.log" 2>&1 &
     
     wait_for_service "auth-service" 8001 || exit 1
@@ -113,14 +131,42 @@ if check_port 8002; then
     echo -e "  ${YELLOW}⚠ user-service already running on port 8002${NC}"
 else
     echo "Starting user-service on port 8002..."
+    cd "$WORKSPACE_ROOT/services/user-service"
+    set -a
+    source .env
+    set +a
     cd "$WORKSPACE_ROOT"
-    RUST_LOG=info,user_service=debug \
-    DATABASE_URL="postgresql://unityplatform:unityplatform_dev_password_dk@localhost:5432/unityplatform_dk" \
-    PORT=8002 \
-    CORS_ALLOWED_ORIGINS="http://localhost:5173,http://localhost:3000" \
     ./services/target/release/user-service > "$WORKSPACE_ROOT/logs/user-service.log" 2>&1 &
     
     wait_for_service "user-service" 8002 || exit 1
+fi
+
+if check_port 8007; then
+    echo -e "  ${YELLOW}⚠ badge-service already running on port 8007${NC}"
+else
+    echo "Starting badge-service on port 8007..."
+    cd "$WORKSPACE_ROOT/services/badge-service"
+    set -a
+    source .env
+    set +a
+    cd "$WORKSPACE_ROOT"
+    ./services/target/release/badge-service > "$WORKSPACE_ROOT/logs/badge-service.log" 2>&1 &
+    
+    wait_for_service "badge-service" 8007 || exit 1
+fi
+
+if check_port 8008; then
+    echo -e "  ${YELLOW}⚠ territory-service already running on port 8008${NC}"
+else
+    echo "Starting territory-service on port 8008..."
+    cd "$WORKSPACE_ROOT/services/territory-service"
+    set -a
+    source .env
+    set +a
+    cd "$WORKSPACE_ROOT"
+    ./services/target/release/territory-service > "$WORKSPACE_ROOT/logs/territory-service.log" 2>&1 &
+    
+    wait_for_service "territory-service" 8008 || exit 1
 fi
 
 echo ""
@@ -148,6 +194,8 @@ echo ""
 echo "📱 Frontend:          http://localhost:5173"
 echo "🔐 Auth Service:      http://localhost:8001"
 echo "👤 User Service:      http://localhost:8002"
+echo "🏆 Badge Service:     http://localhost:8007"
+echo "🌍 Territory Service: http://localhost:8008"
 echo "🗄️  PostgreSQL:        localhost:5432"
 echo "📨 NATS:              localhost:4222"
 echo "🗃️  Redis:             localhost:6379"
@@ -159,6 +207,8 @@ echo ""
 echo "📝 Logs:"
 echo "   Auth Service:      tail -f logs/auth-service.log"
 echo "   User Service:      tail -f logs/user-service.log"
+echo "   Badge Service:     tail -f logs/badge-service.log"
+echo "   Territory Service: tail -f logs/territory-service.log"
 echo "   Frontend:          tail -f logs/frontend.log"
 echo ""
 echo "🛑 To stop all services: ./scripts/stop-dev-services.sh"

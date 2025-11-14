@@ -51,6 +51,7 @@ rand = { workspace = true }
 
 # Metrics
 prometheus = { workspace = true }
+parking_lot = { workspace = true }
 
 # Validation
 validator = { workspace = true }

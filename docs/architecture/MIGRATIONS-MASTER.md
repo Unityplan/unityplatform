@@ -330,7 +330,7 @@ nats.subscribe("user.deleted", |event| {
 | `global.username_registry` | auth-service | Global username uniqueness |
 | `global.email_registry` | auth-service | Global email uniqueness |
 | `global.invitation_token_registry` | invitation-service | Global token uniqueness |
-| `global.badge_definitions` | badge-service | Shared badge catalog (future) |
+| `global.badge_registry` | badge-service | Shared badge catalog (future) |
 | `global.courses` | course-service | Shared course catalog (future) |
 | `global.course_lessons` | course-service | Course content (future) |
 | `global.forum_rooms` | forum-service | Global forum registry (future) |
@@ -555,7 +555,7 @@ nats.subscribe("user.deleted", |event| {
 
 **Tables Created:**
 
-- `global.badge_definitions` - Shared badge catalog (optional)
+- `global.badge_registry` - Shared badge catalog (optional)
 - `territory_{code}.badge_awards` - User badge awards
 - `territory_{code}.badge_progress` - Badge progress tracking
 

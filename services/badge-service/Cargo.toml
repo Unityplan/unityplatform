@@ -1,5 +1,5 @@
 [package]
-name = "auth-service"
+name = "badge-service"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -10,16 +10,8 @@ documentation.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
-[lib]
-name = "auth_service"
-path = "src/lib.rs"
-
-[[bin]]
-name = "auth-service"
-path = "src/main.rs"
-
 [dependencies]
-# Shared library with middleware
+# Shared library
 shared-lib = { path = "../shared-lib" }
 
 # Web framework
@@ -31,17 +23,12 @@ tokio = { workspace = true }
 
 # Database
 sqlx = { workspace = true }
+redis = { workspace = true }
 
 # NATS messaging
 async-nats = { workspace = true }
 bytes = { workspace = true }
 futures-util = { workspace = true }
-
-# Authentication & Crypto
-argon2 = { workspace = true }
-jsonwebtoken = { workspace = true }
-rand = { workspace = true }
-base64 = { workspace = true }
 
 # Serialization
 serde = { workspace = true }
@@ -50,19 +37,20 @@ serde_json = { workspace = true }
 # Validation
 validator = { workspace = true }
 
-# Types
+# UUID & Time
 uuid = { workspace = true }
 chrono = { workspace = true }
-
-# Configuration
-dotenvy = { workspace = true }
 
 # Logging
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
-# Redis (for rate limiting)
-redis = { workspace = true }
+# Configuration
+dotenvy = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
 
 # API Documentation
 utoipa = { workspace = true }

@@ -1,0 +1,92 @@
+[
+    {
+        "slug": "platform-manager",
+        "name": "platform Manager",
+        "description": "Grants full management access to platform administration",
+        "icon": "🏛️",
+        "category": "role",
+        "criteriaType": "manual",
+        "criteriaValue": null,
+        "rarity": "epic",
+        "isRenewable": false,
+        "renewalDays": null,
+        "grantsPermissions": [
+            "platform:manage",
+            "platform:users:manage",
+            "platform:settings:manage",
+            "platform:content:manage",
+            "platform:services:manage"
+        ]
+    },
+    {
+        "slug": "platform-developer",
+        "name": "platform Developer",
+        "description": "Grants access to develop and deploy platform services",
+        "icon": "💻",
+        "category": "role",
+        "criteriaType": "manual",
+        "criteriaValue": null,
+        "rarity": "rare",
+        "isRenewable": false,
+        "renewalDays": null,
+        "grantsPermissions": [
+            "platform:services:develop",
+            "platform:services:deploy",
+            "platform:services:debug",
+            "platform:logs:read"
+        ]
+    },
+    {
+        "slug": "platform-translator",
+        "name": "platform Translator",
+        "description": "Grants access to translate platform content and interfaces",
+        "icon": "🌐",
+        "category": "role",
+        "criteriaType": "manual",
+        "criteriaValue": null,
+        "rarity": "common",
+        "isRenewable": false,
+        "renewalDays": null,
+        "grantsPermissions": [
+            "platform:translations:edit",
+            "platform:translations:publish",
+            "platform:content:translate"
+        ]
+    },
+    {
+        "slug": "platform-infrastructure-manager",
+        "name": "platform Infrastructure Manager",
+        "description": "Grants access to manage platform infrastructure and deployments",
+        "icon": "⚙️",
+        "category": "role",
+        "criteriaType": "manual",
+        "criteriaValue": null,
+        "rarity": "epic",
+        "isRenewable": false,
+        "renewalDays": null,
+        "grantsPermissions": [
+            "platform:infrastructure:manage",
+            "platform:deployments:manage",
+            "platform:monitoring:access",
+            "platform:backups:manage",
+            "platform:security:manage"
+        ]
+    },
+    {
+        "slug": "platform-tester",
+        "name": "platform Tester",
+        "description": "Grants access to test platform features and report issues",
+        "icon": "🧪",
+        "category": "role",
+        "criteriaType": "manual",
+        "criteriaValue": null,
+        "rarity": "common",
+        "isRenewable": false,
+        "renewalDays": null,
+        "grantsPermissions": [
+            "platform:testing:access",
+            "platform:testing:report",
+            "platform:debug:access"
+        ]
+    }
+]

@@ -8,6 +8,7 @@ use std::time::Instant;
 use tracing::{info, warn};
 
 use super::request_id::get_request_id;
+use crate::metrics::MetricsCollector;
 
 /// Logging middleware with structured logging
 ///
@@ -47,10 +48,12 @@ use super::request_id::get_request_id;
 ///     .await
 /// }
 /// ```
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct LoggingMiddleware {
     /// Enable verbose logging (Phase 1 = true, Phase 2 = false)
     verbose: bool,
+    /// Optional metrics collector
+    metrics: Option<MetricsCollector>,
 }
 
 impl LoggingMiddleware {
@@ -59,17 +62,50 @@ impl LoggingMiddleware {
     /// # Arguments
     /// * `verbose` - true for development, false for production
     pub fn new(verbose: bool) -> Self {
-        Self { verbose }
+        Self {
+            verbose,
+            metrics: None,
+        }
+    }
+
+    /// Create logging middleware with metrics collection
+    pub fn with_metrics(verbose: bool, metrics: MetricsCollector) -> Self {
+        Self {
+            verbose,
+            metrics: Some(metrics),
+        }
     }
 
     /// Development logging - verbose with detailed request information
     pub fn development() -> Self {
-        Self { verbose: true }
+        Self {
+            verbose: true,
+            metrics: None,
+        }
+    }
+
+    /// Development logging with metrics
+    pub fn development_with_metrics(metrics: MetricsCollector) -> Self {
+        Self {
+            verbose: true,
+            metrics: Some(metrics),
+        }
     }
 
     /// Production logging - minimal, only essential information
     pub fn production() -> Self {
-        Self { verbose: false }
+        Self {
+            verbose: false,
+            metrics: None,
+        }
+    }
+
+    /// Production logging with metrics
+    pub fn production_with_metrics(metrics: MetricsCollector) -> Self {
+        Self {
+            verbose: false,
+            metrics: Some(metrics),
+        }
     }
 
     /// Alias for development() - kept for backward compatibility
@@ -88,7 +124,10 @@ impl LoggingMiddleware {
 impl Default for LoggingMiddleware {
     fn default() -> Self {
         // Default to production (Phase 2) for safety
-        Self { verbose: false }
+        Self {
+            verbose: false,
+            metrics: None,
+        }
     }
 }
 
@@ -109,6 +148,7 @@ where
         ready(Ok(LoggingMiddlewareService {
             service,
             verbose: self.verbose,
+            metrics: self.metrics.clone(),
         }))
     }
 }
@@ -116,6 +156,7 @@ where
 pub struct LoggingMiddlewareService<S> {
     service: S,
     verbose: bool,
+    metrics: Option<MetricsCollector>,
 }
 
 impl<S, B> Service<ServiceRequest> for LoggingMiddlewareService<S>
@@ -137,6 +178,7 @@ where
         let query = req.query_string().to_string();
         let request_id = get_request_id(req.request()).unwrap_or_else(|| "unknown".to_string());
         let verbose = self.verbose;
+        let metrics = self.metrics.clone();
 
         // Phase 1: Log user agent
         let user_agent = if verbose {
@@ -154,6 +196,11 @@ where
             let res = fut.await?;
             let status = res.status();
             let duration = start.elapsed();
+
+            // Record metrics if collector is available
+            if let Some(ref collector) = metrics {
+                collector.record_request(&method, &path, status.as_u16(), duration.as_secs_f64());
+            }
 
             // Log based on status code
             if status.is_server_error() {

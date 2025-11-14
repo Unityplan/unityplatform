@@ -51,6 +51,9 @@ docker/pods/postgres-data/
 docker/pods/nats-data/
 docker/pods/redis-data/
 
+# Docker archive directories
+docker.archive.*/
+
 # Uploads and user content
 uploads/
 avatars/

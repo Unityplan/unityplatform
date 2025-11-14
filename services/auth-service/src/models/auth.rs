@@ -5,6 +5,7 @@ use validator::Validate;
 
 /// Registration request
 #[derive(Debug, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct RegisterRequest {
     #[validate(length(min = 3, max = 50))]
     #[schema(example = "johndoe", min_length = 3, max_length = 50)]
@@ -29,6 +30,7 @@ pub struct RegisterRequest {
 
 /// Login request
 #[derive(Debug, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct LoginRequest {
     #[validate(length(min = 1))]
     #[schema(example = "johndoe")]
@@ -45,6 +47,7 @@ pub struct LoginRequest {
 
 /// Token refresh request
 #[derive(Debug, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct RefreshRequest {
     #[schema(example = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6")]
     pub refresh_token: String,
@@ -52,6 +55,7 @@ pub struct RefreshRequest {
 
 /// Logout request
 #[derive(Debug, Deserialize, Validate, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct LogoutRequest {
     #[schema(example = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6")]
     pub refresh_token: String,
@@ -59,6 +63,7 @@ pub struct LogoutRequest {
 
 /// Authentication response (returned on login/register)
 #[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct AuthResponse {
     #[schema(example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")]
     pub access_token: String,
@@ -86,6 +91,7 @@ impl AuthResponse {
 
 /// Token validation response
 #[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct ValidateResponse {
     pub valid: bool,
 
@@ -98,10 +104,14 @@ pub struct ValidateResponse {
 
 /// Health check response
 #[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct HealthResponse {
     #[schema(example = "ok")]
     pub status: String,
 
-    #[schema(example = "healthy")]
-    pub database: String,
+    #[schema(example = "auth-service")]
+    pub service: String,
+
+    #[schema(example = "0.1.0-alpha.1")]
+    pub version: String,
 }

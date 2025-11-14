@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "auth-service",
+    "badge-service",
     "shared-lib",
     "territory-service",
     "user-service",
@@ -75,6 +76,7 @@ base64 = "0.22"
 # Prometheus metrics
 prometheus = "0.13"
 actix-web-prometheus = "0.1"
+parking_lot = "0.12"
 
 # Validation
 validator = { version = "0.18", features = ["derive"] }

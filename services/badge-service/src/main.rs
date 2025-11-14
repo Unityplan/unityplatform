@@ -1,15 +1,14 @@
 use actix_web::{web, App, HttpServer};
+use badge_service::models::{
+    AwardBadgeRequest, BadgeResponse, RevokeBadgeRequest, ToggleFeaturedRequest,
+    UpdateProgressRequest, UserBadgeResponse,
+};
 use shared_lib::{
     cors, shutdown_grace_period, shutdown_signal, AppConfig, Database, LoggingMiddleware,
-    MetricsCollector, RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware,
+    MetricsCollector, NatsClient, RateLimitMiddleware, RequestIdMiddleware,
+    SecurityHeadersMiddleware,
 };
-use user_service::handlers::profile::UpdateProfileRequest;
-use user_service::models::{
-    ConnectionResponse, ConnectionStatus, ConnectionType, ConnectionsListResponse,
-    CreateLanguageProficiencyRequest, CreateProfileLinkRequest, LanguageProficiencyResponse,
-    ProfileLinkResponse, ProfileResponse, UpdateLanguageProficiencyRequest,
-    UpdateProfileLinkRequest, UserSearchResponse, UserSearchResult,
-};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -17,58 +16,38 @@ use utoipa_swagger_ui::SwaggerUi;
 #[derive(OpenApi)]
 #[openapi(
     info(
-        title = "User Service API",
+        title = "Badge Service API",
         version = "0.1.0-alpha.1",
-        description = "User profile management, connections, and GDPR compliance for Unity Platform",
+        description = "Badge and achievement management for Unity Platform",
         contact(
             name = "Unity Platform Team",
             email = "dev@unityplan.org"
         )
     ),
     paths(
-        user_service::handlers::profile::get_own_profile,
-        user_service::handlers::profile::update_own_profile,
-        user_service::handlers::profile::get_profile_by_id,
-        user_service::handlers::profile_link::list_links,
-        user_service::handlers::profile_link::create_link,
-        user_service::handlers::profile_link::update_link,
-        user_service::handlers::profile_link::delete_link,
-        user_service::handlers::language_proficiency::list_languages,
-        user_service::handlers::language_proficiency::create_language,
-        user_service::handlers::language_proficiency::update_language,
-        user_service::handlers::language_proficiency::delete_language,
-        user_service::handlers::connection::follow_user,
-        user_service::handlers::connection::unfollow_user,
-        user_service::handlers::connection::block_user,
-        user_service::handlers::connection::unblock_user,
-        user_service::handlers::connection::get_followers,
-        user_service::handlers::connection::get_following,
-        user_service::handlers::connection::search_users,
+        health_check,
+        ready_check,
+        metrics,
+        badge_service::handlers::badge::list_badges,
+        badge_service::handlers::badge::get_user_badges,
+        badge_service::handlers::badge::award_badge,
+        badge_service::handlers::badge::revoke_badge,
+        badge_service::handlers::badge::update_progress,
+        badge_service::handlers::badge::toggle_featured,
     ),
     components(
         schemas(
-            ProfileResponse,
-            UpdateProfileRequest,
-            ProfileLinkResponse,
-            CreateProfileLinkRequest,
-            UpdateProfileLinkRequest,
-            LanguageProficiencyResponse,
-            CreateLanguageProficiencyRequest,
-            UpdateLanguageProficiencyRequest,
-            ConnectionType,
-            ConnectionStatus,
-            ConnectionResponse,
-            ConnectionsListResponse,
-            UserSearchResult,
-            UserSearchResponse
+            BadgeResponse,
+            UserBadgeResponse,
+            AwardBadgeRequest,
+            RevokeBadgeRequest,
+            UpdateProgressRequest,
+            ToggleFeaturedRequest,
         )
     ),
     tags(
         (name = "service", description = "Service health and metadata"),
-        (name = "profile", description = "User profile management"),
-        (name = "profile-links", description = "External profile links (GitHub, LinkedIn, etc.)"),
-        (name = "language-proficiency", description = "Language skills with 4 proficiency dimensions"),
-        (name = "connections", description = "User connections (follow/block)")
+        (name = "badges", description = "Badge and achievement management")
     ),
     modifiers(&SecurityAddon)
 )]
@@ -98,15 +77,16 @@ async fn main() -> std::io::Result<()> {
     // Load environment variables
     dotenvy::dotenv().ok();
 
-    // Initialize logging
-    tracing_subscriber::fmt()
-        .with_env_filter(
+    // Initialize tracing
+    tracing_subscriber::registry()
+        .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+                .unwrap_or_else(|_| "badge_service=debug,actix_web=info".into()),
         )
+        .with(tracing_subscriber::fmt::layer())
         .init();
 
-    tracing::info!("🚀 Starting User Service v{}", env!("CARGO_PKG_VERSION"));
+    tracing::info!("🚀 Starting Badge Service v{}", env!("CARGO_PKG_VERSION"));
 
     // Load configuration
     let config = AppConfig::from_env().expect("Failed to load configuration");
@@ -114,7 +94,7 @@ async fn main() -> std::io::Result<()> {
 
     // Initialize database connection
     let database = Database::new(
-        config.database_url(),
+        &config.database_url(),
         config.database.max_connections,
         config.database.min_connections,
     )
@@ -122,22 +102,26 @@ async fn main() -> std::io::Result<()> {
     .expect("Failed to connect to database");
     tracing::info!("✅ Database connected");
 
-    // Initialize Redis client for rate limiting (use AppConfig later when Redis config is added)
+    // Initialize Redis client for rate limiting
     let redis_url =
         std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
     let redis_client = redis::Client::open(redis_url).expect("Failed to create Redis client");
     tracing::info!("✅ Redis connected");
 
-    // Initialize NATS client using AppConfig
-    let nats_client =
-        shared_lib::NatsClient::new(config.nats_url(), config.nats.cluster_name.clone())
-            .await
-            .expect("Failed to initialize NATS client");
+    // Initialize NATS client
+    let nats_client = NatsClient::new(&config.nats_url(), config.nats.cluster_name.clone())
+        .await
+        .expect("Failed to connect to NATS");
     tracing::info!("✅ NATS connected");
 
+    // Initialize NATS subscriptions
+    badge_service::nats_handlers::initialize_subscriptions(nats_client.clone(), database.clone())
+        .await;
+    tracing::info!("✅ NATS subscriptions initialized");
+
     // Initialize metrics collector
-    let metrics_collector =
-        shared_lib::MetricsCollector::new("user_service", env!("CARGO_PKG_VERSION"));
+    let metrics_collector = MetricsCollector::new("badge_service", env!("CARGO_PKG_VERSION"));
+    tracing::info!("✅ Metrics collector initialized");
 
     let server_addr = format!("{}:{}", config.server.host, config.server.port);
     tracing::info!("🌐 Server will listen on {}", server_addr);
@@ -146,18 +130,25 @@ async fn main() -> std::io::Result<()> {
         server_addr
     );
 
+    // Log development mode settings
+    let dev_auto_grant =
+        std::env::var("DEV_AUTO_GRANT_CODE_OF_CONDUCT").unwrap_or_else(|_| "false".to_string());
+    if dev_auto_grant == "true" {
+        tracing::warn!("⚠️  DEV MODE: Auto-granting Code of Conduct badge to all registered users");
+    }
+
     // Generate OpenAPI documentation
     let openapi = ApiDoc::openapi();
 
     // Create HTTP server
     let server = HttpServer::new(move || {
         App::new()
-            // Priority 1 middleware - Request tracking and logging with metrics
+            // Priority 1 middleware with metrics
             .wrap(LoggingMiddleware::development_with_metrics(
                 metrics_collector.clone(),
             ))
             .wrap(RequestIdMiddleware)
-            // Priority 2 middleware - Security and rate limiting
+            // Priority 2 middleware
             .wrap(SecurityHeadersMiddleware::development())
             .wrap(cors::development())
             .wrap(RateLimitMiddleware::development(redis_client.clone()))
@@ -172,21 +163,11 @@ async fn main() -> std::io::Result<()> {
             // API routes
             .service(
                 web::scope("/api/v1")
-                    // Health endpoints
                     .route("/health", web::get().to(health_check))
                     .route("/ready", web::get().to(ready_check))
                     .route("/metrics", web::get().to(metrics))
-                    // User routes (all require JWT auth)
-                    .service(
-                        web::scope("/user")
-                            // Register more specific routes first
-                            .configure(user_service::handlers::settings::configure)
-                            .configure(user_service::handlers::profile_link::configure)
-                            .configure(user_service::handlers::language_proficiency::configure)
-                            .configure(user_service::handlers::connection::configure)
-                            // Register profile with /{id} last (greedy catch-all)
-                            .configure(user_service::handlers::profile::configure),
-                    ),
+                    // Badge routes
+                    .configure(badge_service::handlers::badge::configure),
             )
     })
     .bind(&server_addr)?
@@ -219,20 +200,20 @@ async fn main() -> std::io::Result<()> {
 
     // Cleanup would happen here (database connections auto-close via Drop)
 
-    tracing::info!("👋 User service stopped gracefully");
+    tracing::info!("👋 Badge service stopped gracefully");
     Ok(())
 }
 
 /// Health check endpoint (no authentication required)
 #[utoipa::path(
     get,
-    path = "/api/v1/service/health",
+    path = "/api/v1/health",
     tag = "service",
     responses(
         (status = 200, description = "Service is healthy", body = serde_json::Value,
             example = json!({
+                "service": "badge-service",
                 "status": "healthy",
-                "service": "user-service",
                 "version": "0.1.0-alpha.1"
             })
         )
@@ -240,39 +221,73 @@ async fn main() -> std::io::Result<()> {
 )]
 async fn health_check() -> actix_web::HttpResponse {
     actix_web::HttpResponse::Ok().json(serde_json::json!({
-        "status": "ok",
-        "service": "user-service",
+        "service": "badge-service",
+        "status": "healthy",
         "version": env!("CARGO_PKG_VERSION"),
     }))
 }
 
-/// Ready check endpoint
+/// Readiness check endpoint - verifies database connectivity
+#[utoipa::path(
+    get,
+    path = "/api/v1/ready",
+    tag = "service",
+    responses(
+        (status = 200, description = "Service is ready", body = serde_json::Value,
+            example = json!({
+                "service": "badge-service",
+                "status": "ready",
+                "version": "0.1.0-alpha.1"
+            })
+        ),
+        (status = 503, description = "Service is not ready", body = serde_json::Value,
+            example = json!({
+                "service": "badge-service",
+                "status": "not_ready",
+                "reason": "database_unavailable",
+                "version": "0.1.0-alpha.1"
+            })
+        )
+    )
+)]
 async fn ready_check(db: web::Data<Database>) -> actix_web::HttpResponse {
     // Check database connectivity
-    match sqlx::query("SELECT 1").fetch_one(db.pool()).await {
-        Ok(_) => actix_web::HttpResponse::Ok().json(serde_json::json!({
+    let db_ok = sqlx::query("SELECT 1").fetch_one(db.pool()).await.is_ok();
+
+    if db_ok {
+        actix_web::HttpResponse::Ok().json(serde_json::json!({
+            "service": "badge-service",
             "status": "ready",
-            "service": "user-service",
             "version": env!("CARGO_PKG_VERSION"),
-        })),
-        Err(_) => actix_web::HttpResponse::ServiceUnavailable().json(serde_json::json!({
+        }))
+    } else {
+        actix_web::HttpResponse::ServiceUnavailable().json(serde_json::json!({
+            "service": "badge-service",
             "status": "not_ready",
-            "service": "user-service",
+            "reason": "database_unavailable",
             "version": env!("CARGO_PKG_VERSION"),
-            "reason": "database_unavailable"
-        })),
+        }))
     }
 }
 
-/// Metrics endpoint (Prometheus format)
+/// Metrics endpoint - Prometheus-compatible metrics
+#[utoipa::path(
+    get,
+    path = "/api/v1/metrics",
+    tag = "service",
+    responses(
+        (status = 200, description = "Prometheus-format metrics", content_type = "text/plain")
+    )
+)]
 async fn metrics(
     db: web::Data<Database>,
     collector: web::Data<MetricsCollector>,
 ) -> actix_web::HttpResponse {
-    // Get database pool stats
+    // Get database pool metrics
     let pool_size = db.pool().size();
     let pool_idle = db.pool().num_idle();
 
+    // Generate comprehensive metrics using the collector
     let metrics_text = collector.generate_prometheus_metrics(Some(pool_size), Some(pool_idle));
 
     actix_web::HttpResponse::Ok()
