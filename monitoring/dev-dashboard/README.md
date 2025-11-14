@@ -36,7 +36,7 @@ pnpm install
 pnpm dev
 ```
 
-Dashboard will be available at http://localhost:8888
+Dashboard will be available at <http://localhost:8888>
 
 ### Build for Production
 
@@ -62,7 +62,7 @@ The dashboard organizes services into five categories:
 
 ## Docker Integration
 
-The dashboard is served via Docker Compose at http://localhost:8888.
+The dashboard is served via Docker Compose at <http://localhost:8888>.
 
 Update `docker-compose.dev.yml` to point to the new build output:
 
