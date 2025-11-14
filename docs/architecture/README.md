@@ -578,6 +578,7 @@ curl -X POST http://localhost:8001/api/v1/auth/login \
    - `README.md` - Service overview, responsibilities, dependencies
    - `API.md` - Complete endpoint specifications with examples
    - `DATABASE.md` - Schema design with multi-pod considerations
+   - `CHANGELOG.md` - Version history following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format
 5. **Update master tracking:**
    - Add tables to [MIGRATIONS-MASTER.md](MIGRATIONS-MASTER.md)
    - Add service to this README's service table

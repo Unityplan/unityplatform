@@ -10,9 +10,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Metrics module for Prometheus integration
-- Middleware helpers for common patterns
 - JWT token utilities
+- Additional middleware patterns
+- Enhanced metrics collectors
+
+### Added (November 14, 2025)
+- **Permission System** - Badge-based RBAC with wildcard support
+  - `PermissionChecker` with LRU cache (5-minute TTL, 1000 entries)
+  - `RequirePermission` middleware for single permission enforcement
+  - `RequireAnyPermission` middleware for OR logic
+  - Complete documentation in `PERMISSION.md`
+- **Metrics Module** - Prometheus metrics collection
+  - `MetricsCollector` with automatic HTTP tracking
+  - Standard metrics (service info, database pool, HTTP requests, errors)
+  - Integration with actix-web middleware
+- **Middleware Enhancements**
+  - `LoggingMiddleware::development()` and `::production()` variants
+  - Deprecated `::phase1()` in favor of `::development()`
+- **Database Migrations**
+  - Migration 20251113000006: Badge service tables
+  - Migration 20251113000007: User settings table
+- **Documentation**
+  - `PERMISSION.md` - Permission system documentation
+  - `NATS-EVENTS.md` - NATS event standards and best practices
+  - Updated `MIDDLEWARE.md` with permission middleware
 
 ---
 
