@@ -211,7 +211,7 @@ impl TerritoryService {
         if let Some(ref currency_code) = updates.currency_code {
             update_fields.push(format!("currency_code = ${}", param_count));
             query_params.push(currency_code.clone());
-            param_count += 1;
+            // No increment needed - this is the last field
         }
 
         if update_fields.is_empty() {

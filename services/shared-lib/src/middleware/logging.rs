@@ -286,7 +286,7 @@ mod tests {
 
     #[actix_web::test]
     async fn test_logging_middleware() {
-        let app = test::init_service(App::new().wrap(LoggingMiddleware::phase1()).route(
+        let app = test::init_service(App::new().wrap(LoggingMiddleware::development()).route(
             "/test",
             web::get().to(|| async { HttpResponse::Ok().finish() }),
         ))

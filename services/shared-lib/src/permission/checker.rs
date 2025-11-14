@@ -299,7 +299,7 @@ impl PermissionChecker {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*; // Uncomment when tests are implemented
 
     // Note: These tests require a test database with the badge schema
     // For now, they serve as documentation of the expected behavior
