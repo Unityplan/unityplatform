@@ -13,10 +13,12 @@
 | 5432 | PostgreSQL | Database |
 | 6222 | NATS | Cluster connections |
 | 6379 | Redis | Cache and session store |
+| 7008 | Matrix Synapse | Decentralized chat server (HTTP) |
 | 8080 | Adminer | PostgreSQL web UI |
 | 8082 | Redis Commander | Redis web UI |
 | 8083 | Traefik | Service routing dashboard |
 | 8222 | NATS | HTTP monitoring |
+| 8448 | Matrix Synapse | Federation port (HTTPS) |
 | 9090 | Prometheus | Metrics collection |
 | 16686 | Jaeger | Distributed tracing UI |
 

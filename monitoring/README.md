@@ -14,10 +14,11 @@ monitoring/
 ## 🎯 Development Dashboard
 
 **Location:** `dashboard/index.html`  
-**URL:** http://localhost:8888  
+**URL:** <http://localhost:8888>  
 **Purpose:** Central hub for accessing all development and monitoring tools
 
 **Access:**
+
 ```bash
 # Start dashboard
 ./scripts/start.sh  # or docker compose -f docker-compose.dev.yml up -d
@@ -29,21 +30,24 @@ open http://localhost:8888
 **Dashboard Links:**
 
 **Development Tools:**
-- Adminer (Database UI) - http://localhost:8080
-- Forgejo (Git) - http://192.168.60.133:3000
-- MailHog (Email testing) - http://localhost:8025
-- Redis Commander - http://localhost:8081
+
+- Adminer (Database UI) - <http://localhost:8080>
+- Forgejo (Git) - <http://192.168.60.133:3000>
+- MailHog (Email testing) - <http://localhost:8025>
+- Redis Commander - <http://localhost:8081>
 
 **Monitoring:**
-- Grafana - http://localhost:3001 (admin/admin)
-- Prometheus - http://localhost:9090
-- Jaeger (Tracing) - http://localhost:16686
+
+- Grafana - <http://localhost:3001> (admin/admin)
+- Prometheus - <http://localhost:9090>
+- Jaeger (Tracing) - <http://localhost:16686>
 
 **Services:**
-- Auth Service Swagger - http://localhost:8001/swagger-ui/
-- User Service Swagger - http://localhost:8002/swagger-ui/
-- Badge Service Swagger - http://localhost:8003/swagger-ui/
-- Territory Service Swagger - http://localhost:8004/swagger-ui/
+
+- Auth Service Swagger - <http://localhost:8001/swagger-ui/>
+- User Service Swagger - <http://localhost:8002/swagger-ui/>
+- Badge Service Swagger - <http://localhost:8003/swagger-ui/>
+- Territory Service Swagger - <http://localhost:8004/swagger-ui/>
 
 ## 📊 Monitoring Stack
 
@@ -52,14 +56,16 @@ Monitoring services are defined in `docker-compose.monitoring.yml` (project root
 ### Grafana
 
 **Purpose:** Metrics visualization and dashboards  
-**URL:** http://localhost:3001  
+**URL:** <http://localhost:3001>  
 **Credentials:** admin/admin (default)
 
 **Pre-provisioned Dashboards:**
+
 - Multi-Pod Overview - Global view of all territory pods
 - Pod Denmark Overview - Denmark pod metrics
 
 **Datasources:**
+
 - Prometheus (automatically configured)
 
 **Configuration:** `docker/grafana/provisioning/`
@@ -69,9 +75,10 @@ Monitoring services are defined in `docker-compose.monitoring.yml` (project root
 ### Prometheus
 
 **Purpose:** Metrics collection and time-series database  
-**URL:** http://localhost:9090
+**URL:** <http://localhost:9090>
 
 **Scrape Targets:**
+
 - Service metrics exporters (auth, user, badge, territory)
 - PostgreSQL exporter
 - Redis exporter
@@ -85,7 +92,7 @@ Monitoring services are defined in `docker-compose.monitoring.yml` (project root
 ### Jaeger
 
 **Purpose:** Distributed tracing  
-**URL:** http://localhost:16686
+**URL:** <http://localhost:16686>
 
 **Traces:** Service-to-service communication, request flows
 
@@ -94,7 +101,7 @@ Monitoring services are defined in `docker-compose.monitoring.yml` (project root
 ### Traefik
 
 **Purpose:** Reverse proxy and load balancer  
-**Dashboard:** http://localhost:8080 (if enabled)
+**Dashboard:** <http://localhost:8080> (if enabled)
 
 **Configuration:** `docker/traefik/traefik.yml`
 
@@ -124,6 +131,7 @@ Edit `dashboard/index.html` to add/remove links or customize appearance.
 Edit `docker/prometheus/prometheus.yml` to add/modify scrape targets.
 
 **Apply changes:**
+
 ```bash
 docker compose -f docker-compose.monitoring.yml restart prometheus
 ```
@@ -142,10 +150,10 @@ docker compose -f docker-compose.monitoring.yml up -d
 
 ### Access Services
 
-1. **Dashboard:** http://localhost:8888
-2. **Grafana:** http://localhost:3001 (login: admin/admin)
-3. **Prometheus:** http://localhost:9090
-4. **Jaeger:** http://localhost:16686
+1. **Dashboard:** <http://localhost:8888>
+2. **Grafana:** <http://localhost:3001> (login: admin/admin)
+3. **Prometheus:** <http://localhost:9090>
+4. **Jaeger:** <http://localhost:16686>
 
 ### Check Status
 
@@ -178,9 +186,10 @@ docker compose -f docker-compose.monitoring.yml down
 
 All Rust services expose metrics at `/metrics` endpoint:
 
-**Example:** http://localhost:8001/metrics (auth-service)
+**Example:** <http://localhost:8001/metrics> (auth-service)
 
 **Standard metrics:**
+
 - HTTP request duration
 - HTTP request count
 - Active connections
@@ -188,6 +197,7 @@ All Rust services expose metrics at `/metrics` endpoint:
 - Custom business metrics
 
 **Access in Prometheus:**
+
 ```promql
 # HTTP request rate
 rate(http_requests_total[5m])
@@ -202,14 +212,17 @@ histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
 ### Infrastructure Metrics
 
 **PostgreSQL:**
+
 - Connections, queries/sec, cache hit ratio
 - Database size, table sizes
 
 **Redis:**
+
 - Memory usage, hit rate, key count
 - Commands/sec, connected clients
 
 **NATS:**
+
 - Messages/sec, subscriptions, connections
 - JetStream storage usage
 
