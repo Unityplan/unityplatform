@@ -49,27 +49,28 @@
 |------|---------|--------|-------|---------|
 | 8000 | api-gateway | 🔮 Future | Phase 3 | Unified API entry point |
 | 8001 | auth-service | ✅ Complete | Phase 1 | Authentication & JWT management |
-| 8002 | user-service | ✅ Complete | Phase 1 | Profiles, connections, GDPR |
-| 8003 | settings-service | ⏳ Scaffolded | Phase 1 | User preferences & privacy |
+| 8002 | user-service | ✅ Complete | Phase 1 | Profiles, connections, GDPR, settings |
+| 8003 | event-service | 📋 Planned | Phase 2 | Events & calendar |
 | 8004 | invitation-service | ⏳ Scaffolded | Phase 1 | Invitation management & trust graph |
 | 8005 | notification-service | ⏳ Scaffolded | Phase 1 | Notifications & email |
 | 8006 | community-service | ⏳ Scaffolded | Phase 2 | Communities & membership |
 | 8007 | badge-service | ⏳ Scaffolded | Phase 2 | Gamification & achievements |
 | 8008 | territory-service | ⏳ Scaffolded | Phase 2 | Pod management & federation |
-| 8009 | event-service | 📋 Planned | Phase 2 | Events & calendar |
-| 8010 | course-service | 📋 Planned | Phase 2 | LMS & certifications |
-| 8011 | forum-service | 📋 Planned | Phase 2 | Matrix-based forums |
-| 8012 | translation-service | 📋 Planned | Phase 2 | i18n & community translations |
-| 8013 | ipfs-service | 📋 Planned | Phase 2 | Decentralized file storage |
+| 8009 | course-service | 📋 Planned | Phase 2 | LMS & certifications |
+| 8010 | forum-service | 📋 Planned | Phase 2 | Matrix-based forums |
+| 8011 | translation-service | 📋 Planned | Phase 2 | i18n & community translations |
+| 8012 | ipfs-service | 📋 Planned | Phase 2 | Decentralized file storage |
 
 ### Reserved Ranges
 
 - **800x**: Backend microservices (8000-8099)
   - 8000: API Gateway (future)
-  - 8001-8005: Phase 1 services (auth, user, settings, invitations, notifications)
+  - 8001-8002: Phase 1 core services (auth, user with settings)
+  - 8003: Phase 2 event service (events & calendar)
+  - 8004-8005: Phase 1 services (invitations, notifications)
   - 8006-8008: Phase 2 core services (community, badge, territory)
-  - 8009-8013: Phase 2 advanced services (event, course, forum, translation, ipfs)
-  - 8014-8099: Reserved for future services
+  - 8009-8012: Phase 2 advanced services (course, forum, translation, ipfs)
+  - 8013-8099: Reserved for future services
 - **900x**: Monitoring & observability (9000-9099)
 - **300x**: Infrastructure web UIs (3000-3099)
 - **400x-600x**: Message buses & databases (4000-6999)
@@ -98,7 +99,7 @@ NATS_URL=nats://localhost:4222
 REDIS_URL=redis://localhost:6379
 ```
 
-#### Settings Service (8003)
+#### Event Service (8003)
 
 ```bash
 PORT=8003
@@ -153,29 +154,37 @@ DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 ```
 
-#### Forum Service (8011)
+#### Course Service (8009)
 
 ```bash
-PORT=8011
+PORT=8009
+DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
+NATS_URL=nats://localhost:4222
+```
+
+#### Forum Service (8010)
+
+```bash
+PORT=8010
 DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 MATRIX_HOMESERVER_URL=https://matrix.unityplatform.org
 MATRIX_ACCESS_TOKEN=your-matrix-token
 ```
 
-#### Translation Service (8012)
+#### Translation Service (8011)
 
 ```bash
-PORT=8012
+PORT=8011
 DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 LIBRETRANSLATE_URL=http://localhost:5000
 ```
 
-#### IPFS Service (8013)
+#### IPFS Service (8012)
 
 ```bash
-PORT=8013
+PORT=8012
 DATABASE_URL=postgres://user:password@localhost:5432/unityplatform
 NATS_URL=nats://localhost:4222
 IPFS_API_URL=http://localhost:5001
@@ -188,19 +197,18 @@ IPFS_GATEWAY_URL=https://ipfs.unityplatform.org
 # Phase 1 Services
 VITE_AUTH_SERVICE_URL=http://localhost:8001
 VITE_USER_SERVICE_URL=http://localhost:8002
-VITE_SETTINGS_SERVICE_URL=http://localhost:8003
 VITE_INVITATION_SERVICE_URL=http://localhost:8004
 VITE_NOTIFICATION_SERVICE_URL=http://localhost:8005
 
 # Phase 2 Services
+VITE_EVENT_SERVICE_URL=http://localhost:8003
 VITE_COMMUNITY_SERVICE_URL=http://localhost:8006
 VITE_BADGE_SERVICE_URL=http://localhost:8007
 VITE_TERRITORY_SERVICE_URL=http://localhost:8008
-VITE_EVENT_SERVICE_URL=http://localhost:8009
-VITE_COURSE_SERVICE_URL=http://localhost:8010
-VITE_FORUM_SERVICE_URL=http://localhost:8011
-VITE_TRANSLATION_SERVICE_URL=http://localhost:8012
-VITE_IPFS_SERVICE_URL=http://localhost:8013
+VITE_COURSE_SERVICE_URL=http://localhost:8009
+VITE_FORUM_SERVICE_URL=http://localhost:8010
+VITE_TRANSLATION_SERVICE_URL=http://localhost:8011
+VITE_IPFS_SERVICE_URL=http://localhost:8012
 
 # Future API Gateway (Phase 3)
 VITE_API_URL=http://localhost:8000  # Single entry point
@@ -211,11 +219,13 @@ VITE_API_URL=http://localhost:8000  # Single entry point
 ### Critical Port Assignments (DO NOT CHANGE)
 
 **Backend Services (8001-8013):**
+
 - These ports are RESERVED for Rust microservices only
 - ❌ DO NOT assign infrastructure services to 800x range
 - ❌ DO NOT use 8080, 8082, 8083, 8089 for backend services (reserved for dev tools)
 
 **Infrastructure Services:**
+
 - Must use ports OUTSIDE the 8001-8013 range
 - Development tools: 8080, 8082, 8083, 8088, 8089, 8888
 - Matrix HTTP: 7008 (changed from 8008 to avoid conflict with territory-service)
@@ -242,16 +252,19 @@ VITE_API_URL=http://localhost:8000  # Single entry point
 ### Verification Commands
 
 **Check if a port is in use:**
+
 ```bash
 sudo lsof -i :PORT_NUMBER
 ```
 
 **Check all Unity Platform services:**
+
 ```bash
 docker ps --format "table {{.Names}}\t{{.Ports}}" | grep -E "(service-|monitoring-|dev-|reverse-proxy)"
 ```
 
 **Verify no conflicts before starting:**
+
 ```bash
 # Check backend service ports (8001-8013)
 for port in {8001..8013}; do
@@ -264,13 +277,16 @@ done
 ### Common Conflict Resolutions
 
 **Matrix vs Territory Service (Port 8008):**
+
 - ❌ OLD: Matrix was configured on port 8008
 - ✅ FIXED: Matrix moved to port 7008
 - Reason: Port 8008 is officially allocated to territory-service
 
 **Grafana/Prometheus Permission Issues:**
+
 - ❌ OLD: Volume permission errors causing restart loops
 - ✅ FIXED: Set correct ownership (UID 472 for Grafana, UID 65534 for Prometheus)
+
 ```bash
 sudo chown -R 472:472 docker/grafana-data
 sudo chown -R 65534:65534 docker/prometheus-data
@@ -290,32 +306,30 @@ When implementing an API gateway (Phase 3):
 
 - All frontend requests → `http://localhost:8000`
 - Gateway routes to individual services
-- Services remain on 8001-8013
+- Services remain on 8001-8012
 - Example routing:
   - `GET /api/auth/*` → auth-service:8001
   - `GET /api/users/*` → user-service:8002
-  - `GET /api/settings/*` → settings-service:8003
+  - `GET /api/events/*` → event-service:8003
   - `GET /api/invitations/*` → invitation-service:8004
   - `GET /api/notifications/*` → notification-service:8005
   - `GET /api/communities/*` → community-service:8006
   - `GET /api/badges/*` → badge-service:8007
   - `GET /api/territories/*` → territory-service:8008
-  - `GET /api/events/*` → event-service:8009
-  - `GET /api/courses/*` → course-service:8010
-  - `GET /api/forum/*` → forum-service:8011
-  - `GET /api/translations/*` → translation-service:8012
-  - `GET /api/ipfs/*` → ipfs-service:8013
+  - `GET /api/courses/*` → course-service:8009
+  - `GET /api/forum/*` → forum-service:8010
+  - `GET /api/translations/*` → translation-service:8011
+  - `GET /api/ipfs/*` → ipfs-service:8012
 
 ## Service Implementation Status
 
 ### ✅ Complete (Production Ready)
 
 - **auth-service (8001)**: 5/5 endpoints, 19/19 tests passing
-- **user-service (8002)**: 28/28 endpoints, 22/22 tests passing
+- **user-service (8002)**: 28/28 endpoints, 22/22 tests passing (includes settings)
 
 ### ⏳ Scaffolded (Week 1-3 Implementation)
 
-- **settings-service (8003)**: 0/5 endpoints
 - **invitation-service (8004)**: 0/6 endpoints
 - **notification-service (8005)**: 0/7 endpoints
 
@@ -327,11 +341,11 @@ When implementing an API gateway (Phase 3):
 
 ### 📋 Planned (Phase 2)
 
-- **event-service (8009)**: Not yet started
-- **course-service (8010)**: Not yet started
-- **forum-service (8011)**: Not yet started
-- **translation-service (8012)**: Not yet started
-- **ipfs-service (8013)**: Not yet started
+- **event-service (8003)**: Not yet started
+- **course-service (8009)**: Not yet started
+- **forum-service (8010)**: Not yet started
+- **translation-service (8011)**: Not yet started
+- **ipfs-service (8012)**: Not yet started
 
 ## Migration Notes
 
@@ -347,10 +361,12 @@ When implementing an API gateway (Phase 3):
 3. **Scalability**: Room for 100 microservices (8000-8099)
 4. **Future gateway**: 8000 as entry point, services at 8001+
 5. **Phase-based allocation**:
-   - 8001-8005: Phase 1 (Core user functionality)
-   - 8006-8008: Phase 2 Core (Social features)
-   - 8009-8013: Phase 2 Advanced (Content & federation)
-   - 8014-8099: Reserved for future expansion
+   - 8001-8002: Phase 1 core (auth, user with settings)
+   - 8003: Phase 2 events (moved up for earlier implementation)
+   - 8004-8005: Phase 1 (invitations, notifications)
+   - 8006-8008: Phase 2 core (community, badge, territory)
+   - 8009-8012: Phase 2 advanced (course, forum, translation, ipfs)
+   - 8013-8099: Reserved for future expansion
 
 ### Service Documentation
 
@@ -374,6 +390,7 @@ Each service documentation includes:
 **Symptom:** Docker container fails with "address already in use" error
 
 **Diagnosis:**
+
 ```bash
 # Find what's using the port
 sudo lsof -i :PORT_NUMBER
@@ -383,6 +400,7 @@ sudo lsof -i :8008
 ```
 
 **Solution:**
+
 1. Identify the service using the port
 2. Check if it's supposed to be running (consult this document)
 3. If it's a Rust backend service, it should be on 8001-8013
@@ -393,6 +411,7 @@ sudo lsof -i :8008
 **Symptom:** Container status shows "Restarting" repeatedly
 
 **Diagnosis:**
+
 ```bash
 # Check logs
 docker logs monitoring-grafana --tail 50
@@ -400,11 +419,13 @@ docker logs monitoring-prometheus --tail 50
 ```
 
 **Common causes:**
+
 1. **Permission errors** - Volume data owned by wrong user
 2. **Missing configuration** - Config file not found
 3. **Port conflict** - Another service using the same port
 
 **Solutions:**
+
 ```bash
 # Fix Grafana permissions (UID 472)
 sudo chown -R 472:472 docker/grafana-data
@@ -421,11 +442,13 @@ docker compose -f docker-compose.monitoring.yml -p unityplatform-monitoring rest
 **Symptom:** Matrix container shows "Config file '/data/homeserver.yaml' does not exist"
 
 **Diagnosis:**
+
 ```bash
 docker logs service-matrix-dk --tail 20
 ```
 
 **Solution:** Matrix requires initial configuration (setup pending)
+
 ```bash
 # Generate config (when ready to set up Matrix)
 docker run -it --rm \
@@ -437,16 +460,19 @@ docker run -it --rm \
 ### Checking All Services Status
 
 **Quick overview:**
+
 ```bash
 ./scripts/status.sh
 ```
 
 **Detailed container listing:**
+
 ```bash
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 ```
 
 **Service-specific health checks:**
+
 ```bash
 # PostgreSQL
 docker exec service-postgres-dk pg_isready -U unityplatform
@@ -461,6 +487,7 @@ docker exec service-redis-dk redis-cli ping
 ---
 
 **Last Updated:** November 14, 2025  
-**Total Services:** 13 microservices + 1 API gateway (planned)  
-**Implementation Status:** 2/13 complete, 6/13 scaffolded, 5/13 planned  
-**Infrastructure Status:** 28/28 ports allocated and documented
+**Total Services:** 12 microservices + 1 API gateway (planned)  
+**Implementation Status:** 2/12 complete, 5/12 scaffolded, 5/12 planned  
+**Infrastructure Status:** 28/28 ports allocated and documented  
+**Note:** Settings functionality integrated into user-service (8002)
