@@ -1,14 +1,8 @@
 # Unity Platform Scripts# Unity Platform Scripts
 
-
-
 Collection of utility scripts for managing the Unity Platform infrastructure and services.Collection of utility scripts for managing the Unity Platform infrastructure and services.
 
-
-
 ## 📋 Overview## � Overview
-
-
 
 **Platform Name**: Unity Platform (formerly "unityplan")  **Platform Name**: Unity Platform (formerly "unityplan")  
 
@@ -18,23 +12,13 @@ Collection of utility scripts for managing the Unity Platform infrastructure and
 
 **Container Naming**: `service-postgres-${TERRITORY_CODE}`, `monitoring-*`, `dev-*`**Container Naming**: `service-postgres-${TERRITORY_CODE}`, `monitoring-*`, `dev-*`
 
-
-
 **Important**: All references to "unityplan" (without "form") are legacy and being phased out. Use `unityplatform` consistently.**Important**: All references to "unityplan" (without "form") are legacy and being phased out. Use `unityplatform` consistently.
-
-
 
 ------
 
-
-
 ## 📁 Directory Structure## �🚀 Quick Start Development Scripts (RECOMMENDED)
 
-
-
 Scripts are organized by category for easier navigation:### Infrastructure Management
-
-
 
 ```**`rebuild-docker-infrastructure.sh`** - Complete infrastructure rebuild
 
@@ -95,8 +79,6 @@ Each category has its own `README.md` with detailed documentation.
 # Stop all services
 
 ./scripts/stop.sh### Check Service Status
-
-
 
 # Restart all services```bash
 
@@ -250,15 +232,15 @@ DATABASE_URL="postgresql://unityplatform:unityplatform_dev_password_dk@localhost
 
 ```
 
-- **Auth Service Swagger**: http://localhost:8001/swagger-ui/
+- **Auth Service Swagger**: <http://localhost:8001/swagger-ui/>
 
-- **Adminer (DB UI)**: http://localhost:8080---
+- **Adminer (DB UI)**: <http://localhost:8080--->
 
-- **Grafana (Monitoring)**: http://localhost:3001 (admin/admin)
+- **Grafana (Monitoring)**: <http://localhost:3001> (admin/admin)
 
-- **Prometheus**: http://localhost:9090## 👥 User & Invitation Scripts
+- **Prometheus**: <http://localhost:9090##> 👥 User & Invitation Scripts
 
-- **Dev Dashboard**: http://localhost:8888
+- **Dev Dashboard**: <http://localhost:8888>
 
 **`create-test-user.sh`** - Create test user
 
@@ -266,7 +248,7 @@ DATABASE_URL="postgresql://unityplatform:unityplatform_dev_password_dk@localhost
 
 - Creates user directly in database (bypasses invitation system)
 
-## 🗄️ Database Credentials (Denmark Pod)- **Development only** - DO NOT use in production!
+## 🗄️ Database Credentials (Denmark Pod)- **Development only** - DO NOT use in production
 
 - Usage: `./scripts/create-test-user.sh <territory> [email] [username] [password] [full_name]`
 
@@ -295,8 +277,6 @@ DATABASE_URL="postgresql://unityplatform:unityplatform_dev_password_dk@localhost
 # PostgreSQL CLI
 
 docker exec -it service-postgres-dk psql -U unityplatform -d unityplatform_dk---
-
-
 
 # List databases## 🛠️ Development Tools
 
@@ -532,15 +512,11 @@ docker logs -f service-redis-dk
 
 ./scripts/setup-database.sh → ./scripts/db/setup-database.sh### Stop Everything
 
-
-
 # Deployment```bash
 
 ./scripts/deploy-multi-pod.sh → ./scripts/deploy/deploy-multi-pod.sh# Stop development tools
 
 ./scripts/verify-multi-pod.sh → ./scripts/deploy/verify-multi-pod.shdocker compose -f docker-compose.dev.yml down
-
-
 
 # Tools# Stop monitoring
 
@@ -641,7 +617,6 @@ docker network create unityplatform-mesh-network
 - [Development Guide](../docs/guides/development/) - Development workflow
 
 - [Architecture Documentation](../docs/architecture/) - System architecture### Database Connection Issues
-
 
 ```bash
 # Check PostgreSQL is running

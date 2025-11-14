@@ -9,14 +9,17 @@ Scripts for deploying Unity Platform pods (production environments).
 Deploy all production pods (Denmark, Norway, Sweden, Europe).
 
 **Usage:**
+
 ```bash
 ./deploy/deploy-multi-pod.sh [--clean]
 ```
 
 **Options:**
+
 - `--clean` - Clean deployment (removes existing volumes)
 
 **Deploys:**
+
 - Denmark pod (DK) - `unityplatform_dk`
 - Norway pod (NO) - `unityplatform_no`
 - Sweden pod (SE) - `unityplatform_se`
@@ -29,11 +32,13 @@ Deploy all production pods (Denmark, Norway, Sweden, Europe).
 Verify multi-pod deployment health and connectivity.
 
 **Usage:**
+
 ```bash
 ./deploy/verify-multi-pod.sh
 ```
 
 **Checks:**
+
 - All pod services running
 - Health endpoints responding
 - Database connectivity
@@ -47,9 +52,11 @@ Verify multi-pod deployment health and connectivity.
 ### [1.0.0] - 2025-11-14
 
 #### Added
+
 - Organized deployment scripts into `deploy/` subdirectory
 
 #### Changed
+
 - **BREAKING**: Scripts moved from `scripts/` root to `scripts/deploy/`
 
 ---
