@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
+
 - JWT token utilities
 - Additional middleware patterns
 - Enhanced metrics collectors
 
 ### Added (November 14, 2025)
+
 - **Permission System** - Badge-based RBAC with wildcard support
   - `PermissionChecker` with LRU cache (5-minute TTL, 1000 entries)
   - `RequirePermission` middleware for single permission enforcement
@@ -42,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Release Stage:** Alpha (Foundation library, not yet used by services)
 
 ### Added
+
 - Initial release of shared-lib
 - Configuration module (`config.rs`) with environment-based config loading
 - Database module (`database.rs`) with SQLx PostgreSQL connection pooling
@@ -52,12 +55,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Re-exports for commonly used types (AppConfig, Database, AppError, NatsClient)
 
 ### Infrastructure
+
 - PostgreSQL 16 support with sqlx
 - NATS 2.10 integration with async-nats
 - Actix-web error integration
 - Tokio async runtime
 
 ### Dependencies
+
 - sqlx 0.8 (PostgreSQL, UUID, chrono, JSON support)
 - async-nats 0.37
 - actix-web 4.9

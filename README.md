@@ -41,7 +41,7 @@ This platform follows a microservices architecture with progressive decentraliza
 │   ├── translation-service/
 │   ├── matrix-gateway/
 │   └── shared-lib/    # Shared utilities and types
-├── frontend/          # Vite + React application
+├── app/               # Vite + React application
 ├── docker/            # Docker configuration files
 │   ├── postgres/      # PostgreSQL init scripts
 │   └── [service-data] # Volume mounts (gitignored)

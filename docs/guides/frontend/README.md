@@ -159,8 +159,8 @@ Data fetching and state management with TanStack Query and Zustand.
 ### Initial Setup
 
 ```bash
-# Navigate to frontend directory
-cd frontend
+# Navigate to app directory
+cd app
 
 # Install dependencies
 npm install
@@ -255,7 +255,7 @@ npm run preview
 ## 📁 Project Structure
 
 ```
-frontend/
+app/
 ├── src/
 │   ├── api/              # API client functions
 │   │   ├── auth.ts       # Authentication API (login, register, logout)

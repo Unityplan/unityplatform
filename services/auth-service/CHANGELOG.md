@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
+
 - Invitation service integration for token validation
 - Email verification flow
 - Password reset functionality
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Release Stage:** Alpha (MVP Phase 1 - Production Ready)
 
 ### Added
+
 - Initial release of auth-service
 - User registration endpoint (POST /api/v1/auth/register)
   - Username validation and uniqueness check
@@ -51,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Prometheus metrics export
 
 ### Security
+
 - Argon2id password hashing (OWASP recommended)
 - JWT-based authentication with HS256 signing
 - Refresh token rotation
@@ -60,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Global username/email uniqueness enforcement
 
 ### Architecture
+
 - AppConfig-based configuration (APP__*__* environment variables)
 - NATS event publishing for user.registered events
 - camelCase JSON serialization
@@ -69,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Circuit breaker patterns ready
 
 ### Database
+
 - Global registries: username_registry, email_registry
 - Territory-based users table: territory_dk.users
 - Session tokens: territory_dk.session_tokens
@@ -76,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Indexed username and email lookups
 
 ### Infrastructure
+
 - Multi-territory support (DK pod operational)
 - PostgreSQL 16 with TimescaleDB
 - NATS messaging integration (unityplatform-global cluster)
@@ -85,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Port 8001 (default)
 
 ### Dependencies
+
 - shared-lib v0.1.0-alpha.1
 - actix-web 4.9
 - sqlx 0.8 (PostgreSQL)
@@ -94,6 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - utoipa 5.3 (OpenAPI)
 
 ### Testing
+
 - All 7 endpoints manually tested and verified
 - Integration with other services confirmed
 - NATS event flow validated

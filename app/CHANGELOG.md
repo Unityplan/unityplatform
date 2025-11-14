@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned - Stage 5: Frontend Auth & Profile (Phase 1 MVP)
+
 - **Authentication Pages:**
   - Login page with react-hook-form + zod validation
   - Registration page with two-step invitation validation
@@ -37,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration with user-service (24 endpoints)
 
 ### Planned - Stage 12: Course & Forum UI (Phase 1 MVP)
+
 - Course catalog and detail pages
 - Lesson viewer with progress tracking
 - Quiz interface with validation
@@ -51,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Release Stage:** Pre-Alpha (Project Scaffolding)
 
 ### Added - Initial Setup
+
 - Vite + React + TypeScript project scaffolding
 - TanStack Router v1.134.10 (type-safe routing)
 - TanStack Query v5 (data fetching and caching)
@@ -60,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TailwindCSS v4.1.16 (utility-first styling)
 
 ### Infrastructure
+
 - Vite 5.x development server
 - TypeScript configuration (strict mode)
 - ESLint configuration
@@ -68,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment variable setup (.env.development, .env.production)
 
 ### Project Structure
+
 - `/src/api/` - API client functions
 - `/src/components/` - Reusable UI components
 - `/src/pages/` - Page components
@@ -80,12 +85,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/public/` - Static assets
 
 ### Design System
+
 - shadcn/ui components with OKLCH theming
 - Accessible, keyboard-navigable components
 - Dark/light/system theme support
 - Responsive design (mobile-first)
 
 ### Dependencies - Core
+
 - React 19.2.0
 - Vite 5.x
 - TypeScript (latest)
@@ -96,6 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - zod (latest)
 
 ### Dependencies - UI
+
 - @radix-ui/* components
 - tailwindcss 4.1.16
 - @tailwindcss/vite 4.1.16
@@ -104,12 +112,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - clsx + tailwind-merge
 
 ### Dependencies - Testing
+
 - vitest (latest)
 - @testing-library/react (latest)
 - @testing-library/jest-dom (latest)
 - @vitejs/plugin-react (latest)
 
 ### Configuration
+
 - PostCSS with TailwindCSS v4
 - TanStack Router config (tsr.config.json)
 - Vite config with React plugin
@@ -117,6 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ESLint with TypeScript and React plugins
 
 ### Notes
+
 - Frontend not yet connected to backend APIs
 - No components implemented yet
 - Project structure ready for Stage 5 implementation
@@ -126,7 +137,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-**Application:** Unity Platform Frontend  
-**Location:** frontend/  
+**Application:** Unity Platform App  
+**Location:** app/  
 **Framework:** React + Vite + TypeScript  
 **Version:** 0.0.0 (Pre-Alpha)
