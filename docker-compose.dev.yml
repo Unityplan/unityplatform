@@ -17,7 +17,7 @@ services:
       - global-net
       - mesh-network
     volumes:
-      - ./docker/dev-dashboard:/usr/share/nginx/html:ro
+      - ./monitoring/dashboard:/usr/share/nginx/html:ro
 
   # Adminer - Database management with connections to all pod databases
   adminer:
