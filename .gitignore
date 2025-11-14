@@ -63,6 +63,9 @@ temp/
 *.tmp
 .temp/
 
+# Backups
+.backup/
+
 # Archived documentation (to be deleted)
 docs-archived/
 project_docs/
