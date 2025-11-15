@@ -6,6 +6,24 @@
 name: unityplatform-dev
 
 services:
+  # Monitoring Backend - Resource stats API
+  monitoring-backend:
+    build:
+      context: ./monitoring/dev-dashboard/backend
+      dockerfile: Dockerfile
+    container_name: dev-monitoring-backend
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    networks:
+      - global-net
+      - mesh-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      PORT: 8090
+      RUST_LOG: info
+
   # Development Dashboard - Links to all tools
   dev-dashboard:
     image: nginx:alpine
@@ -17,7 +35,9 @@ services:
       - global-net
       - mesh-network
     volumes:
-      - ./monitoring/dev-dashboard/dist:/usr/share/nginx/html:ro
+      - ./monitoring/dev-dashboard/app/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - monitoring-backend
 
   # Adminer - Database management with connections to all pod databases
   adminer:
