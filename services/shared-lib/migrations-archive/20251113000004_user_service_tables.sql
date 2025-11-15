@@ -6,8 +6,8 @@
 -- ============================================================================
 -- users_profiles - Extended user profile data
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS territory_dk.user_users_profiles (
-    user_id UUID PRIMARY KEY REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS territory_dk.users_profiles (
+    user_id UUID PRIMARY KEY REFERENCES territory_dk.users(id) ON DELETE CASCADE,
     
     -- Display Info
     display_name VARCHAR(100),
@@ -28,12 +28,12 @@ CREATE TABLE IF NOT EXISTS territory_dk.user_users_profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_users_profiles_display_name ON territory_dk.user_users_profiles(display_name);
-CREATE INDEX idx_users_profiles_interests ON territory_dk.user_users_profiles USING GIN(interests);
-CREATE INDEX idx_users_profiles_skills ON territory_dk.user_users_profiles USING GIN(skills);
+CREATE INDEX idx_users_profiles_display_name ON territory_dk.users_profiles(display_name);
+CREATE INDEX idx_users_profiles_interests ON territory_dk.users_profiles USING GIN(interests);
+CREATE INDEX idx_users_profiles_skills ON territory_dk.users_profiles USING GIN(skills);
 
 -- Full-text search
-CREATE INDEX idx_users_profiles_search ON territory_dk.user_users_profiles USING GIN(
+CREATE INDEX idx_users_profiles_search ON territory_dk.users_profiles USING GIN(
     to_tsvector('english', 
         COALESCE(display_name, '') || ' ' || 
         COALESCE(bio, '') || ' ' || 
@@ -41,17 +41,17 @@ CREATE INDEX idx_users_profiles_search ON territory_dk.user_users_profiles USING
     )
 );
 
-COMMENT ON TABLE territory_dk.user_users_profiles IS 'Extended user profile data (bio, avatar, interests, skills)';
-COMMENT ON COLUMN territory_dk.user_users_profiles.display_name IS 'Public display name (different from username)';
-COMMENT ON COLUMN territory_dk.user_users_profiles.bio IS 'Short bio (280 chars, like Twitter)';
-COMMENT ON COLUMN territory_dk.user_users_profiles.about IS 'Long-form about section (Markdown)';
+COMMENT ON TABLE territory_dk.users_profiles IS 'Extended user profile data (bio, avatar, interests, skills)';
+COMMENT ON COLUMN territory_dk.users_profiles.display_name IS 'Public display name (different from username)';
+COMMENT ON COLUMN territory_dk.users_profiles.bio IS 'Short bio (280 chars, like Twitter)';
+COMMENT ON COLUMN territory_dk.users_profiles.about IS 'Long-form about section (Markdown)';
 
 -- ============================================================================
 -- users_profile_links - External links (GitHub, LinkedIn, etc.)
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS territory_dk.user_users_profile_links (
+CREATE TABLE IF NOT EXISTS territory_dk.users_profile_links (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
     
     label VARCHAR(100) NOT NULL,
     url VARCHAR(500) NOT NULL,
@@ -67,18 +67,18 @@ CREATE TABLE IF NOT EXISTS territory_dk.user_users_profile_links (
     CONSTRAINT unique_user_order UNIQUE (user_id, display_order)
 );
 
-CREATE INDEX idx_users_profile_links_user ON territory_dk.user_users_profile_links(user_id);
+CREATE INDEX idx_users_profile_links_user ON territory_dk.users_profile_links(user_id);
 
-COMMENT ON TABLE territory_dk.user_users_profile_links IS 'External profile links (max 10 per user)';
-COMMENT ON COLUMN territory_dk.user_users_profile_links.label IS 'Link label (e.g., "GitHub", "LinkedIn")';
-COMMENT ON COLUMN territory_dk.user_users_profile_links.icon IS 'Icon identifier (e.g., "github", "linkedin")';
+COMMENT ON TABLE territory_dk.users_profile_links IS 'External profile links (max 10 per user)';
+COMMENT ON COLUMN territory_dk.users_profile_links.label IS 'Link label (e.g., "GitHub", "LinkedIn")';
+COMMENT ON COLUMN territory_dk.users_profile_links.icon IS 'Icon identifier (e.g., "github", "linkedin")';
 
 -- ============================================================================
 -- users_language_proficiency - Language skills with proficiency levels
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS territory_dk.user_users_profile_language_proficiency (
+CREATE TABLE IF NOT EXISTS territory_dk.users_language_proficiency (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
     
     language_code VARCHAR(10) NOT NULL,  -- ISO 639-1 (e.g., 'en', 'da', 'no')
     language_name VARCHAR(100) NOT NULL,
@@ -105,20 +105,20 @@ CREATE TABLE IF NOT EXISTS territory_dk.user_users_profile_language_proficiency 
     )
 );
 
-CREATE INDEX idx_users_language_proficiency_user ON territory_dk.user_users_profile_language_proficiency(user_id);
-CREATE INDEX idx_users_language_proficiency_order ON territory_dk.user_users_profile_language_proficiency(user_id, display_order);
-CREATE INDEX idx_users_language_proficiency_preferred ON territory_dk.user_users_profile_language_proficiency(user_id, is_preferred) 
+CREATE INDEX idx_users_language_proficiency_user ON territory_dk.users_language_proficiency(user_id);
+CREATE INDEX idx_users_language_proficiency_order ON territory_dk.users_language_proficiency(user_id, display_order);
+CREATE INDEX idx_users_language_proficiency_preferred ON territory_dk.users_language_proficiency(user_id, is_preferred) 
     WHERE is_preferred = true;
 
-COMMENT ON TABLE territory_dk.user_users_profile_language_proficiency IS 'User language skills with 4 dimensions (spoken/written/reading/listening)';
-COMMENT ON COLUMN territory_dk.user_users_profile_language_proficiency.language_code IS 'ISO 639-1 language code (e.g., en, da, no, sv)';
+COMMENT ON TABLE territory_dk.users_language_proficiency IS 'User language skills with 4 dimensions (spoken/written/reading/listening)';
+COMMENT ON COLUMN territory_dk.users_language_proficiency.language_code IS 'ISO 639-1 language code (e.g., en, da, no, sv)';
 
 -- ============================================================================
 -- user_connections - Social connections (follow, block)
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS territory_dk.user_users_connections (
-    user_id UUID NOT NULL REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
-    target_user_id UUID NOT NULL REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS territory_dk.user_connections (
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
+    target_user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
     
     connection_type VARCHAR(20) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'active',
@@ -133,21 +133,21 @@ CREATE TABLE IF NOT EXISTS territory_dk.user_users_connections (
     CONSTRAINT valid_status CHECK (status IN ('active', 'pending', 'rejected'))
 );
 
-CREATE INDEX idx_user_connections_user ON territory_dk.user_users_connections(user_id, connection_type);
-CREATE INDEX idx_user_connections_target ON territory_dk.user_users_connections(target_user_id, connection_type);
-CREATE INDEX idx_user_connections_blocks ON territory_dk.user_users_connections(user_id, connection_type) 
+CREATE INDEX idx_user_connections_user ON territory_dk.user_connections(user_id, connection_type);
+CREATE INDEX idx_user_connections_target ON territory_dk.user_connections(target_user_id, connection_type);
+CREATE INDEX idx_user_connections_blocks ON territory_dk.user_connections(user_id, connection_type) 
     WHERE connection_type = 'block';
 
-COMMENT ON TABLE territory_dk.user_users_connections IS 'User social connections (follow/block)';
-COMMENT ON COLUMN territory_dk.user_users_connections.connection_type IS 'follow = user follows target, block = user blocks target';
-COMMENT ON COLUMN territory_dk.user_users_connections.status IS 'active = current connection, pending = friend request, rejected = declined';
+COMMENT ON TABLE territory_dk.user_connections IS 'User social connections (follow/block)';
+COMMENT ON COLUMN territory_dk.user_connections.connection_type IS 'follow = user follows target, block = user blocks target';
+COMMENT ON COLUMN territory_dk.user_connections.status IS 'active = current connection, pending = friend request, rejected = declined';
 
 -- ============================================================================
 -- data_exports - GDPR Article 20 (Right to Data Portability)
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS territory_dk.user_users_data_exports (
+CREATE TABLE IF NOT EXISTS territory_dk.data_exports (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
     
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
     
@@ -167,9 +167,9 @@ CREATE TABLE IF NOT EXISTS territory_dk.user_users_data_exports (
     )
 );
 
-CREATE INDEX idx_data_exports_user ON territory_dk.user_users_data_exports(user_id);
-CREATE INDEX idx_data_exports_status ON territory_dk.user_users_data_exports(status);
-CREATE INDEX idx_data_exports_expires ON territory_dk.user_users_data_exports(expires_at) WHERE status = 'completed';
+CREATE INDEX idx_data_exports_user ON territory_dk.data_exports(user_id);
+CREATE INDEX idx_data_exports_status ON territory_dk.data_exports(status);
+CREATE INDEX idx_data_exports_expires ON territory_dk.data_exports(expires_at) WHERE status = 'completed';
 
 -- Auto-expire exports after 7 days
 CREATE OR REPLACE FUNCTION expire_old_exports()
@@ -183,19 +183,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_set_export_expiry
-    BEFORE INSERT OR UPDATE ON territory_dk.user_users_data_exports
+    BEFORE INSERT OR UPDATE ON territory_dk.data_exports
     FOR EACH ROW
     EXECUTE FUNCTION expire_old_exports();
 
-COMMENT ON TABLE territory_dk.user_users_data_exports IS 'GDPR Article 20: User data export requests (7-day expiration)';
-COMMENT ON COLUMN territory_dk.user_users_data_exports.file_path IS 'Path to generated export file (JSON format)';
+COMMENT ON TABLE territory_dk.data_exports IS 'GDPR Article 20: User data export requests (7-day expiration)';
+COMMENT ON COLUMN territory_dk.data_exports.file_path IS 'Path to generated export file (JSON format)';
 
 -- ============================================================================
 -- account_deletion_requests - GDPR Article 17 (Right to Erasure)
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS territory_dk.user_users_account_deletion_requests (
+CREATE TABLE IF NOT EXISTS territory_dk.account_deletion_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
     
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
     
@@ -219,9 +219,9 @@ CREATE TABLE IF NOT EXISTS territory_dk.user_users_account_deletion_requests (
     )
 );
 
-CREATE INDEX idx_account_deletion_requests_user ON territory_dk.user_users_account_deletion_requests(user_id);
-CREATE INDEX idx_account_deletion_requests_status ON territory_dk.user_users_account_deletion_requests(status);
-CREATE INDEX idx_account_deletion_requests_scheduled ON territory_dk.user_users_account_deletion_requests(scheduled_deletion_at)
+CREATE INDEX idx_account_deletion_requests_user ON territory_dk.account_deletion_requests(user_id);
+CREATE INDEX idx_account_deletion_requests_status ON territory_dk.account_deletion_requests(status);
+CREATE INDEX idx_account_deletion_requests_scheduled ON territory_dk.account_deletion_requests(scheduled_deletion_at)
     WHERE status = 'confirmed' AND scheduled_deletion_at IS NOT NULL;
 
 -- Auto-schedule deletion for 30 days after confirmation
@@ -237,10 +237,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_set_deletion_schedule
-    BEFORE INSERT OR UPDATE ON territory_dk.user_users_account_deletion_requests
+    BEFORE INSERT OR UPDATE ON territory_dk.account_deletion_requests
     FOR EACH ROW
     EXECUTE FUNCTION set_deletion_schedule();
 
-COMMENT ON TABLE territory_dk.user_users_account_deletion_requests IS 'GDPR Article 17: Account deletion with 30-day grace period';
-COMMENT ON COLUMN territory_dk.user_users_account_deletion_requests.confirmation_token IS 'Email confirmation token (24h expiry)';
-COMMENT ON COLUMN territory_dk.user_users_account_deletion_requests.scheduled_deletion_at IS 'Hard delete scheduled 30 days after confirmation';
+COMMENT ON TABLE territory_dk.account_deletion_requests IS 'GDPR Article 17: Account deletion with 30-day grace period';
+COMMENT ON COLUMN territory_dk.account_deletion_requests.confirmation_token IS 'Email confirmation token (24h expiry)';
+COMMENT ON COLUMN territory_dk.account_deletion_requests.scheduled_deletion_at IS 'Hard delete scheduled 30 days after confirmation';

@@ -25,7 +25,7 @@ impl TerritoryService {
                 currency_code,
                 created_at,
                 updated_at
-            FROM global.territories_registry
+            FROM global.registry_territories
             WHERE status = 'active'
             ORDER BY name ASC
         "#;
@@ -69,7 +69,7 @@ impl TerritoryService {
                 currency_code,
                 created_at,
                 updated_at
-            FROM global.territories_registry
+            FROM global.registry_territories
             WHERE code = $1
         "#;
 
@@ -103,7 +103,7 @@ impl TerritoryService {
     ) -> Result<()> {
         let query = r#"
             SELECT COUNT(*) as count
-            FROM territory_dk.territory_managers
+            FROM territory_dk.territory_territories_managers
             WHERE territory_code = $1 AND user_id = $2
         "#;
 
@@ -143,7 +143,7 @@ impl TerritoryService {
                 total_posts,
                 storage_used_mb,
                 calculated_at
-            FROM territory_dk.territory_stats
+            FROM territory_dk.territory_territories_stats
             LIMIT 1
         "#;
 
@@ -218,11 +218,11 @@ impl TerritoryService {
             return Err(AppError::Validation("No fields to update".to_string()));
         }
 
-        // Update territory_settings (will trigger replication to global.territories_registry)
+        // Update territory_settings (will trigger replication to global.registry_territories)
         // Note: There is only ONE row in territory_settings per pod, no WHERE clause needed
         let update_query = format!(
             r#"
-            UPDATE territory_dk.territory_settings
+            UPDATE territory_dk.territory_territories_settings
             SET {}, updated_at = NOW()
             RETURNING 
                 name,

@@ -1,9 +1,10 @@
 # Database Migrations Master Plan
 
-**Last Updated:** November 12, 2025  
-**Current Version:** 20251112000005  
+**Last Updated:** November 15, 2025  
+**Current Version:** 20251113000007  
 **Database:** PostgreSQL 15+ with TimescaleDB  
-**Migration Strategy:** Service-specific migrations with dependency management
+**Migration Strategy:** Service-specific migrations with dependency management  
+**Naming Convention:** Service-prefixed table names for clear ownership
 
 ---
 
@@ -17,15 +18,86 @@ This document defines the database migration strategy for the Unity Platform's m
 - **Two schemas:** `global` (cross-pod data) and `territory_{code}` (pod-specific data)
 - **Services independently deployable** (Docker containers)
 - **Database connection is shared infrastructure** (like NATS, Redis)
+- **Consistent naming convention** for easy navigation and clear ownership
 
 **Key Principles:**
 
 1. **Service Independence** - Each service owns its migrations and tables
 2. **Data Sovereignty** - Personal data stays in territory pods
-3. **Global Uniqueness** - Usernames/emails unique across all pods  
-4. **No Foreign Keys Between Services** - Maintains service boundaries despite shared database
-5. **JWT-Based Authentication** - Services validate JWTs locally without database queries
-6. **Holochain Ready** - Migration path to decentralized storage
+3. **Global Uniqueness** - Usernames/emails unique across all pods
+4. **Clear Naming** - Service-prefixed table names (e.g., `auth_users_core`, `user_users_profiles`)
+5. **No Foreign Keys Between Services** - Maintains service boundaries despite shared database
+6. **JWT-Based Authentication** - Services validate JWTs locally without database queries
+7. **Holochain Ready** - Migration path to decentralized storage
+
+---
+
+## Table Naming Convention
+
+### **Global Schema Tables**
+
+**Pattern:** `registry_{resource}`
+
+**Purpose:** Shared catalogs and cross-territory uniqueness constraints
+
+**Examples:**
+
+- `registry_badge` - Badge catalog shared across all territories
+- `registry_email` - Email uniqueness enforcement
+- `registry_territories` - Territory registry
+- `registry_username` - Username uniqueness enforcement
+
+**Benefits:**
+
+- Tables group together alphabetically in database tools
+- Clear indication of global vs. territory-specific data
+- Easy to identify registry/catalog tables
+
+### **Territory Schema Tables**
+
+**Pattern:** `{service}_{entity}_{data}`
+
+**Structure:**
+
+- **{service}** - Service name (auth, user, badge, territory, etc.)
+- **{entity}** - Primary entity type (users, badges, territories, etc.)
+- **{data}** - Specific data type (core, settings, profiles, etc.)
+
+**Examples:**
+
+**Auth Service:**
+
+- `auth_users_core` - Core authentication data
+- `auth_users_refresh_tokens` - JWT refresh tokens
+
+**User Service:**
+
+- `user_users_profiles` - Extended user profiles
+- `user_users_settings` - User preferences
+- `user_users_profile_language_proficiency` - Language skills
+- `user_users_profile_links` - External profile links
+- `user_users_connections` - Social connections
+- `user_users_data_exports` - GDPR data exports
+- `user_users_account_deletion_requests` - GDPR deletion requests
+
+**Badge Service:**
+
+- `badge_users_badges` - Awarded badges
+- `badge_users_progress` - Progress tracking
+
+**Territory Service:**
+
+- `territory_territories_settings` - Territory configuration
+- `territory_territories_managers` - Manager assignments
+- `territory_territories_stats` - Aggregated statistics
+
+**Benefits:**
+
+- **Instant ownership identification** - See service name first
+- **Alphabetical grouping** - Tables from same service appear together
+- **Clear scope** - Understand entity and data type at a glance
+- **Self-documenting** - No need to reference external docs to understand purpose
+- **Future-proof** - Easy to add new services following same pattern
 
 ---
 
@@ -141,22 +213,173 @@ async fn update_profile(auth: AuthUser, data: ProfileData) -> Result<()> {
 
 ## Migration Structure
 
-### Legacy Monolithic Migrations (Current State)
+### Current Migration Files (November 15, 2025)
+
+**Location:** `services/shared-lib/migrations/`
 
 ```
 services/shared-lib/migrations/
-├── 20251111000001_mvp_core_schema.sql                    # ✅ All 30 tables
-├── 20251112000001_update_language_proficiency_schema.sql # ✅ Language updates
-├── 20251112000002_fix_users_settings_schema.sql          # ✅ Settings fixes
-├── 20251112000003_fix_notification_settings_schema.sql   # ✅ Notification settings
+├── 20251112000001_create_global_schema.sql              # ✅ Global schema + registries
+├── 20251112000002_create_territory_schema_template.sql  # ✅ Territory schema
+├── 20251112000003_auth_core_tables.sql                  # ✅ Auth service tables
+├── 20251113000004_user_service_tables.sql               # ✅ User service tables
+├── 20251113000005_territory_service_tables.sql          # ✅ Territory service tables
+├── 20251113000006_badge_service_tables.sql              # ✅ Badge service tables
+└── 20251113000007_create_users_settings_table.sql       # ✅ User settings table
+```
+
+**Archived Migrations (Pre-Naming Convention):**
+
+- **Location:** `services/shared-lib/migrations-archive/`
+- **Purpose:** Reference for pre-November 15, 2025 table names
+- **Status:** Superseded by current migrations with new naming convention
+
+### Migration Naming Format
+
+**Format:** `YYYYMMDDHHMMSS_descriptive_name.sql`
+
+**Examples:**
+
+- `20251112000001_create_global_schema.sql`
+- `20251113000004_user_service_tables.sql`
+
+**Ordering:**
+
+- Migrations run in chronological order by filename
+- Dependencies enforced through ordering
+- Each migration includes dependency comments
+
+---
+
+## Current Database Schema (November 15, 2025)
+
+### Global Schema (4 tables)
+
+**Purpose:** Cross-territory shared data and uniqueness enforcement
+
+| Table | Columns | Purpose | Owner |
+|-------|---------|---------|-------|
+| `registry_badge` | 15 | Global badge catalog across all territories | badge-service |
+| `registry_email` | 5 | Email uniqueness enforcement | auth-service |
+| `registry_territories` | 12 | Territory/pod registry | territory-service |
+| `registry_username` | 4 | Username uniqueness enforcement | auth-service |
+
+### Territory Schema (14 tables)
+
+**Purpose:** Territory-specific user data (data sovereignty)
+
+**Auth Service (2 tables):**
+
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| `auth_users_core` | 11 | User authentication credentials |
+| `auth_users_refresh_tokens` | 9 | JWT refresh token management |
+
+**User Service (7 tables):**
+
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| `user_users_profiles` | 11 | Extended user profiles (bio, avatar, interests, skills) |
+| `user_users_settings` | 17 | User preferences, privacy, notifications |
+| `user_users_profile_language_proficiency` | 13 | Language skills (4 dimensions: spoken/written/reading/listening) |
+| `user_users_profile_links` | 9 | External profile links (max 10 per user) |
+| `user_users_connections` | 6 | Social connections (follow/block) |
+| `user_users_data_exports` | 11 | GDPR Article 20: Data portability (7-day expiration) |
+| `user_users_account_deletion_requests` | 12 | GDPR Article 17: Right to erasure (30-day grace period) |
+
+**Badge Service (2 tables):**
+
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| `badge_users_badges` | 12 | Badges awarded to users (with renewal tracking) |
+| `badge_users_progress` | 6 | Progress towards earning achievement badges |
+
+**Territory Service (3 tables):**
+
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| `territory_territories_settings` | 14 | Territory configuration (sovereignty source of truth) |
+| `territory_territories_managers` | 6 | Manager assignments (requires badge + entry) |
+| `territory_territories_stats` | 8 | Aggregated statistics (read-only, calculated) |
+
+**Total:** 18 tables (4 global + 14 territory-specific)
+
+---
+
+## Migration Execution Guide
+
+### Running Migrations
+
+**Automated Script (Recommended):**
+
+```bash
+# Run all migrations in order
+cd /path/to/workspace
+bash scripts/db/setup-database.sh
+```
+
+**Manual Execution:**
+
+```bash
+# Run individual migration
+docker exec service-postgres-dk psql -U unityplatform -d unityplatform_dk -f /path/to/migration.sql
+
+# Or from host
+psql -h localhost -p 5432 -U unityplatform -d unityplatform_dk -f migration.sql
+```
+
+### Creating New Migrations
+
+**Naming Convention:**
+
+```
+YYYYMMDDHHMMSS_descriptive_name.sql
+```
+
+**Template:**
+
+```sql
+-- ============================================================================
+-- Migration: YYYYMMDDHHMMSS_descriptive_name.sql
+-- Level: N (Foundation/Core/Features)
+-- Service: service-name
+-- Description: Brief description
+-- Dependencies: Previous migration filename
+-- ============================================================================
+
+-- Your SQL here
+
+-- ============================================================================
+-- Success Message
+-- ============================================================================
+
+DO $$
+BEGIN
+    RAISE NOTICE '✅ Migration YYYYMMDDHHMMSS complete: Description';
+    RAISE NOTICE '    - Created table_name_1';
+    RAISE NOTICE '    - Created table_name_2';
+END $$;
+```
+
+**Remember:**
+
+- Follow naming convention: `{service}_{entity}_{data}` for territory tables
+- Follow naming convention: `registry_{resource}` for global tables
+- Include dependency comments
+- Add table/column comments for documentation
+- Test migration on clean database before committing
+
+---
 ├── 20251112000004_create_data_exports_table.sql          # ✅ GDPR exports
 ├── 20251112000005_create_account_deletion_requests_table.sql # ✅ GDPR deletion
 └── archived/                                             # Old migrations
+
 ```
 
 ### New Service-Specific Migrations (Recommended)
 
 ```
+
 services/shared-lib/migrations/service-migrations/
 ├── README.md                          # Migration execution guide
 ├── 00-territory-service/              # Level 0: Foundation (run first)
@@ -181,6 +404,7 @@ services/shared-lib/migrations/service-migrations/
 ├── 03-community-service/              # Level 3: Communities (after Level 2)
 │   └── [future migrations]
 └── 04-{feature}-service/              # Level 4: Features (parallel)
+
 ```
 
 **See:** `services/shared-lib/migrations/service-migrations/README.md` for complete execution guide
@@ -192,6 +416,7 @@ services/shared-lib/migrations/service-migrations/
 ### Dependencies Graph
 
 ```
+
 Level 0 (Foundation):
   └─> territory-service (global.territories)
 
@@ -215,6 +440,7 @@ Level 4 (Features - can run in parallel):
   ├─> event-service (depends on: users, communities)
   ├─> course-service (depends on: users, communities)
   └─> forum-service (depends on: users, communities)
+
 ```
 
 ### Execution Commands
@@ -1386,34 +1612,112 @@ DHT Entries → Shared data (courses, translations)
 
 ### Future Migrations
 
-- [ ] Email verification tokens
-- [ ] Password reset tokens
-- [ ] Login attempts (rate limiting)
-- [ ] Global badge definitions
-- [ ] Course catalog (global)
-- [ ] Forum rooms (global)
-- [ ] Translation resources (global)
-- [ ] Storage quotas
-- [ ] Improved analytics
+- [ ] Email verification tokens → `auth_users_email_verification`
+- [ ] Password reset tokens → `auth_users_password_reset`
+- [ ] Login attempts (rate limiting) → `auth_users_login_attempts`
+- [ ] Global badge definitions → Already created as `registry_badge`
+- [ ] Course catalog (global) → `registry_course`
+- [ ] Forum rooms (global) → `registry_forum_room`
+- [ ] Translation resources (global) → `registry_translation`
+- [ ] Storage quotas → `user_users_storage_quotas`
+- [ ] Improved analytics → `territory_territories_analytics`
 
 ---
 
-**Next Steps:**
+## Future Service Migration Guidelines
 
-1. Review this master plan
-2. Create service-specific MIGRATIONS.md files
-3. Test multi-pod deployment locally
-4. Document federation patterns
-5. Plan Holochain migration
+### Creating New Service Tables
 
-**References:**
+When adding tables for a new service, follow these guidelines:
 
-- [Database Schema Design](../database-schema-design.md)
-- [Multi-Pod Architecture](../multi-pod-architecture.md)
-- [User Data Sovereignty](../user-data-sovereignty.md)
+**1. Determine Schema:**
+
+- **Global Schema** if: Cross-territory data, uniqueness constraint, shared catalog
+- **Territory Schema** if: User data, territory-specific, data sovereignty
+
+**2. Apply Naming Convention:**
+
+**Global Schema:**
+
+```sql
+-- Pattern: registry_{resource}
+CREATE TABLE global.registry_{resource} (...);
+
+-- Examples:
+CREATE TABLE global.registry_course (...);       -- Course catalog
+CREATE TABLE global.registry_translation (...);  -- Translation resources
+CREATE TABLE global.registry_forum_room (...);   -- Forum room templates
+```
+
+**Territory Schema:**
+
+```sql
+-- Pattern: {service}_{entity}_{data}
+CREATE TABLE territory_dk.{service}_{entity}_{data} (...);
+
+-- Examples (Course Service):
+CREATE TABLE territory_dk.course_users_enrollments (...);    -- User enrollments
+CREATE TABLE territory_dk.course_users_progress (...);       -- Progress tracking
+CREATE TABLE territory_dk.course_users_certificates (...);   -- Awarded certificates
+
+-- Examples (Forum Service):
+CREATE TABLE territory_dk.forum_topics_posts (...);          -- Forum posts
+CREATE TABLE territory_dk.forum_users_subscriptions (...);   -- Topic subscriptions
+CREATE TABLE territory_dk.forum_topics_moderation (...);     -- Moderation actions
+
+-- Examples (Event Service):
+CREATE TABLE territory_dk.event_events_core (...);           -- Event details
+CREATE TABLE territory_dk.event_users_rsvps (...);          -- RSVP tracking
+CREATE TABLE territory_dk.event_events_attendance (...);     -- Attendance records
+```
+
+**3. Add Comments:**
+
+```sql
+COMMENT ON TABLE territory_dk.course_users_enrollments IS 
+    'User course enrollments. Tracks which users are enrolled in which courses.';
+
+COMMENT ON COLUMN territory_dk.course_users_enrollments.user_id IS 
+    'References territory_dk.auth_users_core(id) - validated via JWT middleware. No FK constraint for service independence.';
+```
+
+**4. Create Indexes:**
+
+```sql
+-- Always index foreign reference columns
+CREATE INDEX idx_course_users_enrollments_user 
+    ON territory_dk.course_users_enrollments(user_id);
+
+-- Index commonly queried columns
+CREATE INDEX idx_course_users_enrollments_course 
+    ON territory_dk.course_users_enrollments(course_id);
+```
+
+**5. Add Migration Success Message:**
+
+```sql
+DO $$
+BEGIN
+    RAISE NOTICE '✅ Migration 20251120000001 complete: Course service tables created';
+    RAISE NOTICE '    - course_users_enrollments';
+    RAISE NOTICE '    - course_users_progress';
+    RAISE NOTICE '    - course_users_certificates';
+END $$;
+```
+
+### Benefits of Consistent Naming
+
+✅ **Instant Service Identification** - See which service owns the table at a glance  
+✅ **Alphabetical Grouping** - Tables from same service appear together in DB tools  
+✅ **Self-Documenting** - Table name describes service, entity, and data type  
+✅ **Easy Navigation** - Developers can find tables without consulting docs  
+✅ **Future-Proof** - Pattern scales to dozens of services  
+✅ **Clear Ownership** - No ambiguity about which service maintains which tables
 
 ---
 
-**Last Updated:** November 12, 2025  
+**Last Updated:** November 15, 2025  
+**Current Version:** 20251113000007  
+**Tables:** 18 (4 global + 14 territory)  
 **Maintainer:** Platform Team  
 **Status:** Active Development (Phase 1)

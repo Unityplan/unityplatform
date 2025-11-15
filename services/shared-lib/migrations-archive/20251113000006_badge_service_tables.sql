@@ -9,7 +9,7 @@
 -- ============================================================================
 
 -- Badge definitions shared across all territories
-CREATE TABLE IF NOT EXISTS global.registry_badge (
+CREATE TABLE IF NOT EXISTS global.badge_registry (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- Badge identity
@@ -42,14 +42,14 @@ CREATE TABLE IF NOT EXISTS global.registry_badge (
     CHECK (renewal_days IS NULL OR renewal_days > 0)
 );
 
-CREATE INDEX idx_badge_registry_slug ON global.registry_badge(slug);
-CREATE INDEX idx_badge_registry_category ON global.registry_badge(category);
-CREATE INDEX idx_badge_registry_active ON global.registry_badge(is_active) WHERE is_active = true;
+CREATE INDEX idx_badge_registry_slug ON global.badge_registry(slug);
+CREATE INDEX idx_badge_registry_category ON global.badge_registry(category);
+CREATE INDEX idx_badge_registry_active ON global.badge_registry(is_active) WHERE is_active = true;
 
-COMMENT ON TABLE global.registry_badge IS 
+COMMENT ON TABLE global.badge_registry IS 
     'Global badge catalog shared across all territory pods. Defines badge types, criteria, and permissions.';
 
-COMMENT ON COLUMN global.registry_badge.grants_permissions IS 
+COMMENT ON COLUMN global.badge_registry.grants_permissions IS 
     'Array of permission strings this badge grants, e.g., ["create_post", "moderate_forum"]';
 
 -- ============================================================================
@@ -57,16 +57,16 @@ COMMENT ON COLUMN global.registry_badge.grants_permissions IS
 -- ============================================================================
 
 -- User badge awards
-CREATE TABLE IF NOT EXISTS territory_dk.badge_users_badges (
+CREATE TABLE IF NOT EXISTS territory_dk.user_badges (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- References
-    badge_id UUID NOT NULL, -- References global.registry_badge(id)
-    user_id UUID NOT NULL REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
+    badge_id UUID NOT NULL, -- References global.badge_registry(id)
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
     
     -- Award info
     awarded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    awarded_by UUID REFERENCES territory_dk.auth_users_core(id) ON DELETE SET NULL, -- NULL = auto-awarded
+    awarded_by UUID REFERENCES territory_dk.users(id) ON DELETE SET NULL, -- NULL = auto-awarded
     reason TEXT,
     
     -- Renewal (for renewable badges like Code of Conduct)
@@ -85,24 +85,24 @@ CREATE TABLE IF NOT EXISTS territory_dk.badge_users_badges (
     UNIQUE(user_id, badge_id) -- Can only earn each badge once
 );
 
-CREATE INDEX idx_user_badges_user ON territory_dk.badge_users_badges(user_id);
-CREATE INDEX idx_user_badges_badge ON territory_dk.badge_users_badges(badge_id);
-CREATE INDEX idx_user_badges_featured ON territory_dk.badge_users_badges(user_id, is_featured) WHERE is_featured = true;
-CREATE INDEX idx_user_badges_expires ON territory_dk.badge_users_badges(expires_at) WHERE expires_at IS NOT NULL;
+CREATE INDEX idx_user_badges_user ON territory_dk.user_badges(user_id);
+CREATE INDEX idx_user_badges_badge ON territory_dk.user_badges(badge_id);
+CREATE INDEX idx_user_badges_featured ON territory_dk.user_badges(user_id, is_featured) WHERE is_featured = true;
+CREATE INDEX idx_user_badges_expires ON territory_dk.user_badges(expires_at) WHERE expires_at IS NOT NULL;
 
-COMMENT ON TABLE territory_dk.badge_users_badges IS 
+COMMENT ON TABLE territory_dk.user_badges IS 
     'Badges awarded to users. Each user can earn each badge once, with optional renewal for time-limited badges.';
 
-COMMENT ON COLUMN territory_dk.badge_users_badges.expires_at IS 
+COMMENT ON COLUMN territory_dk.user_badges.expires_at IS 
     'When this badge award expires (e.g., Code of Conduct badge expires after 365 days). NULL = never expires.';
 
 -- Badge progress tracking
-CREATE TABLE IF NOT EXISTS territory_dk.badge_users_progress (
+CREATE TABLE IF NOT EXISTS territory_dk.badge_progress (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- References
-    badge_id UUID NOT NULL, -- References global.registry_badge(id)
-    user_id UUID NOT NULL REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
+    badge_id UUID NOT NULL, -- References global.badge_registry(id)
+    user_id UUID NOT NULL REFERENCES territory_dk.users(id) ON DELETE CASCADE,
     
     -- Progress
     current_value INT NOT NULL DEFAULT 0,
@@ -117,10 +117,10 @@ CREATE TABLE IF NOT EXISTS territory_dk.badge_users_progress (
     CHECK (target_value > 0)
 );
 
-CREATE INDEX idx_badge_progress_user ON territory_dk.badge_users_progress(user_id);
-CREATE INDEX idx_badge_progress_badge ON territory_dk.badge_users_progress(badge_id);
+CREATE INDEX idx_badge_progress_user ON territory_dk.badge_progress(user_id);
+CREATE INDEX idx_badge_progress_badge ON territory_dk.badge_progress(badge_id);
 
-COMMENT ON TABLE territory_dk.badge_users_progress IS 
+COMMENT ON TABLE territory_dk.badge_progress IS 
     'Tracks user progress towards earning achievement badges (e.g., 7/10 followers for Social Butterfly badge).';
 
 -- ============================================================================
@@ -128,7 +128,7 @@ COMMENT ON TABLE territory_dk.badge_users_progress IS
 -- ============================================================================
 
 -- Code of Conduct Badge (Mandatory, Renewable)
-INSERT INTO global.registry_badge (
+INSERT INTO global.badge_registry (
     slug, name, description, icon, category, criteria_type, criteria_value,
     rarity, is_renewable, renewal_days, grants_permissions
 ) VALUES (
@@ -146,7 +146,7 @@ INSERT INTO global.registry_badge (
 ) ON CONFLICT (slug) DO NOTHING;
 
 -- Platform Manager Badge (Role, Manual Award)
-INSERT INTO global.registry_badge (
+INSERT INTO global.badge_registry (
     slug, name, description, icon, category, criteria_type,
     rarity, grants_permissions
 ) VALUES (
@@ -161,7 +161,7 @@ INSERT INTO global.registry_badge (
 ) ON CONFLICT (slug) DO NOTHING;
 
 -- Territory Manager Badge (Role, Manual Award)
-INSERT INTO global.registry_badge (
+INSERT INTO global.badge_registry (
     slug, name, description, icon, category, criteria_type,
     rarity, grants_permissions
 ) VALUES (
@@ -176,7 +176,7 @@ INSERT INTO global.registry_badge (
 ) ON CONFLICT (slug) DO NOTHING;
 
 -- Community Manager Badge (Role, Manual Award)
-INSERT INTO global.registry_badge (
+INSERT INTO global.badge_registry (
     slug, name, description, icon, category, criteria_type,
     rarity, grants_permissions
 ) VALUES (
@@ -191,7 +191,7 @@ INSERT INTO global.registry_badge (
 ) ON CONFLICT (slug) DO NOTHING;
 
 -- Early Adopter Badge (Achievement, Auto-Award)
-INSERT INTO global.registry_badge (
+INSERT INTO global.badge_registry (
     slug, name, description, icon, category, criteria_type,
     rarity
 ) VALUES (
@@ -205,7 +205,7 @@ INSERT INTO global.registry_badge (
 ) ON CONFLICT (slug) DO NOTHING;
 
 -- Social Butterfly Badge (Achievement, Auto-Award)
-INSERT INTO global.registry_badge (
+INSERT INTO global.badge_registry (
     slug, name, description, icon, category, criteria_type, criteria_value,
     rarity
 ) VALUES (
@@ -220,7 +220,7 @@ INSERT INTO global.registry_badge (
 ) ON CONFLICT (slug) DO NOTHING;
 
 -- Invitation Champion Badge (Achievement, Auto-Award)
-INSERT INTO global.registry_badge (
+INSERT INTO global.badge_registry (
     slug, name, description, icon, category, criteria_type, criteria_value,
     rarity
 ) VALUES (
@@ -248,7 +248,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_badge_registry_updated_at
-    BEFORE UPDATE ON global.registry_badge
+    BEFORE UPDATE ON global.badge_registry
     FOR EACH ROW
     EXECUTE FUNCTION update_badge_registry_updated_at();
 
@@ -262,7 +262,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_user_badges_updated_at
-    BEFORE UPDATE ON territory_dk.badge_users_badges
+    BEFORE UPDATE ON territory_dk.user_badges
     FOR EACH ROW
     EXECUTE FUNCTION update_user_badges_updated_at();
 
@@ -274,6 +274,6 @@ CREATE TRIGGER trigger_user_badges_updated_at
 DO $$
 BEGIN
     RAISE NOTICE 'Migration 20251113000006_badge_service_tables.sql completed successfully';
-    RAISE NOTICE 'Created tables: global.registry_badge, territory_dk.badge_users_badges, territory_dk.badge_users_progress';
-    RAISE NOTICE 'Seeded % badge definitions', (SELECT COUNT(*) FROM global.registry_badge);
+    RAISE NOTICE 'Created tables: global.badge_registry, territory_dk.user_badges, territory_dk.badge_progress';
+    RAISE NOTICE 'Seeded % badge definitions', (SELECT COUNT(*) FROM global.badge_registry);
 END $$;

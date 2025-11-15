@@ -24,7 +24,7 @@ COMMENT ON SCHEMA global IS
 -- Dependencies: None
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS global.registry_territories (
+CREATE TABLE IF NOT EXISTS global.territories_registry (
     -- Primary key
     code VARCHAR(10) PRIMARY KEY,              -- 'dk', 'no', 'se', 'eu'
     
@@ -53,21 +53,21 @@ CREATE TABLE IF NOT EXISTS global.registry_territories (
 );
 
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_registry_territories_status ON global.registry_territories(status);
+CREATE INDEX IF NOT EXISTS idx_territories_registry_status ON global.territories_registry(status);
 
 -- Comments
-COMMENT ON TABLE global.registry_territories IS 
+COMMENT ON TABLE global.territories_registry IS 
     'Global territory registry. Platform managers manage infrastructure columns, territory managers manage sovereignty columns (replicated from pod settings).';
-COMMENT ON COLUMN global.registry_territories.code IS 
+COMMENT ON COLUMN global.territories_registry.code IS 
     'Territory code: ISO 3166-1 Alpha-2 (dk, no, se) or custom (HAIDA-FN-CA)';
-COMMENT ON COLUMN global.registry_territories.status IS 
+COMMENT ON COLUMN global.territories_registry.status IS 
     'Territory status: active (accepting users), maintenance (read-only), inactive (disabled)';
 
 -- ============================================================================
 -- Seed Data: Denmark Territory (MVP)
 -- ============================================================================
 
-INSERT INTO global.registry_territories (
+INSERT INTO global.territories_registry (
     code, name, display_name, description,
     pod_url, api_url, status,
     language_code, timezone, currency_code
@@ -90,5 +90,5 @@ INSERT INTO global.registry_territories (
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 20251112000001 complete: Global schema and registry_territories created';
+    RAISE NOTICE '✅ Migration 20251112000001 complete: Global schema and territories_registry created';
 END $$;

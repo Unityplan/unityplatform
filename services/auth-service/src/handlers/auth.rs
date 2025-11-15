@@ -91,7 +91,7 @@ pub async fn register(
 
     // Check if username already exists in global registry
     let username_exists: bool = sqlx::query_scalar(
-        "SELECT EXISTS(SELECT 1 FROM global.username_registry WHERE username = $1)",
+        "SELECT EXISTS(SELECT 1 FROM global.registry_username WHERE username = $1)",
     )
     .bind(&req.username)
     .fetch_one(pool)
@@ -104,7 +104,7 @@ pub async fn register(
     // Check if email already exists in global registry (only if email provided)
     if let Some(ref email) = req.email {
         let email_exists: bool = sqlx::query_scalar(
-            "SELECT EXISTS(SELECT 1 FROM global.email_registry WHERE email = $1)",
+            "SELECT EXISTS(SELECT 1 FROM global.registry_email WHERE email = $1)",
         )
         .bind(email)
         .fetch_one(pool)
@@ -123,7 +123,7 @@ pub async fn register(
 
     // Create user in territory-specific users table
     let user_id = Uuid::new_v4();
-    let territory_table = format!("territory_{}.users", req.territory);
+    let territory_table = format!("territory_{}.auth_users_core", req.territory);
 
     sqlx::query(&format!(
         "INSERT INTO {} (id, username, email, password_hash, territory_code, created_at, updated_at)
@@ -140,7 +140,7 @@ pub async fn register(
 
     // Register username globally
     sqlx::query(
-        "INSERT INTO global.username_registry (username, user_id, territory_code, registered_at)
+        "INSERT INTO global.registry_username (username, user_id, territory_code, registered_at)
          VALUES ($1, $2, $3, NOW())",
     )
     .bind(&req.username)
@@ -152,7 +152,7 @@ pub async fn register(
     // Register email globally (only if email provided)
     if let Some(ref email) = req.email {
         sqlx::query(
-            "INSERT INTO global.email_registry (email, user_id, territory_code, registered_at)
+            "INSERT INTO global.registry_email (email, user_id, territory_code, registered_at)
              VALUES ($1, $2, $3, NOW())",
         )
         .bind(email)
@@ -173,7 +173,7 @@ pub async fn register(
     let token_hash = PasswordService::hash(&refresh_token)?;
 
     // Store refresh token
-    let refresh_token_table = format!("territory_{}.refresh_tokens", req.territory);
+    let refresh_token_table = format!("territory_{}.auth_users_refresh_tokens", req.territory);
     let expires_at = Utc::now() + Duration::days(7);
 
     sqlx::query(&format!(
@@ -244,7 +244,7 @@ pub async fn login(
     let pool = db.pool();
 
     // Get user from territory-specific table
-    let territory_table = format!("territory_{}.users", req.territory);
+    let territory_table = format!("territory_{}.auth_users_core", req.territory);
 
     let user = sqlx::query(&format!(
         "SELECT id, password_hash FROM {} WHERE username = $1 AND deleted_at IS NULL",
@@ -274,7 +274,7 @@ pub async fn login(
     let token_hash = PasswordService::hash(&refresh_token)?;
 
     // Store refresh token
-    let refresh_token_table = format!("territory_{}.refresh_tokens", req.territory);
+    let refresh_token_table = format!("territory_{}.auth_users_refresh_tokens", req.territory);
     let expires_at = Utc::now() + Duration::days(7);
 
     sqlx::query(&format!(
@@ -318,7 +318,7 @@ pub async fn refresh(
     let territories = vec!["dk", "no", "se", "eu"]; // TODO: Get from config
 
     for territory in territories {
-        let refresh_token_table = format!("territory_{}.refresh_tokens", territory);
+        let refresh_token_table = format!("territory_{}.auth_users_refresh_tokens", territory);
 
         // Get all non-revoked, non-expired tokens for this territory
         // Skip territories that don't exist (table not found)
@@ -385,7 +385,7 @@ pub async fn logout(
     let territories = vec!["dk", "no", "se", "eu"]; // TODO: Get from config
 
     for territory in territories {
-        let refresh_token_table = format!("territory_{}.refresh_tokens", territory);
+        let refresh_token_table = format!("territory_{}.auth_users_refresh_tokens", territory);
 
         // Get all non-revoked tokens and check hash
         // Skip territories that don't exist (table not found)

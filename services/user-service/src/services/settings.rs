@@ -18,7 +18,7 @@ impl SettingsService {
         pool: &PgPool,
     ) -> Result<SettingsResponse> {
         let query = format!(
-            "SELECT * FROM territory_{}.users_settings WHERE user_id = $1",
+            "SELECT * FROM territory_{}.user_users_settings WHERE user_id = $1",
             territory
         );
 
@@ -44,7 +44,7 @@ impl SettingsService {
         let query = format!(
             "SELECT profile_visibility, show_email, show_location, allow_messages, 
                     show_activity, show_online_status
-             FROM territory_{}.users_settings 
+             FROM territory_{}.user_users_settings 
              WHERE user_id = $1",
             territory
         );
@@ -81,7 +81,7 @@ impl SettingsService {
         let query = format!(
             "SELECT email_notifications, badge_notifications, course_notifications, 
                     forum_notifications, marketing_emails
-             FROM territory_{}.users_settings 
+             FROM territory_{}.user_users_settings 
              WHERE user_id = $1",
             territory
         );
@@ -119,7 +119,7 @@ impl SettingsService {
         let _ = Self::get_settings(user_id, territory, pool).await?;
 
         let query = format!(
-            "UPDATE territory_{}.users_settings 
+            "UPDATE territory_{}.user_users_settings 
              SET theme = COALESCE($2, theme),
                  language = COALESCE($3, language),
                  timezone = COALESCE($4, timezone),
@@ -172,7 +172,7 @@ impl SettingsService {
         let _ = Self::get_settings(user_id, territory, pool).await?;
 
         let query = format!(
-            "UPDATE territory_{}.users_settings 
+            "UPDATE territory_{}.user_users_settings 
              SET profile_visibility = COALESCE($2, profile_visibility),
                  show_email = COALESCE($3, show_email),
                  show_location = COALESCE($4, show_location),
@@ -210,7 +210,7 @@ impl SettingsService {
         let _ = Self::get_settings(user_id, territory, pool).await?;
 
         let query = format!(
-            "UPDATE territory_{}.users_settings 
+            "UPDATE territory_{}.user_users_settings 
              SET email_notifications = COALESCE($2, email_notifications),
                  badge_notifications = COALESCE($3, badge_notifications),
                  course_notifications = COALESCE($4, course_notifications),
@@ -242,7 +242,7 @@ impl SettingsService {
         pool: &PgPool,
     ) -> Result<SettingsResponse> {
         let query = format!(
-            "INSERT INTO territory_{}.users_settings (user_id)
+            "INSERT INTO territory_{}.user_users_settings (user_id)
              VALUES ($1)
              ON CONFLICT (user_id) DO NOTHING
              RETURNING *",

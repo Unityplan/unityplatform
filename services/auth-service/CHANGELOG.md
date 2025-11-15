@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Database Schema Update:** Renamed tables to follow service-based naming convention
+  - `territory_{code}.users` → `territory_{code}.auth_users_core`
+  - `territory_{code}.refresh_tokens` → `territory_{code}.auth_users_refresh_tokens`
+  - `global.username_registry` → `global.registry_username`
+  - `global.email_registry` → `global.registry_email`
+  - All SQL queries updated across all handlers (registration, login, token management)
+  - Verified: All endpoints tested and working correctly with new table names
+
 ### Planned
 
 - Invitation service integration for token validation

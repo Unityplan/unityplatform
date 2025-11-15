@@ -178,7 +178,7 @@ if check_port 5173; then
     echo -e "  ${YELLOW}⚠ Vite dev server already running on port 5173${NC}"
 else
     echo "Starting Vite dev server on port 5173..."
-    cd "$WORKSPACE_ROOT/frontend"
+    cd "$WORKSPACE_ROOT/app"
     npm run dev > "$WORKSPACE_ROOT/logs/frontend.log" 2>&1 &
     
     wait_for_service "Vite" 5173 || exit 1

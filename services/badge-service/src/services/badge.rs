@@ -15,11 +15,11 @@ pub async fn list_badges(db: &Database, user_id: Option<Uuid>) -> Result<Vec<Bad
                 b.id, b.name, b.slug, b.description, b.icon,
                 b.criteria_type, b.criteria_value, b.rarity,
                 b.is_active, b.created_at, b.updated_at,
-                EXISTS(SELECT 1 FROM territory_{}.user_badges WHERE user_id = $1 AND badge_id = b.id) as user_has_badge,
+                EXISTS(SELECT 1 FROM territory_{}.badge_users_badges WHERE user_id = $1 AND badge_id = b.id) as user_has_badge,
                 bp.current_value as user_progress,
                 bp.target_value as user_target
-            FROM global.badge_registry b
-            LEFT JOIN territory_{}.badge_progress bp ON b.id = bp.badge_id AND bp.user_id = $1
+            FROM global.registry_badge b
+            LEFT JOIN territory_{}.badge_users_progress bp ON b.id = bp.badge_id AND bp.user_id = $1
             WHERE b.is_active = true
             ORDER BY 
                 CASE b.rarity
@@ -38,7 +38,7 @@ pub async fn list_badges(db: &Database, user_id: Option<Uuid>) -> Result<Vec<Bad
                 id, name, slug, description, icon,
                 criteria_type, criteria_value, rarity,
                 is_active, created_at, updated_at
-            FROM global.badge_registry
+            FROM global.registry_badge
             WHERE is_active = true
             ORDER BY 
                 CASE rarity
@@ -93,8 +93,8 @@ pub async fn get_user_badges(db: &Database, user_id: Uuid) -> Result<Vec<UserBad
             ub.id, ub.badge_id, ub.awarded_at, ub.awarded_by, ub.is_featured,
             b.name as badge_name, b.slug as badge_slug, 
             b.icon as badge_icon, b.rarity as badge_rarity
-        FROM territory_{}.user_badges ub
-        JOIN global.badge_registry b ON ub.badge_id = b.id
+        FROM territory_{}.badge_users_badges ub
+        JOIN global.registry_badge b ON ub.badge_id = b.id
         WHERE ub.user_id = $1
         ORDER BY ub.awarded_at DESC
         "#,
@@ -139,7 +139,7 @@ pub async fn award_badge(
 
     // Get badge info from slug
     let badge_query =
-        "SELECT id, name FROM global.badge_registry WHERE slug = $1 AND is_active = true";
+        "SELECT id, name FROM global.registry_badge WHERE slug = $1 AND is_active = true";
     let badge_row = sqlx::query(badge_query)
         .bind(badge_slug)
         .fetch_optional(db.pool())
@@ -151,7 +151,7 @@ pub async fn award_badge(
 
     // Check if user already has the badge
     let check_query = format!(
-        "SELECT EXISTS(SELECT 1 FROM territory_{}.user_badges WHERE user_id = $1 AND badge_id = $2)",
+        "SELECT EXISTS(SELECT 1 FROM territory_{}.badge_users_badges WHERE user_id = $1 AND badge_id = $2)",
         territory
     );
     let already_has: bool = sqlx::query_scalar(&check_query)
@@ -170,7 +170,7 @@ pub async fn award_badge(
     // Award the badge
     let insert_query = format!(
         r#"
-        INSERT INTO territory_{}.user_badges 
+        INSERT INTO territory_{}.badge_users_badges 
         (badge_id, user_id, awarded_by, awarded_at)
         VALUES ($1, $2, $3, NOW())
         RETURNING id
@@ -227,7 +227,7 @@ pub async fn revoke_badge(
     let territory = "dk";
 
     // Get badge info from slug
-    let badge_query = "SELECT id, name FROM global.badge_registry WHERE slug = $1";
+    let badge_query = "SELECT id, name FROM global.registry_badge WHERE slug = $1";
     let badge_row = sqlx::query(badge_query)
         .bind(badge_slug)
         .fetch_optional(db.pool())
@@ -239,7 +239,7 @@ pub async fn revoke_badge(
 
     // Delete the badge award
     let delete_query = format!(
-        "DELETE FROM territory_{}.user_badges WHERE user_id = $1 AND badge_id = $2",
+        "DELETE FROM territory_{}.badge_users_badges WHERE user_id = $1 AND badge_id = $2",
         territory
     );
     let result = sqlx::query(&delete_query)
@@ -297,7 +297,7 @@ pub async fn update_badge_progress(
 
     // Get badge info
     let badge_query =
-        "SELECT id, criteria_value FROM global.badge_registry WHERE slug = $1 AND is_active = true";
+        "SELECT id, criteria_value FROM global.registry_badge WHERE slug = $1 AND is_active = true";
     let row = sqlx::query(badge_query)
         .bind(badge_slug)
         .fetch_optional(db.pool())
@@ -312,7 +312,7 @@ pub async fn update_badge_progress(
     // Upsert progress
     let upsert_query = format!(
         r#"
-        INSERT INTO territory_{}.badge_progress 
+        INSERT INTO territory_{}.badge_users_progress 
         (badge_id, user_id, current_value, target_value, updated_at)
         VALUES ($1, $2, $3, $4, NOW())
         ON CONFLICT (user_id, badge_id) 
@@ -334,7 +334,7 @@ pub async fn update_badge_progress(
     if should_award {
         // Check if already has badge
         let check_query = format!(
-            "SELECT EXISTS(SELECT 1 FROM territory_{}.user_badges WHERE user_id = $1 AND badge_id = $2)",
+            "SELECT EXISTS(SELECT 1 FROM territory_{}.badge_users_badges WHERE user_id = $1 AND badge_id = $2)",
             territory
         );
         let already_has: bool = sqlx::query_scalar(&check_query)
@@ -380,7 +380,7 @@ pub async fn toggle_featured_badge(
     // If setting to featured, unfeatured all other badges first
     if is_featured {
         let unfeatured_query = format!(
-            "UPDATE territory_{}.user_badges SET is_featured = false WHERE user_id = $1",
+            "UPDATE territory_{}.badge_users_badges SET is_featured = false WHERE user_id = $1",
             territory
         );
         sqlx::query(&unfeatured_query)
@@ -391,7 +391,7 @@ pub async fn toggle_featured_badge(
 
     // Update the target badge
     let update_query = format!(
-        "UPDATE territory_{}.user_badges SET is_featured = $1 WHERE user_id = $2 AND badge_id = $3",
+        "UPDATE territory_{}.badge_users_badges SET is_featured = $1 WHERE user_id = $2 AND badge_id = $3",
         territory
     );
     let result = sqlx::query(&update_query)
@@ -412,7 +412,7 @@ pub async fn toggle_featured_badge(
 pub async fn register_badge(db: &Database, req: RegisterBadgeRequest) -> Result<BadgeResponse> {
     // Check if badge already exists
     let existing = sqlx::query(
-        "SELECT id, name, slug, description, icon, criteria_type, criteria_value, rarity, is_active, created_at, updated_at FROM global.badge_registry WHERE slug = $1"
+        "SELECT id, name, slug, description, icon, criteria_type, criteria_value, rarity, is_active, created_at, updated_at FROM global.registry_badge WHERE slug = $1"
     )
     .bind(&req.slug)
     .fetch_optional(db.pool())
@@ -444,7 +444,7 @@ pub async fn register_badge(db: &Database, req: RegisterBadgeRequest) -> Result<
 
     let row = sqlx::query(
         r#"
-        INSERT INTO global.badge_registry (
+        INSERT INTO global.registry_badge (
             slug, name, description, icon, category, criteria_type, criteria_value,
             rarity, is_renewable, renewal_days, grants_permissions
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)

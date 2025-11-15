@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Database Schema Update:** Renamed tables to follow service-based naming convention
+  - `territory_{code}.users` → `territory_{code}.auth_users_core` (foreign key reference)
+  - `territory_{code}.users_profiles` → `territory_{code}.user_users_profiles`
+  - `territory_{code}.users_settings` → `territory_{code}.user_users_settings`
+  - `territory_{code}.users_profile_links` → `territory_{code}.user_users_profile_links`
+  - `territory_{code}.users_language_proficiency` → `territory_{code}.user_users_profile_language_proficiency`
+  - `territory_{code}.user_connections` → `territory_{code}.user_users_connections`
+  - All SQL queries updated across profile, settings, links, language, and connection services
+  - Verified: Profile and settings endpoints tested and working correctly
+
 ### Planned
 
 - Avatar upload/storage (IPFS integration in Stage 9)

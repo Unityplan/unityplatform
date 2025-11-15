@@ -169,16 +169,54 @@ Detailed implementation documentation for each microservice.
 
 **Current Status:**
 
-- **Version:** 20251113000005
+- **Version:** 20251113000007 (7 migrations applied)
 - **Database:** PostgreSQL 15+ with TimescaleDB
-- **Migrations Applied:** 5 core migrations (33 tables)
+- **Migrations Applied:** 7 migrations (18 tables total)
+- **Schema Convention:** Service-prefixed table names
 - **Service Ownership:** Defined per table
+
+**Database Schema Overview:**
+
+```
+Global Schema (4 tables):
+├── registry_badge                # Badge catalog
+├── registry_email                # Email uniqueness
+├── registry_territories          # Territory registry
+└── registry_username             # Username uniqueness
+
+Territory Schema (14 tables):
+├── Auth Service (2 tables)
+│   ├── auth_users_core
+│   └── auth_users_refresh_tokens
+├── User Service (7 tables)
+│   ├── user_users_profiles
+│   ├── user_users_settings
+│   ├── user_users_profile_language_proficiency
+│   ├── user_users_profile_links
+│   ├── user_users_connections
+│   ├── user_users_data_exports
+│   └── user_users_account_deletion_requests
+├── Badge Service (2 tables)
+│   ├── badge_users_badges
+│   └── badge_users_progress
+└── Territory Service (3 tables)
+    ├── territory_territories_settings
+    ├── territory_territories_managers
+    └── territory_territories_stats
+```
+
+**Table Naming Convention:**
+
+- **Global Schema:** `registry_{resource}` (e.g., `registry_badge`, `registry_username`)
+- **Territory Schema:** `{service}_{entity}_{data}` (e.g., `auth_users_core`, `user_users_profiles`)
+- **Benefits:** Easy navigation, clear ownership, alphabetical grouping by service
 
 **Key Principles:**
 
 - Data sovereignty (personal data in territory pods)
 - Global uniqueness (usernames/emails across all pods)
 - Service ownership (each service owns its tables)
+- Consistent naming for easy navigation
 - Migration path to Holochain (future decentralization)
 
 **Service Migration Plans:**

@@ -16,7 +16,7 @@ impl ProfileService {
     ) -> Result<ProfileResponse> {
         // First check if user exists
         let user_query = format!(
-            "SELECT id, username FROM territory_{}.users WHERE id = $1",
+            "SELECT id, username FROM territory_{}.auth_users_core WHERE id = $1",
             territory
         );
 
@@ -51,7 +51,7 @@ impl ProfileService {
     /// Create empty profile for new user
     pub async fn create_profile(user_id: Uuid, territory: &str, pool: &PgPool) -> Result<Profile> {
         let query = format!(
-            "INSERT INTO territory_{}.users_profiles (user_id) 
+            "INSERT INTO territory_{}.user_users_profiles (user_id) 
              VALUES ($1) 
              ON CONFLICT (user_id) DO NOTHING
              RETURNING *",
@@ -84,7 +84,7 @@ impl ProfileService {
 
         // Build dynamic UPDATE query based on provided fields
         let query = format!(
-            "UPDATE territory_{}.users_profiles 
+            "UPDATE territory_{}.user_users_profiles 
              SET display_name = COALESCE($2, display_name),
                  avatar_url = COALESCE($3, avatar_url),
                  bio = COALESCE($4, bio),
@@ -124,7 +124,7 @@ impl ProfileService {
         pool: &PgPool,
     ) -> Result<Profile> {
         let query = format!(
-            "SELECT * FROM territory_{}.users_profiles WHERE user_id = $1",
+            "SELECT * FROM territory_{}.user_users_profiles WHERE user_id = $1",
             territory
         );
 

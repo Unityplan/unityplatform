@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Database Schema Refactoring:** Implemented service-based table naming convention across all 18 tables
+  - **Global Schema (4 tables):** Renamed to `registry_{resource}` pattern
+    - `badge_registry` → `registry_badge`
+    - `email_registry` → `registry_email`
+    - `territories_registry` → `registry_territories`
+    - `username_registry` → `registry_username`
+  - **Territory Schema (14 tables):** Renamed to `{service}_{entity}_{data}` pattern
+    - **Auth Service (2 tables):**
+      - `users` → `auth_users_core`
+      - `refresh_tokens` → `auth_users_refresh_tokens`
+    - **User Service (7 tables):**
+      - `users_profiles` → `user_users_profiles`
+      - `users_settings` → `user_users_settings`
+      - `users_profile_links` → `user_users_profile_links`
+      - `users_language_proficiency` → `user_users_profile_language_proficiency`
+      - `user_connections` → `user_users_connections`
+      - `user_users_data_exports` (unchanged)
+      - `user_users_account_deletion_requests` (unchanged)
+    - **Badge Service (2 tables):**
+      - `user_badges` → `badge_users_badges`
+      - `badge_progress` → `badge_users_progress`
+    - **Territory Service (3 tables):**
+      - `territory_settings` → `territory_territories_settings`
+      - `territory_managers` → `territory_territories_managers`
+      - `territory_stats` → `territory_territories_stats`
+  - Updated all migration files (7 migrations transformed)
+  - Updated all service code across 4 microservices (10 files modified)
+  - All services compiled and tested successfully
+  - **Verified Working:** All endpoints tested with new table names (auth, user, badge, territory services)
+  - **Benefits:** Better alphabetical grouping, clear service ownership, self-documenting table names
+
 ### Added
 
 - **User Service** (v0.1.0-alpha.1) - Complete user profile and social features

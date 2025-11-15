@@ -12,7 +12,7 @@
 set -e  # Exit on error
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
+WORKSPACE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 MIGRATIONS_DIR="$WORKSPACE_DIR/services/shared-lib/migrations"
 CONTAINER_NAME="service-postgres-dk"
 DB_USER="unityplatform"

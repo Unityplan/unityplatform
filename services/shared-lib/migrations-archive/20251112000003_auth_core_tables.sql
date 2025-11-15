@@ -14,7 +14,7 @@
 -- Strategy: Check this table before creating users in any territory
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS global.registry_username (
+CREATE TABLE IF NOT EXISTS global.username_registry (
     username VARCHAR(50) PRIMARY KEY,
     territory_code VARCHAR(10) NOT NULL,
     user_id UUID NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS global.registry_username (
     -- Reference to territory (OK - global table)
     CONSTRAINT fk_username_territory 
         FOREIGN KEY (territory_code) 
-        REFERENCES global.registry_territories(code) 
+        REFERENCES global.territories_registry(code) 
         ON DELETE CASCADE,
     
     -- Ensure username format
@@ -33,14 +33,14 @@ CREATE TABLE IF NOT EXISTS global.registry_username (
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_username_registry_territory 
-    ON global.registry_username(territory_code);
+    ON global.username_registry(territory_code);
 CREATE INDEX IF NOT EXISTS idx_username_registry_user 
-    ON global.registry_username(user_id);
+    ON global.username_registry(user_id);
 
 -- Comments
-COMMENT ON TABLE global.registry_username IS 
+COMMENT ON TABLE global.username_registry IS 
     'Global username registry ensuring usernames are unique across all territories. Checked before user creation.';
-COMMENT ON COLUMN global.registry_username.username IS 
+COMMENT ON COLUMN global.username_registry.username IS 
     'Globally unique username (lowercase, 3-50 chars, alphanumeric + underscores)';
 
 -- ============================================================================
@@ -51,7 +51,7 @@ COMMENT ON COLUMN global.registry_username.username IS
 -- Strategy: Check this table before creating users in any territory
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS global.registry_email (
+CREATE TABLE IF NOT EXISTS global.email_registry (
     email VARCHAR(255) PRIMARY KEY,
     territory_code VARCHAR(10) NOT NULL,
     user_id UUID NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS global.registry_email (
     -- Reference to territory (OK - global table)
     CONSTRAINT fk_email_territory 
         FOREIGN KEY (territory_code) 
-        REFERENCES global.registry_territories(code) 
+        REFERENCES global.territories_registry(code) 
         ON DELETE CASCADE,
     
     -- Ensure email format (basic check)
@@ -70,16 +70,16 @@ CREATE TABLE IF NOT EXISTS global.registry_email (
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_email_registry_territory 
-    ON global.registry_email(territory_code);
+    ON global.email_registry(territory_code);
 CREATE INDEX IF NOT EXISTS idx_email_registry_user 
-    ON global.registry_email(user_id);
+    ON global.email_registry(user_id);
 CREATE INDEX IF NOT EXISTS idx_email_registry_verified 
-    ON global.registry_email(verified);
+    ON global.email_registry(verified);
 
 -- Comments
-COMMENT ON TABLE global.registry_email IS 
+COMMENT ON TABLE global.email_registry IS 
     'Global email registry ensuring emails are unique across all territories. Checked before user creation.';
-COMMENT ON COLUMN global.registry_email.verified IS 
+COMMENT ON COLUMN global.email_registry.verified IS 
     'Email verification status. Users cannot login until verified.';
 
 -- ============================================================================
@@ -91,7 +91,7 @@ COMMENT ON COLUMN global.registry_email.verified IS
 -- JWT: All user info encoded in JWT to minimize database queries
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS territory_dk.auth_users_core (
+CREATE TABLE IF NOT EXISTS territory_dk.users (
     -- Primary key
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     
@@ -121,25 +121,25 @@ CREATE TABLE IF NOT EXISTS territory_dk.auth_users_core (
 );
 
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_users_email ON territory_dk.auth_users_core(email) WHERE email IS NOT NULL AND deleted_at IS NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON territory_dk.auth_users_core(email) WHERE email IS NOT NULL AND deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_users_username ON territory_dk.auth_users_core(username) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_users_active ON territory_dk.auth_users_core(active) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_users_created_at ON territory_dk.auth_users_core(created_at);
-CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON territory_dk.auth_users_core(deleted_at) WHERE deleted_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_email ON territory_dk.users(email) WHERE email IS NOT NULL AND deleted_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON territory_dk.users(email) WHERE email IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_users_username ON territory_dk.users(username) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_users_active ON territory_dk.users(active) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON territory_dk.users(created_at);
+CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON territory_dk.users(deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- Comments
-COMMENT ON TABLE territory_dk.auth_users_core IS 
+COMMENT ON TABLE territory_dk.users IS 
     'User authentication data. JWT contains all user info to minimize database queries (99% of requests use JWT only).';
-COMMENT ON COLUMN territory_dk.auth_users_core.password_hash IS 
+COMMENT ON COLUMN territory_dk.users.password_hash IS 
     'Argon2id password hash (recommended for 2024+)';
-COMMENT ON COLUMN territory_dk.auth_users_core.email IS 
+COMMENT ON COLUMN territory_dk.users.email IS 
     'Optional email for notifications. NULL allowed for privacy-focused or username-only registration.';
-COMMENT ON COLUMN territory_dk.auth_users_core.email_verified IS 
+COMMENT ON COLUMN territory_dk.users.email_verified IS 
     'Email verification status. Users cannot login until verified = true.';
-COMMENT ON COLUMN territory_dk.auth_users_core.deleted_at IS 
+COMMENT ON COLUMN territory_dk.users.deleted_at IS 
     'Soft delete timestamp. When set, user is marked inactive and cannot login.';
-COMMENT ON COLUMN territory_dk.auth_users_core.territory_code IS 
+COMMENT ON COLUMN territory_dk.users.territory_code IS 
     'Territory code for this user. Denormalized for JWT payload.';
 
 -- ============================================================================
@@ -151,7 +151,7 @@ COMMENT ON COLUMN territory_dk.auth_users_core.territory_code IS
 -- Strategy: Access tokens expire in 15min, refresh tokens in 7 days
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS territory_dk.auth_users_refresh_tokens (
+CREATE TABLE IF NOT EXISTS territory_dk.refresh_tokens (
     -- Primary key
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     
@@ -177,16 +177,16 @@ CREATE TABLE IF NOT EXISTS territory_dk.auth_users_refresh_tokens (
 );
 
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON territory_dk.auth_users_refresh_tokens(user_id) WHERE revoked = FALSE;
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token_hash ON territory_dk.auth_users_refresh_tokens(token_hash) WHERE revoked = FALSE;
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON territory_dk.auth_users_refresh_tokens(expires_at) WHERE revoked = FALSE;
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON territory_dk.refresh_tokens(user_id) WHERE revoked = FALSE;
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token_hash ON territory_dk.refresh_tokens(token_hash) WHERE revoked = FALSE;
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON territory_dk.refresh_tokens(expires_at) WHERE revoked = FALSE;
 
 -- Comments
-COMMENT ON TABLE territory_dk.auth_users_refresh_tokens IS 
+COMMENT ON TABLE territory_dk.refresh_tokens IS 
     'JWT refresh tokens for secure token rotation. Access tokens expire in 15min, refresh tokens in 7 days.';
-COMMENT ON COLUMN territory_dk.auth_users_refresh_tokens.token_hash IS 
+COMMENT ON COLUMN territory_dk.refresh_tokens.token_hash IS 
     'SHA-256 hash of refresh token. Never store plain tokens in database.';
-COMMENT ON COLUMN territory_dk.auth_users_refresh_tokens.revoked IS 
+COMMENT ON COLUMN territory_dk.refresh_tokens.revoked IS 
     'Token revocation status. Revoked tokens cannot be used for refresh.';
 
 -- ============================================================================
@@ -202,9 +202,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Apply trigger to users table
-DROP TRIGGER IF EXISTS update_users_updated_at ON territory_dk.auth_users_core;
+DROP TRIGGER IF EXISTS update_users_updated_at ON territory_dk.users;
 CREATE TRIGGER update_users_updated_at
-    BEFORE UPDATE ON territory_dk.auth_users_core
+    BEFORE UPDATE ON territory_dk.users
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 

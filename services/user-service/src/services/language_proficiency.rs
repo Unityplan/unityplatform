@@ -17,7 +17,7 @@ impl LanguageProficiencyService {
         pool: &PgPool,
     ) -> Result<Vec<LanguageProficiency>> {
         let query = format!(
-            "SELECT * FROM territory_{}.users_language_proficiency 
+            "SELECT * FROM territory_{}.user_users_profile_language_proficiency 
              WHERE user_id = $1 
              ORDER BY display_order ASC, created_at ASC",
             territory
@@ -38,7 +38,7 @@ impl LanguageProficiencyService {
         pool: &PgPool,
     ) -> Result<LanguageProficiency> {
         let query = format!(
-            "SELECT * FROM territory_{}.users_language_proficiency 
+            "SELECT * FROM territory_{}.user_users_profile_language_proficiency 
              WHERE id = $1 AND user_id = $2",
             territory
         );
@@ -61,7 +61,7 @@ impl LanguageProficiencyService {
     ) -> Result<LanguageProficiency> {
         // Check if user already has this language
         let exists_query = format!(
-            "SELECT COUNT(*) as count FROM territory_{}.users_language_proficiency 
+            "SELECT COUNT(*) as count FROM territory_{}.user_users_profile_language_proficiency 
              WHERE user_id = $1 AND language_code = $2",
             territory
         );
@@ -85,7 +85,7 @@ impl LanguageProficiencyService {
             None => {
                 let max_query = format!(
                     "SELECT COALESCE(MAX(display_order), -1) as max_order 
-                     FROM territory_{}.users_language_proficiency 
+                     FROM territory_{}.user_users_profile_language_proficiency 
                      WHERE user_id = $1",
                     territory
                 );
@@ -99,7 +99,7 @@ impl LanguageProficiencyService {
         };
 
         let query = format!(
-            "INSERT INTO territory_{}.users_language_proficiency 
+            "INSERT INTO territory_{}.user_users_profile_language_proficiency 
              (user_id, language_code, language_name, spoken_level, written_level, 
               reading_level, listening_level, display_order, is_preferred, show_on_profile) 
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
@@ -135,7 +135,7 @@ impl LanguageProficiencyService {
         let _ = Self::get_language(lang_id, user_id, territory, pool).await?;
 
         let query = format!(
-            "UPDATE territory_{}.users_language_proficiency 
+            "UPDATE territory_{}.user_users_profile_language_proficiency 
              SET language_name = COALESCE($3, language_name),
                  spoken_level = COALESCE($4, spoken_level),
                  written_level = COALESCE($5, written_level),
@@ -177,7 +177,7 @@ impl LanguageProficiencyService {
         let _ = Self::get_language(lang_id, user_id, territory, pool).await?;
 
         let query = format!(
-            "DELETE FROM territory_{}.users_language_proficiency 
+            "DELETE FROM territory_{}.user_users_profile_language_proficiency 
              WHERE id = $1 AND user_id = $2",
             territory
         );

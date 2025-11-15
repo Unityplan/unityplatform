@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Database Schema Update:** Renamed tables to follow service-based naming convention
+  - `global.territories_registry` → `global.registry_territories`
+  - `territory_{code}.territory_settings` → `territory_{code}.territory_territories_settings`
+  - `territory_{code}.territory_managers` → `territory_{code}.territory_territories_managers`
+  - `territory_{code}.territory_stats` → `territory_{code}.territory_territories_stats`
+  - All SQL queries updated across territory service logic
+  - Verified: Territory listing endpoint tested and working correctly
+
 ### Planned
 
 - Territory creation workflow (admin only)

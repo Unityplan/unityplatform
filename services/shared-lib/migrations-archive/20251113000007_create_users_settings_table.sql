@@ -3,8 +3,8 @@
 -- Date: 2025-11-13
 
 -- Create users_settings table in territory_dk schema
-CREATE TABLE IF NOT EXISTS territory_dk.user_users_settings (
-    user_id UUID PRIMARY KEY REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS territory_dk.users_settings (
+    user_id UUID PRIMARY KEY REFERENCES territory_dk.users(id) ON DELETE CASCADE,
     
     -- App preferences
     theme VARCHAR(20) NOT NULL DEFAULT 'system', -- 'light', 'dark', 'system'
@@ -39,19 +39,19 @@ CREATE TABLE IF NOT EXISTS territory_dk.user_users_settings (
 );
 
 -- Create index for faster lookups
-CREATE INDEX idx_users_settings_user_id ON territory_dk.user_users_settings(user_id);
+CREATE INDEX idx_users_settings_user_id ON territory_dk.users_settings(user_id);
 
 -- Add updated_at trigger
 CREATE TRIGGER update_users_settings_updated_at
-    BEFORE UPDATE ON territory_dk.user_users_settings
+    BEFORE UPDATE ON territory_dk.users_settings
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Comments
-COMMENT ON TABLE territory_dk.user_users_settings IS 'User preferences, privacy settings, and notification preferences';
-COMMENT ON COLUMN territory_dk.user_users_settings.theme IS 'UI theme preference: light, dark, or system';
-COMMENT ON COLUMN territory_dk.user_users_settings.profile_visibility IS 'Who can view the user profile: public, territory, or private';
-COMMENT ON COLUMN territory_dk.user_users_settings.allow_messages IS 'Who can send messages: everyone, connections, or none';
+COMMENT ON TABLE territory_dk.users_settings IS 'User preferences, privacy settings, and notification preferences';
+COMMENT ON COLUMN territory_dk.users_settings.theme IS 'UI theme preference: light, dark, or system';
+COMMENT ON COLUMN territory_dk.users_settings.profile_visibility IS 'Who can view the user profile: public, territory, or private';
+COMMENT ON COLUMN territory_dk.users_settings.allow_messages IS 'Who can send messages: everyone, connections, or none';
 
 -- Auto-create default settings when user registers (handled by application)
 -- Settings are created with default values when user first accesses /user/settings

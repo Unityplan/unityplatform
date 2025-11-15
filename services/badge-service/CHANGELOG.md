@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Database Schema Update:** Renamed tables to follow service-based naming convention
+  - `global.badge_registry` → `global.registry_badge`
+  - `territory_{code}.user_badges` → `territory_{code}.badge_users_badges`
+  - `territory_{code}.badge_progress` → `territory_{code}.badge_users_progress`
+  - All SQL queries updated across badge service logic
+  - Verified: Badge listing endpoint tested and working correctly
+
 ### Planned
 
 - Hook system implementation (cryptographic signatures for event-driven badge criteria)

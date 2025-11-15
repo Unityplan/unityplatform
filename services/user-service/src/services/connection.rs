@@ -24,7 +24,7 @@ impl ConnectionService {
 
         // Check if target user exists
         let target_exists = sqlx::query_scalar::<_, bool>(&format!(
-            "SELECT EXISTS(SELECT 1 FROM territory_{}.users WHERE id = $1)",
+            "SELECT EXISTS(SELECT 1 FROM territory_{}.auth_users_core WHERE id = $1)",
             territory
         ))
         .bind(target_user_id)
@@ -38,7 +38,7 @@ impl ConnectionService {
         // Check if already blocked (can't follow if blocked)
         let is_blocked = sqlx::query_scalar::<_, bool>(&format!(
             "SELECT EXISTS(
-                SELECT 1 FROM territory_{}.user_connections
+                SELECT 1 FROM territory_{}.user_users_connections
                 WHERE user_id = $1 AND target_user_id = $2 AND connection_type = 'block'
             )",
             territory
@@ -56,7 +56,7 @@ impl ConnectionService {
 
         // Insert or update follow connection
         sqlx::query(&format!(
-            "INSERT INTO territory_{}.user_connections 
+            "INSERT INTO territory_{}.user_users_connections 
                 (user_id, target_user_id, connection_type, status)
              VALUES ($1, $2, 'follow', 'active')
              ON CONFLICT (user_id, target_user_id, connection_type)
@@ -79,7 +79,7 @@ impl ConnectionService {
         target_user_id: Uuid,
     ) -> Result<()> {
         let result = sqlx::query(&format!(
-            "DELETE FROM territory_{}.user_connections
+            "DELETE FROM territory_{}.user_users_connections
              WHERE user_id = $1 AND target_user_id = $2 AND connection_type = 'follow'",
             territory
         ))
@@ -111,7 +111,7 @@ impl ConnectionService {
 
         // Check if target user exists
         let target_exists = sqlx::query_scalar::<_, bool>(&format!(
-            "SELECT EXISTS(SELECT 1 FROM territory_{}.users WHERE id = $1)",
+            "SELECT EXISTS(SELECT 1 FROM territory_{}.auth_users_core WHERE id = $1)",
             territory
         ))
         .bind(target_user_id)
@@ -127,7 +127,7 @@ impl ConnectionService {
 
         // Remove any mutual follow relationships
         sqlx::query(&format!(
-            "DELETE FROM territory_{}.user_connections
+            "DELETE FROM territory_{}.user_users_connections
              WHERE ((user_id = $1 AND target_user_id = $2) OR (user_id = $2 AND target_user_id = $1))
                AND connection_type = 'follow'",
             territory
@@ -139,7 +139,7 @@ impl ConnectionService {
 
         // Insert or update block connection
         sqlx::query(&format!(
-            "INSERT INTO territory_{}.user_connections 
+            "INSERT INTO territory_{}.user_users_connections 
                 (user_id, target_user_id, connection_type, status)
              VALUES ($1, $2, 'block', 'active')
              ON CONFLICT (user_id, target_user_id, connection_type)
@@ -164,7 +164,7 @@ impl ConnectionService {
         target_user_id: Uuid,
     ) -> Result<()> {
         let result = sqlx::query(&format!(
-            "DELETE FROM territory_{}.user_connections
+            "DELETE FROM territory_{}.user_users_connections
              WHERE user_id = $1 AND target_user_id = $2 AND connection_type = 'block'",
             territory
         ))
@@ -190,7 +190,7 @@ impl ConnectionService {
     ) -> Result<ConnectionsListResponse> {
         // Get total count
         let total = sqlx::query_scalar::<_, i64>(&format!(
-            "SELECT COUNT(*) FROM territory_{}.user_connections
+            "SELECT COUNT(*) FROM territory_{}.user_users_connections
              WHERE target_user_id = $1 AND connection_type = 'follow' AND status = 'active'",
             territory
         ))
@@ -206,7 +206,7 @@ impl ConnectionService {
                 uc.connection_type,
                 uc.status,
                 uc.created_at
-             FROM territory_{}.user_connections uc
+             FROM territory_{}.user_users_connections uc
              JOIN territory_{}.users u ON u.id = uc.user_id
              WHERE uc.target_user_id = $1 
                AND uc.connection_type = 'follow' 
@@ -250,7 +250,7 @@ impl ConnectionService {
     ) -> Result<ConnectionsListResponse> {
         // Get total count
         let total = sqlx::query_scalar::<_, i64>(&format!(
-            "SELECT COUNT(*) FROM territory_{}.user_connections
+            "SELECT COUNT(*) FROM territory_{}.user_users_connections
              WHERE user_id = $1 AND connection_type = 'follow' AND status = 'active'",
             territory
         ))
@@ -266,7 +266,7 @@ impl ConnectionService {
                 uc.connection_type,
                 uc.status,
                 uc.created_at
-             FROM territory_{}.user_connections uc
+             FROM territory_{}.user_users_connections uc
              JOIN territory_{}.users u ON u.id = uc.target_user_id
              WHERE uc.user_id = $1 
                AND uc.connection_type = 'follow' 
@@ -314,8 +314,8 @@ impl ConnectionService {
         // Get total count
         let total = sqlx::query_scalar::<_, i64>(&format!(
             "SELECT COUNT(DISTINCT u.id) 
-             FROM territory_{}.users u
-             LEFT JOIN territory_{}.users_profiles p ON p.user_id = u.id
+             FROM territory_{}.auth_users_core u
+             LEFT JOIN territory_{}.user_users_profiles p ON p.user_id = u.id
              WHERE u.id != $1
                AND (LOWER(u.username) LIKE $2 OR LOWER(p.display_name) LIKE $2)",
             territory, territory
@@ -334,22 +334,22 @@ impl ConnectionService {
                 p.avatar_url,
                 p.bio,
                 EXISTS(
-                    SELECT 1 FROM territory_{}.user_connections
+                    SELECT 1 FROM territory_{}.user_users_connections
                     WHERE user_id = $1 AND target_user_id = u.id 
                       AND connection_type = 'follow' AND status = 'active'
                 ) as is_following,
                 EXISTS(
-                    SELECT 1 FROM territory_{}.user_connections
+                    SELECT 1 FROM territory_{}.user_users_connections
                     WHERE user_id = u.id AND target_user_id = $1 
                       AND connection_type = 'follow' AND status = 'active'
                 ) as is_follower,
                 EXISTS(
-                    SELECT 1 FROM territory_{}.user_connections
+                    SELECT 1 FROM territory_{}.user_users_connections
                     WHERE user_id = $1 AND target_user_id = u.id 
                       AND connection_type = 'block' AND status = 'active'
                 ) as is_blocked
-             FROM territory_{}.users u
-             LEFT JOIN territory_{}.users_profiles p ON p.user_id = u.id
+             FROM territory_{}.auth_users_core u
+             LEFT JOIN territory_{}.user_users_profiles p ON p.user_id = u.id
              WHERE u.id != $1
                AND (LOWER(u.username) LIKE $2 OR LOWER(p.display_name) LIKE $2)
              ORDER BY u.username
