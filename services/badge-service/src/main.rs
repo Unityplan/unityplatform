@@ -46,7 +46,7 @@ use utoipa_swagger_ui::SwaggerUi;
         )
     ),
     tags(
-        (name = "service", description = "Service health and metadata"),
+        (name = "health", description = "Service health and monitoring"),
         (name = "badges", description = "Badge and achievement management")
     ),
     modifiers(&SecurityAddon)
@@ -208,7 +208,7 @@ async fn main() -> std::io::Result<()> {
 #[utoipa::path(
     get,
     path = "/api/v1/health",
-    tag = "service",
+    tag = "health",
     responses(
         (status = 200, description = "Service is healthy", body = serde_json::Value,
             example = json!({
@@ -231,7 +231,7 @@ async fn health_check() -> actix_web::HttpResponse {
 #[utoipa::path(
     get,
     path = "/api/v1/ready",
-    tag = "service",
+    tag = "health",
     responses(
         (status = 200, description = "Service is ready", body = serde_json::Value,
             example = json!({
@@ -274,7 +274,7 @@ async fn ready_check(db: web::Data<Database>) -> actix_web::HttpResponse {
 #[utoipa::path(
     get,
     path = "/api/v1/metrics",
-    tag = "service",
+    tag = "health",
     responses(
         (status = 200, description = "Prometheus-format metrics", content_type = "text/plain")
     )

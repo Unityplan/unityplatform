@@ -23,8 +23,8 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Get workspace root
-WORKSPACE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Get workspace root (scripts/dev/../.. = workspace root)
+WORKSPACE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$WORKSPACE_ROOT"
 
 # Function to check if port is in use
@@ -169,6 +169,20 @@ else
     wait_for_service "territory-service" 8008 || exit 1
 fi
 
+if check_port 8014; then
+    echo -e "  ${YELLOW}⚠ utility-service already running on port 8014${NC}"
+else
+    echo "Starting utility-service on port 8014..."
+    cd "$WORKSPACE_ROOT/services/utility-service"
+    set -a
+    source .env
+    set +a
+    cd "$WORKSPACE_ROOT"
+    ./services/target/release/utility-service > "$WORKSPACE_ROOT/logs/utility-service.log" 2>&1 &
+    
+    wait_for_service "utility-service" 8014 || exit 1
+fi
+
 echo ""
 
 # 3. Start Frontend
@@ -196,7 +210,8 @@ echo "🔐 Auth Service:      http://localhost:8001"
 echo "👤 User Service:      http://localhost:8002"
 echo "🏆 Badge Service:     http://localhost:8007"
 echo "🌍 Territory Service: http://localhost:8008"
-echo "🗄️  PostgreSQL:        localhost:5432"
+echo "�️  Utility Service:   http://localhost:8014"
+echo "�🗄️  PostgreSQL:        localhost:5432"
 echo "📨 NATS:              localhost:4222"
 echo "🗃️  Redis:             localhost:6379"
 echo ""
@@ -209,6 +224,7 @@ echo "   Auth Service:      tail -f logs/auth-service.log"
 echo "   User Service:      tail -f logs/user-service.log"
 echo "   Badge Service:     tail -f logs/badge-service.log"
 echo "   Territory Service: tail -f logs/territory-service.log"
+echo "   Utility Service:   tail -f logs/utility-service.log"
 echo "   Frontend:          tail -f logs/frontend.log"
 echo ""
 echo "🛑 To stop all services: ./scripts/stop-dev-services.sh"

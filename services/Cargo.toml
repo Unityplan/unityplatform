@@ -6,6 +6,7 @@ members = [
     "shared-lib",
     "territory-service",
     "user-service",
+    "utility-service",
     # Services will be added as they are rebuilt with new architecture
     # See: docs/architecture/services/shared-lib/MIDDLEWARE.md
     # See: docs/architecture/MIGRATIONS-MASTER.md

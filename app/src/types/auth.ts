@@ -2,32 +2,31 @@ export interface User {
   id: string;
   email: string;
   username: string;
-  full_name: string | null;
-  territory_code: string;
-  is_active: boolean;
-  created_at: string;
+  fullName: string | null;
+  territory: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
 export interface LoginRequest {
   username: string;  // Login by username (privacy-first)
   password: string;
-  territory_code: string;
+  territory: string;
 }
 
 export interface RegisterRequest {
-  email: string;
+  email?: string;
   username: string;
   password: string;
-  full_name?: string;
-  invitation_token: string; // Required for registration (territory derived from token)
+  territory: string;
+  invitationToken?: string; // Optional for registration
 }
 
 export interface AuthResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-  user: User;
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
 }
 
 export interface AuthState {

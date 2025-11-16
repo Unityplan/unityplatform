@@ -30,7 +30,6 @@ export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
         // Load from localStorage on initial render
         if (typeof localStorage !== 'undefined') {
             const saved = localStorage.getItem("wideContentView")
-            console.log('Initial wideContentView from localStorage:', saved)
             return saved === "true"
         }
         return false
@@ -41,13 +40,11 @@ export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
     useEffect(() => {
         const handleStorageChange = () => {
             const savedWideContentView = localStorage.getItem("wideContentView") === "true"
-            console.log('Storage change detected, new value:', savedWideContentView)
             setIsFullWidth(savedWideContentView)
         }
 
         const handleWideContentViewChange = (event: Event) => {
             const customEvent = event as CustomEvent<{ value: boolean }>
-            console.log('Custom event received, new value:', customEvent.detail.value)
             setIsFullWidth(customEvent.detail.value)
         }
 

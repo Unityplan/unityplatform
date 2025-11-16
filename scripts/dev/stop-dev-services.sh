@@ -16,8 +16,8 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-# Get workspace root
-WORKSPACE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Get workspace root (scripts/dev/../.. = workspace root)
+WORKSPACE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$WORKSPACE_ROOT"
 
 # Stop Frontend
@@ -36,6 +36,9 @@ pkill -f "badge-service" || echo "  (not running)"
 
 echo "Stopping territory-service..."
 pkill -f "territory-service" || echo "  (not running)"
+
+echo "Stopping utility-service..."
+pkill -f "utility-service" || echo "  (not running)"
 
 # Stop Docker Infrastructure
 echo "Stopping Docker infrastructure..."

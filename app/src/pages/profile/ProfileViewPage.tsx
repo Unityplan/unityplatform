@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
-import { getUserProfile } from '@/api/users';
+import { getUserProfile, getFollowers, getFollowing } from '@/api/users';
 import type { UserProfile } from '@/api/users';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLayout } from '@/components/layouts/AppLayout';
@@ -72,10 +72,6 @@ const MOCK_ACTIVITY = [
 ];
 
 
-// Local storage keys for mock data
-const MOCK_STATS_KEY = 'unityplatform_mock_profile_stats';
-const MOCK_FOLLOWING_KEY = 'unityplatform_mock_following';
-
 export function ProfileViewPage() {
     const { user } = useAuthStore();
     const navigate = useNavigate();
@@ -83,25 +79,15 @@ export function ProfileViewPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string>('');
 
-    // Mock stats state - persisted in localStorage
-    const [stats, setStats] = useState(() => {
-        try {
-            const stored = localStorage.getItem(MOCK_STATS_KEY);
-            return stored ? JSON.parse(stored) : { following: 24, followers: 156, posts: MOCK_POSTS.length };
-        } catch {
-            return { following: 24, followers: 156, posts: MOCK_POSTS.length };
-        }
+    // Real stats from API
+    const [stats, setStats] = useState({
+        following: 0,
+        followers: 0,
+        posts: MOCK_POSTS.length, // TODO: Replace with real posts count when posts API is ready
     });
 
     // Mock following state - for when viewing other profiles
-    const [isFollowing, setIsFollowing] = useState(() => {
-        try {
-            const stored = localStorage.getItem(MOCK_FOLLOWING_KEY);
-            return stored ? JSON.parse(stored) : false;
-        } catch {
-            return false;
-        }
-    });
+    const [isFollowing, setIsFollowing] = useState(false);
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -114,9 +100,20 @@ export function ProfileViewPage() {
             try {
                 setIsLoading(true);
                 setError('');
-                // Get profile for current user
-                const profileData = await getUserProfile(user.id);
+
+                // Load profile and connection stats in parallel
+                const [profileData, followersData, followingData] = await Promise.all([
+                    getUserProfile(user.id),
+                    getFollowers(user.id, 1, 0), // Just get total count (limit 1)
+                    getFollowing(user.id, 1, 0), // Just get total count (limit 1)
+                ]);
+
                 setProfile(profileData);
+                setStats({
+                    followers: followersData.total,
+                    following: followingData.total,
+                    posts: MOCK_POSTS.length,
+                });
             } catch (err) {
                 setError('Failed to load profile');
                 console.error('Failed to load profile:', err);
@@ -195,31 +192,19 @@ export function ProfileViewPage() {
         navigate({ to: '/login' });
     };
 
-    // Mock follow handler
+    // Mock follow handler - TODO: Replace with real API call when viewing other profiles
     const handleFollow = () => {
         setIsFollowing(true);
         const newStats = { ...stats, followers: stats.followers + 1 };
         setStats(newStats);
-
-        // Persist to localStorage
-        localStorage.setItem(MOCK_FOLLOWING_KEY, JSON.stringify(true));
-        localStorage.setItem(MOCK_STATS_KEY, JSON.stringify(newStats));
-
-        // TODO: Show toast notification
         console.log('Followed user');
     };
 
-    // Mock unfollow handler
+    // Mock unfollow handler - TODO: Replace with real API call when viewing other profiles
     const handleUnfollow = () => {
         setIsFollowing(false);
         const newStats = { ...stats, followers: Math.max(0, stats.followers - 1) };
         setStats(newStats);
-
-        // Persist to localStorage
-        localStorage.setItem(MOCK_FOLLOWING_KEY, JSON.stringify(false));
-        localStorage.setItem(MOCK_STATS_KEY, JSON.stringify(newStats));
-
-        // TODO: Show toast notification
         console.log('Unfollowed user');
     };
 
@@ -247,13 +232,13 @@ export function ProfileViewPage() {
                     user={{
                         id: user!.id,
                         username: user!.username,
-                        full_name: profile.full_name,
-                        avatar_url: profile.avatar_url,
-                        bio: profile.bio,
-                        location: profile.location,
-                        website: profile.website_url,
-                        created_at: profile.created_at || new Date().toISOString(),
-                        is_verified: false, // TODO: Add is_verified field to backend
+                        fullName: profile.fullName || null,
+                        avatarUrl: profile.avatarUrl || null,
+                        bio: profile.bio || null,
+                        location: profile.location || null,
+                        website: profile.website || null,
+                        createdAt: profile.createdAt || new Date().toISOString(),
+                        isVerified: false, // TODO: Add isVerified field to backend
                     }}
                     stats={stats}
                     isOwnProfile={true}
@@ -380,16 +365,16 @@ export function ProfileViewPage() {
                                         </div>
                                     )}
 
-                                    {profile.website_url && (
+                                    {profile.website && (
                                         <div className="flex items-center gap-2 text-sm">
                                             <Link2 className="size-4 text-muted-foreground" />
                                             <a
-                                                href={profile.website_url}
+                                                href={profile.website}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-primary hover:underline"
                                             >
-                                                {profile.website_url}
+                                                {profile.website}
                                             </a>
                                         </div>
                                     )}
@@ -404,13 +389,13 @@ export function ProfileViewPage() {
                                     <div className="flex items-center gap-2 text-sm">
                                         <Calendar className="size-4 text-muted-foreground" />
                                         <span className="text-muted-foreground">
-                                            Joined {formatDistanceToNow(new Date(profile.created_at || new Date()), { addSuffix: true })}
+                                            Joined {formatDistanceToNow(new Date(profile.createdAt || new Date()), { addSuffix: true })}
                                         </span>
                                     </div>
                                 </div>
 
                                 {/* Empty State */}
-                                {!profile.bio && !profile.location && !profile.website_url && (
+                                {!profile.bio && !profile.location && !profile.website && (
                                     <div className="rounded-lg border border-dashed p-8 text-center">
                                         <p className="text-sm text-muted-foreground">
                                             Complete your profile by adding a bio, location, and website.

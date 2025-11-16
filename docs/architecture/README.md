@@ -159,6 +159,14 @@ Detailed implementation documentation for each microservice.
 | **translation-service** | 8012 | ⏳ Planned | [README](services/translation-service/README.md) · [API](services/translation-service/API.md) · [DB](services/translation-service/DATABASE.md) |
 | **ipfs-service** | 8013 | ⏳ Planned | [README](services/ipfs-service/README.md) · [API](services/ipfs-service/API.md) · [DB](services/ipfs-service/DATABASE.md) |
 
+### Infrastructure Services (Utilities)
+
+| Service | Port | Status | Docs |
+|---------|------|--------|------|
+| **utility-service** | 8014 | 🚧 In Development | [README](services/utility-service/README.md) · [API](services/utility-service/API.md) |
+
+**Note:** Infrastructure services are stateless utilities that support other services. They use Redis caching but no database.
+
 **Port Allocation:** See [services/port-allocation.md](services/port-allocation.md)
 
 ---

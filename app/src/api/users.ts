@@ -3,48 +3,35 @@ import apiClient from '@/lib/api-client';
 const USER_BASE_URL = import.meta.env.VITE_USER_SERVICE_URL || 'http://localhost:8002';
 
 export interface UserProfile {
-  user_id: string;
+  id: string;
   username: string;
   email?: string | null;
-  full_name?: string | null;
-  display_name?: string | null;
-  avatar_url?: string | null;
+  fullName?: string | null;
+  displayName?: string | null;
+  avatarUrl?: string | null;
   bio?: string | null;
   about?: string | null;
   interests?: string[] | null;
   skills?: string[] | null;
   languages?: string[] | null;
   location?: string | null;
-  
-  // @deprecated - Use profile_links instead. Will be removed in next version.
-  // See: docs/architecture/profile-links-system.md
-  website_url?: string | null;
-  github_url?: string | null;
-  linkedin_url?: string | null;
-  twitter_handle?: string | null;
-  
+  website?: string | null;
   theme?: string | null;
   privacy?: PrivacySettings;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UpdateProfileRequest {
-  full_name?: string | null;
-  display_name?: string | null;
+  fullName?: string | null;
+  displayName?: string | null;
   bio?: string | null;
   about?: string | null;
   interests?: string[] | null;
   skills?: string[] | null;
   languages?: string[] | null;
   location?: string | null;
-  
-  // @deprecated - Use profile links API instead
-  website_url?: string | null;
-  github_url?: string | null;
-  linkedin_url?: string | null;
-  twitter_handle?: string | null;
-  
+  website?: string | null;
   theme?: string | null;
   privacy?: Partial<PrivacySettings>;
 }
@@ -52,34 +39,75 @@ export interface UpdateProfileRequest {
 // Profile Links - New flexible system for external links
 export interface ProfileLink {
   id: string;
-  user_id: string;
   label: string;
   url: string;
   icon?: string | null;
-  display_order: number;
-  is_visible: boolean;
-  created_at: string;
-  updated_at: string;
+  displayOrder: number;
+  isVisible: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateProfileLinkRequest {
   label: string;
   url: string;
   icon?: string | null;
-  display_order?: number;
-  is_visible?: boolean;
+  displayOrder?: number;
+  isVisible?: boolean;
 }
 
 export interface UpdateProfileLinkRequest {
   label?: string;
   url?: string;
   icon?: string | null;
-  display_order?: number;
-  is_visible?: boolean;
+  displayOrder?: number;
+  isVisible?: boolean;
 }
 
 export interface ReorderLinksRequest {
-  link_ids: string[];
+  linkIds: string[];
+}
+
+// Language Proficiency
+export type ProficiencyLevel = 'none' | 'basic' | 'intermediate' | 'fluent' | 'native';
+
+export interface LanguageProficiency {
+  id: string;
+  languageCode: string;
+  languageName: string;
+  spokenLevel: ProficiencyLevel;
+  writtenLevel: ProficiencyLevel;
+  readingLevel: ProficiencyLevel;
+  listeningLevel: ProficiencyLevel;
+  displayOrder: number;
+  isPreferred: boolean;
+  showOnProfile: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLanguageProficiencyRequest {
+  languageCode: string;
+  languageName: string;
+  spokenLevel: ProficiencyLevel;
+  writtenLevel: ProficiencyLevel;
+  readingLevel: ProficiencyLevel;
+  listeningLevel: ProficiencyLevel;
+  displayOrder?: number;
+  isPreferred?: boolean;
+  showOnProfile?: boolean;
+}
+
+export interface UpdateLanguageProficiencyRequest {
+  languageCode?: string;
+  languageName?: string;
+  spokenLevel?: ProficiencyLevel;
+  writtenLevel?: ProficiencyLevel;
+  readingLevel?: ProficiencyLevel;
+  listeningLevel?: ProficiencyLevel;
+  displayOrder?: number;
+  isPreferred?: boolean;
+  showOnProfile?: boolean;
 }
 
 export interface PrivacySettings {
@@ -101,11 +129,18 @@ export interface UpdatePrivacySettingsRequest {
 }
 
 export interface UserConnection {
-  follower_id: string;
-  following_id: string;
-  created_at: string;
-  follower_username?: string;
-  following_username?: string;
+  followerId: string;
+  followingId: string;
+  createdAt: string;
+  followerUsername?: string;
+  followingUsername?: string;
+}
+
+export interface ConnectionsListResponse {
+  connections: UserConnection[];
+  total: number;
+  offset: number;
+  limit: number;
 }
 
 /**
@@ -115,31 +150,29 @@ export interface UserConnection {
  * @returns User profile
  */
 export async function getUserProfile(userId: string): Promise<UserProfile> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/profiles/${userId}`);
-  return response.data.data; // Backend wraps in ApiResponse
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/profile/${userId}`);
+  return response.data; // Backend returns data directly (camelCase)
 }
 
 /**
  * Get full profile (own profile with all details)
  * 
- * @param userId - User ID to fetch full profile for
  * @returns Full user profile
  */
-export async function getFullProfile(userId: string): Promise<UserProfile> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/profiles/${userId}/full`);
-  return response.data.data;
+export async function getFullProfile(): Promise<UserProfile> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/profile`);
+  return response.data; // Backend returns data directly (camelCase)
 }
 
 /**
  * Update current user's profile
  * 
- * @param userId - User ID
  * @param data - Profile data to update
  * @returns Updated profile
  */
-export async function updateProfile(userId: string, data: UpdateProfileRequest): Promise<UserProfile> {
-  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/profiles/${userId}`, data);
-  return response.data.data;
+export async function updateProfile(data: UpdateProfileRequest): Promise<UserProfile> {
+  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/user/profile`, data);
+  return response.data; // Backend returns data directly (camelCase)
 }
 
 /**
@@ -174,36 +207,36 @@ export async function deleteAvatar(userId: string): Promise<void> {
 /**
  * Follow a user
  * 
- * @param userId - User ID
  * @param targetId - Target user ID to follow
  */
-export async function followUser(userId: string, targetId: string): Promise<void> {
-  await apiClient.post(`${USER_BASE_URL}/api/v1/connections/follow/${targetId}`, null, {
-    params: { user_id: userId },
-  });
+export async function followUser(targetId: string): Promise<void> {
+  await apiClient.post(`${USER_BASE_URL}/api/v1/user/connections/${targetId}/follow`);
 }
 
 /**
  * Unfollow a user
  * 
- * @param userId - User ID  
  * @param targetId - Target user ID to unfollow
  */
-export async function unfollowUser(userId: string, targetId: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/connections/follow/${targetId}`, {
-    params: { user_id: userId },
-  });
+export async function unfollowUser(targetId: string): Promise<void> {
+  await apiClient.delete(`${USER_BASE_URL}/api/v1/user/connections/${targetId}/follow`);
 }
 
 /**
  * Get user's followers
  * 
  * @param userId - User ID to get followers for
- * @returns List of follower connections
+ * @param limit - Maximum number of results (default: 20, max: 100)
+ * @param offset - Offset for pagination (default: 0)
+ * @returns Paginated list of follower connections
  */
-export async function getFollowers(userId: string): Promise<UserConnection[]> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/connections/followers`, {
-    params: { user_id: userId },
+export async function getFollowers(
+  userId: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<ConnectionsListResponse> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/connections/${userId}/followers`, {
+    params: { limit, offset },
   });
   return response.data;
 }
@@ -212,11 +245,17 @@ export async function getFollowers(userId: string): Promise<UserConnection[]> {
  * Get users that the user is following
  * 
  * @param userId - User ID to get following list for
- * @returns List of following connections
+ * @param limit - Maximum number of results (default: 20, max: 100)
+ * @param offset - Offset for pagination (default: 0)
+ * @returns Paginated list of following connections
  */
-export async function getFollowing(userId: string): Promise<UserConnection[]> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/connections/following`, {
-    params: { user_id: userId },
+export async function getFollowing(
+  userId: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<ConnectionsListResponse> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/connections/${userId}/following`, {
+    params: { limit, offset },
   });
   return response.data;
 }
@@ -224,38 +263,19 @@ export async function getFollowing(userId: string): Promise<UserConnection[]> {
 /**
  * Block a user
  * 
- * @param userId - User ID
  * @param targetId - Target user ID to block
  */
-export async function blockUser(userId: string, targetId: string): Promise<void> {
-  await apiClient.post(`${USER_BASE_URL}/api/v1/connections/block/${targetId}`, null, {
-    params: { user_id: userId },
-  });
+export async function blockUser(targetId: string): Promise<void> {
+  await apiClient.post(`${USER_BASE_URL}/api/v1/user/connections/${targetId}/block`);
 }
 
 /**
  * Unblock a user
  * 
- * @param userId - User ID
  * @param targetId - Target user ID to unblock
  */
-export async function unblockUser(userId: string, targetId: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/connections/block/${targetId}`, {
-    params: { user_id: userId },
-  });
-}
-
-/**
- * Get list of blocked users
- * 
- * @param userId - User ID
- * @returns List of blocked users
- */
-export async function getBlockedUsers(userId: string): Promise<UserConnection[]> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/connections/blocked`, {
-    params: { user_id: userId },
-  });
-  return response.data;
+export async function unblockUser(targetId: string): Promise<void> {
+  await apiClient.delete(`${USER_BASE_URL}/api/v1/user/connections/${targetId}/block`);
 }
 
 // ============================================================================
@@ -265,59 +285,93 @@ export async function getBlockedUsers(userId: string): Promise<UserConnection[]>
 /**
  * Get user's profile links
  * 
- * @param userId - User ID to get links for
  * @returns List of profile links
  */
-export async function getProfileLinks(userId: string): Promise<ProfileLink[]> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/profiles/${userId}/links`);
-  return response.data.data;
+export async function getProfileLinks(): Promise<ProfileLink[]> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/profile/links`);
+  return response.data;
 }
 
 /**
  * Create a new profile link
  * 
- * @param userId - User ID
  * @param data - Link data to create
  * @returns Created profile link
  */
-export async function createProfileLink(userId: string, data: CreateProfileLinkRequest): Promise<ProfileLink> {
-  const response = await apiClient.post(`${USER_BASE_URL}/api/v1/profiles/${userId}/links`, data);
-  return response.data.data;
+export async function createProfileLink(data: CreateProfileLinkRequest): Promise<ProfileLink> {
+  const response = await apiClient.post(`${USER_BASE_URL}/api/v1/user/profile/links`, data);
+  return response.data;
 }
 
 /**
  * Update a profile link
  * 
- * @param userId - User ID
  * @param linkId - Link ID to update
  * @param data - Link data to update
  * @returns Updated profile link
  */
 export async function updateProfileLink(
-  userId: string,
   linkId: string,
   data: UpdateProfileLinkRequest
 ): Promise<ProfileLink> {
-  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/profiles/${userId}/links/${linkId}`, data);
-  return response.data.data;
+  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/user/profile/links/${linkId}`, data);
+  return response.data;
 }
 
 /**
  * Delete a profile link
  * 
- * @param userId - User ID
  * @param linkId - Link ID to delete
  */
-export async function deleteProfileLink(userId: string, linkId: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/profiles/${userId}/links/${linkId}`);
+export async function deleteProfileLink(linkId: string): Promise<void> {
+  await apiClient.delete(`${USER_BASE_URL}/api/v1/user/profile/links/${linkId}`);
+}
+
+// ============================================================================
+// Language Proficiency API
+// ============================================================================
+
+/**
+ * Get user's language proficiencies
+ * 
+ * @returns List of language proficiencies
+ */
+export async function getLanguageProficiencies(): Promise<LanguageProficiency[]> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/profile/languages`);
+  return response.data;
 }
 
 /**
- * Reorder profile links
+ * Create a new language proficiency
  * 
- * @param userId - User ID
- * @param data - Array of link IDs in desired order
+ * @param data - Language proficiency data to create
+ * @returns Created language proficiency
  */
-export async function reorderProfileLinks(userId: string, data: ReorderLinksRequest): Promise<void> {
-  await apiClient.patch(`${USER_BASE_URL}/api/v1/profiles/${userId}/links/reorder`, data);
+export async function createLanguageProficiency(data: CreateLanguageProficiencyRequest): Promise<LanguageProficiency> {
+  const response = await apiClient.post(`${USER_BASE_URL}/api/v1/user/profile/languages`, data);
+  return response.data;
+}
+
+/**
+ * Update a language proficiency
+ * 
+ * @param langId - Language proficiency ID to update
+ * @param data - Language proficiency data to update
+ * @returns Updated language proficiency
+ */
+export async function updateLanguageProficiency(
+  langId: string,
+  data: UpdateLanguageProficiencyRequest
+): Promise<LanguageProficiency> {
+  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/user/profile/languages/${langId}`, data);
+  return response.data;
+}
+
+/**
+ * Delete a language proficiency
+ * 
+ * @param langId - Language proficiency ID to delete
+ */
+export async function deleteLanguageProficiency(langId: string): Promise<void> {
+  await apiClient.delete(`${USER_BASE_URL}/api/v1/user/profile/languages/${langId}`);
 }

@@ -3,6 +3,7 @@ use shared_lib::{
     cors, shutdown_grace_period, shutdown_signal, AppConfig, Database, LoggingMiddleware,
     MetricsCollector, RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware,
 };
+use territory_service::models::language::{LanguageResponse, SearchLanguagesParams};
 use territory_service::models::territory::{
     TerritoryResponse, TerritorySettingsResponse, TerritoryStatsResponse, UpdateSettingsRequest,
 };
@@ -22,10 +23,15 @@ use utoipa_swagger_ui::SwaggerUi;
         )
     ),
     paths(
+        health_check,
+        ready_check,
+        metrics,
         territory_service::handlers::territory::list_territories,
         territory_service::handlers::territory::get_territory,
         territory_service::handlers::territory::get_territory_stats,
         territory_service::handlers::territory::update_territory_settings,
+        territory_service::handlers::language::search_languages,
+        territory_service::handlers::language::get_language,
     ),
     components(
         schemas(
@@ -33,12 +39,15 @@ use utoipa_swagger_ui::SwaggerUi;
             TerritoryStatsResponse,
             TerritorySettingsResponse,
             UpdateSettingsRequest,
+            LanguageResponse,
+            SearchLanguagesParams,
         )
     ),
     tags(
-        (name = "service", description = "Service health and metadata"),
+        (name = "health", description = "Service health and monitoring"),
         (name = "territories", description = "Territory registry and public information"),
         (name = "territory-management", description = "Territory management endpoints (Territory Managers)"),
+        (name = "languages", description = "Global language registry from ISO 639-3"),
     ),
     modifiers(&SecurityAddon)
 )]
@@ -153,8 +162,9 @@ async fn main() -> std::io::Result<()> {
                     .route("/metrics", web::get().to(metrics))
                     // Territory routes
                     .service(
-                        web::scope("/territories")
-                            .configure(territory_service::handlers::territory::configure),
+                        web::scope("/territory")
+                            .configure(territory_service::handlers::territory::configure)
+                            .configure(territory_service::handlers::language::configure),
                     ),
             )
     })
@@ -201,6 +211,14 @@ async fn main() -> std::io::Result<()> {
 }
 
 /// Health check endpoint
+#[utoipa::path(
+    get,
+    path = "/api/v1/health",
+    tag = "health",
+    responses(
+        (status = 200, description = "Service is healthy")
+    )
+)]
 async fn health_check() -> HttpResponse {
     HttpResponse::Ok().json(serde_json::json!({
         "status": "ok",
@@ -210,6 +228,15 @@ async fn health_check() -> HttpResponse {
 }
 
 /// Ready check endpoint
+#[utoipa::path(
+    get,
+    path = "/api/v1/ready",
+    tag = "health",
+    responses(
+        (status = 200, description = "Service is ready"),
+        (status = 503, description = "Service is not ready")
+    )
+)]
 async fn ready_check(db: web::Data<Database>) -> HttpResponse {
     // Check database connectivity
     match sqlx::query("SELECT 1").fetch_one(db.pool()).await {
@@ -228,6 +255,14 @@ async fn ready_check(db: web::Data<Database>) -> HttpResponse {
 }
 
 /// Metrics endpoint (Prometheus format)
+#[utoipa::path(
+    get,
+    path = "/api/v1/metrics",
+    tag = "health",
+    responses(
+        (status = 200, description = "Prometheus metrics", content_type = "text/plain")
+    )
+)]
 async fn metrics(db: web::Data<Database>, collector: web::Data<MetricsCollector>) -> HttpResponse {
     // Get database pool stats
     let pool_size = db.pool().size();

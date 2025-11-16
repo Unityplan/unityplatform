@@ -9,7 +9,7 @@ use crate::services::ProfileLinkService;
 #[utoipa::path(
     get,
     path = "/api/v1/user/profile/links",
-    tag = "profile-links",
+    tag = "profile",
     responses(
         (status = 200, description = "Profile links retrieved successfully", body = Vec<ProfileLinkResponse>),
         (status = 401, description = "Unauthorized"),
@@ -29,7 +29,7 @@ async fn list_links(auth: AuthUser, db: web::Data<Database>) -> Result<HttpRespo
 #[utoipa::path(
     post,
     path = "/api/v1/user/profile/links",
-    tag = "profile-links",
+    tag = "profile",
     request_body = CreateProfileLinkRequest,
     responses(
         (status = 201, description = "Profile link created successfully", body = ProfileLinkResponse),
@@ -56,7 +56,7 @@ async fn create_link(
 #[utoipa::path(
     put,
     path = "/api/v1/user/profile/links/{id}",
-    tag = "profile-links",
+    tag = "profile",
     params(
         ("id" = Uuid, Path, description = "Profile link ID")
     ),
@@ -90,7 +90,7 @@ async fn update_link(
 #[utoipa::path(
     delete,
     path = "/api/v1/user/profile/links/{id}",
-    tag = "profile-links",
+    tag = "profile",
     params(
         ("id" = Uuid, Path, description = "Profile link ID")
     ),

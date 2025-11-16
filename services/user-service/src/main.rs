@@ -7,8 +7,10 @@ use user_service::handlers::profile::UpdateProfileRequest;
 use user_service::models::{
     ConnectionResponse, ConnectionStatus, ConnectionType, ConnectionsListResponse,
     CreateLanguageProficiencyRequest, CreateProfileLinkRequest, LanguageProficiencyResponse,
-    ProfileLinkResponse, ProfileResponse, UpdateLanguageProficiencyRequest,
-    UpdateProfileLinkRequest, UserSearchResponse, UserSearchResult,
+    NotificationSettingsResponse, PrivacySettingsResponse, ProfileLinkResponse, ProfileResponse,
+    SettingsResponse, UpdateLanguageProficiencyRequest, UpdateNotificationSettingsRequest,
+    UpdatePrivacySettingsRequest, UpdateProfileLinkRequest, UpdateSettingsRequest,
+    UserSearchResponse, UserSearchResult,
 };
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
@@ -26,17 +28,32 @@ use utoipa_swagger_ui::SwaggerUi;
         )
     ),
     paths(
+        // Health endpoints
+        health_check,
+        ready_check,
+        metrics,
+        // Profile endpoints
         user_service::handlers::profile::get_own_profile,
         user_service::handlers::profile::update_own_profile,
         user_service::handlers::profile::get_profile_by_id,
+        // Profile links endpoints
         user_service::handlers::profile_link::list_links,
         user_service::handlers::profile_link::create_link,
         user_service::handlers::profile_link::update_link,
         user_service::handlers::profile_link::delete_link,
+        // Language proficiency endpoints
         user_service::handlers::language_proficiency::list_languages,
         user_service::handlers::language_proficiency::create_language,
         user_service::handlers::language_proficiency::update_language,
         user_service::handlers::language_proficiency::delete_language,
+        // Settings endpoints
+        user_service::handlers::settings::get_settings,
+        user_service::handlers::settings::update_settings,
+        user_service::handlers::settings::get_privacy_settings,
+        user_service::handlers::settings::update_privacy_settings,
+        user_service::handlers::settings::get_notification_settings,
+        user_service::handlers::settings::update_notification_settings,
+        // Connection endpoints
         user_service::handlers::connection::follow_user,
         user_service::handlers::connection::unfollow_user,
         user_service::handlers::connection::block_user,
@@ -47,14 +64,25 @@ use utoipa_swagger_ui::SwaggerUi;
     ),
     components(
         schemas(
+            // Profile schemas
             ProfileResponse,
             UpdateProfileRequest,
+            // Profile links schemas
             ProfileLinkResponse,
             CreateProfileLinkRequest,
             UpdateProfileLinkRequest,
+            // Language proficiency schemas
             LanguageProficiencyResponse,
             CreateLanguageProficiencyRequest,
             UpdateLanguageProficiencyRequest,
+            // Settings schemas
+            SettingsResponse,
+            UpdateSettingsRequest,
+            PrivacySettingsResponse,
+            UpdatePrivacySettingsRequest,
+            NotificationSettingsResponse,
+            UpdateNotificationSettingsRequest,
+            // Connection schemas
             ConnectionType,
             ConnectionStatus,
             ConnectionResponse,
@@ -64,10 +92,9 @@ use utoipa_swagger_ui::SwaggerUi;
         )
     ),
     tags(
-        (name = "service", description = "Service health and metadata"),
-        (name = "profile", description = "User profile management"),
-        (name = "profile-links", description = "External profile links (GitHub, LinkedIn, etc.)"),
-        (name = "language-proficiency", description = "Language skills with 4 proficiency dimensions"),
+        (name = "health", description = "Service health and monitoring"),
+        (name = "profile", description = "User profile management (basic info, links, languages)"),
+        (name = "settings", description = "User preferences, privacy, and notification settings"),
         (name = "connections", description = "User connections (follow/block)")
     ),
     modifiers(&SecurityAddon)
@@ -226,12 +253,12 @@ async fn main() -> std::io::Result<()> {
 /// Health check endpoint (no authentication required)
 #[utoipa::path(
     get,
-    path = "/api/v1/service/health",
-    tag = "service",
+    path = "/api/v1/health",
+    tag = "health",
     responses(
         (status = 200, description = "Service is healthy", body = serde_json::Value,
             example = json!({
-                "status": "healthy",
+                "status": "ok",
                 "service": "user-service",
                 "version": "0.1.0-alpha.1"
             })
@@ -246,7 +273,29 @@ async fn health_check() -> actix_web::HttpResponse {
     }))
 }
 
-/// Ready check endpoint
+/// Ready check endpoint (database connectivity)
+#[utoipa::path(
+    get,
+    path = "/api/v1/ready",
+    tag = "health",
+    responses(
+        (status = 200, description = "Service is ready", body = serde_json::Value,
+            example = json!({
+                "status": "ready",
+                "service": "user-service",
+                "version": "0.1.0-alpha.1"
+            })
+        ),
+        (status = 503, description = "Service not ready", body = serde_json::Value,
+            example = json!({
+                "status": "not_ready",
+                "service": "user-service",
+                "version": "0.1.0-alpha.1",
+                "reason": "database_unavailable"
+            })
+        )
+    )
+)]
 async fn ready_check(db: web::Data<Database>) -> actix_web::HttpResponse {
     // Check database connectivity
     match sqlx::query("SELECT 1").fetch_one(db.pool()).await {
@@ -265,6 +314,18 @@ async fn ready_check(db: web::Data<Database>) -> actix_web::HttpResponse {
 }
 
 /// Metrics endpoint (Prometheus format)
+#[utoipa::path(
+    get,
+    path = "/api/v1/metrics",
+    tag = "health",
+    responses(
+        (status = 200, description = "Prometheus metrics", 
+            content_type = "text/plain",
+            body = String,
+            example = "# HELP user_service_http_requests_total Total HTTP requests\n# TYPE user_service_http_requests_total counter\nuser_service_http_requests_total 42"
+        )
+    )
+)]
 async fn metrics(
     db: web::Data<Database>,
     collector: web::Data<MetricsCollector>,

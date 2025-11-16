@@ -199,21 +199,22 @@ impl ConnectionService {
         .await?;
 
         // Get paginated followers
+        // Uses global.registry_username for cross-pod username lookups
         let rows = sqlx::query(&format!(
             "SELECT 
                 uc.user_id,
-                u.username,
+                ru.username,
                 uc.connection_type,
                 uc.status,
                 uc.created_at
              FROM territory_{}.user_users_connections uc
-             JOIN territory_{}.users u ON u.id = uc.user_id
+             JOIN global.registry_username ru ON ru.user_id = uc.user_id
              WHERE uc.target_user_id = $1 
                AND uc.connection_type = 'follow' 
                AND uc.status = 'active'
              ORDER BY uc.created_at DESC
              LIMIT $2 OFFSET $3",
-            territory, territory
+            territory
         ))
         .bind(user_id)
         .bind(limit)
@@ -259,21 +260,22 @@ impl ConnectionService {
         .await?;
 
         // Get paginated following
+        // Uses global.registry_username for cross-pod username lookups
         let rows = sqlx::query(&format!(
             "SELECT 
                 uc.target_user_id,
-                u.username,
+                ru.username,
                 uc.connection_type,
                 uc.status,
                 uc.created_at
              FROM territory_{}.user_users_connections uc
-             JOIN territory_{}.users u ON u.id = uc.target_user_id
+             JOIN global.registry_username ru ON ru.user_id = uc.target_user_id
              WHERE uc.user_id = $1 
                AND uc.connection_type = 'follow' 
                AND uc.status = 'active'
              ORDER BY uc.created_at DESC
              LIMIT $2 OFFSET $3",
-            territory, territory
+            territory
         ))
         .bind(user_id)
         .bind(limit)

@@ -11,7 +11,7 @@ use crate::services::LanguageProficiencyService;
 #[utoipa::path(
     get,
     path = "/api/v1/user/profile/languages",
-    tag = "language-proficiency",
+    tag = "profile",
     responses(
         (status = 200, description = "Language proficiencies retrieved successfully", body = Vec<LanguageProficiencyResponse>),
         (status = 401, description = "Unauthorized"),
@@ -33,7 +33,7 @@ async fn list_languages(auth: AuthUser, db: web::Data<Database>) -> Result<HttpR
 #[utoipa::path(
     post,
     path = "/api/v1/user/profile/languages",
-    tag = "language-proficiency",
+    tag = "profile",
     request_body = CreateLanguageProficiencyRequest,
     responses(
         (status = 201, description = "Language proficiency created successfully", body = LanguageProficiencyResponse),
@@ -62,7 +62,7 @@ async fn create_language(
 #[utoipa::path(
     put,
     path = "/api/v1/user/profile/languages/{id}",
-    tag = "language-proficiency",
+    tag = "profile",
     params(
         ("id" = Uuid, Path, description = "Language proficiency ID")
     ),
@@ -102,7 +102,7 @@ async fn update_language(
 #[utoipa::path(
     delete,
     path = "/api/v1/user/profile/languages/{id}",
-    tag = "language-proficiency",
+    tag = "profile",
     params(
         ("id" = Uuid, Path, description = "Language proficiency ID")
     ),

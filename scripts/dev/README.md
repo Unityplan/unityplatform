@@ -18,8 +18,12 @@ Start all development services (Docker infrastructure + auth-service + frontend)
 **Starts:**
 
 - Docker infrastructure (Postgres, Redis, NATS, etc.)
-- auth-service
-- frontend (app)
+- auth-service (port 8001)
+- user-service (port 8002)
+- badge-service (port 8007)
+- territory-service (port 8008)
+- utility-service (port 8014)
+- frontend (app on port 5173)
 
 ---
 
@@ -98,7 +102,14 @@ Start Phase 1 minimal development environment.
 
 ## Service URLs
 
+- Frontend: <http://localhost:5173>
+- Auth Service: <http://localhost:8001>
+- User Service: <http://localhost:8002>
+- Badge Service: <http://localhost:8007>
+- Territory Service: <http://localhost:8008>
+- Utility Service: <http://localhost:8014>
 - Auth Service Swagger: <http://localhost:8001/swagger-ui/>
+- Utility Service Swagger: <http://localhost:8014/swagger-ui/>
 - Adminer (DB UI): <http://localhost:8080>
 - Grafana (Monitoring): <http://localhost:3001> (admin/admin)
 - Prometheus: <http://localhost:9090>

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AuthStore, LoginRequest, RegisterRequest, User } from '@/types/auth';
 import * as authApi from '@/api/auth';
+import { getFullProfile } from '@/api/users';
 
 /**
  * Extract error message from API error
@@ -43,15 +44,18 @@ export const useAuthStore = create<AuthStore>()(
       login: async (credentials: LoginRequest) => {
         set({ isLoading: true, error: null });
         try {
+          // Step 1: Login and get tokens from auth-service
           const response = await authApi.login(credentials);
           set({
-            user: response.user,
-            accessToken: response.access_token,
-            refreshToken: response.refresh_token,
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
             isAuthenticated: true,
-            isLoading: false,
             error: null,
           });
+          
+          // Step 2: Load user profile from user-service
+          // loadUser() handles its own loading state
+          await get().loadUser();
         } catch (error: unknown) {
           const errorMessage = getErrorMessage(error, 'Login failed');
           set({ error: errorMessage, isLoading: false });
@@ -62,15 +66,18 @@ export const useAuthStore = create<AuthStore>()(
       register: async (data: RegisterRequest) => {
         set({ isLoading: true, error: null });
         try {
+          // Step 1: Register and get tokens from auth-service
           const response = await authApi.register(data);
           set({
-            user: response.user,
-            accessToken: response.access_token,
-            refreshToken: response.refresh_token,
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
             isAuthenticated: true,
-            isLoading: false,
             error: null,
           });
+          
+          // Step 2: Load user profile from user-service
+          // loadUser() handles its own loading state
+          await get().loadUser();
         } catch (error: unknown) {
           const errorMessage = getErrorMessage(error, 'Registration failed');
           set({ error: errorMessage, isLoading: false });
@@ -104,8 +111,8 @@ export const useAuthStore = create<AuthStore>()(
         try {
           const response = await authApi.refreshToken(refreshToken);
           set({
-            accessToken: response.access_token,
-            refreshToken: response.refresh_token,
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
             isAuthenticated: true,
             isLoading: false,
             error: null,
@@ -127,7 +134,20 @@ export const useAuthStore = create<AuthStore>()(
 
         set({ isLoading: true, error: null });
         try {
-          const user = await authApi.getCurrentUser();
+          // Fetch user profile from user-service
+          const profile = await getFullProfile();
+          
+          // Map UserProfile to User type for auth store
+          const user: User = {
+            id: profile.id,
+            username: profile.username,
+            email: profile.email || '',
+            fullName: profile.fullName || null,
+            territory: 'dk', // TODO: Get from JWT token claims
+            isActive: true,
+            createdAt: profile.createdAt || new Date().toISOString(),
+          };
+          
           set({
             user,
             isLoading: false,

@@ -41,11 +41,20 @@ check_port 6379
 
 echo ""
 echo "Backend Services (Rust):"
-echo -n "  auth-service (8001):   "
+echo -n "  auth-service (8001):      "
 check_port 8001
 
-echo -n "  user-service (8002):   "
+echo -n "  user-service (8002):      "
 check_port 8002
+
+echo -n "  badge-service (8007):     "
+check_port 8007
+
+echo -n "  territory-service (8008): "
+check_port 8008
+
+echo -n "  utility-service (8014):   "
+check_port 8014
 
 echo ""
 echo "Frontend:"

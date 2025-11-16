@@ -10,6 +10,15 @@ import {
     uploadAvatar,
     deleteAvatar,
     type UserProfile,
+    type ProfileLink,
+    type LanguageProficiency,
+    getProfileLinks,
+    createProfileLink,
+    updateProfileLink,
+    deleteProfileLink,
+    getLanguageProficiencies,
+    createLanguageProficiency,
+    deleteLanguageProficiency,
 } from '@/api/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,31 +36,23 @@ import {
 import { Link, useRouter } from '@tanstack/react-router';
 import { Home, Upload, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { TagInput } from '@/components/ui/tag-input';
+import { LanguageProficiencyManager } from '@/components/LanguageProficiencyManager';
+import { ProfileLinksManager } from '@/components/ProfileLinksManager';
 import { LocationPicker } from '@/components/LocationPicker';
 
 // Validation schemas
 const profileSchema = z.object({
-    full_name: z.string().max(255, 'Name must be 255 characters or less').optional(),
-    display_name: z.string().max(255, 'Display name must be 255 characters or less').optional(),
-    bio: z.string().max(500, 'Bio must be 500 characters or less').optional(),
+    displayName: z.string().max(100, 'Display name must be 100 characters or less').optional(),
+    bio: z.string().max(280, 'Bio must be 280 characters or less').optional(),
     about: z.string().max(2000, 'About must be 2000 characters or less').optional(),
-    location: z.string().max(255, 'Location must be 255 characters or less').optional(),
-    interests: z.string().optional(), // Comma-separated string, will be split into array
-    skills: z.string().optional(), // Comma-separated string, will be split into array
-    languages: z.string().optional(), // Comma-separated string, will be split into array
+    location: z.string().max(100, 'Location must be 100 characters or less').optional(),
+    website: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+    interests: z.array(z.string()).optional(), // Array of interest tags
+    skills: z.array(z.string()).optional(), // Array of skill tags
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
-
-// Helper functions for array fields
-const arrayToString = (arr: string[] | null | undefined): string => {
-    return arr?.join(', ') || '';
-};
-
-const stringToArray = (str: string | undefined): string[] | null => {
-    if (!str || str.trim() === '') return null;
-    return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
-};
 
 export function ProfileEditPage() {
     const { user } = useAuthStore();
@@ -63,6 +64,12 @@ export function ProfileEditPage() {
     const [success, setSuccess] = useState<string>('');
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string>('');
+
+    // Links state
+    const [links, setLinks] = useState<ProfileLink[]>([]);
+
+    // Languages state
+    const [languages, setLanguages] = useState<LanguageProficiency[]>([]);
 
     const {
         register,
@@ -94,19 +101,24 @@ export function ProfileEditPage() {
 
                 // Set form default values
                 reset({
-                    full_name: profileData.full_name || '',
-                    display_name: profileData.display_name || '',
+                    displayName: profileData.displayName || '',
                     bio: profileData.bio || '',
                     about: profileData.about || '',
                     location: profileData.location || '',
-                    interests: arrayToString(profileData.interests),
-                    skills: arrayToString(profileData.skills),
-                    languages: arrayToString(profileData.languages),
+                    website: profileData.website || '',
+                    interests: profileData.interests || [],
+                    skills: profileData.skills || [],
                 });
 
-                if (profileData.avatar_url) {
-                    setAvatarPreview(profileData.avatar_url);
+                if (profileData.avatarUrl) {
+                    setAvatarPreview(profileData.avatarUrl);
                 }
+
+                // Load links
+                await loadLinks();
+
+                // Load languages
+                await loadLanguages();
             } catch (err) {
                 setError('Failed to load profile data');
                 console.error('Failed to load profile:', err);
@@ -117,6 +129,26 @@ export function ProfileEditPage() {
 
         loadData();
     }, [user, reset]);
+
+    // Load profile links
+    const loadLinks = async () => {
+        try {
+            const linksData = await getProfileLinks();
+            setLinks(linksData);
+        } catch (err) {
+            console.error('Failed to load links:', err);
+        }
+    };
+
+    // Load language proficiencies
+    const loadLanguages = async () => {
+        try {
+            const languagesData = await getLanguageProficiencies();
+            setLanguages(languagesData);
+        } catch (err) {
+            console.error('Failed to load languages:', err);
+        }
+    };
 
     // Handle avatar file selection with react-dropzone
     const onDrop = (acceptedFiles: File[]) => {
@@ -169,15 +201,14 @@ export function ProfileEditPage() {
             setSuccess('');
 
             // Update profile info
-            await updateProfile(user.id, {
-                full_name: data.full_name || null,
-                display_name: data.display_name || null,
+            await updateProfile({
+                displayName: data.displayName || null,
                 bio: data.bio || null,
                 about: data.about || null,
                 location: data.location || null,
-                interests: stringToArray(data.interests),
-                skills: stringToArray(data.skills),
-                languages: stringToArray(data.languages),
+                website: data.website || null,
+                interests: data.interests && data.interests.length > 0 ? data.interests : null,
+                skills: data.skills && data.skills.length > 0 ? data.skills : null,
             });
 
             // Upload avatar if changed
@@ -410,35 +441,36 @@ export function ProfileEditPage() {
                                     </p>
                                 </div>
 
-                                {/* Full Name */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="full_name">Full Name</Label>
-                                    <Input
-                                        id="full_name"
-                                        {...register('full_name')}
-                                        disabled={isSaving}
-                                        placeholder="Your full name"
-                                    />
-                                    {errors.full_name && (
-                                        <p className="text-sm text-destructive">{errors.full_name.message}</p>
-                                    )}
-                                </div>
-
                                 {/* Display Name */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="display_name">Display Name</Label>
+                                    <Label htmlFor="displayName">Display Name</Label>
                                     <Input
-                                        id="display_name"
-                                        {...register('display_name')}
+                                        id="displayName"
+                                        {...register('displayName')}
                                         disabled={isSaving}
-                                        placeholder="How you'd like to be called (optional)"
+                                        placeholder="How you'd like to be called"
                                     />
-                                    {errors.display_name && (
-                                        <p className="text-sm text-destructive">{errors.display_name.message}</p>
+                                    {errors.displayName && (
+                                        <p className="text-sm text-destructive">{errors.displayName.message}</p>
                                     )}
                                     <p className="text-sm text-muted-foreground">
-                                        Alternative name to show instead of your full name
+                                        This name will be displayed on your profile
                                     </p>
+                                </div>
+
+                                {/* Website */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="website">Website</Label>
+                                    <Input
+                                        id="website"
+                                        {...register('website')}
+                                        disabled={isSaving}
+                                        placeholder="https://example.com"
+                                        type="url"
+                                    />
+                                    {errors.website && (
+                                        <p className="text-sm text-destructive">{errors.website.message}</p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
@@ -476,13 +508,13 @@ export function ProfileEditPage() {
                                     disabled={isSaving}
                                     placeholder="A brief description about yourself..."
                                     className="min-h-[100px] resize-none"
-                                    maxLength={500}
+                                    maxLength={280}
                                 />
                                 {errors.bio && (
                                     <p className="text-sm text-destructive">{errors.bio.message}</p>
                                 )}
                                 <p className="text-sm text-muted-foreground">
-                                    Brief introduction shown on your profile (max 500 characters)
+                                    Brief introduction shown on your profile (max 280 characters)
                                 </p>
                             </div>
 
@@ -517,56 +549,89 @@ export function ProfileEditPage() {
                             {/* Interests */}
                             <div className="space-y-2">
                                 <Label htmlFor="interests">Interests</Label>
-                                <Input
-                                    id="interests"
-                                    {...register('interests')}
+                                <TagInput
+                                    value={watch('interests') || []}
+                                    onChange={(tags) => setValue('interests', tags)}
+                                    placeholder="Type an interest and press Enter"
                                     disabled={isSaving}
-                                    placeholder="e.g., Permaculture, Forest Ecology, Beekeeping"
                                 />
                                 {errors.interests && (
                                     <p className="text-sm text-destructive">{errors.interests.message}</p>
                                 )}
                                 <p className="text-sm text-muted-foreground">
-                                    Separate multiple interests with commas
+                                    Add tags for your interests (e.g., Permaculture, Forest Ecology)
                                 </p>
                             </div>
 
                             {/* Skills */}
                             <div className="space-y-2">
                                 <Label htmlFor="skills">Skills</Label>
-                                <Input
-                                    id="skills"
-                                    {...register('skills')}
+                                <TagInput
+                                    value={watch('skills') || []}
+                                    onChange={(tags) => setValue('skills', tags)}
+                                    placeholder="Type a skill and press Enter"
                                     disabled={isSaving}
-                                    placeholder="e.g., Composting, Rainwater Harvesting, Natural Building"
                                 />
                                 {errors.skills && (
                                     <p className="text-sm text-destructive">{errors.skills.message}</p>
                                 )}
                                 <p className="text-sm text-muted-foreground">
-                                    Separate multiple skills with commas
-                                </p>
-                            </div>
-
-                            {/* Languages */}
-                            <div className="space-y-2">
-                                <Label htmlFor="languages">Languages</Label>
-                                <Input
-                                    id="languages"
-                                    {...register('languages')}
-                                    disabled={isSaving}
-                                    placeholder="e.g., English (Native), Danish (Fluent), Swedish (Intermediate)"
-                                />
-                                {errors.languages && (
-                                    <p className="text-sm text-destructive">{errors.languages.message}</p>
-                                )}
-                                <p className="text-sm text-muted-foreground">
-                                    Primary language first, then secondary languages with proficiency levels.
-                                    This helps with translation features.
+                                    Add tags for your skills (e.g., Composting, Rainwater Harvesting)
                                 </p>
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Profile Links Section */}
+                    <ProfileLinksManager
+                        links={links}
+                        onAdd={async (linkData) => {
+                            await createProfileLink(linkData);
+                            await loadLinks();
+                        }}
+                        onUpdate={async (id, updates) => {
+                            await updateProfileLink(id, updates);
+                            await loadLinks();
+                        }}
+                        onDelete={async (id) => {
+                            await deleteProfileLink(id);
+                            await loadLinks();
+                        }}
+                        disabled={isSaving}
+                    />
+
+                    {/* Language Proficiencies Section */}
+                    <LanguageProficiencyManager
+                        languages={languages}
+                        onAdd={async (languageData) => {
+                            await createLanguageProficiency(languageData);
+                            await loadLanguages();
+                        }}
+                        onUpdate={async (id, updates) => {
+                            // We need to add an update endpoint - for now we'll delete and recreate
+                            await deleteLanguageProficiency(id);
+                            const existingLang = languages.find((l) => l.id === id);
+                            if (existingLang) {
+                                await createLanguageProficiency({
+                                    languageCode: existingLang.languageCode,
+                                    languageName: existingLang.languageName,
+                                    spokenLevel: updates.spokenLevel ?? existingLang.spokenLevel,
+                                    writtenLevel: updates.writtenLevel ?? existingLang.writtenLevel,
+                                    readingLevel: updates.readingLevel ?? existingLang.readingLevel,
+                                    listeningLevel: updates.listeningLevel ?? existingLang.listeningLevel,
+                                    displayOrder: existingLang.displayOrder,
+                                    isPreferred: existingLang.isPreferred,
+                                    showOnProfile: existingLang.showOnProfile,
+                                });
+                            }
+                            await loadLanguages();
+                        }}
+                        onDelete={async (id) => {
+                            await deleteLanguageProficiency(id);
+                            await loadLanguages();
+                        }}
+                        disabled={isSaving}
+                    />
 
                     {/* Action Buttons */}
                     <div className="flex gap-4">
@@ -586,3 +651,4 @@ export function ProfileEditPage() {
         </AppLayout>
     );
 }
+

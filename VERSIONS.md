@@ -25,10 +25,15 @@
 | Service | Version | Status | Last Updated | Dependencies |
 |---------|---------|--------|--------------|--------------|
 | **shared-lib** | 0.1.0-alpha.1 | ✅ Active | 2025-11-05 | sqlx, async-nats, actix-web |
-| **auth-service** | - | 🟡 Development | - | shared-lib@0.1.0 |
-| **user-service** | - | ⬜ Not Started | - | shared-lib@0.1.0, auth-service |
-| **territory-service** | - | ⬜ Not Started | - | shared-lib@0.1.0 |
-| **badge-service** | - | ⬜ Not Started | - | shared-lib@0.1.0 |
+| **auth-service** | 0.1.0-alpha.1 | ✅ Complete | 2025-11-15 | shared-lib@0.1.0 |
+| **user-service** | 0.1.0-alpha.1 | ✅ Complete | 2025-11-15 | shared-lib@0.1.0, auth-service |
+| **badge-service** | 0.1.0-alpha.1 | ✅ Complete | 2025-11-15 | shared-lib@0.1.0 |
+| **territory-service** | 0.1.0-alpha.1 | ✅ Complete | 2025-11-15 | shared-lib@0.1.0 |
+| **utility-service** | 0.1.0-alpha.1 | 🚧 In Development | 2025-11-16 | shared-lib@0.1.0 (no DB) |
+| **invitation-service** | - | ⏳ Scaffolded | - | shared-lib@0.1.0 |
+| **notification-service** | - | ⏳ Scaffolded | - | shared-lib@0.1.0 |
+| **community-service** | - | ⬜ Not Started | - | shared-lib@0.1.0 |
+| **event-service** | - | ⬜ Not Started | - | shared-lib@0.1.0 |
 | **course-service** | - | ⬜ Not Started | - | shared-lib@0.1.0 |
 | **forum-service** | - | ⬜ Not Started | - | shared-lib@0.1.0 |
 | **translation-service** | - | ⬜ Not Started | - | shared-lib@0.1.0 |

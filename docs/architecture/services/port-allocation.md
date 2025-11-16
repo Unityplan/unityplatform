@@ -54,12 +54,14 @@
 | 8004 | invitation-service | ⏳ Scaffolded | Phase 1 | Invitation management & trust graph |
 | 8005 | notification-service | ⏳ Scaffolded | Phase 1 | Notifications & email |
 | 8006 | community-service | ⏳ Scaffolded | Phase 2 | Communities & membership |
-| 8007 | badge-service | ⏳ Scaffolded | Phase 2 | Gamification & achievements |
-| 8008 | territory-service | ⏳ Scaffolded | Phase 2 | Pod management & federation |
+| 8007 | badge-service | ✅ Complete | Phase 2 | Gamification & achievements |
+| 8008 | territory-service | ✅ Complete | Phase 2 | Pod management & federation |
 | 8009 | course-service | 📋 Planned | Phase 2 | LMS & certifications |
 | 8010 | forum-service | 📋 Planned | Phase 2 | Matrix-based forums |
 | 8011 | translation-service | 📋 Planned | Phase 2 | i18n & community translations |
 | 8012 | ipfs-service | 📋 Planned | Phase 2 | Decentralized file storage |
+| 8013 | _(reserved)_ | - | - | Reserved for future services |
+| 8014 | utility-service | 🚧 In Development | Phase 1 | Favicon fetching, utilities (no DB) |
 
 ### Reserved Ranges
 
@@ -70,7 +72,9 @@
   - 8004-8005: Phase 1 services (invitations, notifications)
   - 8006-8008: Phase 2 core services (community, badge, territory)
   - 8009-8012: Phase 2 advanced services (course, forum, translation, ipfs)
-  - 8013-8099: Reserved for future services
+  - 8013: Reserved for future services
+  - 8014: Infrastructure utilities (favicon, QR codes, etc.) - Phase 1
+  - 8015-8099: Reserved for future services
 - **900x**: Monitoring & observability (9000-9099)
 - **300x**: Infrastructure web UIs (3000-3099)
 - **400x-600x**: Message buses & databases (4000-6999)

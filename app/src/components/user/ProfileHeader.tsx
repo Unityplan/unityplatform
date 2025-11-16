@@ -22,13 +22,13 @@ interface ProfileHeaderProps {
     user: {
         id: string;
         username: string;
-        full_name?: string | null;
-        avatar_url?: string | null;
+        fullName?: string | null;
+        avatarUrl?: string | null;
         bio?: string | null;
         location?: string | null;
         website?: string | null;
-        created_at: string;
-        is_verified?: boolean;
+        createdAt: string;
+        isVerified?: boolean;
     };
     stats?: {
         following: number;
@@ -81,7 +81,7 @@ export function ProfileHeader({
     onSignOut,
     className,
 }: ProfileHeaderProps) {
-    const joinDate = format(new Date(user.created_at), 'MMMM yyyy');
+    const joinDate = format(new Date(user.createdAt), 'MMMM yyyy');
 
     const handleFollowClick = () => {
         if (isFollowing && onUnfollow) {
@@ -103,18 +103,18 @@ export function ProfileHeader({
                     {/* Avatar */}
                     <div className="relative">
                         <Avatar
-                            src={user.avatar_url}
+                            src={user.avatarUrl}
                             alt={user.username}
-                            fallback={user.full_name || user.username}
+                            fallback={user.fullName || user.username}
                             size="2xl"
                             className="lg:hidden"
                             showOnlineStatus
                             isOnline={false}
                         />
                         <Avatar
-                            src={user.avatar_url}
+                            src={user.avatarUrl}
                             alt={user.username}
-                            fallback={user.full_name || user.username}
+                            fallback={user.fullName || user.username}
                             size="4xl"
                             className="hidden lg:block"
                             showOnlineStatus
@@ -185,9 +185,9 @@ export function ProfileHeader({
                     <div>
                         <div className="flex items-center gap-2">
                             <h1 className="text-2xl font-bold text-foreground">
-                                {user.full_name || user.username}
+                                {user.fullName || user.username}
                             </h1>
-                            {user.is_verified && (
+                            {user.isVerified && (
                                 <Badge variant="secondary" className="text-sm">
                                     ✓ Verified
                                 </Badge>

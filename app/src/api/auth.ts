@@ -1,7 +1,7 @@
 import apiClient from '@/lib/api-client';
 import type { LoginRequest, RegisterRequest, AuthResponse, User } from '@/types/auth';
 
-const AUTH_BASE_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8080';
+const AUTH_BASE_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8001';
 
 /**
  * Register a new user
@@ -31,7 +31,7 @@ export async function login(credentials: LoginRequest): Promise<AuthResponse> {
  * @param refreshToken - The refresh token to invalidate
  */
 export async function logout(refreshToken: string): Promise<void> {
-  await apiClient.post(`${AUTH_BASE_URL}/api/v1/auth/logout`, { refresh_token: refreshToken });
+  await apiClient.post(`${AUTH_BASE_URL}/api/v1/auth/logout`, { refreshToken });
 }
 
 /**
@@ -42,7 +42,7 @@ export async function logout(refreshToken: string): Promise<void> {
  */
 export async function refreshToken(refreshToken: string): Promise<AuthResponse> {
   const response = await apiClient.post(`${AUTH_BASE_URL}/api/v1/auth/refresh`, {
-    refresh_token: refreshToken,
+    refreshToken,
   });
   return response.data;
 }
@@ -67,7 +67,7 @@ export async function getCurrentUser(): Promise<User> {
  */
 export async function validateInvitation(token: string): Promise<{
   valid: boolean;
-  token_type: string;
+  tokenType: string;
   territory: {
     code: string;
     name: string;
@@ -77,10 +77,10 @@ export async function validateInvitation(token: string): Promise<{
     name: string;
   };
   email?: string;
-  expires_at?: string;
-  remaining_uses?: number;
+  expiresAt?: string;
+  remainingUses?: number;
 }> {
-  // ⭐ No territory_code parameter - backend looks it up from global registry
+  // ⭐ No territory parameter - backend looks it up from global registry
   const response = await apiClient.get(`${AUTH_BASE_URL}/api/v1/auth/invitations/validate/${token}`);
   return response.data;
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useNavigate } from '@tanstack/react-router';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,7 @@ import { ModeToggle } from '@/components/mode-toggle';
 const loginSchema = z.object({
     username: z.string().min(3, 'Username is required (3-50 characters)'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
-    territory_code: z.string().min(2, 'Please select a territory'),
+    territory: z.string().min(2, 'Please select a territory'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -38,21 +39,23 @@ const TERRITORIES = [
 export function LoginPage() {
     const { login, isLoading, error } = useAuthStore();
     const [showPassword, setShowPassword] = useState(false);
+    const navigate = useNavigate();
 
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
             username: '',
             password: '',
-            territory_code: 'dk', // Default to Denmark
+            territory: 'dk', // Default to Denmark
         },
     });
 
     const onSubmit = async (data: LoginFormValues) => {
         try {
             await login(data);
-            // TODO: Redirect to dashboard once routing is set up
-            console.log('Login successful!');
+            console.log('Login successful! Redirecting to dashboard...');
+            // Navigate to dashboard after successful login
+            navigate({ to: '/dashboard' });
         } catch (err) {
             // Error is already handled by the store
             console.error('Login failed:', err);
@@ -81,7 +84,7 @@ export function LoginPage() {
                                 {/* Territory Selection */}
                                 <FormField
                                     control={form.control}
-                                    name="territory_code"
+                                    name="territory"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Territory</FormLabel>
