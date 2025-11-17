@@ -1,8 +1,24 @@
 # Unity Platform - Project Summary
 
+**Version:** 0.1.0-alpha.1  
+**Phase:** 1 - MVP Development  
+**Progress:** 42% Complete  
+**Last Updated:** November 17, 2025
+
+**🔗 Issue Tracking:** [Forgejo Issues](http://localhost:3000/henrik/unity_platform/issues) | [Milestone v0.1.0-alpha.2](http://localhost:3000/henrik/unity_platform/milestones)
+
+---
+
 ## 🎯 Executive Summary
 
 Unity Platform is a **decentralized global communication and learning platform** designed to empower users with data sovereignty while enabling seamless multilingual collaboration across territories. The platform combines modern web technologies with a forward-looking architecture that supports future migration to fully decentralized systems.
+
+**Current Status:**
+- ✅ Foundation complete (infrastructure, database, auth, user services)
+- ✅ Territory & Badge systems operational
+- ✅ Utility services (favicon, language registry) complete
+- 🔄 Frontend development in progress (27 active issues)
+- 📋 Future stages planned in Forgejo (55 open issues)
 
 ---
 

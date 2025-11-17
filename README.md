@@ -4,6 +4,25 @@ A decentralized learning and communication platform with user sovereignty at its
 
 > **Note:** This is the platform software. The example deployment "unityplan.org" is just one project using this platform for testing purposes.
 
+## 📊 Project Status
+
+**Version:** 0.1.0-alpha.1  
+**Phase:** 1 - MVP Development  
+**Progress:** 42% Complete (55 of 137 tasks)  
+**Latest:** All Phase 1 stages migrated to Forgejo issue tracking
+
+**🔗 Issue Tracking:** [View Issues](http://localhost:3000/henrik/unity_platform/issues) | [Milestone v0.1.0-alpha.2](http://localhost:3000/henrik/unity_platform/milestones)
+
+### Quick Status
+
+- ✅ **Complete:** Stages 1-4 (Foundation), Stage 6 (Territory/Badge), Stage 14 (Utility)
+- 🔄 **In Progress:** Stage 5 (Frontend Development)
+- 📋 **Planned:** Stages 7-13 (Course, Matrix, IPFS, Forum, Translation, Testing)
+
+For detailed status, see [Phase 1 Status Document](docs/status/current/phase-1-status.md).
+
+---
+
 ## 🎯 Vision
 
 Unity Platform is an open-source platform for communication, learning, and community building that implements an "inverted pyramid" model where users have complete sovereignty over their data and democratic control over communities.
