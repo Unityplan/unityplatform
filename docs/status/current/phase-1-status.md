@@ -268,311 +268,150 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 
 ### Stage 1: Foundation & Infrastructure Setup
 
-**Status:** ✅ Complete  
+**Status:** ✅ Complete (📋 Migrated to Forgejo)  
 **Progress:** 33/33 tasks completed (100%)  
 **Started:** November 4, 2025  
 **Completed:** November 13, 2025  
 
-#### Step 1.1: Repository & Project Structure (4/4) ✅
+**🔗 Historical Record:** [Forgejo Closed Issues #42-#47](http://localhost:3000/henrik/unity_platform/issues?q=is%3Aissue+is%3Aclosed+label%3Aarea%2Finfrastructure+milestone%3Av0.1.0-alpha.2)  
+**📊 Project Board:** [Unity Platform Development](http://localhost:3000/henrik/unity_platform/projects/1)
 
-- ✅ Initialize Git repository
-- ✅ Create .gitignore for Rust, Node, Docker
-- ✅ Create README.md with project overview
-- ✅ Create workspace directory structure
+**All tasks migrated to Forgejo as closed issues (#42-#47) on November 17, 2025 for historical tracking.**
 
-#### Step 1.2: Docker Infrastructure Setup (5/5) ✅
+#### Task Summary (See Forgejo for Details)
 
-- ✅ Create docker-compose.yml (development)
-- ✅ PostgreSQL 16 service configured with TimescaleDB
-- ✅ NATS service configured with JetStream
-- ✅ Redis service configured with persistence
-- ✅ Adminer database UI configured
+**Issue #42:** Repository & project structure (Git, .gitignore, README, directories)  
+**Issue #43:** Docker infrastructure (PostgreSQL, NATS, Redis, Adminer)  
+**Issue #44:** Rust backend foundation (workspace, shared-lib v0.1.0-alpha.1)  
+**Issue #45:** Multi-pod infrastructure (NATS clustering, monitoring, Grafana, Jaeger)  
+**Issue #46:** Middleware (9 patterns across Priority 1-3)  
+**Issue #47:** Development tools (Forgejo, SQLTools, documentation)
 
-#### Step 1.3: Rust Backend Foundation (8/8) ✅
+**Key Achievements:**
+- Complete infrastructure operational with monitoring
+- Shared library foundation for all services
+- Multi-pod architecture ready for scale
+- Full observability stack (Prometheus, Grafana, Jaeger)
+- All middleware patterns implemented
 
-- ✅ Create Rust workspace (services/Cargo.toml)
-- ✅ Create shared library crate (v0.1.0-alpha.1)
-- ✅ Create configuration system (AppConfig)
-- ✅ Create database connection module (Database)
-- ✅ Create NATS client module (NatsClient)
-- ✅ Create shared error types (AppError)
-- ✅ Set up logging and tracing (LoggingMiddleware)
-- ✅ Test infrastructure connectivity
-
-#### Step 1.4: Multi-Pod Infrastructure (12/12) ✅
-
-- ✅ Create multi-pod Docker Compose configurations
-- ✅ NATS clustering for cross-pod communication
-- ✅ Prometheus monitoring for all pods
-- ✅ Grafana dashboards (Pod Overview, Multi-Pod Overview)
-- ✅ Jaeger distributed tracing
-- ✅ Traefik reverse proxy with SSL
-- ✅ Denmark pod fully operational
-- ✅ Network architecture (global-net, mesh-network, pod-net)
-- ✅ Pod exporters (PostgreSQL, Redis, NATS, cAdvisor, Node)
-- ✅ Monitoring targets all UP (6/7 Denmark targets)
-- ✅ Deployment scripts and verification tools
-- ✅ Documentation (deployment notes, troubleshooting)
-
-#### Step 1.5: Middleware Infrastructure (4/4) ✅
-
-- ✅ Priority 1 Middleware (request_id, logging, error_handler)
-- ✅ Priority 2 Middleware (security_headers, cors, rate_limit, validation)
-- ✅ Priority 3 Middleware (graceful_shutdown, circuit_breaker)
-- ✅ Comprehensive documentation (MIDDLEWARE.md, ERROR-HANDLING.md)
-
-#### Step 1.5: Development Tools (12/12) ✅
-
-- ✅ Forgejo git server configured and running
-- ✅ Forgejo MCP integration for AI development
-- ✅ Docker Registry for container images
-- ✅ MailHog for email testing
-- ✅ Redis Commander for Redis management
-- ✅ Development dashboard (ports and services)
-- ✅ SQLTools VS Code extension configured
-- ✅ PostgreSQL database connection working
-- ✅ Documentation reorganized (consolidated docs/ structure)
-- ✅ Project documentation migrated
-- ✅ Status tracking updated
-- ✅ Navigation README created
-
-**Notes:**  
-
-- Infrastructure fully operational with monitoring and development tools
-- Documentation consolidated into single docs/ structure for better navigation
-- Multi-pod architecture ready for Norway and Sweden pod deployment
-
-**Blockers:**  
-
-- None
-
----
+**Notes:**
+- Completed November 4-13, 2025
+- Documentation consolidated into docs/ structure
+- Ready for Norway and Sweden pod deployment---
 
 ### Stage 2: Database Schema & Migrations
 
-**Status:** ✅ Complete  
+**Status:** ✅ Complete (📋 Migrated to Forgejo)  
 **Progress:** 6/6 tasks completed (100%)  
 **Started:** November 5, 2025  
 **Completed:** November 8, 2025  
 **Dependencies:** Stage 1 (Foundation)
 
-#### Step 2.1: Set up SQLx Migrations (2/2) ✅
+**🔗 Historical Record:** [Forgejo Closed Issues #48-#50](http://localhost:3000/henrik/unity_platform/issues?q=is%3Aissue+is%3Aclosed+label%3Aarea%2Finfrastructure+milestone%3Av0.1.0-alpha.2+Stage+2)  
+**📊 Project Board:** [Unity Platform Development](http://localhost:3000/henrik/unity_platform/projects/1)
 
-- ✅ Install SQLx CLI
-- ✅ Create migration directory
+**All tasks migrated to Forgejo as closed issues (#48-#50) on November 17, 2025 for historical tracking.**
 
-#### Step 2.2: Global Schema Migration (2/2) ✅
+#### Task Summary (See Forgejo for Details)
 
-- ✅ Create migration: 20251108000001_global_schema.sql
-- ✅ Run migration and verify
+**Issue #48:** SQLx migrations setup (CLI installation, directory structure)  
+**Issue #49:** Global schema migration (identity layer, registries, sessions)  
+**Issue #50:** Territory schema template (reusable schema, Denmark seed data)
 
-#### Step 2.3: Territory Schema Template (2/2) ✅
+**Key Achievements:**
+- Schema separation complete (global + territory isolation)
+- Reusable territory template for multi-territory deployment
+- ISO 3166-1 Alpha-2 territory code standard
+- SQLTools database management configured
+- Future-ready for multi-territory pods
 
-- ✅ Create migration: 20251108000002_territory_schema.sql
-- ✅ Create Denmark seed data: 20251108000003_seed_data_dk.sql
-
-**Notes:**  
-
-- ✅ **Schema separation complete**: Global identity/federation layer now separate from territory user data
-- ✅ **Reusable template**: Territory schema can be deployed to any new pod
-- ✅ **Future-ready**: Prepared for multi-territory pods (territory_de, territory_fr, etc.)
-- Database uses schema-based isolation (global + territory)
-- Territory code follows ISO 3166-1 Alpha-2 standard (DK, NO, SE)
-- SQLTools configured for database management
-- Application services will use `get_schema_name()` helper for multi-territory support
-
-**Blockers:**  
-
-- None
+**Notes:**
+- Completed November 5-8, 2025
+- Database uses schema-based isolation
+- Ready for territory_no, territory_se, etc.
 
 ---
 
 ### Stage 3: Authentication Service
 
-**Status:** ✅ Complete (Core + Architecture Compliance)  
+**Status:** ✅ Complete (📋 Migrated to Forgejo)  
 **Progress:** 27/27 tasks completed (100%)  
 **Started:** November 12, 2025  
 **Completed:** November 14, 2025 (Architecture Compliance)  
 **Dependencies:** Stage 2 (Database Schema)
 
-#### Step 3.1: Auth Service Scaffolding (2/2) ✅
+**🔗 Historical Record:** [Forgejo Closed Issues #51-#58](http://localhost:3000/henrik/unity_platform/issues?q=is%3Aissue+is%3Aclosed+label%3Aarea%2Fauth-service+milestone%3Av0.1.0-alpha.2)  
+**📊 Project Board:** [Unity Platform Development](http://localhost:3000/henrik/unity_platform/projects/1)
 
-- ✅ Create auth-service crate
-- ✅ Create service structure (handlers, models, services)
+**All tasks migrated to Forgejo as closed issues (#51-#58) on November 17, 2025 for historical tracking.**
 
-#### Step 3.2: Auth Database Schema (2/2) ✅
+#### Task Summary (See Forgejo for Details)
 
-- ✅ Add auth tables to territory schema template
-- ✅ Run migration and update territory creation function
+**Issue #51:** Auth-service scaffolding (crate structure, middleware integration)  
+**Issue #52:** Auth database schema (sessions, invitation tokens, password resets)  
+**Issue #53:** JWT token service (access/refresh tokens, RS256 signing)  
+**Issue #54:** Auth endpoints (6 endpoints: register, login, refresh, logout, verify, check-username)  
+**Issue #55:** JWT authentication middleware (JwtAuth Transform, require_auth wrapper)  
+**Issue #56:** Architecture compliance (camelCase, NATS events, AppConfig, observability)  
+**Issue #57:** Testing (TestContext pattern, parallel execution, manual verification)  
+**Issue #58:** Production features (graceful shutdown, circuit breakers)
 
-#### Step 3.3: JWT Token Service (5/5) ✅
-
-- ✅ Implement TokenService struct
-- ✅ generate_access_token function
-- ✅ generate_refresh_token function
-- ✅ verify_access_token function
-- ✅ verify_refresh_token function
-
-#### Step 3.4: Auth Handlers Implementation (6/6) ✅
-
-- ✅ POST /auth/register - User registration (invitation validation pending)
-- ✅ POST /auth/login - User login
-- ✅ POST /auth/refresh - Refresh access token
-- ✅ POST /auth/logout - Logout user
-- ✅ GET /auth/verify - Verify JWT token
-- ✅ POST /auth/check-username - Check username availability
-
-#### Step 3.5: JWT Middleware (3/3) ✅
-
-- ✅ Implement JWT authentication middleware
-- ✅ require_auth() middleware wrapper (via JwtAuth Transform)
-- ✅ Platform security model confirmed (no optional auth needed - invitation-only platform)
-
-#### Step 3.6: Architecture Compliance (7/7) ✅
-
-- ✅ camelCase JSON serialization on all request/response models
-- ✅ NATS event publishing integration (`global.user.registered`)
-- ✅ AppConfig-based configuration (`APP__*__*` environment variables)
-- ✅ Health/ready/metrics endpoints verified
-- ✅ All endpoints tested and working
-- ✅ NATS events confirmed published with security best practices
-- ✅ Build script enhanced with `--build` flag
-
-#### Step 3.7: Auth Service Testing (4/4) ✅
-
-- ✅ Comprehensive test suite with TestContext pattern
-- ✅ Parallel test execution
-- ✅ Clean test isolation
-- ✅ Manual testing (all 6 endpoints verified via curl)
-
-#### Step 3.8: Production-Ready Features (3/3) ✅
-
-- ✅ Graceful shutdown (SIGTERM/Ctrl+C handling)
-- ✅ Circuit breaker patterns (three-state: Closed/Open/HalfOpen)
-- ✅ All Priority 1-3 middleware integrated
+**Key Achievements:**
+- 6 RESTful authentication endpoints
+- Secure password hashing with Argon2
+- JWT tokens with 15-min/7-day expiry
+- Global registry uniqueness enforcement
+- Optional email support
+- NATS event publishing (user.registered)
+- Full architecture compliance
+- Production-ready with circuit breakers
 
 **Notes:**
-
-- Architecture reset complete (unityplan → unityplatform)
-- 14 legacy services archived for reference
-- Fresh database with 3 migrations
-- All middleware patterns implemented (Priority 1-3)
-- Optional email support working
-- Graceful shutdown tested with SIGTERM
-- Circuit breakers tested (8/8 tests passing)
-- **Architecture compliance verified (November 14, 2025):**
-  - camelCase JSON responses working (`accessToken`, `refreshToken`, `expiresIn`)
-  - NATS events publishing successfully
-  - AppConfig integration complete
-  - Start script enhanced with `--build` flag
-
-**Blockers:**
-
-- None (invitation system deferred to invitation-service)
+- Completed November 12-14, 2025
+- Invitation system deferred to invitation-service
+- All tests passing (including 8/8 circuit breaker tests)
 
 ---
 
 ### Stage 4: User Service
 
-**Status:** ✅ Complete  
+**Status:** ✅ Complete (📋 Migrated to Forgejo)  
 **Progress:** 24/24 endpoints completed (100%)  
 **Started:** November 13, 2025  
 **Completed:** November 14, 2025  
 **Dependencies:** Stage 3 (Authentication Service)
 
-#### Step 4.1: User Service Scaffolding (2/2) ✅
+**🔗 Historical Record:** [Forgejo Closed Issues #59-#67](http://localhost:3000/henrik/unity_platform/issues?q=is%3Aissue+is%3Aclosed+label%3Aarea%2Fuser-service+milestone%3Av0.1.0-alpha.2)  
+**📊 Project Board:** [Unity Platform Development](http://localhost:3000/henrik/unity_platform/projects/1)
 
-- ✅ Create user-service crate with all middleware
-- ✅ Create service structure (handlers, models, services)
+**All tasks migrated to Forgejo as closed issues (#59-#67) on November 17, 2025 for historical tracking.**
 
-#### Step 4.2: User Database Schema (2/2) ✅
+#### Task Summary (See Forgejo for Details)
 
-- ✅ Migration 20251113000004: 6 tables, 26 indexes, 2 triggers
-  - users_profiles, users_profile_links, users_language_proficiency
-  - user_connections, data_exports, account_deletion_requests
-- ✅ Migration 20251113000007: users_settings table
-  - App preferences (theme, language, timezone)
-  - Privacy settings (profile visibility, show email/location, allow messages)
-  - Notification preferences (email, badge, course, forum, marketing)
-  - Activity settings (show activity, show online status)
+**Issue #59:** User-service scaffolding (crate structure, all middleware)  
+**Issue #60:** User database schema (7 tables: profiles, links, languages, connections, settings, exports, deletions)  
+**Issue #61:** Profile management (3 endpoints: get own, update, view others)  
+**Issue #62:** Profile links (4 endpoints: list, create, update, delete - max 10 links)  
+**Issue #63:** Language proficiency (4 endpoints: 4D skill tracking across spoken/written/reading/listening)  
+**Issue #64:** User connections (7 endpoints: follow/unfollow, block/unblock, lists, search)  
+**Issue #65:** User settings (6 endpoints: app preferences, privacy, notifications, activity)  
+**Issue #66:** Security and testing (defense-in-depth authorization, OpenAPI/Swagger docs)  
+**Issue #67:** Architecture compliance (camelCase, AppConfig, NATS, metrics, observability)
 
-#### Step 4.3: Profile Management (3/3) ✅
+**Key Achievements:**
+- 24 RESTful endpoints across 5 feature groups
+- Defense-in-depth security (JWT + handler + service + DB)
+- 4-dimensional language proficiency tracking
+- Social features (follow/block with automatic cleanup)
+- Complete settings management (merged settings-service into user-service)
+- Full architecture compliance
+- Paginated results and optimized queries
 
-- ✅ GET /api/v1/user/profile - Get own profile (auto-created)
-- ✅ PUT /api/v1/user/profile - Update profile
-- ✅ GET /api/v1/user/profile/{id} - View other user profiles
-
-#### Step 4.4: Profile Links (4/4) ✅
-
-- ✅ GET /api/v1/user/profile/links - List profile links
-- ✅ POST /api/v1/user/profile/links - Create link (max 10)
-- ✅ PUT /api/v1/user/profile/links/{id} - Update link
-- ✅ DELETE /api/v1/user/profile/links/{id} - Delete link
-
-#### Step 4.5: Language Proficiency (4/4) ✅
-
-- ✅ GET /api/v1/user/profile/languages - List languages
-- ✅ POST /api/v1/user/profile/languages - Add language (4 skill dimensions)
-- ✅ PUT /api/v1/user/profile/languages/{id} - Update language
-- ✅ DELETE /api/v1/user/profile/languages/{id} - Delete language
-
-#### Step 4.6: User Connections (7/7) ✅
-
-- ✅ POST /api/v1/user/{id}/follow - Follow user
-- ✅ DELETE /api/v1/user/{id}/follow - Unfollow user
-- ✅ POST /api/v1/user/{id}/block - Block user (removes follows)
-- ✅ DELETE /api/v1/user/{id}/block - Unblock user
-- ✅ GET /api/v1/user/{id}/followers - List followers (paginated)
-- ✅ GET /api/v1/user/{id}/following - List following (paginated)
-- ✅ GET /api/v1/user/search - Search users with connection status
-
-#### Step 4.7: User Settings (6/6) ✅
-
-- ✅ GET /api/v1/user/settings - Get all settings (auto-creates defaults)
-- ✅ PATCH /api/v1/user/settings - Update all settings
-- ✅ GET /api/v1/user/settings/privacy - Get privacy settings
-- ✅ PATCH /api/v1/user/settings/privacy - Update privacy settings
-- ✅ GET /api/v1/user/settings/notifications - Get notification settings
-- ✅ PATCH /api/v1/user/settings/notifications - Update notification settings
-
-**Note:** Settings-service merged into user-service for MVP simplicity. Settings will migrate to Holochain user source chain in Phase 3.
-
-#### Step 4.8: Security & Testing (3/3) ✅
-
-- ✅ Defense-in-depth authorization (JWT + handler + service + DB WHERE)
-- ✅ OpenAPI/Swagger documentation at /swagger-ui/
-- ✅ Comprehensive endpoint testing (profiles, links, languages, connections, settings)
-
-#### Step 4.9: Architecture Compliance (8/8) ✅
-
-- ✅ camelCase JSON serialization verified on all models
-- ✅ AppConfig migration: `config.database_url()`, `config.nats_url()`
-- ✅ NATS client initialized and connected
-- ✅ Health endpoint corrected to `/api/v1/health`
-- ✅ Ready endpoint added: `/api/v1/ready` with DB check
-- ✅ Metrics endpoint added: `/api/v1/metrics` (Prometheus format)
-- ✅ MetricsCollector integrated with automatic HTTP tracking
-- ✅ All endpoints tested and working
-
-**Achievements:**
-
-- **24 RESTful endpoints** across 5 feature groups (profiles, links, languages, connections, settings)
-- **Security verified**: Users cannot modify other users' data
-- **Language skills**: 4-dimensional tracking (spoken/written/reading/listening)
-- **Social features**: Follow/block with automatic mutual relationship cleanup
-- **Search**: Username/display name search with connection status indicators
-- **Settings management**: Complete user preferences, privacy, and notifications
-- **Performance**: Paginated results, display ordering, optimized queries
-- **Architecture compliance**: Full AppConfig integration, NATS ready, Prometheus metrics
-- **Design decision**: Settings-service merged into user-service for MVP efficiency
-
-**Deferred to Future:**
-
-- Avatar upload/storage (will use IPFS in Stage 9)
-- Privacy settings enforcement (framework in place, will be enforced in Stage 5)
-- Data export automation (tables ready, scheduled jobs later)
-- Account deletion flow (soft delete ready, automation later)
-- Settings migration to Holochain (Phase 3 - user source chain)
+**Notes:**
+- Completed November 13-14, 2025
+- Settings-service merged for MVP efficiency
+- Avatar upload deferred to IPFS integration (Stage 9)
+- Settings will migrate to Holochain in Phase 3
 
 ---
 
