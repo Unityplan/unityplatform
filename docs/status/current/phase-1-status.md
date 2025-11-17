@@ -1,24 +1,24 @@
 # Phase 1 MVP - Implementation Status
 
-**Last Updated:** November 16, 2025  
+**Last Updated:** November 17, 2025  
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
-**Progress:** 42% (Stages 1-4: 100%, Stage 6: 100%, Stage 14: 100%, Stages 5,7-13: 0%)  
+**Progress:** 42% (Stages 1-4: 100%, Stage 6: 100%, Stage 14: 100%, Stage 5: Planned, Stages 7-13: 0%)  
 **Release Stage:** Alpha (0.1.0-alpha.1)  
-**Recent Update:** Utility-service complete with favicon fetching, language registry integration, and frontend profile/language UI components
+**Recent Update:** Stage 5 tasks migrated to Forgejo (27 issues created for frontend development)
 
 ---
 
 ## 📊 Overall Progress
 
 ```text
-[████████░░░░░░░░░░░░] 42% Complete (Stages 1-4: 100%, Stage 6: 100%, Stage 14: 100%, Stages 5,7-13: 0%)
+[████████░░░░░░░░░░░░] 42% Complete (Stages 1-4: 100%, Stage 6: 100%, Stage 14: 100%, Stage 5: Planned, Stages 7-13: 0%)
 
 Stage 1:  Foundation & Infrastructure        [██████████] 100%
 Stage 2:  Database Schema & Migrations       [██████████] 100%
 Stage 3:  Authentication Service             [██████████] 100%
 Stage 4:  User Service (incl. Settings)      [██████████] 100%
-Stage 5:  Frontend Auth & Profile            [░░░░░░░░░░] 0%
+Stage 5:  Frontend Auth & Profile            [📋Forgejo] 0% → Track in Forgejo
 Stage 6:  Territory & Badge Services         [██████████] 100%
 Stage 7:  Course Service (LMS)               [░░░░░░░░░░] 0%
 Stage 8:  Matrix Protocol Integration        [░░░░░░░░░░] 0%
@@ -34,20 +34,43 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 
 ## 🎯 Current Sprint
 
-**Sprint:** Sprint 8 - Utility Service & Language Registry Complete  
-**Sprint Goal:** Implement utility-service with favicon fetching and integrate language registry with territory-service and frontend UI  
-**Sprint Dates:** November 16, 2025  
+**Sprint:** Sprint 9 - Stage 5 Planning & Forgejo Migration  
+**Sprint Goal:** Migrate Stage 5 frontend tasks to Forgejo issue tracking for better project management  
+**Sprint Dates:** November 17, 2025  
 **Team Members:** Henrik  
-**Status:** ✅ Complete - Utility-service operational, language registry integrated, frontend UI components added
+**Status:** ✅ Complete - All 27 frontend issues created in Forgejo
 
 ### Active Tasks
 
-- 🎯 **Next**: Continue frontend development (Stage 5)
-  - Auth flow implementation
-  - Profile management UI
-  - Integration with backend APIs
+- 🎯 **Next**: Begin Stage 5 Frontend Development
+  - Start with issue #4: Create Vite + React + TypeScript project
+  - Track progress in [Forgejo Project Board](http://localhost:3000/henrik/unity_platform/projects/1)
+  - View all issues: [Frontend Issues](http://localhost:3000/henrik/unity_platform/issues?labels=area%2Ffrontend-app)
 
 ### Completed This Sprint
+
+- ✅ **Forgejo Issue Migration (Stage 5)**
+  - Created 27 detailed issues for Frontend Auth & Profile (#4-#30)
+  - All issues tagged with priority/high|medium|low
+  - All issues assigned to milestone v0.1.0-alpha.2
+  - All issues labeled with area/frontend-app
+  - Detailed acceptance criteria included for each issue
+
+- ✅ **Forgejo API Scripts**
+  - Created scripts/forgejo/ directory with automation tools
+  - create-issue.sh - Quick CLI issue creator
+  - create-from-roadmap.sh - Interactive issue creator
+  - list-labels.sh, list-milestones.sh - Utilities
+  - Fixed label format (priority/high vs priority:high)
+  - All scripts tested and working
+
+- ✅ **Documentation Updates**
+  - Updated phase-1-status.md to reference Forgejo
+  - Created QUICKSTART.md for 5-minute setup
+  - Created comprehensive README.md for scripts
+  - Stage 5 tasks marked as migrated
+
+### Previous Sprint Completions (Sprint 8)
 
 - ✅ **Utility-service complete (port 8014)**
   - Favicon fetching endpoint with URL validation and SSRF protection
@@ -555,71 +578,51 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 
 ### Stage 5: Frontend Auth & Profile
 
-**Status:** 🚧 Not Started  
-**Progress:** 0/20 tasks completed (0%)  
+**Status:** � Migrated to Forgejo Issues  
+**Progress:** 0/27 tasks completed (0%)  
 **Started:** Not yet  
 **Completed:** Not yet  
-**Dependencies:** Stages 3 & 4 (Auth and User Services)
+**Dependencies:** ✅ Stages 3 & 4 Complete (Auth and User Services)
 
-#### Step 5.1: Project Scaffolding (0/7)
+**🔗 Track Progress:** [Forgejo Issues](http://localhost:3000/henrik/unity_platform/issues?labels=area%2Ffrontend-app&milestone=1&state=open)  
+**📊 Project Board:** [Unity Platform Development](http://localhost:3000/henrik/unity_platform/projects/1)
 
-- ⬜ Create Vite + React + TypeScript project
-- ⬜ Install core dependencies (TanStack Router/Query, Zustand, Axios, forms)
-- ⬜ Install UI dependencies (TailwindCSS v4, @tailwindcss/vite, shadcn/ui)
-- ⬜ Install testing dependencies (Vitest, Testing Library, jsdom)
-- ⬜ Configure TailwindCSS v4 (postcss.config.js, index.css with OKLCH theming)
-- ⬜ Configure Vitest (vitest.config.ts, test setup)
-- ⬜ Set up environment variables (.env.development, .env.production)
+**All tasks migrated to Forgejo issues (#4-#30) on November 17, 2025.**
 
-#### Step 5.2: Auth Store (Zustand) (0/1)
+#### Task Summary (See Forgejo for Details)
 
-- ⬜ Create auth store (src/stores/authStore.ts) with persistence
-- ⬜ Create UI store (src/stores/uiStore.ts) with theme management
+**Step 5.1: Project Scaffolding** → Issues #4-#10 (7 issues)
+- ✅ Migrated: Vite setup, dependencies, configuration
 
-#### Step 5.3: API Client Functions (0/2)
+**Step 5.2: State Management** → Issues #11-#12 (2 issues)
+- ✅ Migrated: Auth store, UI store
 
-- ⬜ Create auth API client (src/api/auth.ts) with 6 endpoints
-- ⬜ Create user API client (src/api/users.ts) with 11 endpoints
-- ⬜ Create API client with token refresh interceptor (src/lib/api-client.ts)
+**Step 5.3: API Clients** → Issues #13-#15 (3 issues)
+- ✅ Migrated: Auth API, User API, interceptors
 
-#### Step 5.4: Auth Pages (0/3)
+**Step 5.4: Auth Pages** → Issues #16-#18 (3 issues)
+- ✅ Migrated: Login, register, password reset
 
-- ⬜ Create login page (LoginPage.tsx with react-hook-form + zod)
-- ⬜ Create register page (RegisterPage.tsx with two-step invitation validation)
-- ⬜ Create password reset page (PasswordResetPage.tsx with two-step flow)
+**Step 5.5: Profile Pages** → Issues #19-#20 (2 issues)
+- ✅ Migrated: Profile view, profile edit
 
-#### Step 5.5: Profile Pages (0/2)
+**Step 5.6: Protected Routes** → Issues #21-#23 (3 issues)
+- ✅ Migrated: AuthGuard, router config, route files
 
-- ⬜ Create profile view page (ProfileViewPage.tsx)
-- ⬜ Create profile edit page (ProfileEditPage.tsx)
+**Step 5.7: UI Components** → Issues #24-#27 (4 issues)
+- ✅ Migrated: Avatar, user card, profile header, privacy form
 
-#### Step 5.6: Protected Routes (0/3)
-
-- ⬜ Create route guard component (AuthGuard.tsx)
-- ⬜ Configure TanStack Router with file-based routing
-- ⬜ Create 8 route files (root, index, login, register, reset-password, dashboard, profile, profile.edit)
-
-#### Step 5.7: UI Components (0/4)
-
-- ⬜ Create avatar component
-- ⬜ Create user card component
-- ⬜ Create profile header component
-- ⬜ Create privacy settings form
-
-#### Step 5.8: Frontend Testing (0/3)
-
-- ⬜ Unit tests for components
-- ⬜ Integration tests (login, registration, profile flows)
-- ⬜ E2E tests (complete user flows)
+**Step 5.8: Testing** → Issues #28-#30 (3 issues)
+- ✅ Migrated: Unit tests, integration tests, E2E tests
 
 **Notes:**  
 
-- Will be implemented after backend services are complete
-- Frontend will consume API endpoints from auth and user services
+- ✅ All 27 tasks converted to Forgejo issues with detailed acceptance criteria
+- ✅ Backend services complete (Stages 3 & 4)
+- ✅ Issues prioritized and ready to work
+- 📋 Use Forgejo for task tracking, progress updates, and collaboration
 
 **Blockers:**
-
-- Waiting for backend services (Stages 3 & 4) to be implemented
 
 - None
 
