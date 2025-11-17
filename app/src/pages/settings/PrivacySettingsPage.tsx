@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { AppLayout } from '@/components/layouts/AppLayout';
 import { PrivacySettingsForm } from '@/components/user/PrivacySettingsForm';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Breadcrumb,
@@ -12,7 +11,8 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Link, useRouter } from '@tanstack/react-router';
-import { Home, User, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Home, User, Shield } from 'lucide-react';
+import { toast } from 'sonner';
 
 // Privacy settings type (matches PrivacySettingsForm schema)
 type PrivacySettings = {
@@ -46,8 +46,6 @@ const PRIVACY_SETTINGS_KEY = 'unityplatform_privacy_settings';
 export function PrivacySettingsPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
-    const [saveSuccess, setSaveSuccess] = useState(false);
-    const [saveError, setSaveError] = useState(false);
 
     // Load initial settings from localStorage
     const getInitialSettings = (): Partial<PrivacySettings> => {
@@ -65,8 +63,6 @@ export function PrivacySettingsPage() {
     // Mock submit handler - TODO: Replace with actual API call
     const handleSubmit = async (values: PrivacySettings) => {
         setIsLoading(true);
-        setSaveSuccess(false);
-        setSaveError(false);
 
         try {
             // Simulate API delay
@@ -78,16 +74,17 @@ export function PrivacySettingsPage() {
             // TODO: Replace with actual API call
             // await updatePrivacySettings(values);
 
-            setSaveSuccess(true);
-
-            // Auto-hide success message after 3 seconds
-            setTimeout(() => setSaveSuccess(false), 3000);
+            toast.success("Privacy settings saved successfully");
         } catch (error) {
             console.error('Failed to save privacy settings:', error);
-            setSaveError(true);
+            toast.error("Failed to save privacy settings");
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleBack = () => {
+        router.navigate({ to: "/settings" });
     };
 
     return (
@@ -128,29 +125,42 @@ export function PrivacySettingsPage() {
                             Manage who can see your profile and how others can interact with you.
                         </p>
                     </div>
-                    <Button
-                        onClick={() => router.history.back()}
-                        disabled={isLoading}
-                    >
-                        Cancel
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={handleBack} disabled={isLoading}>
+                            Back to Settings
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+                                submitButton?.click();
+                            }}
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Saving...' : 'Save'}
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Privacy Settings Form */}
                 <PrivacySettingsForm
                     initialValues={initialValues}
                     onSubmit={handleSubmit}
-                    isLoading={isLoading}
                 />
 
-                {/* Helper Text */}
-                <div className="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
-                    <p className="font-semibold">Note:</p>
-                    <p>
-                        Privacy settings are currently stored locally and will be synced with the server
-                        once the backend API is implemented. Changes you make here will affect how your
-                        profile appears to other users.
-                    </p>
+                {/* Action Buttons - Bottom */}
+                <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={handleBack} disabled={isLoading}>
+                        Back to Settings
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+                            submitButton?.click();
+                        }}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Saving...' : 'Save'}
+                    </Button>
                 </div>
             </div>
         </AppLayout>

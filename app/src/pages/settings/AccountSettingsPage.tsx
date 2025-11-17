@@ -15,6 +15,7 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 
 export function AccountSettingsPage() {
     const router = useRouter()
@@ -46,7 +47,7 @@ export function AccountSettingsPage() {
 
     const handleEmailChange = () => {
         if (!newEmail) {
-            alert("Please enter a new email address")
+            toast.error("Please enter a new email address")
             return
         }
 
@@ -55,22 +56,22 @@ export function AccountSettingsPage() {
         setEmail(newEmail)
         setNewEmail("")
         setEmailVerified(false)
-        alert("Verification email sent to " + newEmail)
+        toast.success("Verification email sent to " + newEmail)
     }
 
     const handlePasswordChange = () => {
         if (!currentPassword || !newPassword || !confirmPassword) {
-            alert("Please fill in all password fields")
+            toast.error("Please fill in all password fields")
             return
         }
 
         if (newPassword !== confirmPassword) {
-            alert("New passwords do not match")
+            toast.error("New passwords do not match")
             return
         }
 
         if (newPassword.length < 8) {
-            alert("Password must be at least 8 characters")
+            toast.error("Password must be at least 8 characters")
             return
         }
 
@@ -78,7 +79,7 @@ export function AccountSettingsPage() {
         setCurrentPassword("")
         setNewPassword("")
         setConfirmPassword("")
-        alert("Password changed successfully")
+        toast.success("Password changed successfully")
     }
 
     const handleTotpToggle = (checked: boolean) => {
@@ -88,6 +89,7 @@ export function AccountSettingsPage() {
             if (confirm("Are you sure you want to disable two-factor authentication?")) {
                 setTotpEnabled(false)
                 localStorage.setItem("totpEnabled", "false")
+                toast.success("Two-factor authentication disabled")
             }
         }
     }
@@ -97,11 +99,11 @@ export function AccountSettingsPage() {
         setTotpEnabled(true)
         setShowTotpSetup(false)
         localStorage.setItem("totpEnabled", "true")
-        alert("Two-factor authentication enabled successfully")
+        toast.success("Two-factor authentication enabled successfully")
     }
 
-    const handleCancel = () => {
-        router.history.back()
+    const handleBack = () => {
+        router.navigate({ to: "/settings" })
     }
 
     return (
@@ -132,11 +134,17 @@ export function AccountSettingsPage() {
             }
         >
             <div className="space-y-6 py-6">
-                <div>
-                    <h1 className="text-2xl font-bold">Account Settings</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Manage your email, password, and security settings
-                    </p>
+                {/* Page Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold">Account Settings</h1>
+                        <p className="text-muted-foreground mt-1">
+                            Manage your email, password, and security settings
+                        </p>
+                    </div>
+                    <Button variant="outline" onClick={handleBack}>
+                        Back to Settings
+                    </Button>
                 </div>
 
                 {/* Email Management */}
@@ -356,9 +364,9 @@ export function AccountSettingsPage() {
                     </div>
                 </Card>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleCancel}>
+                {/* Action Buttons - Bottom */}
+                <div className="flex justify-end">
+                    <Button variant="outline" onClick={handleBack}>
                         Back to Settings
                     </Button>
                 </div>

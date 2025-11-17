@@ -14,6 +14,7 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 
 interface Session {
     id: string
@@ -98,20 +99,25 @@ export function SecuritySettingsPage() {
     const handleRevokeSession = (sessionId: string) => {
         if (confirm("Are you sure you want to revoke this session?")) {
             setSessions(sessions.filter(s => s.id !== sessionId))
-            alert("Session revoked successfully")
+            toast.success("Session revoked successfully")
         }
     }
 
     const handleRevokeAllSessions = () => {
         if (confirm("This will sign you out of all devices except this one. Continue?")) {
             setSessions(sessions.filter(s => s.current))
-            alert("All other sessions have been revoked")
+            toast.success("All other sessions have been revoked")
         }
     }
 
-    const handleCancel = () => {
-        router.history.back()
-    }
+    const handleBack = () => {
+        router.navigate({ to: "/settings" });
+    };
+
+    const handleSave = () => {
+        // Save security settings (friend recovery and manager recovery are already saved to localStorage)
+        toast.success("Security settings saved successfully");
+    };
 
     return (
         <AppLayout
@@ -141,11 +147,22 @@ export function SecuritySettingsPage() {
             }
         >
             <div className="space-y-6 py-6">
-                <div>
-                    <h1 className="text-2xl font-bold">Security Settings</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Manage account recovery, active sessions, and login history
-                    </p>
+                {/* Page Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold">Security Settings</h1>
+                        <p className="text-muted-foreground mt-1">
+                            Manage account recovery, active sessions, and login history
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={handleBack}>
+                            Back to Settings
+                        </Button>
+                        <Button onClick={handleSave}>
+                            Save
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Account Recovery */}
@@ -304,8 +321,8 @@ export function SecuritySettingsPage() {
                                     </div>
                                     <span
                                         className={`text-xs px-2 py-1 rounded ${login.status === "Success"
-                                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                                                : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                                             }`}
                                     >
                                         {login.status}
@@ -320,13 +337,16 @@ export function SecuritySettingsPage() {
                     </div>
                 </Card>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleCancel}>
+                {/* Action Buttons - Bottom */}
+                <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={handleBack}>
                         Back to Settings
+                    </Button>
+                    <Button onClick={handleSave}>
+                        Save
                     </Button>
                 </div>
             </div>
         </AppLayout>
-    )
+    );
 }

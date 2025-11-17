@@ -39,6 +39,7 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      isLocked: false, // Session lock state
 
       // Actions
       login: async (credentials: LoginRequest) => {
@@ -189,7 +190,45 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticated: false,
           isLoading: false,
           error: null,
+          isLocked: false, // Reset lock state on clear
         });
+      },
+
+      lockSession: () => {
+        set({ isLocked: true });
+      },
+
+      unlockSession: async (_email: string, password: string) => {
+        const { user } = get();
+        if (!user) {
+          throw new Error('No user session to unlock');
+        }
+
+        set({ isLoading: true, error: null });
+        try {
+          // Re-authenticate with the provided credentials
+          const credentials: LoginRequest = {
+            username: user.username, // Use stored username
+            password,
+            territory: user.territory,
+          };
+
+          // Verify credentials by attempting login
+          const response = await authApi.login(credentials);
+          
+          // Update tokens and unlock session
+          set({
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
+            isLocked: false,
+            isLoading: false,
+            error: null,
+          });
+        } catch (error: unknown) {
+          const errorMessage = getErrorMessage(error, 'Unlock failed');
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
       },
     }),
     {

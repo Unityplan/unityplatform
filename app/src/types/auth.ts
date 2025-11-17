@@ -36,6 +36,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  isLocked: boolean; // Session lock state
 }
 
 export interface AuthActions {
@@ -47,6 +48,8 @@ export interface AuthActions {
   setTokens: (accessToken: string, refreshToken: string) => void;
   setUser: (user: User) => void;
   clearAuth: () => void;
+  lockSession: () => void; // Lock the session
+  unlockSession: (email: string, password: string) => Promise<void>; // Unlock with re-auth
 }
 
 export type AuthStore = AuthState & AuthActions;

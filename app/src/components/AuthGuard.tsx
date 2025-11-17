@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import { useAuthStore } from '@/stores/authStore';
+import { useInactivityDetector } from '@/hooks/useInactivityDetector';
+import { SessionLockScreen } from '@/components/SessionLockScreen';
 
 interface AuthGuardProps {
     children: React.ReactNode;
@@ -8,11 +10,34 @@ interface AuthGuardProps {
 
 /**
  * AuthGuard component that protects routes from unauthenticated access.
- * Redirects to /login if user is not authenticated.
+ * 
+ * **Security Features:**
+ * - Redirects to /login if user is not authenticated
+ * - Auto-locks session after 10 minutes of inactivity
+ * - Shows session lock screen for re-authentication
+ * - Stores redirect path for post-login navigation
+ * 
+ * @example
+ * ```tsx
+ * <AuthGuard>
+ *   <ProtectedPage />
+ * </AuthGuard>
+ * ```
  */
 export function AuthGuard({ children }: AuthGuardProps) {
-    const { isAuthenticated, user, isLoading } = useAuthStore();
+    const { isAuthenticated, user, isLoading, isLocked, lockSession } = useAuthStore();
     const router = useRouter();
+
+    // Inactivity detection - lock session after 10 minutes
+    useInactivityDetector({
+        timeout: 10 * 60 * 1000, // 10 minutes
+        onInactive: () => {
+            if (isAuthenticated && !isLocked) {
+                lockSession();
+            }
+        },
+        enabled: isAuthenticated && !isLocked,
+    });
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -24,6 +49,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
             });
         }
     }, [isAuthenticated, router]);
+
+    // Show session lock screen if locked
+    if (isAuthenticated && isLocked) {
+        return <SessionLockScreen />;
+    }
 
     // Show loading while user data is being fetched
     if (isAuthenticated && !user && isLoading) {

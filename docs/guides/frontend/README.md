@@ -86,6 +86,26 @@ Complete guide for setting up and building the frontend application.
 
 ---
 
+### [Security Guide](./security.md) 🔐 SECURITY BEST PRACTICES
+
+Comprehensive security implementation and best practices for authentication, authorization, and session management.
+
+**Contents:**
+
+- Token-based authentication (JWT storage, refresh, persistence)
+- Session lock (10-minute inactivity auto-lock)
+- Automatic token refresh (interceptors, queue system, error handling)
+- Route protection (AuthGuard, redirects, loading states)
+- Request blocking (locked session prevention)
+- Error handling (401/403/500, token refresh failures)
+- Password security (no storage, re-authentication)
+- Additional measures (XSS, CSRF, CSP, timeouts)
+- Security checklist and future enhancements
+
+**Use when:** Implementing authentication, handling tokens, protecting routes, debugging auth issues, or ensuring security compliance.
+
+---
+
 ### [Testing Guide](./testing-guide.md)
 
 Comprehensive testing strategies for all frontend code.

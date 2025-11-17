@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from '@tanstack/react-router'
 import { router } from './router'
 import { ThemeProvider } from './components/theme-provider'
+import { Toaster } from 'sonner'
 import './index.css'
 
 // Initialize reduced motion preference on app load
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <RouterProvider router={router} />
+      <Toaster position="top-right" richColors closeButton />
     </ThemeProvider>
   </StrictMode>,
 )

@@ -1,18 +1,18 @@
 # Phase 1 MVP - Implementation Status
 
-**Last Updated:** November 14, 2025  
+**Last Updated:** November 16, 2025  
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
-**Progress:** 38% (Stages 1-4: 100%, Stage 6: 100%, Stages 5,7-13: 0%)  
+**Progress:** 42% (Stages 1-4: 100%, Stage 6: 100%, Stage 14: 100%, Stages 5,7-13: 0%)  
 **Release Stage:** Alpha (0.1.0-alpha.1)  
-**Recent Update:** User-service settings endpoints complete - All Phase 1 backend core services operational (auth, user, badge, territory)
+**Recent Update:** Utility-service complete with favicon fetching, language registry integration, and frontend profile/language UI components
 
 ---
 
 ## 📊 Overall Progress
 
 ```text
-[████████░░░░░░░░░░░░] 38% Complete (Stages 1-4: 100%, Stage 6: 100%, Stages 5,7-13: 0%)
+[████████░░░░░░░░░░░░] 42% Complete (Stages 1-4: 100%, Stage 6: 100%, Stage 14: 100%, Stages 5,7-13: 0%)
 
 Stage 1:  Foundation & Infrastructure        [██████████] 100%
 Stage 2:  Database Schema & Migrations       [██████████] 100%
@@ -27,26 +27,66 @@ Stage 10: Forum Service (Matrix-based)       [░░░░░░░░░░] 0%
 Stage 11: Translation Service                [░░░░░░░░░░] 0%
 Stage 12: Frontend Course & Forum UI         [░░░░░░░░░░] 0%
 Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
+Stage 14: Utility Service & Language Registry[██████████] 100%
 ```
 
 ---
 
 ## 🎯 Current Sprint
 
-**Sprint:** Sprint 7 - User Settings & Phase 1 Backend Completion  
-**Sprint Goal:** Complete user settings endpoints and verify all Phase 1 backend core services are operational  
-**Sprint Dates:** November 14, 2025  
+**Sprint:** Sprint 8 - Utility Service & Language Registry Complete  
+**Sprint Goal:** Implement utility-service with favicon fetching and integrate language registry with territory-service and frontend UI  
+**Sprint Dates:** November 16, 2025  
 **Team Members:** Henrik  
-**Status:** ✅ Complete - All Phase 1 backend core services (auth, user, badge, territory) fully operational
+**Status:** ✅ Complete - Utility-service operational, language registry integrated, frontend UI components added
 
 ### Active Tasks
 
-- 🎯 **Next**: Frontend development (Stage 5)
-  - Auth & Profile UI implementation
+- 🎯 **Next**: Continue frontend development (Stage 5)
+  - Auth flow implementation
+  - Profile management UI
   - Integration with backend APIs
-  - Settings UI components
 
 ### Completed This Sprint
+
+- ✅ **Utility-service complete (port 8014)**
+  - Favicon fetching endpoint with URL validation and SSRF protection
+  - Redis caching (7-day TTL) with HIT/MISS tracking
+  - 1MB size limit for fetched favicons
+  - All 5 middleware (Logging, RequestId, Security, CORS, RateLimit)
+  - OpenAPI/Swagger documentation
+  - Health, ready, and metrics endpoints
+  - CHANGELOG.md with Keep a Changelog format
+
+- ✅ **Language registry integration**
+  - Migration 20251113000008: global.registry_languages table
+  - 25 initial languages (ISO 639-3 standard)
+  - Territory-service language search/list endpoints
+  - Language models and services with code/name search
+
+- ✅ **Frontend components and UI**
+  - ProfileLinksManager with automatic favicon fetching
+  - Favicon display with Globe fallback icon
+  - LanguageProficiencyManager with table view and search
+  - TagInput component for skills/interests (primary colors)
+  - ResponsiveDialog for desktop/mobile dialog/drawer pattern
+  - Updated shadcn/ui components (command, dialog, drawer, popover, table)
+
+- ✅ **API client improvements**
+  - utility.ts client with blob URL handling for favicons
+  - Proper error handling for favicon fetch failures
+
+- ✅ **Dev tools enhancement**
+  - Added utility-service to dev scripts (start, stop, status, restart)
+  - Build utility-service in release mode
+  - Updated frontend .env with VITE_UTILITY_SERVICE_URL
+
+- ✅ **Documentation updates**
+  - Complete utility-service architecture (README.md, API.md)
+  - Updated architecture overview with utility-service details
+  - Port allocation (8014) and service URLs documented
+
+### Previous Sprint Completions
 
 - ✅ User settings endpoints implemented (6 endpoints)
   - GET/PATCH `/api/v1/user/settings` (all settings)
@@ -189,10 +229,11 @@ Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
   - ✅ All documentation includes Phase 1 vs Phase 2 comparison tables
 - ✅ Rust workspace created (services/Cargo.toml)
 - ✅ Database schema designed with global and territory_dk schemas
-- ✅ SQLx migrations created and applied
+- ✅ SQLx migrations created and applied (8 migrations total)
 - ✅ Multi-territory architecture implemented (schema-based isolation)
 - ✅ Territory management standard followed (ISO 3166-1 Alpha-2 codes)
 - ✅ SQLTools configured for database management
+- ✅ Language registry (global.registry_languages with 25 languages)
 
 ### Blockers
 
@@ -929,6 +970,67 @@ Basic translation service with caching for multi-language support.
 
 ---
 
+### Stage 14: Utility Service & Language Registry
+
+**Status:** ✅ Complete  
+**Progress:** 18/18 tasks completed (100%)  
+**Started:** November 16, 2025  
+**Completed:** November 16, 2025  
+**Dependencies:** Stage 4 (User Service), Stage 6 (Territory Service)
+
+#### Step 14.1: Utility Service Scaffolding (2/2) ✅
+
+- ✅ Create utility-service crate (port 8014)
+- ✅ Create service structure (handlers, models)
+
+#### Step 14.2: Favicon Fetching (4/4) ✅
+
+- ✅ Implement GET /utilities/favicon endpoint with URL validation
+- ✅ Add SSRF protection and 1MB size limit
+- ✅ Integrate Redis caching (7-day TTL)
+- ✅ Add HIT/MISS tracking for cache performance
+
+#### Step 14.3: Language Registry (3/3) ✅
+
+- ✅ Create migration 20251113000008: global.registry_languages table
+- ✅ Seed 25 initial languages (ISO 639-3 standard)
+- ✅ Implement territory-service language search/list endpoints
+
+#### Step 14.4: Frontend Integration (5/5) ✅
+
+- ✅ Create ProfileLinksManager with automatic favicon fetching
+- ✅ Implement favicon display with Globe fallback icon
+- ✅ Create LanguageProficiencyManager with table view and search
+- ✅ Create TagInput component for skills/interests
+- ✅ Create ResponsiveDialog for desktop/mobile patterns
+
+#### Step 14.5: Documentation & DevOps (4/4) ✅
+
+- ✅ Complete utility-service documentation (README.md, API.md)
+- ✅ Update architecture overview with utility-service
+- ✅ Add utility-service to dev scripts (start, stop, status, restart)
+- ✅ Update frontend .env with VITE_UTILITY_SERVICE_URL
+
+**Achievements:**
+
+- **Infrastructure service pattern**: Stateless utilities with Redis caching
+- **Favicon automation**: Profile links automatically fetch and cache favicons
+- **Language registry**: Standardized ISO 639-3 language codes
+- **Frontend components**: Reusable UI patterns (ResponsiveDialog, TagInput)
+- **Consistent architecture**: All 5 middleware, workspace dependencies
+
+**Notes:**
+
+- Utility-service follows exact same patterns as other services
+- Frontend components use shadcn/ui for consistency
+- Language registry integrated with territory-service for multi-language support
+
+**Blockers:**
+
+- None
+
+---
+
 ### Stage 13: Testing, Documentation & Deployment
 
 **Status:** ⬜ Not Started  
@@ -987,8 +1089,9 @@ Load testing consolidated here from individual stages for comprehensive system p
 
 - ✅ Auth service operational
 - ✅ User service operational
+- ✅ Utility service operational (favicon fetching, language registry)
 - ⬜ Frontend auth/profile working
-- ⬜ Users can register, login, manage profiles
+- ⬜ Users can register, login, manage profiles via UI
 
 ### Milestone 3: Badge & Course System Complete
 
@@ -1087,6 +1190,41 @@ Load testing consolidated here from individual stages for comprehensive system p
 ---
 
 ## 📝 Recent Activity Log
+
+### November 16, 2025
+
+- ✅ **Stage 14 Complete: Utility Service & Language Registry**
+- ✅ Utility-service implementation (port 8014)
+  - Favicon fetching with URL validation and SSRF protection
+  - Redis caching with 7-day TTL
+  - HIT/MISS tracking for cache performance
+  - All 5 middleware components integrated
+  - OpenAPI/Swagger documentation
+- ✅ Language registry integration
+  - Migration 20251113000008: global.registry_languages table
+  - 25 initial languages (ISO 639-3 standard)
+  - Territory-service language search/list endpoints
+- ✅ Frontend UI components
+  - ProfileLinksManager with automatic favicon fetching
+  - LanguageProficiencyManager with table view and search
+  - TagInput component for skills/interests
+  - ResponsiveDialog for desktop/mobile patterns
+- ✅ Dev tools updates
+  - Added utility-service to dev scripts
+  - Updated frontend .env configuration
+- ✅ Documentation complete
+  - Utility-service README.md and API.md
+  - Architecture overview updated
+- 📊 Progress: 42% of Phase 1 complete (Stages 1-4, 6, 14: 100%)
+
+### November 14, 2025
+
+- ✅ **Sprint 7 Complete: User Settings & Phase 1 Backend Completion**
+- ✅ User settings endpoints implemented (6 endpoints)
+- ✅ Territory-service completed (6/6 endpoints)
+- ✅ Badge-service completed (7/7 endpoints)
+- ✅ All backend core services architecture compliance verified
+- 📊 Progress: 38% of Phase 1 complete (Stages 1-4, 6: 100%)
 
 ### November 8, 2025
 

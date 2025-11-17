@@ -45,6 +45,11 @@ Learn how the system is designed and structured.
 - **[Rust Backend Plan](guides/development/rust-backend-plan.md)** - Comprehensive Rust microservices development roadmap
 - **[Development Tools](guides/development/development-tools.md)** - Development environment setup and tools
 
+#### Frontend
+
+- **[Frontend Development Guide](guides/frontend/README.md)** - Complete frontend development guide (React, Vite, TanStack)
+- **[Frontend Security](guides/frontend/security.md)** - Authentication, session management, and security best practices
+
 #### Operations
 
 - **[Forgejo MCP Setup](guides/operations/forgejo-mcp-setup.md)** - Forgejo git server and MCP integration

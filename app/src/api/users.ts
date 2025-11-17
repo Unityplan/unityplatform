@@ -110,22 +110,79 @@ export interface UpdateLanguageProficiencyRequest {
   showOnProfile?: boolean;
 }
 
+// ============================================================================
+// Settings Types
+// ============================================================================
+
+export interface UserSettings {
+  userId: string;
+  theme: string;
+  language: string;
+  timezone: string;
+  profileVisibility: string;
+  showEmail: boolean;
+  showLocation: boolean;
+  allowMessages: string;
+  emailNotifications: boolean;
+  badgeNotifications: boolean;
+  courseNotifications: boolean;
+  forumNotifications: boolean;
+  marketingEmails: boolean;
+  showActivity: boolean;
+  showOnlineStatus: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateSettingsRequest {
+  theme?: 'light' | 'dark' | 'system';
+  language?: string;
+  timezone?: string;
+  profileVisibility?: 'public' | 'territory' | 'private';
+  showEmail?: boolean;
+  showLocation?: boolean;
+  allowMessages?: 'everyone' | 'connections' | 'none';
+  emailNotifications?: boolean;
+  badgeNotifications?: boolean;
+  courseNotifications?: boolean;
+  forumNotifications?: boolean;
+  marketingEmails?: boolean;
+  showActivity?: boolean;
+  showOnlineStatus?: boolean;
+}
+
 export interface PrivacySettings {
-  profile_visibility: 'public' | 'connections_only' | 'private';
-  show_email: boolean;
-  show_full_name: boolean;
-  show_location: boolean;
-  show_connections: boolean;
-  allow_messages_from: 'everyone' | 'connections_only' | 'nobody';
+  profileVisibility: 'public' | 'territory' | 'private';
+  showEmail: boolean;
+  showLocation: boolean;
+  allowMessages: 'everyone' | 'connections' | 'none';
+  showActivity: boolean;
+  showOnlineStatus: boolean;
 }
 
 export interface UpdatePrivacySettingsRequest {
-  profile_visibility?: 'public' | 'connections_only' | 'private';
-  show_email?: boolean;
-  show_full_name?: boolean;
-  show_location?: boolean;
-  show_connections?: boolean;
-  allow_messages_from?: 'everyone' | 'connections_only' | 'nobody';
+  profileVisibility?: 'public' | 'territory' | 'private';
+  showEmail?: boolean;
+  showLocation?: boolean;
+  allowMessages?: 'everyone' | 'connections' | 'none';
+  showActivity?: boolean;
+  showOnlineStatus?: boolean;
+}
+
+export interface NotificationSettings {
+  emailNotifications: boolean;
+  badgeNotifications: boolean;
+  courseNotifications: boolean;
+  forumNotifications: boolean;
+  marketingEmails: boolean;
+}
+
+export interface UpdateNotificationSettingsRequest {
+  emailNotifications?: boolean;
+  badgeNotifications?: boolean;
+  courseNotifications?: boolean;
+  forumNotifications?: boolean;
+  marketingEmails?: boolean;
 }
 
 export interface UserConnection {
@@ -374,4 +431,71 @@ export async function updateLanguageProficiency(
  */
 export async function deleteLanguageProficiency(langId: string): Promise<void> {
   await apiClient.delete(`${USER_BASE_URL}/api/v1/user/profile/languages/${langId}`);
+}
+
+// ============================================================================
+// Settings API
+// ============================================================================
+
+/**
+ * Get all user settings
+ * 
+ * @returns Complete user settings
+ */
+export async function getUserSettings(): Promise<UserSettings> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/settings`);
+  return response.data;
+}
+
+/**
+ * Update user settings
+ * 
+ * @param data - Settings data to update
+ * @returns Updated settings
+ */
+export async function updateUserSettings(data: UpdateSettingsRequest): Promise<UserSettings> {
+  const response = await apiClient.patch(`${USER_BASE_URL}/api/v1/user/settings`, data);
+  return response.data;
+}
+
+/**
+ * Get privacy settings
+ * 
+ * @returns Privacy settings
+ */
+export async function getPrivacySettings(): Promise<PrivacySettings> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/settings/privacy`);
+  return response.data;
+}
+
+/**
+ * Update privacy settings
+ * 
+ * @param data - Privacy settings to update
+ * @returns Updated privacy settings
+ */
+export async function updatePrivacySettings(data: UpdatePrivacySettingsRequest): Promise<PrivacySettings> {
+  const response = await apiClient.patch(`${USER_BASE_URL}/api/v1/user/settings/privacy`, data);
+  return response.data;
+}
+
+/**
+ * Get notification settings
+ * 
+ * @returns Notification settings
+ */
+export async function getNotificationSettings(): Promise<NotificationSettings> {
+  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/settings/notifications`);
+  return response.data;
+}
+
+/**
+ * Update notification settings
+ * 
+ * @param data - Notification settings to update
+ * @returns Updated notification settings
+ */
+export async function updateNotificationSettings(data: UpdateNotificationSettingsRequest): Promise<NotificationSettings> {
+  const response = await apiClient.patch(`${USER_BASE_URL}/api/v1/user/settings/notifications`, data);
+  return response.data;
 }

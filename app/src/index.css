@@ -21,16 +21,16 @@
 
 :root {
   --radius: 0.5rem;
-  --background: hsl(45.85 20% 99.02%);
+  --background: hsl(45.85 20% 89%);
   --foreground: hsl(154 69% 2%);
   --muted: hsl(124 4.26% 93.57%);
-  --muted-foreground: hsl(124 8% 34%);
+  --muted-foreground: hsl(124 28% 14%);
   --popover: hsl(150 40% 98.04%);
   --popover-foreground: hsl(154 69% 1%);
-  --card: hsl(150 40% 98.04%);
+  --card: hsl(106.72 10% 60%);
   --card-foreground: hsl(154 69% 1%);
-  --border: hsl(180 4.87% 94.34%);
-  --input: hsl(180 2.44% 91.96%);
+  --border: hsl(180 3% 44%);
+  --input: hsl(180 2.44% 84%);
   --primary: hsl(142.64 26.58% 30.98%);
   --primary-foreground: hsl(0 0% 100%);
   --secondary: hsl(79.25 40.18% 73%);
@@ -45,8 +45,8 @@
   --chart-3: hsl(184 26% 31%);
   --chart-4: hsl(124 26% 34%);
   --chart-5: hsl(154 29% 31%);
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
+  --sidebar: hsl(45.85 20% 79%);
+  --sidebar-foreground: hsl(240 5.3% 6%);
   --sidebar-primary: hsl(240 5.9% 10%);
   --sidebar-primary-foreground: hsl(0 0% 98%);
   --sidebar-accent: hsl(240 4.8% 95.9%);
@@ -147,7 +147,9 @@
   .leaflet-div-icon {
     @apply !bg-transparent !border-none;
   }
-  .leaflet-popup-content-wrapper, .leaflet-popup-content, .leaflet-popup-content p {
+  .leaflet-popup-content-wrapper,
+  .leaflet-popup-content,
+  .leaflet-popup-content p {
     @apply ![all:unset];
   }
   .leaflet-popup {
@@ -156,7 +158,8 @@
   .leaflet-popup-close-button {
     @apply ring-offset-background focus:ring-ring bg-secondary rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:outline-hidden;
   }
-  .leaflet-tooltip, .leaflet-draw-tooltip {
+  .leaflet-tooltip,
+  .leaflet-draw-tooltip {
     @apply !bg-foreground !text-background !animate-none !rounded-md !border-none !p-0 !px-3 !py-1.5 !shadow-none;
   }
   .leaflet-draw-tooltip:before {
@@ -171,7 +174,11 @@
   .leaflet-draw-tooltip-subtext {
     @apply !text-background;
   }
-  .leaflet-popup-tip-container, .leaflet-tooltip-top:before, .leaflet-tooltip-bottom:before, .leaflet-tooltip-left:before, .leaflet-tooltip-right:before {
+  .leaflet-popup-tip-container,
+  .leaflet-tooltip-top:before,
+  .leaflet-tooltip-bottom:before,
+  .leaflet-tooltip-left:before,
+  .leaflet-tooltip-right:before {
     @apply hidden;
   }
   .leaflet-control-attribution {

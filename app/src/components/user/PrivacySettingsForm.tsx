@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
@@ -30,7 +29,6 @@ type PrivacySettingsFormValues = z.infer<typeof privacySettingsSchema>;
 interface PrivacySettingsFormProps {
     initialValues?: Partial<PrivacySettingsFormValues>;
     onSubmit: (values: PrivacySettingsFormValues) => Promise<void>;
-    isLoading?: boolean;
 }
 
 /**
@@ -56,7 +54,6 @@ interface PrivacySettingsFormProps {
 export function PrivacySettingsForm({
     initialValues = {},
     onSubmit,
-    isLoading = false,
 }: PrivacySettingsFormProps) {
     const form = useForm<PrivacySettingsFormValues>({
         resolver: zodResolver(privacySettingsSchema),
@@ -270,13 +267,6 @@ export function PrivacySettingsForm({
                                 </FormItem>
                             )}
                         />
-
-                        {/* Submit Button */}
-                        <div className="flex justify-end pt-4">
-                            <Button type="submit" disabled={isLoading} className="gap-2">
-                                {isLoading ? 'Saving...' : 'Save Privacy Settings'}
-                            </Button>
-                        </div>
                     </form>
                 </Form>
             </CardContent>

@@ -40,6 +40,7 @@ import { TagInput } from '@/components/ui/tag-input';
 import { LanguageProficiencyManager } from '@/components/LanguageProficiencyManager';
 import { ProfileLinksManager } from '@/components/ProfileLinksManager';
 import { LocationPicker } from '@/components/LocationPicker';
+import { toast } from 'sonner';
 
 // Validation schemas
 const profileSchema = z.object({
@@ -60,8 +61,6 @@ export function ProfileEditPage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [error, setError] = useState<string>('');
-    const [success, setSuccess] = useState<string>('');
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string>('');
 
@@ -86,14 +85,13 @@ export function ProfileEditPage() {
     useEffect(() => {
         const loadData = async () => {
             if (!user) {
-                setError('You must be logged in to edit your profile');
+                toast.error('You must be logged in to edit your profile');
                 setIsLoading(false);
                 return;
             }
 
             try {
                 setIsLoading(true);
-                setError('');
 
                 const profileData = await getUserProfile(user.id);
 
@@ -120,7 +118,7 @@ export function ProfileEditPage() {
                 // Load languages
                 await loadLanguages();
             } catch (err) {
-                setError('Failed to load profile data');
+                toast.error('Failed to load profile data');
                 console.error('Failed to load profile:', err);
             } finally {
                 setIsLoading(false);
@@ -178,13 +176,12 @@ export function ProfileEditPage() {
 
         try {
             setIsSaving(true);
-            setError('');
             await deleteAvatar(user.id);
             setAvatarFile(null);
             setAvatarPreview('');
-            setSuccess('Avatar deleted successfully');
+            toast.success('Avatar deleted successfully');
         } catch (err) {
-            setError('Failed to delete avatar');
+            toast.error('Failed to delete avatar');
             console.error('Failed to delete avatar:', err);
         } finally {
             setIsSaving(false);
@@ -197,8 +194,6 @@ export function ProfileEditPage() {
 
         try {
             setIsSaving(true);
-            setError('');
-            setSuccess('');
 
             // Update profile info
             await updateProfile({
@@ -216,14 +211,14 @@ export function ProfileEditPage() {
                 await uploadAvatar(user.id, avatarFile);
             }
 
-            setSuccess('Profile updated successfully');
+            toast.success('Profile updated successfully');
 
             // Reload user data and navigate
             setTimeout(() => {
                 router.navigate({ to: '/profile' });
             }, 1500);
         } catch (err) {
-            setError('Failed to update profile');
+            toast.error('Failed to update profile');
             console.error('Failed to update profile:', err);
         } finally {
             setIsSaving(false);
@@ -264,7 +259,7 @@ export function ProfileEditPage() {
         );
     }
 
-    if (error && !profile) {
+    if (!profile) {
         return (
             <AppLayout
                 breadcrumbs={
@@ -293,8 +288,8 @@ export function ProfileEditPage() {
             >
                 <Card className="w-full max-w-md mx-auto">
                     <CardHeader>
-                        <CardTitle>Error</CardTitle>
-                        <CardDescription>{error}</CardDescription>
+                        <CardTitle>Profile Not Found</CardTitle>
+                        <CardDescription>Unable to load profile data</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button onClick={() => router.navigate({ to: '/profile' })}>
@@ -336,25 +331,25 @@ export function ProfileEditPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold">Edit Profile</h1>
-                    <Button
-                        onClick={() => router.history.back()}
-                        disabled={isSaving}
-                    >
-                        Cancel
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => router.navigate({ to: '/profile' })}
+                            disabled={isSaving}
+                        >
+                            Back to Profile
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+                                submitButton?.click();
+                            }}
+                            disabled={isSaving}
+                        >
+                            {isSaving ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                    </div>
                 </div>
-
-                {/* Success/Error Messages */}
-                {success && (
-                    <div className="rounded-lg bg-green-100 dark:bg-green-900/20 p-4 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
-                        {success}
-                    </div>
-                )}
-                {error && (
-                    <div className="rounded-lg bg-red-100 dark:bg-red-900/20 p-4 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800">
-                        {error}
-                    </div>
-                )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     {/* Profile Picture & Basic Info Grid */}
@@ -634,16 +629,17 @@ export function ProfileEditPage() {
                     />
 
                     {/* Action Buttons */}
-                    <div className="flex gap-4">
-                        <Button type="submit" disabled={isSaving} className="flex-1">
-                            {isSaving ? 'Saving...' : 'Save Changes'}
-                        </Button>
+                    <div className="flex justify-end gap-2">
                         <Button
                             type="button"
+                            variant="outline"
                             onClick={() => router.navigate({ to: '/profile' })}
                             disabled={isSaving}
                         >
-                            Cancel
+                            Back to Profile
+                        </Button>
+                        <Button type="submit" disabled={isSaving}>
+                            {isSaving ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </div>
                 </form>

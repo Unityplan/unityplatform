@@ -12,6 +12,7 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { useState } from "react"
+import { toast } from "sonner"
 
 export function DataManagementPage() {
     const router = useRouter()
@@ -25,25 +26,25 @@ export function DataManagementPage() {
         // Mock: Simulate export process
         setTimeout(() => {
             setIsExporting(false)
-            alert("Your data export has been prepared. Download link sent to your email.")
+            toast.success("Your data export has been prepared. Download link sent to your email.")
         }, 2000)
     }
 
     const handleDeleteAccount = () => {
         if (deleteConfirmText !== "DELETE") {
-            alert("Please type DELETE to confirm")
+            toast.error("Please type DELETE to confirm")
             return
         }
 
         // Mock: Simulate account deletion
         if (confirm("This action cannot be undone. Are you absolutely sure?")) {
-            alert("Account deletion request submitted. You will receive a confirmation email.")
+            toast.success("Account deletion request submitted. You will receive a confirmation email.")
             router.navigate({ to: "/login" })
         }
     }
 
-    const handleCancel = () => {
-        router.history.back()
+    const handleBack = () => {
+        router.navigate({ to: "/settings" })
     }
 
     return (
@@ -74,11 +75,17 @@ export function DataManagementPage() {
             }
         >
             <div className="space-y-6 py-6">
-                <div>
-                    <h1 className="text-2xl font-bold">Data Management</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Export your data or delete your account
-                    </p>
+                {/* Page Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold">Data Management</h1>
+                        <p className="text-muted-foreground mt-1">
+                            Export your data or delete your account
+                        </p>
+                    </div>
+                    <Button variant="outline" onClick={handleBack}>
+                        Back to Settings
+                    </Button>
                 </div>
 
                 {/* GDPR Data Export */}
@@ -214,9 +221,9 @@ export function DataManagementPage() {
                     </div>
                 </Card>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleCancel}>
+                {/* Action Buttons - Bottom */}
+                <div className="flex justify-end">
+                    <Button variant="outline" onClick={handleBack}>
                         Back to Settings
                     </Button>
                 </div>

@@ -14,47 +14,71 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 
 interface NotificationSettings {
     // Email notifications
-    emailDigest: boolean
-    emailMessages: boolean
-    emailFollowers: boolean
-    emailCommunity: boolean
-    emailUpdates: boolean
+    emailDigest: boolean              // Daily activity summary
+    emailMessages: boolean            // Direct messages
+    emailFollowers: boolean           // New followers
+    emailMentions: boolean            // When mentioned
+    emailCommunity: boolean           // Community announcements
+    emailBadges: boolean              // Badge achievements
+    emailCourses: boolean             // Course updates
+    emailForums: boolean              // Forum activity
+    emailPlatformUpdates: boolean     // Platform news/updates
 
     // In-app notifications
-    inAppMessages: boolean
-    inAppFollowers: boolean
-    inAppCommunity: boolean
-    inAppMentions: boolean
-    inAppLikes: boolean
+    inappMessages: boolean            // Direct messages
+    inappFollowers: boolean           // New followers
+    inappMentions: boolean            // @mentions in posts/comments
+    inappCommunity: boolean           // Community activity
+    inappBadges: boolean              // Badge achievements
+    inappCourses: boolean             // Course updates
+    inappForums: boolean              // Forum replies
+    inappLikes: boolean               // Likes/reactions on content
 
     // Push notifications
-    pushEnabled: boolean
-    pushMessages: boolean
-    pushFollowers: boolean
-    pushCommunity: boolean
+    pushEnabled: boolean              // Master toggle for push
+    pushMessages: boolean             // Direct messages
+    pushFollowers: boolean            // New followers
+    pushMentions: boolean             // @mentions
+    pushCommunity: boolean            // Important community updates
+    pushBadges: boolean               // Badge achievements
+    pushCourses: boolean              // Course deadlines/updates
 }
 
 export function NotificationSettingsPage() {
     const router = useRouter()
 
     const [settings, setSettings] = useState<NotificationSettings>({
+        // Email notifications
         emailDigest: true,
         emailMessages: true,
         emailFollowers: true,
+        emailMentions: true,
         emailCommunity: false,
-        emailUpdates: true,
-        inAppMessages: true,
-        inAppFollowers: true,
-        inAppCommunity: true,
-        inAppMentions: true,
-        inAppLikes: false,
+        emailBadges: true,
+        emailCourses: true,
+        emailForums: false,
+        emailPlatformUpdates: true,
+        // In-app notifications
+        inappMessages: true,
+        inappFollowers: true,
+        inappMentions: true,
+        inappCommunity: true,
+        inappBadges: true,
+        inappCourses: true,
+        inappForums: true,
+        inappLikes: false,
+        // Push notifications
         pushEnabled: false,
         pushMessages: false,
         pushFollowers: false,
+        pushMentions: false,
         pushCommunity: false,
+        pushBadges: false,
+        pushCourses: false,
     })
 
     // Load saved settings
@@ -73,11 +97,11 @@ export function NotificationSettingsPage() {
 
     const handleSave = () => {
         localStorage.setItem("notificationSettings", JSON.stringify(settings))
-        alert("Notification preferences saved successfully")
+        toast.success("Notification preferences saved successfully")
     }
 
-    const handleCancel = () => {
-        router.history.back()
+    const handleBack = () => {
+        router.navigate({ to: "/settings" })
     }
 
     return (
@@ -108,11 +132,22 @@ export function NotificationSettingsPage() {
             }
         >
             <div className="space-y-6 py-6">
-                <div>
-                    <h1 className="text-2xl font-bold">Notification Preferences</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Choose how and when you want to be notified
-                    </p>
+                {/* Page Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold">Notification Preferences</h1>
+                        <p className="text-muted-foreground mt-1">
+                            Choose how and when you want to be notified
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={handleBack}>
+                            Back to Settings
+                        </Button>
+                        <Button onClick={handleSave}>
+                            Save
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Email Notifications */}
@@ -165,6 +200,19 @@ export function NotificationSettingsPage() {
 
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
+                                    <Label>Mentions</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        When someone mentions you in a post or comment
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.emailMentions}
+                                    onCheckedChange={handleToggle("emailMentions")}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
                                     <Label>Community Updates</Label>
                                     <p className="text-sm text-muted-foreground">
                                         Important announcements from your communities
@@ -178,14 +226,53 @@ export function NotificationSettingsPage() {
 
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
+                                    <Label>Badge Achievements</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Get notified when you earn a new badge
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.emailBadges}
+                                    onCheckedChange={handleToggle("emailBadges")}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Course Updates</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Updates about courses you're enrolled in
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.emailCourses}
+                                    onCheckedChange={handleToggle("emailCourses")}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Forum Activity</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Replies to your forum posts and topics
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.emailForums}
+                                    onCheckedChange={handleToggle("emailForums")}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
                                     <Label>Platform Updates</Label>
                                     <p className="text-sm text-muted-foreground">
                                         News and updates about Unity Platform
                                     </p>
                                 </div>
                                 <Switch
-                                    checked={settings.emailUpdates}
-                                    onCheckedChange={handleToggle("emailUpdates")}
+                                    checked={settings.emailPlatformUpdates}
+                                    onCheckedChange={handleToggle("emailPlatformUpdates")}
                                 />
                             </div>
                         </div>
@@ -209,8 +296,8 @@ export function NotificationSettingsPage() {
                                     </p>
                                 </div>
                                 <Switch
-                                    checked={settings.inAppMessages}
-                                    onCheckedChange={handleToggle("inAppMessages")}
+                                    checked={settings.inappMessages}
+                                    onCheckedChange={handleToggle("inappMessages")}
                                 />
                             </div>
 
@@ -222,21 +309,8 @@ export function NotificationSettingsPage() {
                                     </p>
                                 </div>
                                 <Switch
-                                    checked={settings.inAppFollowers}
-                                    onCheckedChange={handleToggle("inAppFollowers")}
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>Community Activity</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Updates from communities you're part of
-                                    </p>
-                                </div>
-                                <Switch
-                                    checked={settings.inAppCommunity}
-                                    onCheckedChange={handleToggle("inAppCommunity")}
+                                    checked={settings.inappFollowers}
+                                    onCheckedChange={handleToggle("inappFollowers")}
                                 />
                             </div>
 
@@ -248,8 +322,60 @@ export function NotificationSettingsPage() {
                                     </p>
                                 </div>
                                 <Switch
-                                    checked={settings.inAppMentions}
-                                    onCheckedChange={handleToggle("inAppMentions")}
+                                    checked={settings.inappMentions}
+                                    onCheckedChange={handleToggle("inappMentions")}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Community Activity</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Updates from communities you're part of
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.inappCommunity}
+                                    onCheckedChange={handleToggle("inappCommunity")}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Badge Achievements</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        When you earn a new badge
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.inappBadges}
+                                    onCheckedChange={handleToggle("inappBadges")}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Course Updates</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Updates about your enrolled courses
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.inappCourses}
+                                    onCheckedChange={handleToggle("inappCourses")}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Forum Replies</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Replies to your forum posts and topics
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.inappForums}
+                                    onCheckedChange={handleToggle("inappForums")}
                                 />
                             </div>
 
@@ -261,8 +387,8 @@ export function NotificationSettingsPage() {
                                     </p>
                                 </div>
                                 <Switch
-                                    checked={settings.inAppLikes}
-                                    onCheckedChange={handleToggle("inAppLikes")}
+                                    checked={settings.inappLikes}
+                                    onCheckedChange={handleToggle("inappLikes")}
                                 />
                             </div>
                         </div>
@@ -321,14 +447,53 @@ export function NotificationSettingsPage() {
 
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-0.5">
+                                            <Label>Mentions</Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Push notifications when someone mentions you
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={settings.pushMentions}
+                                            onCheckedChange={handleToggle("pushMentions")}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-0.5">
                                             <Label>Community Activity</Label>
                                             <p className="text-sm text-muted-foreground">
-                                                Push notifications for community updates
+                                                Important updates from your communities
                                             </p>
                                         </div>
                                         <Switch
                                             checked={settings.pushCommunity}
                                             onCheckedChange={handleToggle("pushCommunity")}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-0.5">
+                                            <Label>Badge Achievements</Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Push notifications when you earn a badge
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={settings.pushBadges}
+                                            onCheckedChange={handleToggle("pushBadges")}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-0.5">
+                                            <Label>Course Updates</Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Important course deadlines and updates
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={settings.pushCourses}
+                                            onCheckedChange={handleToggle("pushCourses")}
                                         />
                                     </div>
                                 </>
@@ -345,13 +510,13 @@ export function NotificationSettingsPage() {
                     </div>
                 </Card>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                    <Button onClick={handleSave}>
-                        Save Preferences
+                {/* Action Buttons - Bottom */}
+                <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={handleBack}>
+                        Back to Settings
                     </Button>
-                    <Button variant="outline" onClick={handleCancel}>
-                        Cancel
+                    <Button onClick={handleSave}>
+                        Save
                     </Button>
                 </div>
             </div>

@@ -16,6 +16,7 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 
 export function AppearanceSettingsPage() {
     const router = useRouter()
@@ -84,6 +85,16 @@ export function AppearanceSettingsPage() {
         window.dispatchEvent(new CustomEvent('wideContentViewChange', { detail: { value: checked } }))
     }
 
+    const handleSave = () => {
+        // TODO: API call to save settings will go here
+        // For now, settings are already saved in localStorage by individual handlers
+        toast.success("Appearance settings saved successfully")
+    }
+
+    const handleBack = () => {
+        router.navigate({ to: "/settings" })
+    }
+
     return (
         <AppLayout
             breadcrumbs={
@@ -122,11 +133,14 @@ export function AppearanceSettingsPage() {
                             Customize how Unity Platform looks and feels
                         </p>
                     </div>
-                    <Button
-                        onClick={() => router.history.back()}
-                    >
-                        Cancel
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={handleBack}>
+                            Back to Settings
+                        </Button>
+                        <Button onClick={handleSave}>
+                            Save
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Theme Mode Selection */}
@@ -437,6 +451,16 @@ export function AppearanceSettingsPage() {
                         </ul>
                     </div>
                 </Card>
+
+                {/* Action Buttons - Bottom */}
+                <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={handleBack}>
+                        Back to Settings
+                    </Button>
+                    <Button onClick={handleSave}>
+                        Save
+                    </Button>
+                </div>
             </div>
         </AppLayout>
     )
