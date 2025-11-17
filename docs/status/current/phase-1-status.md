@@ -3,49 +3,55 @@
 **Last Updated:** November 17, 2025  
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
-**Progress:** 42% (Stages 1-4: 100%, Stage 6: 100%, Stage 14: 100%, Stage 5: Planned, Stages 7-13: 0%)  
+**Progress:** 42% (Stages 1-4,6,14: Complete | Stage 5: In Progress | Stages 7-13: Planned)  
 **Release Stage:** Alpha (0.1.0-alpha.1)  
-**Recent Update:** Stage 5 tasks migrated to Forgejo (27 issues created for frontend development)
+**Recent Update:** All Phase 1 stages migrated to Forgejo (137 issues total)
+
+**🔗 Forgejo Tracking:** [View All Phase 1 Issues](http://localhost:3000/henrik/unity_platform/issues?milestone=1) | [Milestone v0.1.0-alpha.2](http://localhost:3000/henrik/unity_platform/milestones)
 
 ---
 
 ## 📊 Overall Progress
 
 ```text
-[████████░░░░░░░░░░░░] 42% Complete (Stages 1-4: 100%, Stage 6: 100%, Stage 14: 100%, Stage 5: Planned, Stages 7-13: 0%)
+[████████░░░░░░░░░░░░] 42% Complete
 
-Stage 1:  Foundation & Infrastructure        [██████████] 100%
-Stage 2:  Database Schema & Migrations       [██████████] 100%
-Stage 3:  Authentication Service             [██████████] 100%
-Stage 4:  User Service (incl. Settings)      [██████████] 100%
-Stage 5:  Frontend Auth & Profile            [📋Forgejo] 0% → Track in Forgejo
-Stage 6:  Territory & Badge Services         [██████████] 100%
-Stage 7:  Course Service (LMS)               [░░░░░░░░░░] 0%
-Stage 8:  Matrix Protocol Integration        [░░░░░░░░░░] 0%
-Stage 9:  IPFS Service                       [░░░░░░░░░░] 0%
-Stage 10: Forum Service (Matrix-based)       [░░░░░░░░░░] 0%
-Stage 11: Translation Service                [░░░░░░░░░░] 0%
-Stage 12: Frontend Course & Forum UI         [░░░░░░░░░░] 0%
-Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░] 0%
-Stage 14: Utility Service & Language Registry[██████████] 100%
+Stage 1:  Foundation & Infrastructure        [██████████] 100% → Forgejo #42-#47 (closed)
+Stage 2:  Database Schema & Migrations       [██████████] 100% → Forgejo #48-#50 (closed)
+Stage 3:  Authentication Service             [██████████] 100% → Forgejo #51-#58 (closed)
+Stage 4:  User Service (incl. Settings)      [██████████] 100% → Forgejo #59-#67 (closed)
+Stage 5:  Frontend Auth & Profile            [██░░░░░░░░] 15% → Forgejo #4-#30 (open)
+Stage 6:  Territory & Badge Services         [██████████] 100% → Forgejo #31-#41 (closed)
+Stage 7:  Course Service (LMS)               [░░░░░░░░░░]  0% → Forgejo #68-#73 (open)
+Stage 8:  Matrix Protocol Integration        [░░░░░░░░░░]  0% → Forgejo #74-#79 (open)
+Stage 9:  IPFS Service                       [░░░░░░░░░░]  0% → Forgejo #82-#87 (open)
+Stage 10: Forum Service (Matrix-based)       [░░░░░░░░░░]  0% → Forgejo #88-#95 (open)
+Stage 11: Translation Service                [░░░░░░░░░░]  0% → Forgejo #96-#98 (open)
+Stage 12: Frontend Course & Forum UI         [░░░░░░░░░░]  0% → Forgejo #99-#108 (open)
+Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░]  0% → Forgejo #109-#119 (open)
+Stage 14: Utility Service & Language Registry[██████████] 100% → Forgejo #120-#136 (closed)
 ```
+
+**Total Issues:** 137 (55 closed, 82 open)  
+**Closed Issues:** Historical work (Stages 1-4, 6, 14)  
+**Open Issues:** Active development (Stage 5) + Future work (Stages 7-13)
 
 ---
 
 ## 🎯 Current Sprint
 
-**Sprint:** Sprint 9 - Stage 5 Planning & Forgejo Migration  
-**Sprint Goal:** Migrate Stage 5 frontend tasks to Forgejo issue tracking for better project management  
+**Sprint:** Sprint 10 - Forgejo Migration Complete  
+**Sprint Goal:** Migrate all Phase 1 stages to Forgejo for comprehensive project tracking  
 **Sprint Dates:** November 17, 2025  
 **Team Members:** Henrik  
-**Status:** ✅ Complete - All 27 frontend issues created in Forgejo
+**Status:** ✅ Complete - All 137 issues created in Forgejo
 
 ### Active Tasks
 
-- 🎯 **Next**: Begin Stage 5 Frontend Development
-  - Start with issue #4: Create Vite + React + TypeScript project
-  - Track progress in [Forgejo Project Board](http://localhost:3000/henrik/unity_platform/projects/1)
-  - View all issues: [Frontend Issues](http://localhost:3000/henrik/unity_platform/issues?labels=area%2Ffrontend-app)
+- 🎯 **Next**: Continue Stage 5 Frontend Development
+  - Work through issues #4-#30 systematically
+  - Track progress in [Forgejo Milestone](http://localhost:3000/henrik/unity_platform/milestones)
+  - View by label: [Frontend](http://localhost:3000/henrik/unity_platform/issues?labels=14) | [High Priority](http://localhost:3000/henrik/unity_platform/issues?labels=1)
 
 ### Completed This Sprint
 
@@ -288,6 +294,7 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 **Issue #47:** Development tools (Forgejo, SQLTools, documentation)
 
 **Key Achievements:**
+
 - Complete infrastructure operational with monitoring
 - Shared library foundation for all services
 - Multi-pod architecture ready for scale
@@ -295,6 +302,7 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 - All middleware patterns implemented
 
 **Notes:**
+
 - Completed November 4-13, 2025
 - Documentation consolidated into docs/ structure
 - Ready for Norway and Sweden pod deployment---
@@ -319,6 +327,7 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 **Issue #50:** Territory schema template (reusable schema, Denmark seed data)
 
 **Key Achievements:**
+
 - Schema separation complete (global + territory isolation)
 - Reusable territory template for multi-territory deployment
 - ISO 3166-1 Alpha-2 territory code standard
@@ -326,6 +335,7 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 - Future-ready for multi-territory pods
 
 **Notes:**
+
 - Completed November 5-8, 2025
 - Database uses schema-based isolation
 - Ready for territory_no, territory_se, etc.
@@ -357,6 +367,7 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 **Issue #58:** Production features (graceful shutdown, circuit breakers)
 
 **Key Achievements:**
+
 - 6 RESTful authentication endpoints
 - Secure password hashing with Argon2
 - JWT tokens with 15-min/7-day expiry
@@ -367,6 +378,7 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 - Production-ready with circuit breakers
 
 **Notes:**
+
 - Completed November 12-14, 2025
 - Invitation system deferred to invitation-service
 - All tests passing (including 8/8 circuit breaker tests)
@@ -399,6 +411,7 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 **Issue #67:** Architecture compliance (camelCase, AppConfig, NATS, metrics, observability)
 
 **Key Achievements:**
+
 - 24 RESTful endpoints across 5 feature groups
 - Defense-in-depth security (JWT + handler + service + DB)
 - 4-dimensional language proficiency tracking
@@ -408,6 +421,7 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 - Paginated results and optimized queries
 
 **Notes:**
+
 - Completed November 13-14, 2025
 - Settings-service merged for MVP efficiency
 - Avatar upload deferred to IPFS integration (Stage 9)
@@ -491,11 +505,13 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 #### Task Summary (See Forgejo for Details)
 
 **Territory Service (Issues #31-#33):**
+
 - ✅ Service scaffolding and structure
 - ✅ 6 endpoints implemented (list, get, stats, settings, create)
 - ✅ Full architecture compliance (camelCase, AppConfig, NATS, metrics)
 
 **Badge Service (Issues #34-#38):**
+
 - ✅ Service scaffolding and structure
 - ✅ Database migration (20251113000005)
 - ✅ Code of Conduct badge seeded
@@ -503,21 +519,25 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 - ✅ Full architecture compliance
 
 **Permission System (Issue #39):**
+
 - ✅ PermissionChecker with LRU cache
 - ✅ Badge-based RBAC with wildcard support
 - ✅ RequirePermission & RequireAnyPermission middleware
 
 **NATS Integration (Issue #40):**
+
 - ✅ Event handlers for user.registered
 - ✅ Event publishing for badge.awarded and badge.revoked
 - ✅ Hook system design (HOOK-SYSTEM.md)
 
 **Testing (Issue #41):**
+
 - ✅ All endpoints manually tested and verified
 - ✅ Permission system validation
 - ✅ NATS event flow verification
 
 **Key Achievements:**
+
 - 13 total endpoints across two services
 - Complete observability stack (health, ready, metrics)
 - Badge-based permission system with caching
@@ -525,6 +545,7 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 - Full architecture compliance verified
 
 **Notes:**
+
 - Completed November 14, 2025
 - Issues created in Forgejo as closed for historical record
 - All work documented in Sprint 7 completions
@@ -533,39 +554,23 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 
 ### Stage 7: Course Service (LMS)
 
-**Status:** ⬜ Not Started  
+**Status:** ⬜ Not Started (Migrated to Forgejo Issues)  
 **Progress:** 0/13 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
 **Dependencies:** Stage 6 (Badge System)
 
-#### Step 7.1: Course Service Scaffolding (0/2)
+**Forgejo Issues:** [#68-#73](http://localhost:3000/henrik/unity_platform/issues?labels=19&milestone=1&state=open) (6 open issues)
 
-- ⬜ Create course-service crate
-- ⬜ Create service structure
-
-#### Step 7.2: Course Database Schema (0/1)
-
-- ⬜ Add course tables to territory schema
-
-#### Step 7.3: Seed Code of Conduct Course (0/3)
-
-- ⬜ Create Code of Conduct training course
-- ⬜ Create lessons for Code of Conduct
-- ⬜ Create quiz questions
-
-#### Step 7.4: Course Handlers (0/7)
-
-- ⬜ GET /courses - List published courses
-- ⬜ GET /courses/{course_id} - Get course details
-- ⬜ POST /courses/{course_id}/enroll - Enroll in course
-- ⬜ GET /courses/{course_id}/lessons/{lesson_id} - Get lesson content
-- ⬜ POST /courses/{course_id}/lessons/{lesson_id}/complete - Mark lesson complete
-- ⬜ POST /quizzes/{quiz_id}/submit - Submit quiz answers
-- ⬜ GET /users/me/enrollments - Get my enrolled courses
+- [#68: Stage 7.1 - Course-service scaffolding](http://localhost:3000/henrik/unity_platform/issues/68)
+- [#69: Stage 7.2 - Database schema migration](http://localhost:3000/henrik/unity_platform/issues/69)
+- [#70: Stage 7.4 - Course endpoints (7 endpoints)](http://localhost:3000/henrik/unity_platform/issues/70)
+- [#71: Stage 7.5 - Architecture compliance](http://localhost:3000/henrik/unity_platform/issues/71)
+- [#72: Stage 7.6 - Testing and documentation](http://localhost:3000/henrik/unity_platform/issues/72)
+- [#73: Stage 7.3 - Seed Code of Conduct course](http://localhost:3000/henrik/unity_platform/issues/73)
 
 **Notes:**  
--
+All tasks tracked in Forgejo. See issues for detailed acceptance criteria and technical notes.
 
 **Blockers:**  
 -
@@ -574,29 +579,23 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 
 ### Stage 8: Matrix Protocol Integration
 
-**Status:** ⬜ Not Started  
+**Status:** ⬜ Not Started (Migrated to Forgejo Issues)  
 **Progress:** 0/6 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
 **Dependencies:** Stage 7 (Course Service)
 
-#### Step 8.1: Matrix Synapse Setup (0/2)
+**Forgejo Issues:** [#74-#79](http://localhost:3000/henrik/unity_platform/issues?labels=20&milestone=1&state=open) (6 open issues)
 
-- ⬜ Add Matrix Synapse to docker-compose.yml
-- ⬜ Configure Matrix homeserver for territory
-
-#### Step 8.2: Matrix Gateway Service (0/2)
-
-- ⬜ Create matrix-gateway crate
-- ⬜ Create service structure with ruma client
-
-#### Step 8.3: Matrix Integration (0/2)
-
-- ⬜ Register users on Matrix when they register on platform
-- ⬜ Create Matrix credentials and store in database
+- [#74: Stage 8.1 - Add Matrix Synapse to Docker infrastructure](http://localhost:3000/henrik/unity_platform/issues/74)
+- [#75: Stage 8.2 - Configure Matrix homeserver for territory](http://localhost:3000/henrik/unity_platform/issues/75)
+- [#76: Stage 8.3 - Create matrix-bridge service scaffolding](http://localhost:3000/henrik/unity_platform/issues/76)
+- [#77: Stage 8.4 - Implement Matrix user registration sync](http://localhost:3000/henrik/unity_platform/issues/77)
+- [#78: Stage 8.5 - Matrix credentials storage and retrieval](http://localhost:3000/henrik/unity_platform/issues/78)
+- [#79: Stage 8.6 - Matrix-bridge architecture compliance and testing](http://localhost:3000/henrik/unity_platform/issues/79)
 
 **Notes:**  
-Matrix protocol provides the foundation for federated forums. Each territory runs its own Matrix homeserver for data sovereignty.
+Matrix protocol provides the foundation for federated forums. All tasks tracked in Forgejo.
 
 **Blockers:**  
 -
@@ -605,31 +604,23 @@ Matrix protocol provides the foundation for federated forums. Each territory run
 
 ### Stage 9: IPFS Service
 
-**Status:** ⬜ Not Started  
+**Status:** ⬜ Not Started (Migrated to Forgejo Issues)  
 **Progress:** 0/8 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
 **Dependencies:** Stage 8 (Matrix Protocol)
 
-#### Step 9.1: IPFS Setup (0/2)
+**Forgejo Issues:** [#82-#87](http://localhost:3000/henrik/unity_platform/issues?labels=21&milestone=1&state=open) (6 open issues)
 
-- ⬜ Add IPFS to docker-compose.yml
-- ⬜ Initialize and configure IPFS
-
-#### Step 9.2: IPFS Service Scaffolding (0/2)
-
-- ⬜ Create ipfs-service crate
-- ⬜ Create service structure
-
-#### Step 9.3: IPFS Handlers (0/4)
-
-- ⬜ POST /ipfs/upload - Upload file to IPFS
-- ⬜ GET /ipfs/{cid} - Retrieve file metadata
-- ⬜ POST /ipfs/{cid}/pin - Pin content
-- ⬜ DELETE /ipfs/{cid}/pin - Unpin content
+- [#82: Stage 9.1 - Add IPFS to Docker infrastructure](http://localhost:3000/henrik/unity_platform/issues/82)
+- [#83: Stage 9.2 - Create ipfs-service scaffolding](http://localhost:3000/henrik/unity_platform/issues/83)
+- [#84: Stage 9.3 - Implement IPFS file upload endpoint](http://localhost:3000/henrik/unity_platform/issues/84)
+- [#85: Stage 9.4 - Implement IPFS content retrieval endpoint](http://localhost:3000/henrik/unity_platform/issues/85)
+- [#86: Stage 9.5 - Implement IPFS pin/unpin endpoints](http://localhost:3000/henrik/unity_platform/issues/86)
+- [#87: Stage 9.6 - IPFS service architecture compliance and testing](http://localhost:3000/henrik/unity_platform/issues/87)
 
 **Notes:**  
-IPFS provides decentralized content storage for course materials and forum attachments.
+IPFS provides decentralized content storage. All tasks tracked in Forgejo.
 
 **Blockers:**  
 -
@@ -638,51 +629,25 @@ IPFS provides decentralized content storage for course materials and forum attac
 
 ### Stage 10: Forum Service (Matrix-based)
 
-**Status:** ⬜ Not Started  
+**Status:** ⬜ Not Started (Migrated to Forgejo Issues)  
 **Progress:** 0/19 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
 **Dependencies:** Stage 8 (Matrix Protocol), Stage 9 (IPFS Service)
 
-#### Step 10.1: Forum Service Scaffolding (0/2)
+**Forgejo Issues:** [#88-#95](http://localhost:3000/henrik/unity_platform/issues?labels=22&milestone=1&state=open) (8 open issues)
 
-- ⬜ Create forum-service crate
-- ⬜ Create service structure
-
-#### Step 10.2: Forum Database Schema (0/1)
-
-- ⬜ Add forum tables to territory schema (Matrix room references)
-
-#### Step 10.3: Matrix Room Integration (0/2)
-
-- ⬜ Create Matrix room when forum topic is created
-- ⬜ Sync messages bidirectionally between forum and Matrix
-
-#### Step 10.4: Forum Handlers Implementation (0/8)
-
-- ⬜ GET /forum/categories - List forum categories
-- ⬜ GET /forum/categories/{slug}/topics - List topics
-- ⬜ POST /forum/topics - Create new topic (creates Matrix room)
-- ⬜ GET /forum/topics/{slug} - Get topic with posts
-- ⬜ POST /forum/topics/{topic_id}/posts - Create post
-- ⬜ PUT /forum/posts/{post_id} - Edit post
-- ⬜ DELETE /forum/posts/{post_id} - Delete post
-- ⬜ POST /forum/posts/{post_id}/reactions - Add reaction
-
-#### Step 10.5: Moderation System (0/4)
-
-- ⬜ POST /forum/moderation/strike - Issue strike
-- ⬜ GET /forum/moderation/queue - Get moderation queue
-- ⬜ POST /forum/posts/{post_id}/flag - Flag post
-- ⬜ POST /forum/topics/{topic_id}/lock - Lock topic
-
-#### Step 10.6: Forum Testing (0/2)
-
-- ⬜ Unit and integration tests
-- ⬜ Matrix synchronization tests
+- [#88: Stage 10.1 - Create forum-service scaffolding](http://localhost:3000/henrik/unity_platform/issues/88)
+- [#89: Stage 10.2 - Create forum database schema](http://localhost:3000/henrik/unity_platform/issues/89)
+- [#90: Stage 10.3 - Implement Matrix room integration](http://localhost:3000/henrik/unity_platform/issues/90)
+- [#91: Stage 10.4 - Implement forum category endpoints](http://localhost:3000/henrik/unity_platform/issues/91)
+- [#92: Stage 10.5 - Implement forum topic endpoints](http://localhost:3000/henrik/unity_platform/issues/92)
+- [#93: Stage 10.6 - Implement forum post endpoints](http://localhost:3000/henrik/unity_platform/issues/93)
+- [#94: Stage 10.7 - Implement forum moderation system](http://localhost:3000/henrik/unity_platform/issues/94)
+- [#95: Stage 10.8 - Forum service testing and compliance](http://localhost:3000/henrik/unity_platform/issues/95)
 
 **Notes:**  
-Forums are built on Matrix protocol. Each forum topic is a Matrix room, enabling federated cross-territory collaboration.
+Forums are built on Matrix protocol. All tasks tracked in Forgejo.
 
 **Blockers:**  
 -
@@ -691,20 +656,20 @@ Forums are built on Matrix protocol. Each forum topic is a Matrix room, enabling
 
 ### Stage 11: Translation Service
 
-**Status:** ⬜ Not Started  
+**Status:** ⬜ Not Started (Migrated to Forgejo Issues)  
 **Progress:** 0/3 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
 **Dependencies:** Stage 10 (Forum Service)
 
-#### Step 11.1: Translation Service Setup (0/3)
+**Forgejo Issues:** [#96-#98](http://localhost:3000/henrik/unity_platform/issues?labels=23&milestone=1&state=open) (3 open issues)
 
-- ⬜ Create translation-service crate
-- ⬜ Create service structure
-- ⬜ Implement POST /translate handler with Redis caching
+- [#96: Stage 11.1 - Create translation-service scaffolding](http://localhost:3000/henrik/unity_platform/issues/96)
+- [#97: Stage 11.2 - Implement translation endpoint with caching](http://localhost:3000/henrik/unity_platform/issues/97)
+- [#98: Stage 11.3 - Translation service testing and compliance](http://localhost:3000/henrik/unity_platform/issues/98)
 
 **Notes:**  
-Basic translation service with caching for multi-language support.
+Basic translation service with caching. All tasks tracked in Forgejo.
 
 **Blockers:**  
 -
@@ -713,30 +678,27 @@ Basic translation service with caching for multi-language support.
 
 ### Stage 12: Frontend - Course & Forum UI
 
-**Status:** ⬜ Not Started  
+**Status:** ⬜ Not Started (Migrated to Forgejo Issues)  
 **Progress:** 0/10 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
 **Dependencies:** Stage 10 (Forum Service), Stage 11 (Translation Service)
 
-#### Step 12.1: Course Pages (0/5)
+**Forgejo Issues:** [#99-#108](http://localhost:3000/henrik/unity_platform/issues?labels=14&milestone=1&state=open&q=Stage+12) (10 open issues)
 
-- ⬜ Create course catalog page
-- ⬜ Create course detail page
-- ⬜ Create lesson viewer page
-- ⬜ Create quiz page
-- ⬜ Create my learning page
-
-#### Step 12.2: Forum Pages (0/5)
-
-- ⬜ Forum category list page
-- ⬜ Topic list page
-- ⬜ Topic view with posts page
-- ⬜ Create topic form
-- ⬜ Moderation dashboard
+- [#99: Stage 12.1 - Create course catalog page](http://localhost:3000/henrik/unity_platform/issues/99)
+- [#100: Stage 12.2 - Create course detail page](http://localhost:3000/henrik/unity_platform/issues/100)
+- [#101: Stage 12.3 - Create lesson viewer page](http://localhost:3000/henrik/unity_platform/issues/101)
+- [#102: Stage 12.4 - Create quiz page](http://localhost:3000/henrik/unity_platform/issues/102)
+- [#103: Stage 12.5 - Create my learning page](http://localhost:3000/henrik/unity_platform/issues/103)
+- [#104: Stage 12.6 - Create forum category list page](http://localhost:3000/henrik/unity_platform/issues/104)
+- [#105: Stage 12.7 - Create forum topic list page](http://localhost:3000/henrik/unity_platform/issues/105)
+- [#106: Stage 12.8 - Create forum topic view with posts page](http://localhost:3000/henrik/unity_platform/issues/106)
+- [#107: Stage 12.9 - Create new topic form](http://localhost:3000/henrik/unity_platform/issues/107)
+- [#108: Stage 12.10 - Create moderation dashboard](http://localhost:3000/henrik/unity_platform/issues/108)
 
 **Notes:**  
--
+Frontend pages for courses and forums. All tasks tracked in Forgejo.
 
 **Blockers:**  
 -
@@ -745,44 +707,20 @@ Basic translation service with caching for multi-language support.
 
 ### Stage 14: Utility Service & Language Registry
 
-**Status:** ✅ Complete  
+**Status:** ✅ Complete (Migrated to Forgejo)  
 **Progress:** 18/18 tasks completed (100%)  
 **Started:** November 16, 2025  
 **Completed:** November 16, 2025  
 **Dependencies:** Stage 4 (User Service), Stage 6 (Territory Service)
 
-#### Step 14.1: Utility Service Scaffolding (2/2) ✅
+**Forgejo Issues:** [#120-#136](http://localhost:3000/henrik/unity_platform/issues?labels=13,12,14&milestone=1&state=closed&q=Stage+14) (18 closed issues)
 
-- ✅ Create utility-service crate (port 8014)
-- ✅ Create service structure (handlers, models)
+All 18 tasks migrated to Forgejo as closed issues for historical tracking:
 
-#### Step 14.2: Favicon Fetching (4/4) ✅
-
-- ✅ Implement GET /utilities/favicon endpoint with URL validation
-- ✅ Add SSRF protection and 1MB size limit
-- ✅ Integrate Redis caching (7-day TTL)
-- ✅ Add HIT/MISS tracking for cache performance
-
-#### Step 14.3: Language Registry (3/3) ✅
-
-- ✅ Create migration 20251113000008: global.registry_languages table
-- ✅ Seed 25 initial languages (ISO 639-3 standard)
-- ✅ Implement territory-service language search/list endpoints
-
-#### Step 14.4: Frontend Integration (5/5) ✅
-
-- ✅ Create ProfileLinksManager with automatic favicon fetching
-- ✅ Implement favicon display with Globe fallback icon
-- ✅ Create LanguageProficiencyManager with table view and search
-- ✅ Create TagInput component for skills/interests
-- ✅ Create ResponsiveDialog for desktop/mobile patterns
-
-#### Step 14.5: Documentation & DevOps (4/4) ✅
-
-- ✅ Complete utility-service documentation (README.md, API.md)
-- ✅ Update architecture overview with utility-service
-- ✅ Add utility-service to dev scripts (start, stop, status, restart)
-- ✅ Update frontend .env with VITE_UTILITY_SERVICE_URL
+- Issues #120-#124: Utility service scaffolding and favicon fetching
+- Issues #125-#127: Language registry implementation  
+- Issues #128-#132: Frontend integration components
+- Issues #133-#136: Documentation and DevOps
 
 **Achievements:**
 
@@ -791,6 +729,11 @@ Basic translation service with caching for multi-language support.
 - **Language registry**: Standardized ISO 639-3 language codes
 - **Frontend components**: Reusable UI patterns (ResponsiveDialog, TagInput)
 - **Consistent architecture**: All 5 middleware, workspace dependencies
+
+**Notes:**
+
+- Completed November 16, 2025
+- Issues created in Forgejo as closed for historical record
 
 **Notes:**
 
@@ -806,35 +749,28 @@ Basic translation service with caching for multi-language support.
 
 ### Stage 13: Testing, Documentation & Deployment
 
-**Status:** ⬜ Not Started  
+**Status:** ⬜ Not Started (Migrated to Forgejo Issues)  
 **Progress:** 0/11 tasks completed  
 **Started:** N/A  
 **Completed:** N/A  
 **Dependencies:** Stage 12 (Frontend Complete)
 
-#### Step 13.1: Comprehensive Testing (0/5)
+**Forgejo Issues:** [#109-#119](http://localhost:3000/henrik/unity_platform/issues?labels=24&milestone=1&state=open) (11 open issues)
 
-- ⬜ Unit tests for all services (80%+ coverage)
-- ⬜ Integration tests for API endpoints
-- ⬜ E2E tests for critical user flows
-- ⬜ Load testing (consolidated from all stages)
-- ⬜ Security testing
-
-#### Step 13.2: Documentation (0/3)
-
-- ⬜ API documentation (OpenAPI/Swagger)
-- ⬜ Developer documentation
-- ⬜ User documentation
-
-#### Step 13.3: Deployment Setup (0/3)
-
-- ⬜ Production docker-compose.yml
-- ⬜ CI/CD pipeline (GitHub Actions)
-- ⬜ Monitoring setup (Prometheus, Grafana)
-- ⬜ Backup strategy
+- [#109: Stage 13.1 - Backend unit tests (80%+ coverage)](http://localhost:3000/henrik/unity_platform/issues/109)
+- [#110: Stage 13.2 - Integration tests for API endpoints](http://localhost:3000/henrik/unity_platform/issues/110)
+- [#111: Stage 13.3 - Frontend unit and component tests](http://localhost:3000/henrik/unity_platform/issues/111)
+- [#112: Stage 13.4 - End-to-end tests for critical flows](http://localhost:3000/henrik/unity_platform/issues/112)
+- [#113: Stage 13.5 - Load and performance testing](http://localhost:3000/henrik/unity_platform/issues/113)
+- [#114: Stage 13.6 - Security testing and vulnerability scanning](http://localhost:3000/henrik/unity_platform/issues/114)
+- [#115: Stage 13.7 - API documentation (OpenAPI/Swagger)](http://localhost:3000/henrik/unity_platform/issues/115)
+- [#116: Stage 13.8 - Developer documentation](http://localhost:3000/henrik/unity_platform/issues/116)
+- [#117: Stage 13.9 - User documentation and help guides](http://localhost:3000/henrik/unity_platform/issues/117)
+- [#118: Stage 13.10 - Production deployment configuration](http://localhost:3000/henrik/unity_platform/issues/118)
+- [#119: Stage 13.11 - CI/CD pipeline setup](http://localhost:3000/henrik/unity_platform/issues/119)
 
 **Notes:**  
-Load testing consolidated here from individual stages for comprehensive system performance validation.
+Comprehensive testing, documentation, and deployment setup. All tasks tracked in Forgejo.
 
 **Blockers:**  
 -
