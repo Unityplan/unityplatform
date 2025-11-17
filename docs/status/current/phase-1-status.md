@@ -592,27 +592,35 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 #### Task Summary (See Forgejo for Details)
 
 **Step 5.1: Project Scaffolding** → Issues #4-#10 (7 issues)
+
 - ✅ Migrated: Vite setup, dependencies, configuration
 
 **Step 5.2: State Management** → Issues #11-#12 (2 issues)
+
 - ✅ Migrated: Auth store, UI store
 
 **Step 5.3: API Clients** → Issues #13-#15 (3 issues)
+
 - ✅ Migrated: Auth API, User API, interceptors
 
 **Step 5.4: Auth Pages** → Issues #16-#18 (3 issues)
+
 - ✅ Migrated: Login, register, password reset
 
 **Step 5.5: Profile Pages** → Issues #19-#20 (2 issues)
+
 - ✅ Migrated: Profile view, profile edit
 
 **Step 5.6: Protected Routes** → Issues #21-#23 (3 issues)
+
 - ✅ Migrated: AuthGuard, router config, route files
 
 **Step 5.7: UI Components** → Issues #24-#27 (4 issues)
+
 - ✅ Migrated: Avatar, user card, profile header, privacy form
 
 **Step 5.8: Testing** → Issues #28-#30 (3 issues)
+
 - ✅ Migrated: Unit tests, integration tests, E2E tests
 
 **Notes:**  
@@ -630,134 +638,57 @@ Stage 14: Utility Service & Language Registry[██████████] 10
 
 ### Stage 6: Territory Service & Badge System
 
-**Status:** ✅ Complete  
+**Status:** ✅ Complete (📋 Migrated to Forgejo)  
 **Progress:** 30/30 tasks completed (100%)  
 **Started:** November 14, 2025  
 **Completed:** November 14, 2025  
 **Dependencies:** Stages 3 & 4 (Auth & User Services)
 
-#### Step 6.1: Territory Service Scaffolding (2/2) ✅
+**🔗 Historical Record:** [Forgejo Closed Issues #31-#41](http://localhost:3000/henrik/unity_platform/issues?labels=area%2Fterritory-service%2Carea%2Fbadge-service&milestone=1&state=closed)  
+**📊 Project Board:** [Unity Platform Development](http://localhost:3000/henrik/unity_platform/projects/1)
 
-- ✅ Create territory-service crate
-- ✅ Create service structure
+**All tasks migrated to Forgejo as closed issues (#31-#41) on November 17, 2025 for historical tracking.**
 
-#### Step 6.2: Territory Handlers (3/3) ✅
+#### Task Summary (See Forgejo for Details)
 
-- ✅ GET /territories - List all active territories
-- ✅ GET /territories/{code} - Get territory details
-- ✅ POST /territories - Create new territory (admin only)
+**Territory Service (Issues #31-#33):**
+- ✅ Service scaffolding and structure
+- ✅ 6 endpoints implemented (list, get, stats, settings, create)
+- ✅ Full architecture compliance (camelCase, AppConfig, NATS, metrics)
 
-#### Step 6.3: Territory Architecture Compliance (8/8) ✅
+**Badge Service (Issues #34-#38):**
+- ✅ Service scaffolding and structure
+- ✅ Database migration (20251113000005)
+- ✅ Code of Conduct badge seeded
+- ✅ 7 endpoints implemented (list, get user badges, award, revoke, featured, register-publisher)
+- ✅ Full architecture compliance
 
-- ✅ camelCase JSON serialization verified on all models (7 models)
-- ✅ AppConfig migration: `config.database_url()`, `config.nats_url()`
-- ✅ NATS client initialized and connected
-- ✅ Health endpoint corrected to `/api/v1/health`
-- ✅ Ready endpoint added: `/api/v1/ready` with DB check
-- ✅ Metrics endpoint added: `/api/v1/metrics` (Prometheus format)
-- ✅ MetricsCollector integrated with automatic HTTP tracking
-- ✅ All endpoints tested and working
+**Permission System (Issue #39):**
+- ✅ PermissionChecker with LRU cache
+- ✅ Badge-based RBAC with wildcard support
+- ✅ RequirePermission & RequireAnyPermission middleware
 
-#### Step 6.4: Badge Service Scaffolding (2/2) ✅
+**NATS Integration (Issue #40):**
+- ✅ Event handlers for user.registered
+- ✅ Event publishing for badge.awarded and badge.revoked
+- ✅ Hook system design (HOOK-SYSTEM.md)
 
-- ✅ Create badge-service crate
-- ✅ Create service structure
+**Testing (Issue #41):**
+- ✅ All endpoints manually tested and verified
+- ✅ Permission system validation
+- ✅ NATS event flow verification
 
-#### Step 6.5: Badge Database Schema (1/1) ✅
+**Key Achievements:**
+- 13 total endpoints across two services
+- Complete observability stack (health, ready, metrics)
+- Badge-based permission system with caching
+- NATS event-driven architecture
+- Full architecture compliance verified
 
-- ✅ Add badge tables to territory schema (Migration 20251113000005)
-
-#### Step 6.6: Seed Code of Conduct Badge (2/2) ✅
-
-- ✅ Create seed script for essential badges
-- ✅ Create function to check badge expiration
-
-#### Step 6.7: Badge Handlers Implementation (6/6) ✅
-
-- ✅ GET /badges - List all available badges
-- ✅ GET /badges/{badge_id} - Get badge details (not yet implemented but API ready)
-- ✅ GET /users/{user_id}/badges - Get user's badges
-- ✅ POST /badges/award - Award badge to user
-- ✅ POST /badges/revoke - Revoke badge
-- ✅ PATCH /users/me/badges/{badge_id}/featured - Toggle featured status
-
-#### Step 6.8: Badge Architecture Compliance (8/8) ✅
-
-- ✅ camelCase JSON serialization verified on all models (6 models)
-- ✅ AppConfig migration: `config.database_url()`, `config.nats_url()`
-- ✅ Logging configuration: `tracing_subscriber::registry()` pattern with RUST_LOG
-- ✅ Health/ready endpoints with correct format (service, status, version)
-- ✅ Metrics endpoint with Prometheus format
-- ✅ NATS client initialized and connected to `unityplan-global`
-- ✅ All environment variables cleaned (removed duplicates)
-- ✅ All endpoints tested and verified
-
-#### Step 6.9: Permission Checking System ✅
-
-- ✅ Create permission checker (shared-lib)
-  - PermissionChecker with LRU cache (5-minute TTL, 1000 entries)
-  - Badge-based RBAC with wildcard support
-  - Territory-aware permission queries
-- ✅ Create middleware for permission enforcement
-  - RequirePermission (single permission check)
-  - RequireAnyPermission (OR logic for multiple permissions)
-  - Automatic 403 responses for unauthorized access
-  - Complete documentation in shared-lib/PERMISSION.md
-
-**Achievements:**
-
-- Services can protect routes with `.wrap(RequirePermission::new(permission_checker, "service:resource:action"))`
-- Hierarchical permissions with wildcard support (`portal:*` matches all portal permissions)
-- Badge registration endpoint for service autonomy
-- Territory-service and portal-service role badge examples
-
-#### Step 6.10: Badge Event Handlers (NATS) (3/3) ✅
-
-- ✅ Subscribe to user.registered events (auto-grant Code of Conduct in dev mode)
-- ✅ Publish badge.awarded events (on every badge award)
-- ✅ Publish badge.revoked events (on every badge revocation)
-
-**Achievements:**
-
-- Badge-service publishes NATS events for all badge state changes
-- Events include: user_id, badge_slug, badge_name, timestamp, reason
-- Event publishing integrated into award_badge() and revoke_badge() functions
-- Graceful error handling - event publishing failures don't block badge operations
-- Hook system designed for future course-service integration (HOOK-SYSTEM.md)
-
-#### Step 6.11: Testing Badge System (3/3) ✅
-
-- ✅ Manual endpoint testing (all 7 endpoints verified)
-- ✅ Permission system verification (role badge permissions working)
-- ✅ NATS event flow validation (events published and received)
-
-**Achievements:**
-
-- **Territory Service**: 6/6 endpoints working (list, get, stats, settings, update settings, create), full architecture compliance
-- **Badge Service**: 7/7 endpoints working (including register-publisher), full architecture compliance
-- **Permission System**: PermissionChecker, RequirePermission, RequireAnyPermission middleware complete
-- **NATS Events**: badge.awarded and badge.revoked events published on all state changes
-- **Hook System**: Comprehensive security design for event-driven badge criteria evaluation
-- **Architecture compliance**: Both services using AppConfig, NATS, Prometheus metrics
-- **Observability**: Health/ready/metrics endpoints on both services
-- **camelCase**: All models properly serialized in both services
-- **NATS Integration**: Both connected to NATS cluster
-- **Dev Scripts**: Both services added to start/stop scripts
-- **Logging**: Proper logging configuration with RUST_LOG for both services
-- **Service Autonomy**: Services can register their own role badges on startup
-- **Testing**: All endpoints manually tested and verified working
-
-**Notes:**  
-
-- Badge-service has NATS event handler for user.registered (dev mode)
-- NATS event publishing complete (badge.awarded, badge.revoked)
-- Hook system designed with cryptographic signatures (see HOOK-SYSTEM.md)
-- Course completion events deferred until course-service integration
-- Unit tests deferred (manual testing complete, automated tests later)
-
-**Blockers:**  
-
-- None (Stage 6 complete at 100%)
+**Notes:**
+- Completed November 14, 2025
+- Issues created in Forgejo as closed for historical record
+- All work documented in Sprint 7 completions
 
 ---
 
