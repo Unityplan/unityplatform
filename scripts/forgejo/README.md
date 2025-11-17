@@ -5,23 +5,26 @@ Helper scripts for managing Forgejo issues, labels, and milestones via API.
 ## Setup
 
 1. **Copy the environment template:**
+
    ```bash
    cp .env.example .env
    ```
 
 2. **Generate a Forgejo API token:**
-   - Go to: http://localhost:3000 (or your Forgejo instance)
+   - Go to: <http://localhost:3000> (or your Forgejo instance)
    - Settings → Applications → Generate New Token
    - Name: "CLI Scripts" or similar
    - Select scopes: **repo** (all repo permissions)
    - Copy the generated token
 
 3. **Edit `.env` file:**
+
    ```bash
    nano .env
    ```
-   
+
    Update these values:
+
    ```bash
    FORGEJO_URL=http://localhost:3000
    FORGEJO_TOKEN=your_actual_token_here
@@ -31,6 +34,7 @@ Helper scripts for managing Forgejo issues, labels, and milestones via API.
    ```
 
 4. **Make scripts executable:**
+
    ```bash
    chmod +x *.sh
    ```
@@ -42,6 +46,7 @@ Helper scripts for managing Forgejo issues, labels, and milestones via API.
 Convert incomplete tasks from `phase-1-status.md` to Forgejo issues.
 
 **Usage:**
+
 ```bash
 # Dry run (preview without creating)
 ./convert-status-to-issues.sh --dry-run
@@ -60,6 +65,7 @@ Convert incomplete tasks from `phase-1-status.md` to Forgejo issues.
 ```
 
 **Features:**
+
 - ✅ Parses markdown checkboxes (❌ and ⏸️ = incomplete)
 - ✅ Maps tasks to appropriate labels (priority, type, area)
 - ✅ Sets milestone from `.env` configuration
@@ -68,6 +74,7 @@ Convert incomplete tasks from `phase-1-status.md` to Forgejo issues.
 - ✅ Issue limit
 
 **What it converts:**
+
 - Stage 5: Frontend Auth & Profile (0% complete)
 - Stage 7: Course Service (LMS) (0% complete)
 - Stage 8: Matrix Protocol Integration (0% complete)
@@ -82,6 +89,7 @@ Convert incomplete tasks from `phase-1-status.md` to Forgejo issues.
 List all labels in your repository.
 
 **Usage:**
+
 ```bash
 # Human-readable output
 ./list-labels.sh
@@ -91,6 +99,7 @@ List all labels in your repository.
 ```
 
 **Example output:**
+
 ```
 📋 Labels in Unityplan/unityplatform:
 
@@ -108,6 +117,7 @@ Total: 18
 List all milestones in your repository.
 
 **Usage:**
+
 ```bash
 # Human-readable output
 ./list-milestones.sh
@@ -117,6 +127,7 @@ List all milestones in your repository.
 ```
 
 **Example output:**
+
 ```
 🎯 Milestones in Unityplan/unityplatform:
 
@@ -131,11 +142,13 @@ Total: 2
 Quick helper to create a single issue from command line.
 
 **Usage:**
+
 ```bash
 ./create-issue.sh "Issue Title" "Issue Body" [label1,label2,...] [milestone]
 ```
 
 **Examples:**
+
 ```bash
 # Simple issue (no labels or milestone)
 ./create-issue.sh "Fix login bug" "Users cannot login with special characters"
@@ -152,6 +165,7 @@ Quick helper to create a single issue from command line.
 ```
 
 **Output:**
+
 ```
 ✅ Created issue #42: Add dark mode
 🔗 http://localhost:3000/Unityplan/unityplatform/issues/42
@@ -168,6 +182,7 @@ Quick helper to create a single issue from command line.
 ### Daily Usage
 
 **Convert markdown tasks to issues:**
+
 ```bash
 # Preview first (always recommended)
 ./convert-status-to-issues.sh --dry-run --stage 5
@@ -177,6 +192,7 @@ Quick helper to create a single issue from command line.
 ```
 
 **Create ad-hoc issues:**
+
 ```bash
 ./create-issue.sh \
   "Update documentation" \
@@ -186,6 +202,7 @@ Quick helper to create a single issue from command line.
 ```
 
 **Check your labels/milestones:**
+
 ```bash
 ./list-labels.sh
 ./list-milestones.sh
@@ -204,6 +221,7 @@ Quick helper to create a single issue from command line.
 ### "Error: .env file not found!"
 
 **Solution:**
+
 ```bash
 cp .env.example .env
 nano .env  # Add your token
@@ -212,6 +230,7 @@ nano .env  # Add your token
 ### "Failed to create issue"
 
 **Check:**
+
 1. Token is valid (regenerate if needed)
 2. Token has `repo` scope permissions
 3. Repository owner/name in `.env` is correct
@@ -221,6 +240,7 @@ nano .env  # Add your token
 
 **Solution:**
 Create the label first in Forgejo UI or check the exact label name:
+
 ```bash
 ./list-labels.sh
 ```
@@ -229,6 +249,7 @@ Create the label first in Forgejo UI or check the exact label name:
 
 **Solution:**
 Check milestone name matches exactly:
+
 ```bash
 ./list-milestones.sh
 ```
@@ -247,4 +268,4 @@ Update `.env` with correct milestone title.
 
 - `docs/guides/development/forgejo-quickstart.md` - Beginner setup guide
 - `docs/guides/development/forgejo-project-management.md` - Comprehensive strategy
-- Forgejo API docs: https://forgejo.org/docs/latest/api/
+- Forgejo API docs: <https://forgejo.org/docs/latest/api/>

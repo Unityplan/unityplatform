@@ -122,7 +122,7 @@ Create 5-10 issues for your immediate work on Frontend Auth:
 
 ### 4. Use Your Project Board
 
-1. Open: http://localhost:3000/Unityplan/unityplatform/projects/1
+1. Open: <http://localhost:3000/Unityplan/unityplatform/projects/1>
 2. Drag issues to "In Progress" as you work
 3. Move to "Done" when complete
 4. Celebrate progress! 🎉
@@ -182,7 +182,8 @@ cd scripts/forgejo
 ⚠️ **Not pushed to Forgejo yet** - Repository doesn't exist in Forgejo
 
 **To push:**
-1. Create repository in Forgejo: http://localhost:3000/repo/create
+
+1. Create repository in Forgejo: <http://localhost:3000/repo/create>
    - Owner: `Unityplan`
    - Repository Name: `unityplatform`
 2. Then push: `git push forgejo main`
@@ -199,11 +200,13 @@ cd scripts/forgejo
 ## What's Different from Before?
 
 **Before:**
+
 - ❌ Markdown status files (messy, hard to track)
 - ❌ Manual todo lists
 - ❌ No visual progress tracking
 
 **Now:**
+
 - ✅ Forgejo issues (structured, searchable)
 - ✅ Project board (visual Kanban)
 - ✅ Labels, milestones, filtering

@@ -5,6 +5,7 @@ Follow these steps to get started with Forgejo issue management in **5 minutes**
 ## Step 1: Generate Forgejo API Token (2 minutes)
 
 1. Open Forgejo in your browser:
+
    ```bash
    open http://localhost:3000
    ```
@@ -19,6 +20,7 @@ Follow these steps to get started with Forgejo issue management in **5 minutes**
    - Click **Generate Token**
 
 5. **IMPORTANT**: Copy the token immediately (you can't see it again!)
+
    ```
    Example token: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0
    ```
@@ -37,6 +39,7 @@ nano .env
 ```
 
 **Update these values in `.env`:**
+
 ```bash
 FORGEJO_URL=http://localhost:3000
 FORGEJO_TOKEN=paste_your_token_here  # ← PASTE YOUR TOKEN
@@ -55,6 +58,7 @@ DEFAULT_MILESTONE=v0.1.0-alpha.2
 ```
 
 **Expected output:**
+
 ```
 📋 Labels in Unityplan/unityplatform:
 
@@ -80,6 +84,7 @@ Total: 18
 ```
 
 **Expected output:**
+
 ```
 ✅ Created issue #1: Test issue from CLI
 🔗 http://localhost:3000/Unityplan/unityplatform/issues/1
@@ -187,16 +192,19 @@ nano .env
 ## Daily Workflow
 
 **Morning routine (2 minutes):**
-1. Check project board: http://localhost:3000/Unityplan/unityplatform/projects/1
+
+1. Check project board: <http://localhost:3000/Unityplan/unityplatform/projects/1>
 2. Move issues to "In Progress" as you start work
 3. Create new issues for any discoveries
 
 **During work:**
+
 - Update issue descriptions as you learn more
 - Add comments with progress notes
 - Move issues through the board
 
 **End of day (2 minutes):**
+
 1. Update issue status (move to "Testing" or "Done")
 2. Create issues for tomorrow's work
 3. Review milestone progress
