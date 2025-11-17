@@ -80,10 +80,16 @@ if [[ -n "$MILESTONE" ]]; then
 fi
 
 # Build JSON payload
+# Convert label IDs to proper JSON array of numbers
+labels_json="[]"
+if [[ ${#label_ids[@]} -gt 0 ]]; then
+    labels_json=$(printf '%s\n' "${label_ids[@]}" | jq -R 'tonumber' | jq -s .)
+fi
+
 payload=$(jq -n \
     --arg title "$TITLE" \
     --arg body "$BODY" \
-    --argjson labels "$(printf '%s\n' "${label_ids[@]}" | jq -R . | jq -s .)" \
+    --argjson labels "$labels_json" \
     '{title: $title, body: $body, labels: $labels}')
 
 if [[ -n "$milestone_id" ]]; then

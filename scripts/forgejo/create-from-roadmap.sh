@@ -79,31 +79,30 @@ echo ""
 echo "Type:"
 echo "  1 - feature"
 echo "  2 - bug"
-echo "  3 - docs"
-echo "  4 - testing"
-echo "  5 - refactor"
+echo "  3 - enhancement"
+echo "  4 - infrastructure"
 read -rp "Type (default: feature): " TYPE_NUM
 
 case "${TYPE_NUM:-1}" in
     1) TYPE="feature" ;;
     2) TYPE="bug" ;;
-    3) TYPE="docs" ;;
-    4) TYPE="testing" ;;
-    5) TYPE="refactor" ;;
+    3) TYPE="enhancement" ;;
+    4) TYPE="infrastructure" ;;
     *) TYPE="feature" ;;
 esac
 
 # Area (based on stage)
 case "$STAGE" in
-    5|12) AREA="frontend" ;;
-    7|10|11) AREA="backend" ;;
-    8|9) AREA="integration" ;;
-    13) AREA="testing" ;;
-    *) AREA="other" ;;
+    5|12) AREA="frontend-app" ;;
+    7) AREA="auth-service" ;;  # Course service - update when created
+    10|11) AREA="backend" ;;  # Forum/Translation - update when created
+    8|9) AREA="infrastructure" ;;
+    13) AREA="infrastructure" ;;
+    *) AREA="infrastructure" ;;
 esac
 
-# Build labels
-LABELS="priority:${PRIORITY},type:${TYPE},area:${AREA}"
+# Build labels with slash format (priority/high not priority:high)
+LABELS="priority/${PRIORITY},type/${TYPE},area/${AREA}"
 
 # Milestone
 MILESTONE="${DEFAULT_MILESTONE:-}"
