@@ -13,7 +13,9 @@ The auth-service is responsible for user authentication, JWT token management, a
 
 ### **Responsibilities**
 
-- ✅ User registration (with invitation token validation)
+- ✅ User registration with invitation validation
+  - **Production:** Requires valid invitation token from manager
+  - **Development:** Optional invitation token for testing
 - ✅ User authentication (login/logout)
 - ✅ JWT token generation and validation
 - ✅ Password hashing (Argon2id)

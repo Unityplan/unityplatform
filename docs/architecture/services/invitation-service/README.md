@@ -9,14 +9,20 @@
 
 ## 📋 Overview
 
-The invitation-service manages the entire invitation lifecycle: creation, validation, tracking, and revocation. All user registrations require a valid invitation token.
+The invitation-service manages the entire invitation lifecycle: creation, validation, tracking, and revocation. **Production requires valid invitation tokens** for all user registrations - only territory and community managers can create invitations.
+
+### **Production Requirements**
+
+- **🔒 No Open Registration** - Production deployments require valid invitation tokens
+- **👥 Manager-Only Creation** - Only territory/community managers can create invitations
+- **🧪 Dev Mode Exception** - Development mode allows optional invitation validation for testing
 
 ### **Responsibilities**
 
-- ⏳ Generate unique invitation tokens
+- ⏳ Generate unique invitation tokens (manager-only)
 - ⏳ Validate invitation tokens (during registration)
 - ⏳ Track invitation usage (who invited whom)
-- ⏳ Revoke invitations (admin or creator)
+- ⏳ Revoke invitations (manager or creator)
 - ⏳ List user's sent invitations with status
 - ⏳ Global invitation uniqueness enforcement
 
@@ -26,6 +32,7 @@ The invitation-service manages the entire invitation lifecycle: creation, valida
 - ❌ User profiles (handled by user-service)
 - ❌ Invitation emails/notifications (handled by notification-service)
 - ❌ Community invitations (handled by community-service)
+- ❌ Manager role assignment (handled by territory-service/community-service)
 
 ---
 
@@ -59,15 +66,20 @@ HttpServer::new(|| {
 
 ### **Tables Owned by invitation-service**
 
-#### **1. invitation_tokens (territory-specific)**
+#### **1. invitation_invitations_tokens (territory-specific)**
+
+**Naming:** Follows `{service}_{entity}_{data}` convention
+- `invitation_` = service prefix
+- `invitations_` = entity
+- `tokens` = data type
 
 ```sql
-CREATE TABLE territory_{code}.invitation_tokens (
+CREATE TABLE territory_{code}.invitation_invitations_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     token VARCHAR(255) UNIQUE NOT NULL,  -- Unique invitation code
     
-    -- Ownership
-    created_by UUID REFERENCES users(id) ON DELETE CASCADE,  -- Who created this invitation
+    -- Ownership (no FK for service independence)
+    created_by UUID NOT NULL,  -- References auth_users_core(id) - validated via JWT
     created_at TIMESTAMPTZ DEFAULT NOW(),
     
     -- Usage limits
@@ -80,10 +92,12 @@ CREATE TABLE territory_{code}.invitation_tokens (
     -- Status
     is_active BOOLEAN DEFAULT true,
     revoked_at TIMESTAMPTZ,
-    revoked_by UUID REFERENCES users(id),
+    revoked_by UUID,  -- References auth_users_core(id) - validated via JWT
     
     -- Metadata
     metadata JSONB DEFAULT '{}'::jsonb,  -- Custom data (e.g., community_id, role)
+    
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
     
     CONSTRAINT valid_max_uses CHECK (max_uses >= 0),
     CONSTRAINT valid_uses_count CHECK (uses_count >= 0 AND uses_count <= max_uses),
@@ -92,25 +106,29 @@ CREATE TABLE territory_{code}.invitation_tokens (
     )
 );
 
-CREATE INDEX idx_invitation_tokens_token ON invitation_tokens(token);
-CREATE INDEX idx_invitation_tokens_created_by ON invitation_tokens(created_by);
-CREATE INDEX idx_invitation_tokens_active ON invitation_tokens(is_active) WHERE is_active = true;
-CREATE INDEX idx_invitation_tokens_expires ON invitation_tokens(expires_at) WHERE expires_at IS NOT NULL;
+CREATE INDEX idx_invitation_invitations_tokens_token ON invitation_invitations_tokens(token);
+CREATE INDEX idx_invitation_invitations_tokens_created_by ON invitation_invitations_tokens(created_by);
+CREATE INDEX idx_invitation_invitations_tokens_active ON invitation_invitations_tokens(is_active) WHERE is_active = true;
+CREATE INDEX idx_invitation_invitations_tokens_expires ON invitation_invitations_tokens(expires_at) WHERE expires_at IS NOT NULL;
+
+COMMENT ON COLUMN invitation_invitations_tokens.created_by IS 'References auth_users_core(id) - validated via JWT, no FK for service independence';
 ```
 
 **Purpose:** Primary invitation token storage  
 **Holochain Entry Type:** `InvitationToken` (public chain - inviter's reputation)  
 **Token Format:** 16-character alphanumeric (e.g., `A7K9-M2X4-P5W8-Q1Z3`)
 
-#### **2. invitation_uses (territory-specific)**
+#### **2. invitation_invitations_uses (territory-specific)**
+
+**Naming:** Follows `{service}_{entity}_{data}` convention
 
 ```sql
-CREATE TABLE territory_{code}.invitation_uses (
+CREATE TABLE territory_{code}.invitation_invitations_uses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    invitation_id UUID NOT NULL REFERENCES invitation_tokens(id) ON DELETE CASCADE,
+    invitation_id UUID NOT NULL REFERENCES invitation_invitations_tokens(id) ON DELETE CASCADE,
     
-    -- Who used it
-    used_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    -- Who used it (no FK for service independence)
+    used_by UUID NOT NULL,  -- References auth_users_core(id) - validated via JWT
     used_at TIMESTAMPTZ DEFAULT NOW(),
     
     -- Context
@@ -120,27 +138,32 @@ CREATE TABLE territory_{code}.invitation_uses (
     UNIQUE(invitation_id, used_by)  -- Prevent duplicate use by same user
 );
 
-CREATE INDEX idx_invitation_uses_invitation ON invitation_uses(invitation_id);
-CREATE INDEX idx_invitation_uses_user ON invitation_uses(used_by);
-CREATE INDEX idx_invitation_uses_timestamp ON invitation_uses(used_at);
+CREATE INDEX idx_invitation_invitations_uses_invitation ON invitation_invitations_uses(invitation_id);
+CREATE INDEX idx_invitation_invitations_uses_user ON invitation_invitations_uses(used_by);
+CREATE INDEX idx_invitation_invitations_uses_timestamp ON invitation_invitations_uses(used_at);
+
+COMMENT ON COLUMN invitation_invitations_uses.used_by IS 'References auth_users_core(id) - validated via JWT, no FK for service independence';
 ```
 
 **Purpose:** Track who used which invitation and when  
 **Holochain Entry Type:** `InvitationUse` (public - builds trust graph)  
 **Use Case:** Invitation tree visualization, spam prevention
 
-#### **3. invitation_token_registry (global - uniqueness enforcement)**
+#### **3. registry_invitation (global - uniqueness enforcement)**
+
+**Naming:** Follows `registry_{resource}` convention for global tables
 
 ```sql
-CREATE TABLE global.invitation_token_registry (
+CREATE TABLE global.registry_invitation (
     token VARCHAR(255) PRIMARY KEY,
-    territory_code VARCHAR(10) NOT NULL,
+    territory_code VARCHAR(10) NOT NULL REFERENCES global.territories(code) ON DELETE CASCADE,
+    territory_token_id UUID NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     
     UNIQUE(token)
 );
 
-CREATE INDEX idx_invitation_token_registry_territory ON invitation_token_registry(territory_code);
+CREATE INDEX idx_registry_invitation_territory ON global.registry_invitation(territory_code);
 ```
 
 **Purpose:** Ensure invitation codes are globally unique across all territories  

@@ -106,9 +106,10 @@
 
 **Endpoint:** `POST /api/v1/invitations`  
 **Authentication:** Bearer token required  
+**Authorization:** Manager role required (territory or community manager)  
 **Status:** ⏳ Planned
 
-**Description:** Create a new invitation token.
+**Description:** Create a new invitation token. **Production: Only managers can create invitations.**
 
 **Request Body:**
 
