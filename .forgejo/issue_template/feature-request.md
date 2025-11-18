@@ -29,24 +29,24 @@ As a [type of user], I want [goal] so that [benefit].
 <!-- Optional: Suggest implementation details -->
 
 **Backend Changes:**
-- 
+-
 
 **Frontend Changes:**
-- 
+-
 
 **Database Changes:**
-- 
+-
 
 **API Endpoints:**
-- 
+-
 
 ## 📋 Acceptance Criteria
 
 <!-- How do we know when this feature is complete? -->
 
-- [ ] 
-- [ ] 
-- [ ] 
+- [ ]
+- [ ]
+- [ ]
 
 ## 🔄 Alternatives Considered
 

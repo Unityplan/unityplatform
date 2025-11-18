@@ -1,7 +1,7 @@
 # Forgejo Workflow Guide
 
 **Last Updated:** November 17, 2025  
-**Forgejo Instance:** http://localhost:3000  
+**Forgejo Instance:** <http://localhost:3000>  
 **Repository:** henrik/unity_platform
 
 This guide explains how to use Forgejo for issue tracking, project management, and collaboration on the Unity Platform.
@@ -26,6 +26,7 @@ This guide explains how to use Forgejo for issue tracking, project management, a
 The Unity Platform uses Forgejo (self-hosted Git forge) for comprehensive issue tracking. All Phase 1 MVP work is tracked through 137 issues organized by stage, with proper labeling, milestones, and status tracking.
 
 **Why Forgejo?**
+
 - ✅ Self-hosted (data sovereignty)
 - ✅ Open source (freedom)
 - ✅ Git integration (version control)
@@ -38,11 +39,13 @@ The Unity Platform uses Forgejo (self-hosted Git forge) for comprehensive issue 
 ## Accessing Forgejo
 
 ### Web Interface
+
 ```
 http://localhost:3000
 ```
 
 **Quick Links:**
+
 - [All Issues](http://localhost:3000/henrik/unity_platform/issues)
 - [Open Issues](http://localhost:3000/henrik/unity_platform/issues?state=open)
 - [Closed Issues](http://localhost:3000/henrik/unity_platform/issues?state=closed)
@@ -50,6 +53,7 @@ http://localhost:3000
 - [Labels](http://localhost:3000/henrik/unity_platform/labels)
 
 ### API Access
+
 ```bash
 # Set environment variables
 export FORGEJO_URL="http://localhost:3000"
@@ -71,11 +75,13 @@ curl -s -H "Authorization: token ${FORGEJO_TOKEN}" \
 All Phase 1 issues follow this pattern:
 
 **Title Format:** `Stage X.Y: Task Description`
+
 - `X` = Stage number (1-14)
 - `Y` = Task number within stage
 - Example: `Stage 5.1: Create Vite + React + TypeScript project`
 
 **Description Components:**
+
 1. **Context** - What this task is about
 2. **Requirements** - What needs to be done
 3. **Acceptance Criteria** - How to verify completion
@@ -92,6 +98,7 @@ All Phase 1 issues follow this pattern:
 ### Finding Issues
 
 **By Stage:**
+
 ```
 Stage 1-4: #42-#67 (closed - historical)
 Stage 5: #4-#30 (open - active)
@@ -107,12 +114,14 @@ Stage 14: #120-#136 (closed - historical)
 ```
 
 **By Label:**
+
 - [Frontend Issues](http://localhost:3000/henrik/unity_platform/issues?labels=14)
 - [High Priority](http://localhost:3000/henrik/unity_platform/issues?labels=1)
 - [In Progress](http://localhost:3000/henrik/unity_platform/issues?labels=17)
 - [Auth Service](http://localhost:3000/henrik/unity_platform/issues?labels=9)
 
 **By Milestone:**
+
 - [v0.1.0-alpha.2](http://localhost:3000/henrik/unity_platform/issues?milestone=1)
 
 ---
@@ -245,6 +254,7 @@ Refs: #<issue-number>
 ```
 
 **Examples:**
+
 ```bash
 # Feature implementation
 git commit -m "feat(auth): implement JWT token generation
@@ -292,6 +302,7 @@ Examples:
 ### Issue Management
 
 ✅ **DO:**
+
 - Assign issues to yourself when starting work
 - Update labels to reflect current status
 - Comment on progress and blockers
@@ -301,6 +312,7 @@ Examples:
 - Break large tasks into smaller issues
 
 ❌ **DON'T:**
+
 - Leave issues assigned when not actively working
 - Close issues before code is merged
 - Create duplicate issues (search first)
@@ -311,6 +323,7 @@ Examples:
 ### Communication
 
 **Issue Comments:**
+
 ```markdown
 <!-- Progress update -->
 Working on this now. Completed:
@@ -331,6 +344,7 @@ Working on this now. Completed:
 ### Testing
 
 Before closing an issue:
+
 ```bash
 # 1. Run unit tests
 cargo test            # Rust services
@@ -360,6 +374,7 @@ docker compose -f docker-compose.dev.yml up
 **Progress:** 55/137 issues closed (40%)
 
 **Stages:**
+
 - ✅ Stages 1-4: Foundation complete
 - 🔄 Stage 5: Frontend in progress
 - ✅ Stage 6: Territory/Badge complete
@@ -367,6 +382,7 @@ docker compose -f docker-compose.dev.yml up
 - ✅ Stage 14: Utility service complete
 
 **Links:**
+
 - [Milestone Overview](http://localhost:3000/henrik/unity_platform/milestones)
 - [Open Issues](http://localhost:3000/henrik/unity_platform/issues?milestone=1&state=open)
 - [Closed Issues](http://localhost:3000/henrik/unity_platform/issues?milestone=1&state=closed)
@@ -378,6 +394,7 @@ docker compose -f docker-compose.dev.yml up
 ### Common Issues
 
 **Issue not appearing after creation:**
+
 ```bash
 # Check API response
 curl -s -H "Authorization: token ${FORGEJO_TOKEN}" \
@@ -389,6 +406,7 @@ echo $FORGEJO_TOKEN
 ```
 
 **Labels not applying:**
+
 ```bash
 # List all labels with IDs
 curl -s -H "Authorization: token ${FORGEJO_TOKEN}" \
@@ -398,6 +416,7 @@ curl -s -H "Authorization: token ${FORGEJO_TOKEN}" \
 ```
 
 **Cannot access Forgejo:**
+
 ```bash
 # Check if running
 docker ps | grep forgejo

@@ -85,6 +85,7 @@ Unity Platform uses a four-level hierarchy for organizing development:
 **Architecture:** Rust microservices + PostgreSQL multi-tenancy + React frontend
 
 **Completion Criteria:**
+
 - All 14 stages complete
 - All 137 issues in milestone closed
 - Platform tested and stable
@@ -101,6 +102,7 @@ Unity Platform uses a four-level hierarchy for organizing development:
 **Architecture:** Kubernetes deployment, enhanced federation, advanced monitoring
 
 **Completion Criteria:**
+
 - Regional multi-pod deployments
 - Kubernetes orchestration
 - Advanced federation features
@@ -117,6 +119,7 @@ Unity Platform uses a four-level hierarchy for organizing development:
 **Architecture:** Holochain migration, pure P2P, cryptographic ownership
 
 **Completion Criteria:**
+
 - Full Holochain integration
 - Peer-to-peer architecture
 - Cryptographic data ownership
@@ -168,6 +171,7 @@ Stages do NOT directly map to version numbers. Instead:
 - **Version bumps** happen based on stability and feature completeness, not stage completion
 
 **Example:**
+
 ```
 Version 0.1.0-alpha.1:
   ✅ Stage 1: Foundation
@@ -212,21 +216,25 @@ Example: 0.1.0-alpha.1+build.20251117
 ### Version Components
 
 **MAJOR (0.x.x):**
+
 - Increment when Phase changes (Phase 1 → Phase 2 → Phase 3)
 - Breaking changes to architecture
 - Examples: `0.x.x` (Phase 1), `1.x.x` (Phase 2), `2.x.x` (Phase 3)
 
 **MINOR (x.1.x):**
+
 - New features or services added
 - Backward-compatible changes
 - Examples: `0.1.x` (MVP features), `0.2.x` (Scale features)
 
 **PATCH (x.x.0):**
+
 - Bug fixes and small improvements
 - No new features
 - Examples: `0.1.1` (auth bug fix), `0.1.2` (database patch)
 
 **PRE-RELEASE (alpha/beta/rc):**
+
 - `alpha.N` - Early development, unstable, internal testing
 - `beta.N` - Feature-complete, external testing, may have bugs
 - `rc.N` - Release Candidate, stable, final testing
@@ -298,6 +306,7 @@ Development → Alpha → Beta → Release Candidate → Stable
 **Issues:** 137 total
 
 **Progress:**
+
 - ✅ Closed: 55 issues (40%)
 - 🔄 Open: 82 issues (60%)
 
@@ -306,6 +315,7 @@ Development → Alpha → Beta → Release Candidate → Stable
 ### Milestone Workflow
 
 1. **Create Milestone:**
+
    ```
    Name: v0.1.0-alpha.2
    Due Date: 2026-01-15 (example)
@@ -370,11 +380,13 @@ as extensions to the MAJOR.MINOR.PATCH format.
 ### Platform vs Service Versions
 
 **Platform Version (VERSIONS.md):**
+
 - Represents overall platform state
 - Updated when major milestone reached
 - Example: `0.1.0-alpha.1`
 
 **Service Versions (individual Cargo.toml):**
+
 - Each microservice has own version
 - Can increment independently
 - Usually aligned with platform version
@@ -383,11 +395,13 @@ as extensions to the MAJOR.MINOR.PATCH format.
 **Alignment Strategy:**
 
 During **Phase 1 (MVP)**:
+
 - All services use same version as platform
 - Simpler to manage during rapid development
 - Example: All services at `0.1.0-alpha.1`
 
 Starting **Phase 2 (Scale)**:
+
 - Services can version independently
 - Semantic versioning per service
 - Platform version represents compatibility matrix
@@ -396,24 +410,28 @@ Starting **Phase 2 (Scale)**:
 ### Version Increment Triggers
 
 **When to bump MAJOR (0.x → 1.x):**
+
 - Phase completion (Phase 1 → Phase 2)
 - Breaking API changes
 - Architecture redesign
 - Migration requiring user action
 
 **When to bump MINOR (x.0.x → x.1.x):**
+
 - New service added
 - New major feature
 - Stage completion (sometimes)
 - Backward-compatible API additions
 
 **When to bump PATCH (x.x.0 → x.x.1):**
+
 - Bug fixes
 - Security patches
 - Performance improvements
 - Documentation updates
 
 **When to bump PRE-RELEASE (alpha.1 → alpha.2):**
+
 - Regular development progress
 - Stage completions
 - Sprint completions

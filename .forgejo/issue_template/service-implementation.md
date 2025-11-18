@@ -15,17 +15,20 @@ labels: 'type/feature,type/infrastructure'
 ## 📋 Service Specification
 
 **Responsibilities:**
-- 
-- 
-- 
+-
+
+-
+-
 
 **NOT Responsible For:**
-- 
-- 
+-
+
+-
 
 ## 🗄️ Database Schema
 
 **Tables:**
+
 ```sql
 -- Example schema
 CREATE TABLE territory_dk.table_name (
@@ -36,11 +39,13 @@ CREATE TABLE territory_dk.table_name (
 ```
 
 **Global Tables:**
+
 ```sql
 -- If applicable
 ```
 
 **Migrations:**
+
 - [ ] Create migration file in `services/shared-lib/migrations/`
 - [ ] Test migration up/down
 - [ ] Document schema changes
@@ -62,6 +67,7 @@ CREATE TABLE territory_dk.table_name (
 ## 🏗️ Implementation Checklist
 
 ### 1. Service Scaffolding
+
 - [ ] Create `services/[service-name]/` directory
 - [ ] Create `Cargo.toml` with dependencies
 - [ ] Create `src/main.rs` with server setup
@@ -69,6 +75,7 @@ CREATE TABLE territory_dk.table_name (
 - [ ] Add to workspace `Cargo.toml`
 
 ### 2. Project Structure
+
 - [ ] Create `src/handlers/` - HTTP request handlers
 - [ ] Create `src/models/` - Request/Response types
 - [ ] Create `src/services/` - Business logic
@@ -76,6 +83,7 @@ CREATE TABLE territory_dk.table_name (
 - [ ] Create `README.md` - Service documentation
 
 ### 3. Middleware Stack
+
 - [ ] Add `LoggingMiddleware` (development/production)
 - [ ] Add `RequestIdMiddleware`
 - [ ] Add `SecurityHeadersMiddleware`
@@ -84,6 +92,7 @@ CREATE TABLE territory_dk.table_name (
 - [ ] Test middleware chain
 
 ### 4. Database Integration
+
 - [ ] Add `shared_lib::Database` connection
 - [ ] Implement territory-aware queries
 - [ ] Add connection pooling
@@ -91,6 +100,7 @@ CREATE TABLE territory_dk.table_name (
 - [ ] Add error handling
 
 ### 5. API Implementation
+
 - [ ] Implement all endpoints (see table above)
 - [ ] Add request validation with `ValidatedJson`
 - [ ] Add proper error responses
@@ -98,6 +108,7 @@ CREATE TABLE territory_dk.table_name (
 - [ ] Test all endpoints
 
 ### 6. Business Logic
+
 - [ ] Implement core service logic
 - [ ] Add validation rules
 - [ ] Add authorization checks
@@ -105,6 +116,7 @@ CREATE TABLE territory_dk.table_name (
 - [ ] Handle edge cases
 
 ### 7. Testing
+
 - [ ] Unit tests for business logic
 - [ ] Integration tests for API endpoints
 - [ ] Test error handling
@@ -113,6 +125,7 @@ CREATE TABLE territory_dk.table_name (
 - [ ] Achieve >80% code coverage
 
 ### 8. Documentation
+
 - [ ] Update service README.md
 - [ ] Document API endpoints
 - [ ] Document database schema
@@ -120,6 +133,7 @@ CREATE TABLE territory_dk.table_name (
 - [ ] Update architecture docs
 
 ### 9. Docker Integration
+
 - [ ] Add Dockerfile for service
 - [ ] Add to `docker-compose.dev.yml`
 - [ ] Add to `docker-compose.pod.yml`
@@ -127,6 +141,7 @@ CREATE TABLE territory_dk.table_name (
 - [ ] Test container deployment
 
 ### 10. Deployment
+
 - [ ] Add health check endpoint (`/health`)
 - [ ] Add metrics endpoint (`/metrics`)
 - [ ] Configure logging
@@ -136,21 +151,25 @@ CREATE TABLE territory_dk.table_name (
 ## 🔗 Dependencies
 
 **Depends On:**
+
 - [ ] #<!-- Issue number: Foundation/Infrastructure -->
 - [ ] #<!-- Issue number: Database schema -->
 - [ ] #<!-- Issue number: Auth service -->
 
 **Blocks:**
+
 - [ ] #<!-- Issue number: Frontend integration -->
 
 ## 📚 Reference Documentation
 
 **Architecture Docs:**
+
 - `docs/architecture/services/[service-name]/README.md`
 - `docs/architecture/services/[service-name]/API.md`
 - `docs/architecture/services/[service-name]/DATABASE.md`
 
 **Similar Services:**
+
 - Check `services/auth-service/` for authentication patterns
 - Check `services/user-service/` for CRUD patterns
 - Check `services/badge-service/` for reference implementation

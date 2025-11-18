@@ -13,17 +13,20 @@
 **Current Sprint:** Setting up frontend foundation
 
 ### Completed
+
 - ✅ [#4: Vite + React + TypeScript project setup](http://localhost:3000/henrik/unity_platform/issues/4)
 - ✅ [#5: Install and configure shadcn/ui](http://localhost:3000/henrik/unity_platform/issues/5)
 - ✅ [#6: Set up TailwindCSS theming](http://localhost:3000/henrik/unity_platform/issues/6)
 - ✅ [#7: Install TanStack Router](http://localhost:3000/henrik/unity_platform/issues/7)
 
 ### In Progress
+
 - 🔄 [#8: Create route structure](http://localhost:3000/henrik/unity_platform/issues/8)
 - 🔄 [#9: Set up TanStack Query](http://localhost:3000/henrik/unity_platform/issues/9)
 - 🔄 [#10: Create API service layer](http://localhost:3000/henrik/unity_platform/issues/10)
 
 ### Upcoming (27 total issues)
+
 View all frontend tasks in [Forgejo](http://localhost:3000/henrik/unity_platform/issues?milestone=1&labels=14&state=open)
 
 ---
@@ -178,24 +181,28 @@ app/
 ## 🧩 Key Features
 
 ### Authentication
+
 - Login/Register forms with validation
 - JWT token management (access + refresh)
 - Protected routes with auth guards
 - Persistent auth state (localStorage)
 
 ### User Profiles
+
 - View/edit profile (bio, avatar, location)
 - Social links management
 - Privacy settings
 - Language preferences
 
 ### Responsive Design
+
 - Mobile-first approach
 - Tablet & desktop optimized
 - Touch-friendly interactions
 - Accessible (ARIA, keyboard nav)
 
 ### Developer Experience
+
 - Hot Module Replacement (HMR)
 - TypeScript autocomplete
 - ESLint + Prettier
@@ -361,6 +368,7 @@ const apiUrl = import.meta.env.VITE_API_BASE_URL
 - **Styling:** [TailwindCSS Docs](https://tailwindcss.com/docs)
 
 **Internal Docs:**
+
 - [Frontend Architecture](../docs/architecture/frontend/)
 - [Component Guidelines](../docs/guides/frontend/component-guidelines.md)
 - [Testing Guide](../docs/guides/frontend/testing.md)
@@ -373,6 +381,7 @@ const apiUrl = import.meta.env.VITE_API_BASE_URL
 ### Common Issues
 
 **Port already in use:**
+
 ```bash
 # Kill process on port 5173
 lsof -ti:5173 | xargs kill -9
@@ -382,6 +391,7 @@ npm run dev -- --port 5174
 ```
 
 **Module not found:**
+
 ```bash
 # Clear node_modules and reinstall
 rm -rf node_modules package-lock.json
@@ -389,6 +399,7 @@ npm install
 ```
 
 **Type errors after update:**
+
 ```bash
 # Regenerate route tree
 npm run build

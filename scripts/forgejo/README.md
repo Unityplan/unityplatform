@@ -82,6 +82,7 @@ All 14 stages of Phase 1 MVP are now tracked in Forgejo:
 ```
 
 Covers:
+
 - Stage 1: Foundation & Infrastructure
 - Stage 2: Database Schema & Migrations  
 - Stage 3: Authentication Service

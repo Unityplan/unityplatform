@@ -90,8 +90,8 @@ CREATE TABLE IF NOT EXISTS territory_dk.invitation_invitations_tokens (
     CHECK (uses_count >= 0),
     CHECK (uses_count <= max_uses OR max_uses = 0),  -- 0 = unlimited
     CHECK (
-        (is_active = FALSE AND revoked_at IS NOT NULL) OR 
-        (is_active = TRUE AND revoked_at IS NULL)
+        (is_active = TRUE AND revoked_at IS NULL) OR 
+        (is_active = FALSE)  -- Can be false for revocation OR fully used
     )
 );
 

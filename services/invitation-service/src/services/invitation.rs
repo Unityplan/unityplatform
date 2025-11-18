@@ -5,6 +5,7 @@ use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::models::invitation::Invitation;
+use crate::models::usage::UseInvitationResponse;
 
 /// Characters allowed in invitation tokens (excludes confusing: 0, O, I, 1, l)
 const TOKEN_CHARS: &[u8] = b"23456789ABCDEFGHJKMNPQRSTUVWXYZ";
@@ -208,6 +209,210 @@ pub async fn validate_invitation(
         .await?;
 
     Ok(invitation)
+}
+
+/// Record invitation usage after successful user registration
+///
+/// # Arguments
+/// * `pool` - Database connection pool
+/// * `token` - Invitation token that was used
+/// * `used_by` - User ID who used the invitation (from auth-service)
+/// * `territory_code` - Territory code (e.g., "dk")
+/// * `ip_address` - Optional IP address of the user
+/// * `user_agent` - Optional user agent string
+///
+/// # Returns
+/// * `Ok(UseInvitationResponse)` - Usage recorded successfully
+/// * `Err(AppError::NotFound)` - Invalid or expired token
+/// * `Err(AppError::Conflict)` - User already used this token
+/// * `Err(AppError::BadRequest)` - Token is fully used
+///
+/// # Database Operations (Transaction)
+/// 1. Validate token exists and is active
+/// 2. Check for duplicate usage (same user_id + invitation_id)
+/// 3. Insert into `invitation_invitations_uses`
+/// 4. Increment `uses_count` in `invitation_invitations_tokens`
+/// 5. Set `is_active = false` if fully used (uses_count >= max_uses)
+pub async fn use_invitation(
+    pool: &PgPool,
+    token: &str,
+    used_by: Uuid,
+    territory_code: &str,
+    ip_address: Option<String>,
+    user_agent: Option<String>,
+) -> Result<UseInvitationResponse> {
+    let mut tx = pool.begin().await?;
+
+    // Step 1: Validate token and get invitation details
+    let invitation = validate_invitation_for_use(&mut tx, token, territory_code).await?;
+
+    // Step 2: Check for duplicate usage
+    check_duplicate_usage(&mut tx, invitation.id, used_by, territory_code).await?;
+
+    // Step 3: Record usage in invitation_invitations_uses
+    insert_invitation_use(
+        &mut tx,
+        invitation.id,
+        used_by,
+        territory_code,
+        ip_address,
+        user_agent,
+    )
+    .await?;
+
+    // Step 4: Increment uses_count and update is_active if fully used
+    let (uses_remaining, fully_used) =
+        update_invitation_usage(&mut tx, invitation.id, invitation.max_uses, territory_code)
+            .await?;
+
+    // Commit transaction
+    tx.commit().await?;
+
+    Ok(UseInvitationResponse::new(
+        invitation.id,
+        uses_remaining,
+        fully_used,
+    ))
+}
+
+/// Validate invitation for use (similar to validate_invitation but within transaction)
+async fn validate_invitation_for_use(
+    tx: &mut Transaction<'_, Postgres>,
+    token: &str,
+    territory_code: &str,
+) -> Result<Invitation> {
+    let table_name = format!("territory_{}.invitation_invitations_tokens", territory_code);
+
+    let query = format!(
+        r#"
+        SELECT id, token, created_by, max_uses, uses_count, expires_at,
+               is_active, revoked_at, revoked_by, metadata, created_at, updated_at
+        FROM {}
+        WHERE token = $1
+          AND is_active = true
+          AND (expires_at IS NULL OR expires_at > NOW())
+          AND (max_uses = 0 OR uses_count < max_uses)
+        FOR UPDATE
+        "#,
+        table_name
+    );
+
+    let invitation = sqlx::query_as::<_, Invitation>(&query)
+        .bind(token)
+        .fetch_optional(&mut **tx)
+        .await?
+        .ok_or_else(|| {
+            AppError::NotFound("Invalid, expired, or fully used invitation token".to_string())
+        })?;
+
+    Ok(invitation)
+}
+
+/// Check if user has already used this invitation
+async fn check_duplicate_usage(
+    tx: &mut Transaction<'_, Postgres>,
+    invitation_id: Uuid,
+    used_by: Uuid,
+    territory_code: &str,
+) -> Result<()> {
+    let table_name = format!("territory_{}.invitation_invitations_uses", territory_code);
+
+    let query = format!(
+        r#"
+        SELECT EXISTS(
+            SELECT 1 FROM {}
+            WHERE invitation_id = $1 AND used_by = $2
+        )
+        "#,
+        table_name
+    );
+
+    let already_used = sqlx::query_scalar::<_, bool>(&query)
+        .bind(invitation_id)
+        .bind(used_by)
+        .fetch_one(&mut **tx)
+        .await?;
+
+    if already_used {
+        return Err(AppError::Conflict(
+            "User has already used this invitation token".to_string(),
+        ));
+    }
+
+    Ok(())
+}
+
+/// Insert usage record into invitation_invitations_uses
+async fn insert_invitation_use(
+    tx: &mut Transaction<'_, Postgres>,
+    invitation_id: Uuid,
+    used_by: Uuid,
+    territory_code: &str,
+    ip_address: Option<String>,
+    user_agent: Option<String>,
+) -> Result<()> {
+    let table_name = format!("territory_{}.invitation_invitations_uses", territory_code);
+
+    let query = format!(
+        r#"
+        INSERT INTO {} (invitation_id, used_by, ip_address, user_agent)
+        VALUES ($1, $2, $3::inet, $4)
+        "#,
+        table_name
+    );
+
+    sqlx::query(&query)
+        .bind(invitation_id)
+        .bind(used_by)
+        .bind(ip_address)
+        .bind(user_agent)
+        .execute(&mut **tx)
+        .await?;
+
+    Ok(())
+}
+
+/// Update invitation token usage count and active status
+async fn update_invitation_usage(
+    tx: &mut Transaction<'_, Postgres>,
+    invitation_id: Uuid,
+    max_uses: i32,
+    territory_code: &str,
+) -> Result<(i32, bool)> {
+    let table_name = format!("territory_{}.invitation_invitations_tokens", territory_code);
+
+    let query = format!(
+        r#"
+        UPDATE {}
+        SET uses_count = uses_count + 1,
+            is_active = CASE
+                WHEN max_uses = 0 THEN true
+                WHEN uses_count + 1 >= max_uses THEN false
+                ELSE true
+            END,
+            updated_at = NOW()
+        WHERE id = $1
+        RETURNING uses_count, is_active
+        "#,
+        table_name
+    );
+
+    let row: (i32, bool) = sqlx::query_as(&query)
+        .bind(invitation_id)
+        .fetch_one(&mut **tx)
+        .await?;
+
+    let (uses_count, is_active) = row;
+    let uses_remaining = if max_uses == 0 {
+        -1 // Unlimited
+    } else {
+        max_uses - uses_count
+    };
+
+    // Fully used = not active (is_active set to false when uses_count >= max_uses)
+    let fully_used = !is_active;
+
+    Ok((uses_remaining, fully_used))
 }
 
 #[cfg(test)]

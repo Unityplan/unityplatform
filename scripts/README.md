@@ -675,8 +675,64 @@ If you encounter references to "unityplan" (without "platform"):
 
 ---
 
+## 🆕 Service Scaffolding (NEW!)
+
+### scaffold-service.sh
+
+**Location:** `scripts/dev/scaffold-service.sh`
+
+**Purpose:** Quickly create a new Unity Platform microservice with complete, working boilerplate.
+
+**Usage:**
+
+```bash
+./scripts/dev/scaffold-service.sh <base-name> <port> <description>
+```
+
+**⚠️ CRITICAL: Use BASE NAME ONLY (script adds '-service' suffix automatically)**
+
+**Example:**
+
+```bash
+# ✅ CORRECT - Use base name only
+./scripts/dev/scaffold-service.sh invitation 8004 "Manages invitation tokens for user registration"
+# Creates: invitation-service
+
+# ❌ WRONG - Don't include -service suffix
+./scripts/dev/scaffold-service.sh invitation-service 8004 "..."
+# Would create: invitation-service-service (WRONG!)
+```
+
+**What it creates:**
+
+- ✅ Complete service structure (handlers/, models/, services/)  
+- ✅ Cargo.toml with all standard dependencies  
+- ✅ main.rs with full middleware stack  
+- ✅ Health, ready, and metrics endpoints  
+- ✅ OpenAPI/Swagger documentation  
+- ✅ .env.example with correct configuration  
+- ✅ CHANGELOG.md  
+- ✅ Adds service to workspace Cargo.toml  
+- ✅ Tests that service compiles  
+
+**Based on:** user-service template (includes JWT auth middleware)
+
+**Next steps after scaffolding:**
+
+1. Read `docs/guides/development/service-implementation-guide.md`
+2. Implement models in `src/models/`
+3. Implement handlers in `src/handlers/`
+4. Implement business logic in `src/services/`
+5. Update OpenAPI docs in `src/main.rs`
+6. Test with `cargo test -p <service-name>`
+
+**Available ports:** 8003-8020 (8003=auth, 8004=invitation, 8005=user)
+
+---
+
 ## See Also
 
 - [Multi-Pod README](../MULTI-POD-README.md) - Multi-pod deployment guide
 - [Forgejo MCP Setup](../docs/forgejo-mcp-setup.md) - Development environment setup
 - [Phase 1 Approach](../project_status/phase-1-development-approach.md) - Development workflow
+- [Service Implementation Guide](../docs/guides/development/service-implementation-guide.md) - **How to implement business logic after scaffolding**

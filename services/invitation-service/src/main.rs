@@ -29,11 +29,14 @@ mod services;
         metrics,
         // Invitation endpoints
         handlers::invitation::validate_invitation_handler,
+        handlers::invitation::use_invitation_handler,
     ),
     components(
         schemas(
             models::ValidateInvitationRequest,
             models::ValidateInvitationResponse,
+            models::UseInvitationRequest,
+            models::UseInvitationResponse,
         )
     ),
     tags(

@@ -14,6 +14,7 @@
 Unity Platform is a **decentralized global communication and learning platform** designed to empower users with data sovereignty while enabling seamless multilingual collaboration across territories. The platform combines modern web technologies with a forward-looking architecture that supports future migration to fully decentralized systems.
 
 **Current Status:**
+
 - ✅ Foundation complete (infrastructure, database, auth, user services)
 - ✅ Territory & Badge systems operational
 - ✅ Utility services (favicon, language registry) complete

@@ -92,6 +92,7 @@ cargo watch -x run
 **Purpose:** Shared utilities and middleware for all services
 
 **Key Components:**
+
 - `AppConfig` - Configuration management with environment variables
 - `Database` - PostgreSQL connection pooling with SQLx
 - `AppError` - Unified error handling
@@ -100,6 +101,7 @@ cargo watch -x run
 - `Version` - Runtime version information
 
 **Usage:**
+
 ```rust
 use shared_lib::{AppConfig, Database, LoggingMiddleware};
 
@@ -127,6 +129,7 @@ HttpServer::new(move || {
 **Issues:** [#51-#58](http://localhost:3000/henrik/unity_platform/issues?labels=9) (8 closed issues)
 
 **Endpoints:**
+
 - `POST /register` - Register new user
 - `POST /login` - Authenticate user
 - `POST /refresh` - Refresh access token
@@ -147,6 +150,7 @@ HttpServer::new(move || {
 **Issues:** [#59-#67](http://localhost:3000/henrik/unity_platform/issues?labels=10) (9 closed issues)
 
 **Features:**
+
 - Profile management (bio, avatar, location, links)
 - User settings (privacy, notifications, language)
 - Social connections (follow/unfollow, friends list)
@@ -167,6 +171,7 @@ HttpServer::new(move || {
 **Issues:** [#31-#33](http://localhost:3000/henrik/unity_platform/issues?labels=12) (3 closed issues)
 
 **Features:**
+
 - Territory registration (countries, regions, first nations)
 - Territory settings & configuration
 - Manager assignment & permissions
@@ -186,6 +191,7 @@ HttpServer::new(move || {
 **Issues:** [#34-#41](http://localhost:3000/henrik/unity_platform/issues?labels=11) (8 closed issues)
 
 **Features:**
+
 - Badge registry (global badge definitions)
 - User badge awards
 - Progress tracking
@@ -205,6 +211,7 @@ HttpServer::new(move || {
 **Issues:** [#120-#136](http://localhost:3000/henrik/unity_platform/issues?labels=13) (18 closed issues)
 
 **Features:**
+
 - Favicon fetching for external URLs
 - Language registry & metadata
 - Language code validation
@@ -224,6 +231,7 @@ HttpServer::new(move || {
 **Issues:** [#68-#73](http://localhost:3000/henrik/unity_platform/issues?labels=19) (6 open issues)
 
 **Planned Features:**
+
 - Course creation & management
 - Module & lesson structure
 - Enrollment management
@@ -244,6 +252,7 @@ HttpServer::new(move || {
 **Issues:** [#74-#79](http://localhost:3000/henrik/unity_platform/issues?labels=20) (6 open issues)
 
 **Planned Features:**
+
 - Matrix homeserver integration
 - Room creation & management
 - Message bridging
@@ -264,6 +273,7 @@ HttpServer::new(move || {
 **Issues:** [#82-#87](http://localhost:3000/henrik/unity_platform/issues?labels=21) (6 open issues)
 
 **Planned Features:**
+
 - File upload to IPFS
 - File retrieval via CID
 - Pin management
@@ -284,6 +294,7 @@ HttpServer::new(move || {
 **Issues:** [#88-#95](http://localhost:3000/henrik/unity_platform/issues?labels=22) (8 open issues)
 
 **Planned Features:**
+
 - Forum creation & management
 - Thread & post management
 - Moderation tools
@@ -304,6 +315,7 @@ HttpServer::new(move || {
 **Issues:** [#96-#98](http://localhost:3000/henrik/unity_platform/issues?labels=23) (3 open issues)
 
 **Planned Features:**
+
 - Translation API integration
 - Language detection
 - Translation caching

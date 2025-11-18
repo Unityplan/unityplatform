@@ -16,11 +16,13 @@
 **Current Stage:** Stage 5 - Frontend Development (in progress)
 
 **Stage Status:**
+
 - ✅ **Complete:** Stages 1-4 (Foundation), Stage 6 (Territory/Badge), Stage 14 (Utility)
 - 🔄 **In Progress:** Stage 5 (Frontend) - [27 issues](http://localhost:3000/henrik/unity_platform/issues?labels=14&state=open)
 - 📋 **Planned:** Stages 7-13 (Course, Matrix, IPFS, Forum, Translation, Testing)
 
 **Issue Breakdown:**
+
 - **Closed:** 55 issues (historical work)
 - **Open:** 82 issues (27 active, 55 planned)
 - **Total:** 137 issues across 14 stages

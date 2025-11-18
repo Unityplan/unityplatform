@@ -30,6 +30,7 @@ As a [type of user], I want [goal] so that [benefit].
 <!-- Describe the component's appearance and behavior -->
 
 **Shadcn Components Used:**
+
 - [ ] Button
 - [ ] Card
 - [ ] Dialog
@@ -52,12 +53,14 @@ interface ComponentNameProps {
 ## 🏗️ Implementation Checklist
 
 ### 1. Component Setup
+
 - [ ] Create component file
 - [ ] Define TypeScript interfaces
 - [ ] Add prop validation
 - [ ] Export component
 
 ### 2. UI Implementation
+
 - [ ] Build component structure
 - [ ] Add Tailwind styling
 - [ ] Integrate shadcn components
@@ -65,6 +68,7 @@ interface ComponentNameProps {
 - [ ] Test on mobile/tablet/desktop
 
 ### 3. State Management
+
 - [ ] Add local state (useState)
 - [ ] Add Zustand store (if needed)
 - [ ] Add TanStack Query (for data fetching)
@@ -72,6 +76,7 @@ interface ComponentNameProps {
 - [ ] Handle error states
 
 ### 4. API Integration
+
 - [ ] Create API service functions
 - [ ] Add TanStack Query hooks
 - [ ] Handle data mutations
@@ -79,6 +84,7 @@ interface ComponentNameProps {
 - [ ] Handle API errors
 
 ### 5. Form Handling (if applicable)
+
 - [ ] Add react-hook-form
 - [ ] Add zod validation schema
 - [ ] Add form fields
@@ -86,6 +92,7 @@ interface ComponentNameProps {
 - [ ] Add submit handler
 
 ### 6. Routing (if page)
+
 - [ ] Add route to router.tsx
 - [ ] Add route file in `src/routes/`
 - [ ] Add navigation links
@@ -93,6 +100,7 @@ interface ComponentNameProps {
 - [ ] Test navigation
 
 ### 7. Accessibility
+
 - [ ] Add ARIA labels
 - [ ] Add keyboard navigation
 - [ ] Test with screen reader
@@ -100,6 +108,7 @@ interface ComponentNameProps {
 - [ ] Test color contrast
 
 ### 8. Testing
+
 - [ ] Unit tests with Vitest
 - [ ] Component tests with Testing Library
 - [ ] Test user interactions
@@ -107,6 +116,7 @@ interface ComponentNameProps {
 - [ ] Test responsive behavior
 
 ### 9. Documentation
+
 - [ ] Add JSDoc comments
 - [ ] Add Storybook story (optional)
 - [ ] Update component docs
@@ -115,12 +125,14 @@ interface ComponentNameProps {
 ## 📊 State & Data Flow
 
 **Data Sources:**
-- Local state: 
-- Zustand store: 
-- API endpoint: 
-- URL params: 
+
+- Local state:
+- Zustand store:
+- API endpoint:
+- URL params:
 
 **Data Flow:**
+
 ```
 User Action → Component → [State/API] → Update UI
 ```
@@ -128,17 +140,21 @@ User Action → Component → [State/API] → Update UI
 ## 🔗 Dependencies
 
 **API Endpoints:**
+
 - `GET /api/v1/[endpoint]`
 - `POST /api/v1/[endpoint]`
 
 **Other Components:**
-- `ComponentA` - 
-- `ComponentB` - 
+
+- `ComponentA` -
+- `ComponentB` -
 
 **Services:**
-- Backend service: 
+
+- Backend service:
 
 **Related Issues:**
+
 - Depends on #
 - Related to #
 
@@ -159,17 +175,18 @@ User Action → Component → [State/API] → Update UI
 <!-- Add any specific notes, decisions, or considerations -->
 
 **Design Decisions:**
-- 
+-
 
 **Technical Choices:**
-- 
+-
 
 **Edge Cases:**
-- 
+-
 
 ## 🎨 Styling Guidelines
 
 **Theme:**
+
 ```typescript
 // Use theme variables
 className="bg-primary text-primary-foreground"
@@ -177,6 +194,7 @@ className="border border-border rounded-md"
 ```
 
 **Responsive:**
+
 ```typescript
 // Mobile-first approach
 className="flex flex-col md:flex-row lg:gap-4"
