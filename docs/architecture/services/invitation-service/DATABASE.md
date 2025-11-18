@@ -42,7 +42,7 @@ CREATE TABLE territory_{code}.invitation_invitations_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     token VARCHAR(255) NOT NULL UNIQUE,
-    created_by UUID NOT NULL,  -- References territory_{code}.auth_users_core(id) - no FK for service independence
+    created_by UUID NOT NULL,  -- References global.registry_username(user_id) - no FK for service independence
     
     max_uses INT NOT NULL DEFAULT 1,
     uses_count INT NOT NULL DEFAULT 0,
@@ -51,7 +51,7 @@ CREATE TABLE territory_{code}.invitation_invitations_tokens (
     
     is_active BOOLEAN NOT NULL DEFAULT true,
     revoked_at TIMESTAMPTZ,
-    revoked_by UUID,  -- References territory_{code}.auth_users_core(id) - no FK for service independence
+    revoked_by UUID,  -- References global.registry_username(user_id) - no FK for service independence
     
     metadata JSONB,
     
@@ -68,11 +68,12 @@ CREATE INDEX idx_invitation_invitations_tokens_active ON invitation_invitations_
 CREATE INDEX idx_invitation_invitations_tokens_expires ON invitation_invitations_tokens(expires_at) WHERE expires_at IS NOT NULL;
 
 COMMENT ON TABLE invitation_invitations_tokens IS 'Invitation tokens - owned by invitation-service';
-COMMENT ON COLUMN invitation_invitations_tokens.created_by IS 'References auth_users_core(id) - validated via JWT, no FK for service independence';
-COMMENT ON COLUMN invitation_invitations_tokens.revoked_by IS 'References auth_users_core(id) - validated via JWT, no FK for service independence';
+COMMENT ON COLUMN invitation_invitations_tokens.created_by IS 'References global.registry_username(user_id) - validated via JWT, no FK for service independence';
+COMMENT ON COLUMN invitation_invitations_tokens.revoked_by IS 'References global.registry_username(user_id) - validated via JWT, no FK for service independence';
 ```
 
 **Naming Convention:** Follows `{service}_{entity}_{data}` pattern:
+
 - `invitation_` = service prefix (invitation-service)
 - `invitations_` = entity (what this service manages)
 - `tokens` = data type (token storage)

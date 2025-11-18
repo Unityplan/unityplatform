@@ -27,6 +27,9 @@ validator.workspace = true
 # Redis
 redis.workspace = true
 
+# Messaging
+async-nats = { workspace = true }
+
 # HTTP client for fetching favicons
 reqwest.workspace = true
 

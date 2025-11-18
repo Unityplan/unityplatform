@@ -69,6 +69,7 @@ HttpServer::new(|| {
 #### **1. invitation_invitations_tokens (territory-specific)**
 
 **Naming:** Follows `{service}_{entity}_{data}` convention
+
 - `invitation_` = service prefix
 - `invitations_` = entity
 - `tokens` = data type
@@ -79,7 +80,7 @@ CREATE TABLE territory_{code}.invitation_invitations_tokens (
     token VARCHAR(255) UNIQUE NOT NULL,  -- Unique invitation code
     
     -- Ownership (no FK for service independence)
-    created_by UUID NOT NULL,  -- References auth_users_core(id) - validated via JWT
+    created_by UUID NOT NULL,  -- References global.registry_username(user_id) - validated via JWT
     created_at TIMESTAMPTZ DEFAULT NOW(),
     
     -- Usage limits
@@ -92,7 +93,7 @@ CREATE TABLE territory_{code}.invitation_invitations_tokens (
     -- Status
     is_active BOOLEAN DEFAULT true,
     revoked_at TIMESTAMPTZ,
-    revoked_by UUID,  -- References auth_users_core(id) - validated via JWT
+    revoked_by UUID,  -- References global.registry_username(user_id) - validated via JWT
     
     -- Metadata
     metadata JSONB DEFAULT '{}'::jsonb,  -- Custom data (e.g., community_id, role)

@@ -4,7 +4,8 @@ mod services;
 
 use actix_web::{web, App, HttpServer};
 use shared_lib::{
-    cors, LoggingMiddleware, RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware,
+    cors, shutdown_grace_period, AppConfig, Database, LoggingMiddleware, MetricsCollector,
+    NatsClient, RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware,
 };
 use std::sync::Arc;
 use utoipa::OpenApi;
@@ -75,57 +76,49 @@ async fn main() -> std::io::Result<()> {
         )
         .init();
 
-    tracing::info!("🚀 Starting utility-service v{}", env!("CARGO_PKG_VERSION"));
+    tracing::info!("🚀 Starting Utility Service v{}", env!("CARGO_PKG_VERSION"));
 
-    // Service configuration
-    let service_host = std::env::var("SERVICE_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
-    let service_port = std::env::var("SERVICE_PORT")
-        .unwrap_or_else(|_| "8014".to_string())
-        .parse::<u16>()
-        .expect("Invalid SERVICE_PORT");
+    // Load configuration
+    let config = AppConfig::from_env().expect("Failed to load configuration");
+    tracing::info!("✅ Configuration loaded");
 
-    tracing::info!(
-        "📡 Service will listen on {}:{}",
-        service_host,
-        service_port
-    );
+    // Initialize database connection
+    let _database = Database::new(
+        config.database_url(),
+        config.database.max_connections,
+        config.database.min_connections,
+    )
+    .await
+    .expect("Failed to initialize database");
+    tracing::info!("✅ Database connected");
 
     // Initialize Redis client
     let redis_url =
         std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
     let redis_client =
         redis::Client::open(redis_url.clone()).expect("Failed to create Redis client");
+    tracing::info!("✅ Redis connected");
 
-    tracing::info!("🔄 Redis client initialized");
-
-    // Test Redis connection
-    {
-        let mut conn = redis_client
-            .get_multiplexed_async_connection()
-            .await
-            .expect("Failed to connect to Redis");
-
-        let _: String = redis::cmd("PING")
-            .query_async(&mut conn)
-            .await
-            .expect("Redis PING failed");
-
-        tracing::info!("✅ Redis connection verified");
-    }
+    // Initialize NATS client
+    let _nats_client = NatsClient::new(config.nats_url(), config.nats.cluster_name.clone())
+        .await
+        .expect("Failed to initialize NATS client");
+    tracing::info!("✅ NATS connected");
 
     // Initialize services
     let favicon_service = Arc::new(services::FaviconService::new(redis_client.clone()));
     tracing::info!("🎨 Favicon service initialized");
 
+    // Initialize metrics collector
+    let metrics_collector = MetricsCollector::new("utility_service", env!("CARGO_PKG_VERSION"));
+
     // Create shared state
     let favicon_service_data = web::Data::new(favicon_service);
-
-    tracing::info!("📝 Registering routes and middleware...");
 
     // Generate OpenAPI documentation
     let openapi = ApiDoc::openapi();
 
-    let server_addr = format!("{}:{}", service_host, service_port);
+    let server_addr = format!("{}:{}", config.server.host, config.server.port);
     tracing::info!("🌐 Server will listen on {}", server_addr);
     tracing::info!(
         "📚 Swagger UI available at http://{}/swagger-ui/",
@@ -135,7 +128,9 @@ async fn main() -> std::io::Result<()> {
     let server = HttpServer::new(move || {
         App::new()
             // Priority 1: Logging and request tracking
-            .wrap(LoggingMiddleware::development())
+            .wrap(LoggingMiddleware::development_with_metrics(
+                metrics_collector.clone(),
+            ))
             .wrap(RequestIdMiddleware)
             // Priority 2: Security and access control
             .wrap(SecurityHeadersMiddleware::development())
@@ -157,14 +152,11 @@ async fn main() -> std::io::Result<()> {
                     .route("/favicon", web::get().to(handlers::get_favicon)),
             )
     })
-    .bind((service_host.as_str(), service_port))?
+    .bind((config.server.host.as_str(), config.server.port))?
     .workers(4)
-    .shutdown_timeout(30);
+    .shutdown_timeout(shutdown_grace_period());
 
-    tracing::info!(
-        "✅ utility-service is ready and listening on port {}",
-        service_port
-    );
+    tracing::info!("✅ Server started successfully");
 
     server.run().await
 }

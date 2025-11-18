@@ -66,6 +66,42 @@ This workspace contains a microservices platform with:
   - Database queries: Use `pgsql_query` and `pgsql_modify` instead of `docker exec psql`
 - **Reasoning**: MCP tools provide better context, error handling, and user experience
 
+## Forgejo Issue Management
+
+**Overview**: This project uses Forgejo (self-hosted Git forge at `localhost:3000`) for issue tracking. All Phase 1 MVP work is tracked via 137 issues across 14 stages.
+
+**Helper Scripts** (in `scripts/forgejo/`):
+
+- `get-issue.sh <number>` - Retrieve and display issue details
+- `create-issue.sh <title> <body> <labels> <milestone>` - Create new issue
+- `update-issue.sh <number> [--title "..."] [--body "..."] [--state open|closed] [--labels "..."]` - Update issue
+- `close-issue.sh <number> [comment]` - Close issue with optional comment
+
+**Workflow**:
+
+1. **When user mentions "#NNN" or "issue NNN"**: Use `get-issue.sh NNN` to read issue details
+2. **When completing work**: Offer to close issue with `close-issue.sh NNN "Completed in <context>"`
+3. **When creating tasks**: Use `create-issue.sh` with appropriate labels and milestone
+4. **When updating status**: Use `update-issue.sh` to change state/labels
+
+**Examples**:
+
+```bash
+# Read issue #147
+./scripts/forgejo/get-issue.sh 147
+
+# Close issue with comment
+./scripts/forgejo/close-issue.sh 147 "Scaffolding script completed"
+
+# Update issue state
+./scripts/forgejo/update-issue.sh 147 --state closed
+
+# Update issue labels
+./scripts/forgejo/update-issue.sh 147 --labels "priority:high,status:done"
+```
+
+**Configuration**: Scripts use `.env` file in `scripts/forgejo/` with FORGEJO_TOKEN for authentication.
+
 ## Service Creation Pattern
 
 When creating a new Rust microservice, follow this standard pattern:
@@ -161,6 +197,25 @@ async fn create(body: ValidatedJson<CreateRequest>) -> HttpResponse {
 - Use `shared_lib::AppError` for all errors
 - Return `shared_lib::Result<T>` from functions
 - Let middleware handle error responses automatically
+
+### 9. **Service Scaffolding**
+
+**CRITICAL**: When using the scaffolding script:
+
+```bash
+# ✅ CORRECT - Use base name only (script adds -service suffix)
+./scripts/dev/scaffold-service.sh invitation 8004 "Description"
+# Creates: invitation-service
+
+# ❌ WRONG - Never include -service in the name
+./scripts/dev/scaffold-service.sh invitation-service 8004 "..."
+# Would create: invitation-service-service (WRONG!)
+```
+
+- Script location: `scripts/dev/scaffold-service.sh`
+- Takes 3 arguments: `<base-name>` `<port>` `<description>`
+- Automatically adds `-service` suffix to create service name
+- After scaffolding, follow: `docs/guides/development/service-implementation-guide.md`
 
 ## Project Structure
 

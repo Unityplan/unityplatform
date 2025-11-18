@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "auth-service",
     "badge-service",
+    "invitation-service",
     "shared-lib",
     "territory-service",
     "user-service",

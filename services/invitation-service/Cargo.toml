@@ -1,5 +1,5 @@
 [package]
-name = "user-service"
+name = "invitation-service"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -10,8 +10,16 @@ documentation.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
+[lib]
+name = "invitation_service_service"
+path = "src/lib.rs"
+
+[[bin]]
+name = "invitation-service"
+path = "src/main.rs"
+
 [dependencies]
-# Shared library
+# Shared library with middleware
 shared-lib = { path = "../shared-lib" }
 
 # Web framework
@@ -25,9 +33,6 @@ tokio = { workspace = true }
 sqlx = { workspace = true }
 redis = { workspace = true }
 
-# Messaging
-async-nats = { workspace = true }
-
 # Serialization
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -35,16 +40,17 @@ serde_json = { workspace = true }
 # Validation
 validator = { workspace = true }
 
-# UUID & Time
+# Types
 uuid = { workspace = true }
 chrono = { workspace = true }
+rand = { workspace = true }
+
+# Configuration
+dotenvy = { workspace = true }
 
 # Logging
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
-
-# Configuration
-dotenvy = { workspace = true }
 
 # Error handling
 thiserror = { workspace = true }
