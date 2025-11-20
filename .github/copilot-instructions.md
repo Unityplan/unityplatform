@@ -23,7 +23,10 @@ This workspace contains a microservices platform with:
 - **Documentation**: `docs/` directory (consolidated structure)
 - **Status**: `docs/status/current/phase-1-status.md` (18% complete)
 - **Database Schema**: `services/shared-lib/migrations/` (3 migrations applied)
+- **Migration Master Plan**: `docs/architecture/MIGRATIONS-MASTER.md` (Naming conventions & strategy)
+- **Service Guide**: `docs/guides/development/service-implementation-guide.md` (Step-by-step implementation)
 - **Scripts**: `scripts/README.md` for all utility scripts
+- **Testing**: `./scripts/dev/run-tests.sh` (Run all or specific service tests)
 - **Local Database Credentials (DK Pod)**:
   - Host: `localhost:5432`
   - Database: `unityplatform_dk`
@@ -54,6 +57,31 @@ This workspace contains a microservices platform with:
 - **Changelogs**: Update `CHANGELOG.md` and service-specific changelogs for all changes
 - **Version Info**: Use `shared_lib::version` module for runtime version access
 
+## Service Development Standards
+
+**CRITICAL: All services must follow these non-negotiable requirements:**
+
+1.  **Shared Library Integration**: Use `shared-lib` for ALL middleware (Logging, RequestId, SecurityHeaders, CORS, RateLimit).
+2.  **Naming Conventions**:
+    - Rust code: `snake_case`
+    - JSON API: `camelCase` (use `#[serde(rename_all = "camelCase")]`)
+    - Database Tables: `snake_case` with service prefix (e.g., `auth_users_core`)
+    - URLs: `kebab-case` with plural resources (e.g., `/api/v1/invitations`)
+3.  **Standard Endpoints**: Every service must implement:
+    - `GET /api/v1/health`
+    - `GET /api/v1/ready`
+    - `GET /api/v1/metrics`
+4.  **Error Handling**: Use `shared_lib::AppError` and `Result<T>`.
+5.  **Validation**: Use `ValidatedJson<T>` extractors.
+
+## Database Guidelines
+
+- **Migration Strategy**: Service-specific migrations in `services/shared-lib/migrations/`.
+- **Global Tables**: `registry_{resource}` (e.g., `registry_username`).
+- **Territory Tables**: `{service}_{entity}_{data}` (e.g., `auth_users_core`).
+- **No Cross-Service FKs**: Services share the DB but NOT foreign keys.
+- **Data Sovereignty**: Personal data MUST stay in territory schemas (`territory_{code}`).
+
 ## AI Assistant Guidelines
 
 - **Terminal Commands**: NEVER chain commands with `&&` - always use single commands for easier auto-approval
@@ -65,6 +93,23 @@ This workspace contains a microservices platform with:
   - File operations: Use file MCP tools when appropriate
   - Database queries: Use `pgsql_query` and `pgsql_modify` instead of `docker exec psql`
 - **Reasoning**: MCP tools provide better context, error handling, and user experience
+
+## Testing Guidelines
+
+**Standardized Testing Script**:
+Always use the `scripts/dev/run-tests.sh` script to run tests. This ensures consistent environment setup and execution.
+
+- **Run all tests**: `./scripts/dev/run-tests.sh`
+- **Run specific service tests**: `./scripts/dev/run-tests.sh <service-name>` (e.g., `./scripts/dev/run-tests.sh auth-service`)
+
+**Integration Testing Pattern**:
+When writing integration tests for services:
+
+1. **Use `actix_web::test`**: Initialize the app with `test::init_service`.
+2. **Mock External Services**: If a service depends on another (e.g., auth depends on invitation), mock the dependency or use the real service if it's a core requirement (like database).
+3. **Database Setup**: Use the real database connection from `AppConfig`. The test environment shares the dev database, so be careful to clean up test data.
+4. **Cleanup**: Always implement a cleanup function to remove test data (users, tokens, etc.) after the test runs.
+5. **Example**: See `services/auth-service/tests/integration_test.rs` or `services/invitation-service/tests/integration_test.rs` for reference implementations.
 
 ## Forgejo Issue Management
 

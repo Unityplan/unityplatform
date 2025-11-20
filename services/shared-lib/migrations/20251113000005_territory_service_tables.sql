@@ -90,7 +90,8 @@ CREATE TABLE IF NOT EXISTS territory_dk.territory_territories_managers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- Assignment
-    user_id UUID NOT NULL REFERENCES territory_dk.auth_users_core(id) ON DELETE CASCADE,
+    -- Reference GLOBAL registry to allow cross-pod managers (Strict Federation)
+    user_id UUID NOT NULL REFERENCES global.registry_username(user_id) ON DELETE CASCADE,
     territory_code VARCHAR(10) NOT NULL,
     
     -- Audit Trail

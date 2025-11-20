@@ -64,6 +64,9 @@ tracing-subscriber = { workspace = true }
 # Redis (for rate limiting)
 redis = { workspace = true }
 
+# HTTP client (for calling invitation-service)
+reqwest = { workspace = true }
+
 # API Documentation
 utoipa = { workspace = true }
 utoipa-swagger-ui = { workspace = true }

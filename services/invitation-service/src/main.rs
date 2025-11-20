@@ -30,6 +30,10 @@ mod services;
         // Invitation endpoints
         handlers::invitation::validate_invitation_handler,
         handlers::invitation::use_invitation_handler,
+        handlers::invitation::create_invitation_handler,
+        handlers::invitation::list_my_invitations_handler,
+        handlers::invitation::get_invitation_uses_handler,
+        handlers::invitation::revoke_invitation_handler,
     ),
     components(
         schemas(
@@ -37,6 +41,15 @@ mod services;
             models::ValidateInvitationResponse,
             models::UseInvitationRequest,
             models::UseInvitationResponse,
+            models::CreateInvitationRequest,
+            models::CreateInvitationResponse,
+            models::ListInvitationsQuery,
+            models::ListInvitationsResponse,
+            models::InvitationWithUses,
+            models::InvitationUse,
+            models::PaginationInfo,
+            models::GetInvitationUsesResponse,
+            models::RevokeInvitationResponse,
         )
     ),
     tags(
@@ -79,7 +92,10 @@ async fn main() -> std::io::Result<()> {
         )
         .init();
 
-    tracing::info!("🚀 Starting Invitation Service v{}", env!("CARGO_PKG_VERSION"));
+    tracing::info!(
+        "🚀 Starting Invitation Service v{}",
+        env!("CARGO_PKG_VERSION")
+    );
 
     // Load configuration
     let config = AppConfig::from_env().expect("Failed to load configuration");
@@ -152,7 +168,7 @@ async fn main() -> std::io::Result<()> {
                     .route("/ready", web::get().to(ready_check))
                     .route("/metrics", web::get().to(metrics))
                     // Invitation routes
-                    .configure(handlers::configure)
+                    .configure(handlers::configure),
             )
     })
     .bind(&server_addr)?

@@ -141,6 +141,20 @@ else
     wait_for_service "user-service" 8002 || exit 1
 fi
 
+if check_port 8004; then
+    echo -e "  ${YELLOW}⚠ invitation-service already running on port 8004${NC}"
+else
+    echo "Starting invitation-service on port 8004..."
+    cd "$WORKSPACE_ROOT/services/invitation-service"
+    set -a
+    source .env
+    set +a
+    cd "$WORKSPACE_ROOT"
+    ./services/target/release/invitation-service > "$WORKSPACE_ROOT/logs/invitation-service.log" 2>&1 &
+    
+    wait_for_service "invitation-service" 8004 || exit 1
+fi
+
 if check_port 8007; then
     echo -e "  ${YELLOW}⚠ badge-service already running on port 8007${NC}"
 else
@@ -208,10 +222,11 @@ echo ""
 echo "📱 Frontend:          http://localhost:5173"
 echo "🔐 Auth Service:      http://localhost:8001"
 echo "👤 User Service:      http://localhost:8002"
+echo "💌 Invitation Service: http://localhost:8004"
 echo "🏆 Badge Service:     http://localhost:8007"
 echo "🌍 Territory Service: http://localhost:8008"
-echo "�️  Utility Service:   http://localhost:8014"
-echo "�🗄️  PostgreSQL:        localhost:5432"
+echo "🛠️  Utility Service:   http://localhost:8014"
+echo "🗄️  PostgreSQL:        localhost:5432"
 echo "📨 NATS:              localhost:4222"
 echo "🗃️  Redis:             localhost:6379"
 echo ""
@@ -222,6 +237,7 @@ echo ""
 echo "📝 Logs:"
 echo "   Auth Service:      tail -f logs/auth-service.log"
 echo "   User Service:      tail -f logs/user-service.log"
+echo "   Invitation Service: tail -f logs/invitation-service.log"
 echo "   Badge Service:     tail -f logs/badge-service.log"
 echo "   Territory Service: tail -f logs/territory-service.log"
 echo "   Utility Service:   tail -f logs/utility-service.log"

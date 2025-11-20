@@ -6,7 +6,7 @@ use crate::services::{PasswordService, TokenService};
 use actix_web::{get, post, web, HttpRequest, HttpResponse};
 use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
-use shared_lib::{AppError, Database, NatsClient, Result, ValidatedJson};
+use shared_lib::{AppConfig, AppError, Database, NatsClient, Result, ValidatedJson};
 use sqlx::Row;
 use std::env;
 use utoipa;
@@ -61,30 +61,51 @@ pub async fn register(
     db: web::Data<Database>,
     token_service: web::Data<TokenService>,
     nats: web::Data<NatsClient>,
+    config: web::Data<AppConfig>,
 ) -> Result<HttpResponse> {
     let req = body.into_inner();
 
-    // Feature flag: Check if invitation validation is enabled
-    let enable_invitation_check = env::var("ENABLE_INVITATION_VALIDATION")
-        .unwrap_or_else(|_| "false".to_string())
-        .parse::<bool>()
-        .unwrap_or(false);
+    let allow_open_registration = config.server.allow_open_registration;
+    let invitation_service_url =
+        env::var("INVITATION_SERVICE_URL").unwrap_or_else(|_| "http://localhost:8004".to_string());
 
-    if enable_invitation_check {
-        if let Some(invitation_token) = &req.invitation_token {
-            // TODO: Call invitation-service to validate token when service is available
-            // For now, just log that we would validate
-            tracing::info!(
-                "Would validate invitation token: {} (invitation-service not yet implemented)",
-                invitation_token
-            );
+    // Validate invitation token based on configuration
+    if !allow_open_registration {
+        // Production mode: invitation required
+        let invitation_token = req.invitation_token.as_ref().ok_or_else(|| {
+            AppError::Validation("Invitation token required for registration".to_string())
+        })?;
+
+        // Validate invitation token
+        let is_valid = crate::services::invitation_client::validate_invitation(
+            &invitation_service_url,
+            invitation_token,
+            allow_open_registration,
+        )
+        .await?;
+
+        if !is_valid {
+            return Err(AppError::Validation("Invalid invitation token".to_string()));
+        }
+
+        tracing::info!("Invitation token validated successfully");
+    } else if let Some(ref invitation_token) = req.invitation_token {
+        // Dev mode with invitation token provided: validate it
+        let is_valid = crate::services::invitation_client::validate_invitation(
+            &invitation_service_url,
+            invitation_token,
+            allow_open_registration,
+        )
+        .await?;
+
+        if is_valid {
+            tracing::info!("Invitation token validated successfully (dev mode)");
         } else {
-            return Err(AppError::Validation(
-                "Invitation token required when invitation validation is enabled".to_string(),
-            ));
+            tracing::warn!("Invalid invitation token in dev mode, continuing anyway");
         }
     } else {
-        tracing::warn!("Invitation validation is disabled - registration without invitation check");
+        // Dev mode without invitation token
+        tracing::warn!("Registration without invitation token (allow_open_registration=true)");
     }
 
     let pool = db.pool();
@@ -164,6 +185,37 @@ pub async fn register(
 
     // Commit transaction
     tx.commit().await?;
+
+    // Mark invitation as used (if provided)
+    if let Some(ref invitation_token) = req.invitation_token {
+        // Note: We do this AFTER user creation to ensure user exists even if this fails
+        let _usage_result = crate::services::invitation_client::use_invitation(
+            &invitation_service_url,
+            invitation_token,
+            user_id,
+            None, // TODO: Extract IP from request
+            None, // TODO: Extract user agent from request
+            allow_open_registration,
+        )
+        .await;
+
+        // Log result but don't fail registration if invitation service is unavailable
+        match _usage_result {
+            Ok(Some(usage)) => {
+                tracing::info!(
+                    "Invitation {} marked as used (remaining: {})",
+                    usage.invitation_id,
+                    usage.uses_remaining
+                );
+            }
+            Ok(None) => {
+                tracing::warn!("Failed to mark invitation as used (non-fatal)");
+            }
+            Err(e) => {
+                tracing::error!("Error marking invitation as used: {}", e);
+            }
+        }
+    }
 
     // Generate tokens
     let access_token = token_service.generate_access_token(user_id, &req.territory)?;

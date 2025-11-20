@@ -1,3 +1,2 @@
 pub mod invitation;
-
-pub use invitation::*;
+pub mod permissions;

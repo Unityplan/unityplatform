@@ -4,8 +4,12 @@ use shared_lib::{AppError, Result};
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
-use crate::models::invitation::Invitation;
+use crate::models::invitation::{
+    GetInvitationUsesResponse, Invitation, InvitationUse, InvitationWithUses,
+    ListInvitationsResponse, PaginationInfo, RevokeInvitationResponse,
+};
 use crate::models::usage::UseInvitationResponse;
+use crate::services::permissions::check_manager_permissions;
 
 /// Characters allowed in invitation tokens (excludes confusing: 0, O, I, 1, l)
 const TOKEN_CHARS: &[u8] = b"23456789ABCDEFGHJKMNPQRSTUVWXYZ";
@@ -207,6 +211,24 @@ pub async fn validate_invitation(
         .bind(token)
         .fetch_optional(pool)
         .await?;
+
+    // Security Check: Verify that the creator still exists AND has permissions
+    // This prevents usage of "zombie" invitations from deleted or revoked managers
+    if let Some(ref inv) = invitation {
+        let has_permissions =
+            check_manager_permissions(pool, inv.created_by, territory_code).await?;
+
+        if !has_permissions {
+            tracing::warn!(
+                invitation_id = %inv.id,
+                created_by = %inv.created_by,
+                territory = %territory_code,
+                "Security Alert: Attempt to use invitation from manager with revoked permissions"
+            );
+            // Return None to treat as invalid/not found
+            return Ok(None);
+        }
+    }
 
     Ok(invitation)
 }
@@ -460,4 +482,333 @@ mod tests {
             assert!(tokens.insert(token), "Duplicate token generated");
         }
     }
+}
+
+/// List invitations created by a user with filtering and pagination
+///
+/// # Arguments
+/// * `pool` - Database connection pool
+/// * `user_id` - User ID to list invitations for
+/// * `territory_code` - Territory code (e.g., "dk")
+/// * `status_filter` - Optional status filter (active, used, expired, revoked)
+/// * `page` - Page number (1-indexed)
+/// * `limit` - Results per page (max 100)
+///
+/// # Returns
+/// List of invitations with pagination info
+pub async fn list_user_invitations(
+    pool: &PgPool,
+    user_id: Uuid,
+    territory_code: &str,
+    status_filter: Option<String>,
+    page: i64,
+    limit: i64,
+) -> Result<ListInvitationsResponse> {
+    // Clamp limit to max 100
+    let limit = limit.min(100);
+    let offset = (page - 1) * limit;
+
+    // Build status filter SQL
+    let status_condition = match status_filter.as_deref() {
+        Some("active") => "AND is_active = true AND (expires_at IS NULL OR expires_at > NOW())",
+        Some("used") => "AND uses_count >= max_uses AND max_uses > 0",
+        Some("expired") => "AND expires_at IS NOT NULL AND expires_at <= NOW()",
+        Some("revoked") => "AND revoked_at IS NOT NULL",
+        _ => "", // No filter
+    };
+
+    // Query invitations
+    let query = format!(
+        r#"
+        SELECT 
+            id, token, max_uses, uses_count, is_active, 
+            expires_at, created_at, revoked_at
+        FROM territory_{}.invitation_invitations_tokens
+        WHERE created_by = $1 {}
+        ORDER BY created_at DESC
+        LIMIT $2 OFFSET $3
+        "#,
+        territory_code, status_condition
+    );
+
+    let rows = sqlx::query_as::<
+        _,
+        (
+            Uuid,
+            String,
+            i32,
+            i32,
+            bool,
+            Option<chrono::DateTime<Utc>>,
+            chrono::DateTime<Utc>,
+            Option<chrono::DateTime<Utc>>,
+        ),
+    >(&query)
+    .bind(user_id)
+    .bind(limit)
+    .bind(offset)
+    .fetch_all(pool)
+    .await?;
+
+    // Get total count
+    let count_query = format!(
+        r#"
+        SELECT COUNT(*)
+        FROM territory_{}.invitation_invitations_tokens
+        WHERE created_by = $1 {}
+        "#,
+        territory_code, status_condition
+    );
+
+    let total: i64 = sqlx::query_scalar(&count_query)
+        .bind(user_id)
+        .fetch_one(pool)
+        .await?;
+
+    // Build response with uses for each invitation
+    let mut invitations = Vec::new();
+
+    for (id, token, max_uses, uses_count, is_active, expires_at, created_at, revoked_at) in rows {
+        // Get uses for this invitation
+        let uses_query = format!(
+            r#"
+            SELECT u.used_by, a.username, u.used_at, u.ip_address
+            FROM territory_{}.invitation_invitations_uses u
+            JOIN territory_{}.auth_users_core a ON u.used_by = a.id
+            WHERE u.invitation_id = $1
+            ORDER BY u.used_at DESC
+            "#,
+            territory_code, territory_code
+        );
+
+        let uses: Vec<InvitationUse> =
+            sqlx::query_as::<_, (Uuid, String, chrono::DateTime<Utc>, Option<String>)>(&uses_query)
+                .bind(id)
+                .fetch_all(pool)
+                .await?
+                .into_iter()
+                .map(|(user_id, username, used_at, ip_address)| InvitationUse {
+                    user_id,
+                    username,
+                    used_at,
+                    ip_address,
+                })
+                .collect();
+
+        // Determine status
+        let status = if revoked_at.is_some() {
+            "revoked".to_string()
+        } else if let Some(exp) = expires_at {
+            if exp <= Utc::now() {
+                "expired".to_string()
+            } else if max_uses > 0 && uses_count >= max_uses {
+                "used".to_string()
+            } else if is_active {
+                "active".to_string()
+            } else {
+                "inactive".to_string()
+            }
+        } else if max_uses > 0 && uses_count >= max_uses {
+            "used".to_string()
+        } else if is_active {
+            "active".to_string()
+        } else {
+            "inactive".to_string()
+        };
+
+        invitations.push(InvitationWithUses {
+            id,
+            token,
+            max_uses,
+            uses_count,
+            is_active,
+            expires_at,
+            created_at,
+            revoked_at,
+            status,
+            uses,
+        });
+    }
+
+    Ok(ListInvitationsResponse {
+        invitations,
+        pagination: PaginationInfo { page, limit, total },
+    })
+}
+
+/// Get detailed uses for a specific invitation
+///
+/// # Arguments
+/// * `pool` - Database connection pool
+/// * `invitation_id` - Invitation ID to get uses for
+/// * `territory_code` - Territory code (e.g., "dk")
+/// * `requesting_user_id` - User ID making the request (for authorization)
+///
+/// # Returns
+/// Invitation uses with details
+///
+/// # Authorization
+/// Only the creator or a manager can view invitation uses
+pub async fn get_invitation_uses(
+    pool: &PgPool,
+    invitation_id: Uuid,
+    territory_code: &str,
+    requesting_user_id: Uuid,
+) -> Result<GetInvitationUsesResponse> {
+    // Get invitation details and verify ownership
+    let invitation_query = format!(
+        r#"
+        SELECT id, token, created_by, max_uses, uses_count
+        FROM territory_{}.invitation_invitations_tokens
+        WHERE id = $1
+        "#,
+        territory_code
+    );
+
+    let invitation: Option<(Uuid, String, Uuid, i32, i32)> = sqlx::query_as(&invitation_query)
+        .bind(invitation_id)
+        .fetch_optional(pool)
+        .await?;
+
+    let Some((id, token, created_by, max_uses, uses_count)) = invitation else {
+        return Err(AppError::NotFound("Invitation not found".to_string()));
+    };
+
+    // Check if user is creator or manager
+    if created_by != requesting_user_id {
+        // Check if requesting user is a manager
+        let is_manager = crate::services::permissions::check_manager_permissions(
+            pool,
+            requesting_user_id,
+            territory_code,
+        )
+        .await?;
+
+        if !is_manager {
+            return Err(AppError::Forbidden(
+                "You can only view uses for your own invitations".to_string(),
+            ));
+        }
+    }
+
+    // Get uses
+    let uses_query = format!(
+        r#"
+        SELECT u.used_by, a.username, u.used_at, u.ip_address
+        FROM territory_{}.invitation_invitations_uses u
+        JOIN territory_{}.auth_users_core a ON u.used_by = a.id
+        WHERE u.invitation_id = $1
+        ORDER BY u.used_at DESC
+        "#,
+        territory_code, territory_code
+    );
+
+    let uses: Vec<InvitationUse> =
+        sqlx::query_as::<_, (Uuid, String, chrono::DateTime<Utc>, Option<String>)>(&uses_query)
+            .bind(invitation_id)
+            .fetch_all(pool)
+            .await?
+            .into_iter()
+            .map(|(user_id, username, used_at, ip_address)| InvitationUse {
+                user_id,
+                username,
+                used_at,
+                ip_address,
+            })
+            .collect();
+
+    Ok(GetInvitationUsesResponse {
+        invitation_id: id,
+        token,
+        uses,
+        total_uses: uses_count,
+        max_uses,
+    })
+}
+
+/// Revoke an invitation
+///
+/// # Arguments
+/// * `pool` - Database connection pool
+/// * `invitation_id` - Invitation ID to revoke
+/// * `territory_code` - Territory code (e.g., "dk")
+/// * `revoked_by` - User ID revoking the invitation
+///
+/// # Returns
+/// Revocation confirmation
+///
+/// # Authorization
+/// Only the creator or a manager can revoke an invitation
+pub async fn revoke_invitation(
+    pool: &PgPool,
+    invitation_id: Uuid,
+    territory_code: &str,
+    revoked_by: Uuid,
+) -> Result<RevokeInvitationResponse> {
+    // Get invitation details and verify ownership
+    let invitation_query = format!(
+        r#"
+        SELECT id, created_by, is_active, revoked_at
+        FROM territory_{}.invitation_invitations_tokens
+        WHERE id = $1
+        "#,
+        territory_code
+    );
+
+    let invitation: Option<(Uuid, Uuid, bool, Option<chrono::DateTime<Utc>>)> =
+        sqlx::query_as(&invitation_query)
+            .bind(invitation_id)
+            .fetch_optional(pool)
+            .await?;
+
+    let Some((id, created_by, _is_active, revoked_at)) = invitation else {
+        return Err(AppError::NotFound("Invitation not found".to_string()));
+    };
+
+    // Check if already revoked
+    if revoked_at.is_some() {
+        return Err(AppError::Conflict(
+            "Invitation is already revoked".to_string(),
+        ));
+    }
+
+    // Check if user is creator or manager
+    if created_by != revoked_by {
+        // Check if requesting user is a manager
+        let is_manager = crate::services::permissions::check_manager_permissions(
+            pool,
+            revoked_by,
+            territory_code,
+        )
+        .await?;
+
+        if !is_manager {
+            return Err(AppError::Forbidden(
+                "You can only revoke your own invitations".to_string(),
+            ));
+        }
+    }
+
+    // Revoke invitation
+    let revoked_at = Utc::now();
+    let update_query = format!(
+        r#"
+        UPDATE territory_{}.invitation_invitations_tokens
+        SET is_active = false, revoked_at = $1, revoked_by = $2
+        WHERE id = $3
+        "#,
+        territory_code
+    );
+
+    sqlx::query(&update_query)
+        .bind(revoked_at)
+        .bind(revoked_by)
+        .bind(invitation_id)
+        .execute(pool)
+        .await?;
+
+    Ok(RevokeInvitationResponse {
+        invitation_id: id,
+        revoked_at,
+    })
 }

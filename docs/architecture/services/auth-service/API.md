@@ -33,7 +33,7 @@
 - `username`: 3-30 characters, alphanumeric + underscore
 - `email`: Valid email format
 - `password`: Min 8 characters, must include uppercase, lowercase, number, special char
-- `invitation_token`: Valid invitation code (checked against invitation-service)
+- `invitation_token`: Valid invitation code (Required in Production, Optional in Dev if `ALLOW_OPEN_REGISTRATION=true`)
 - `territory_code`: Valid territory code (dk, no, se, eu)
 
 **Response (201 Created):**
