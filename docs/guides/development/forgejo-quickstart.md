@@ -1,6 +1,7 @@
 # Forgejo Quick Start Guide - Step by Step
 
 ## 🎯 Goal
+
 Set up a practical, maintainable issue tracking system in Forgejo for the Unity Platform mono-repo.
 
 **Philosophy:** Start simple, add complexity as needed. Better to have a working basic system than a perfect unused one.
@@ -16,6 +17,7 @@ Labels are tags that categorize issues. Start with just the essentials.
 #### Go to: Repository → Issues → Labels → New Label
 
 **Priority Labels (4 total):**
+
 ```
 Name: priority: critical
 Color: #d73a4a (red)
@@ -35,6 +37,7 @@ Description: Nice to have, future work
 ```
 
 **Type Labels (4 total):**
+
 ```
 Name: type: feature
 Color: #1d76db (blue)
@@ -54,6 +57,7 @@ Description: DevOps, deployment, infrastructure work
 ```
 
 **Area Labels (7 total - your main services):**
+
 ```
 Name: area: auth-service
 Color: #c5def5
@@ -85,6 +89,7 @@ Description: Docker, databases, deployment
 ```
 
 **Status Labels (3 total):**
+
 ```
 Name: status: blocked
 Color: #000000 (black)
@@ -110,6 +115,7 @@ Milestones = Release goals or time-based sprints
 #### Go to: Repository → Issues → Milestones → New Milestone
 
 **First Milestone:**
+
 ```
 Title: v0.1.0-alpha.2
 Description: 
@@ -135,6 +141,7 @@ Project Board = Kanban board for visual tracking
 #### Go to: Repository → Projects → New Project
 
 **Setup:**
+
 ```
 Name: Unity Platform Development
 Description: Main development tracking board
@@ -142,6 +149,7 @@ Template: Basic Kanban
 ```
 
 **Columns to create:**
+
 1. **📋 Backlog** - Everything not yet started
 2. **🎯 Ready** - Refined and ready to work on
 3. **🚧 In Progress** - Currently being developed
@@ -160,6 +168,7 @@ Let's create a real issue for your next task.
 #### Go to: Repository → Issues → New Issue
 
 **Example Issue:**
+
 ```
 Title: Implement frontend authentication flow
 
@@ -192,6 +201,7 @@ Complete the authentication flow in the React frontend, connecting to the auth-s
 ```
 
 **Labels to add:**
+
 - `type: feature`
 - `area: frontend`
 - `priority: high`
@@ -211,23 +221,27 @@ Now that you have one issue, practice the workflow:
 #### **Daily Routine:**
 
 **Morning (5 minutes):**
+
 1. Open your project board
 2. Look at "Ready" column
 3. Drag ONE issue to "In Progress"
 4. Update issue: Add label `status: in-progress`
 
 **During Work:**
+
 1. Create a branch: `git checkout -b feature/auth-flow-#1`
 2. Work on the task
 3. Commit referencing issue: `git commit -m "feat(auth): connect login form - #1"`
 
 **When Done:**
+
 1. Create Pull Request (PR)
 2. In PR description: `Closes #1` (auto-links and will close issue on merge)
 3. Move card to "Review" column
 4. Merge PR → Issue auto-closes → Card moves to "Done"
 
 **Friday End of Week (10 minutes):**
+
 1. Move all "Done" cards to "Closed" column
 2. Review "In Progress" - anything stuck?
 3. Add new issues to "Backlog" for next week
@@ -243,6 +257,7 @@ Now that you have the system set up, populate it with real work.
 Look at your `docs/status/current/phase-1-status.md` file.
 
 **For each incomplete task:**
+
 1. Create an issue
 2. Add labels (type, area, priority)
 3. Add to milestone (if relevant)
@@ -281,16 +296,19 @@ Milestone: (none - next milestone)
 ### Weekly Routine
 
 **Monday Morning (30 minutes):**
+
 - Review project board
 - Move issues from "Backlog" to "Ready" for the week
 - Set your focus: Pick 3-5 issues max for the week
 
 **Wednesday Mid-week (15 minutes):**
+
 - Quick board check
 - Anything blocked? Add `status: blocked` label and comment why
 - Anything need help? Comment or ask
 
 **Friday Afternoon (30 minutes):**
+
 - Close completed issues
 - Update issue status
 - Plan next week
@@ -299,15 +317,18 @@ Milestone: (none - next milestone)
 ### Daily Habit
 
 **Start of work day (2 minutes):**
+
 - Look at project board "In Progress"
 - If empty, move one from "Ready"
 - Keep only 1-2 in progress at a time
 
 **During work:**
+
 - Commit with issue reference: `#123`
 - Comment on issue with progress updates
 
 **End of day (2 minutes):**
+
 - Update issue if made progress
 - Move card if status changed
 
@@ -315,7 +336,7 @@ Milestone: (none - next milestone)
 
 ## Common Pitfalls to Avoid
 
-### ❌ Don't Do This:
+### ❌ Don't Do This
 
 1. **Creating 100 issues at once**
    - Start with 10-15 for immediate work
@@ -337,7 +358,7 @@ Milestone: (none - next milestone)
    - Only assign when you're confident it'll be in that release
    - Backlog issues don't need milestones
 
-### ✅ Do This Instead:
+### ✅ Do This Instead
 
 1. **Start small, grow organically**
    - This week: Set up labels, milestone, board
@@ -358,6 +379,7 @@ Milestone: (none - next milestone)
 ## Quick Reference Cheat Sheet
 
 ### Creating an Issue
+
 ```
 1. Click "Issues" → "New Issue"
 2. Write clear title: [AREA] What needs to be done
@@ -370,6 +392,7 @@ Milestone: (none - next milestone)
 ```
 
 ### Working on an Issue
+
 ```
 1. Move card to "In Progress" on project board
 2. Create branch: git checkout -b type/description-#issue-number
@@ -381,6 +404,7 @@ Milestone: (none - next milestone)
 ```
 
 ### Weekly Planning
+
 ```
 Monday:
 - Review backlog
@@ -398,26 +422,31 @@ Friday:
 ## Your First Week Plan
 
 ### Day 1: Setup
+
 - ✅ Create 18 core labels (30 min)
 - ✅ Create first milestone (15 min)
 - ✅ Create project board (20 min)
 
 ### Day 2: First Issues
+
 - ✅ Create 5 issues for immediate work (1 hour)
 - ✅ Add labels, milestone, assign
 - ✅ Add to project board
 
 ### Day 3-5: Practice
+
 - ✅ Work on 1-2 issues
 - ✅ Practice the workflow
 - ✅ Make commits with issue references
 
 ### Day 6: Review
+
 - ✅ Look at what worked
 - ✅ Look at what felt clunky
 - ✅ Adjust as needed
 
 ### Day 7: Plan Week 2
+
 - ✅ Create next week's issues
 - ✅ Review project board
 - ✅ Set goals for week 2
@@ -427,6 +456,7 @@ Friday:
 ## Success Metrics
 
 After 2 weeks, you should have:
+
 - ✅ 10-20 issues created
 - ✅ 3-5 issues closed
 - ✅ Project board actively used daily
@@ -453,16 +483,19 @@ But for now: **Just master the basics above** ⬆️
 ## Questions to Ask Yourself Weekly
 
 **End of Week 1:**
+
 - Did I create any issues this week? ✓
 - Did I update the project board? ✓
 - Did I reference issues in commits? ✓
 
 **End of Week 2:**
+
 - Is my project board accurate? ✓
 - Are my labels helpful? ✓
 - Do I check the board daily? ✓
 
 **End of Week 4:**
+
 - Has this helped me track work better? ✓
 - What should I add next? ✓
 - What should I simplify? ✓
@@ -472,7 +505,8 @@ But for now: **Just master the basics above** ⬆️
 ## Get Help
 
 If something isn't clear:
-1. Check Forgejo/Gitea documentation: https://docs.gitea.com
+
+1. Check Forgejo/Gitea documentation: <https://docs.gitea.com>
 2. Look at other open-source projects on GitHub/GitLab for inspiration
 3. Remember: Your system should serve you, not the other way around
 

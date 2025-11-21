@@ -14,9 +14,12 @@ set -e  # Exit on error
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 MIGRATIONS_DIR="$WORKSPACE_DIR/services/shared-lib/migrations"
+SHARED_LIB_DIR="$WORKSPACE_DIR/services/shared-lib"
 CONTAINER_NAME="service-postgres-dk"
 DB_USER="unityplatform"
 DB_NAME="unityplatform_dk"
+DB_PASSWORD="unityplatform_dev_password_dk"
+DB_URL="postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME"
 
 # Colors for output
 RED='\033[0;31m'
@@ -72,52 +75,37 @@ echo -e "${GREEN}✅ Database reset complete${NC}"
 echo ""
 
 # ============================================================================
-# Step 3: Run Migrations
+# Step 3: Run Migrations with sqlx
 # ============================================================================
 
-echo -e "${YELLOW}📋 Running migrations...${NC}"
+echo -e "${YELLOW}📋 Running migrations with sqlx...${NC}"
 echo ""
 
-# Get list of migration files
-MIGRATIONS=($(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort))
-
-if [ ${#MIGRATIONS[@]} -eq 0 ]; then
-    echo -e "${RED}❌ No migration files found in $MIGRATIONS_DIR${NC}"
+# Check if sqlx is installed
+if ! command -v sqlx &> /dev/null; then
+    echo -e "${RED}❌ sqlx not found${NC}"
+    echo ""
+    echo "Install it with:"
+    echo "  cargo install sqlx-cli --no-default-features --features postgres"
     exit 1
 fi
 
-# Run each migration
-MIGRATION_COUNT=0
-for migration in "${MIGRATIONS[@]}"; do
-    MIGRATION_FILE=$(basename "$migration")
-    MIGRATION_COUNT=$((MIGRATION_COUNT + 1))
-    
-    echo -e "${BLUE}   [$MIGRATION_COUNT/${#MIGRATIONS[@]}] Running: $MIGRATION_FILE${NC}"
-    
-    # Copy migration to container
-    docker cp "$migration" "$CONTAINER_NAME:/tmp/$MIGRATION_FILE" > /dev/null
-    
-    # Run migration and capture output
-    MIGRATION_OUTPUT=$(docker exec $CONTAINER_NAME psql -U $DB_USER -d $DB_NAME -f "/tmp/$MIGRATION_FILE" 2>&1)
-    MIGRATION_EXIT_CODE=$?
-    
-    # Show NOTICE messages (completion messages)
-    echo "$MIGRATION_OUTPUT" | grep "NOTICE:" || true
-    
-    # Check for errors
-    if [ $MIGRATION_EXIT_CODE -ne 0 ] || echo "$MIGRATION_OUTPUT" | grep -q "ERROR:"; then
-        echo -e "${RED}      ✗ Failed${NC}"
-        echo ""
-        echo "Error output:"
-        echo "$MIGRATION_OUTPUT" | grep -E "(ERROR|FATAL)"
-        exit 1
-    else
-        echo -e "${GREEN}      ✓ Success${NC}"
-    fi
-    echo ""
-done
+# Run migrations
+cd "$SHARED_LIB_DIR"
 
-echo -e "${GREEN}✅ All migrations completed successfully${NC}"
+echo "   Running: DATABASE_URL=\"$DB_URL\" sqlx migrate run"
+echo ""
+
+if DATABASE_URL="$DB_URL" sqlx migrate run; then
+    echo ""
+    echo -e "${GREEN}✅ All migrations completed successfully${NC}"
+else
+    echo ""
+    echo -e "${RED}❌ Migration failed${NC}"
+    exit 1
+fi
+
+cd "$WORKSPACE_DIR"
 echo ""
 
 # ============================================================================
@@ -182,7 +170,7 @@ echo -e "${BLUE}================================================================
 echo ""
 echo "📊 Summary:"
 echo "   • Database: $DB_NAME (fresh)"
-echo "   • Migrations run: $MIGRATION_COUNT"
+echo "   • Migrations: Applied via sqlx migrate run"
 echo "   • Schemas: global, territory_dk"
 echo ""
 echo "🔗 Connection info:"

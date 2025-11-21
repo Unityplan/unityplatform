@@ -23,7 +23,10 @@ This workspace contains a microservices platform with:
 - **Documentation**: `docs/` directory (consolidated structure)
 - **Status**: `docs/status/current/phase-1-status.md` (18% complete)
 - **Database Schema**: `services/shared-lib/migrations/` (3 migrations applied)
+- **Migration Master Plan**: `docs/architecture/MIGRATIONS-MASTER.md` (Naming conventions & strategy)
+- **Service Guide**: `docs/guides/development/service-implementation-guide.md` (Step-by-step implementation)
 - **Scripts**: `scripts/README.md` for all utility scripts
+- **Testing**: `./scripts/dev/run-tests.sh` (Run all or specific service tests)
 - **Local Database Credentials (DK Pod)**:
   - Host: `localhost:5432`
   - Database: `unityplatform_dk`
@@ -54,6 +57,31 @@ This workspace contains a microservices platform with:
 - **Changelogs**: Update `CHANGELOG.md` and service-specific changelogs for all changes
 - **Version Info**: Use `shared_lib::version` module for runtime version access
 
+## Service Development Standards
+
+**CRITICAL: All services must follow these non-negotiable requirements:**
+
+1.  **Shared Library Integration**: Use `shared-lib` for ALL middleware (Logging, RequestId, SecurityHeaders, CORS, RateLimit).
+2.  **Naming Conventions**:
+    - Rust code: `snake_case`
+    - JSON API: `camelCase` (use `#[serde(rename_all = "camelCase")]`)
+    - Database Tables: `snake_case` with service prefix (e.g., `auth_users_core`)
+    - URLs: `kebab-case` with plural resources (e.g., `/api/v1/invitations`)
+3.  **Standard Endpoints**: Every service must implement:
+    - `GET /api/v1/health`
+    - `GET /api/v1/ready`
+    - `GET /api/v1/metrics`
+4.  **Error Handling**: Use `shared_lib::AppError` and `Result<T>`.
+5.  **Validation**: Use `ValidatedJson<T>` extractors.
+
+## Database Guidelines
+
+- **Migration Strategy**: Service-specific migrations in `services/shared-lib/migrations/`.
+- **Global Tables**: `registry_{resource}` (e.g., `registry_username`).
+- **Territory Tables**: `{service}_{entity}_{data}` (e.g., `auth_users_core`).
+- **No Cross-Service FKs**: Services share the DB but NOT foreign keys.
+- **Data Sovereignty**: Personal data MUST stay in territory schemas (`territory_{code}`).
+
 ## AI Assistant Guidelines
 
 - **Terminal Commands**: NEVER chain commands with `&&` - always use single commands for easier auto-approval
@@ -65,6 +93,60 @@ This workspace contains a microservices platform with:
   - File operations: Use file MCP tools when appropriate
   - Database queries: Use `pgsql_query` and `pgsql_modify` instead of `docker exec psql`
 - **Reasoning**: MCP tools provide better context, error handling, and user experience
+
+## Testing Guidelines
+
+**Standardized Testing Script**:
+Always use the `scripts/dev/run-tests.sh` script to run tests. This ensures consistent environment setup and execution.
+
+- **Run all tests**: `./scripts/dev/run-tests.sh`
+- **Run specific service tests**: `./scripts/dev/run-tests.sh <service-name>` (e.g., `./scripts/dev/run-tests.sh auth-service`)
+
+**Integration Testing Pattern**:
+When writing integration tests for services:
+
+1. **Use `actix_web::test`**: Initialize the app with `test::init_service`.
+2. **Mock External Services**: If a service depends on another (e.g., auth depends on invitation), mock the dependency or use the real service if it's a core requirement (like database).
+   - **HTTP Clients**: Use `wiremock` to mock external HTTP services (standard practice).
+3. **Database Setup**: Use the real database connection from `AppConfig`. The test environment shares the dev database, so be careful to clean up test data.
+4. **Cleanup**: Always implement a cleanup function to remove test data (users, tokens, etc.) after the test runs.
+5. **Example**: See `services/auth-service/tests/integration_test.rs` or `services/invitation-service/tests/integration_test.rs` for reference implementations.
+
+## Forgejo Issue Management
+
+**Overview**: This project uses Forgejo (self-hosted Git forge at `localhost:3000`) for issue tracking. All Phase 1 MVP work is tracked via 137 issues across 14 stages.
+
+**Helper Scripts** (in `scripts/forgejo/`):
+
+- `get-issue.sh <number>` - Retrieve and display issue details
+- `create-issue.sh <title> <body> <labels> <milestone>` - Create new issue
+- `update-issue.sh <number> [--title "..."] [--body "..."] [--state open|closed] [--labels "..."]` - Update issue
+- `close-issue.sh <number> [comment]` - Close issue with optional comment
+
+**Workflow**:
+
+1. **When user mentions "#NNN" or "issue NNN"**: Use `get-issue.sh NNN` to read issue details
+2. **When completing work**: Offer to close issue with `close-issue.sh NNN "Completed in <context>"`
+3. **When creating tasks**: Use `create-issue.sh` with appropriate labels and milestone
+4. **When updating status**: Use `update-issue.sh` to change state/labels
+
+**Examples**:
+
+```bash
+# Read issue #147
+./scripts/forgejo/get-issue.sh 147
+
+# Close issue with comment
+./scripts/forgejo/close-issue.sh 147 "Scaffolding script completed"
+
+# Update issue state
+./scripts/forgejo/update-issue.sh 147 --state closed
+
+# Update issue labels
+./scripts/forgejo/update-issue.sh 147 --labels "priority:high,status:done"
+```
+
+**Configuration**: Scripts use `.env` file in `scripts/forgejo/` with FORGEJO_TOKEN for authentication.
 
 ## Service Creation Pattern
 
@@ -161,6 +243,25 @@ async fn create(body: ValidatedJson<CreateRequest>) -> HttpResponse {
 - Use `shared_lib::AppError` for all errors
 - Return `shared_lib::Result<T>` from functions
 - Let middleware handle error responses automatically
+
+### 9. **Service Scaffolding**
+
+**CRITICAL**: When using the scaffolding script:
+
+```bash
+# ✅ CORRECT - Use base name only (script adds -service suffix)
+./scripts/dev/scaffold-service.sh invitation 8004 "Description"
+# Creates: invitation-service
+
+# ❌ WRONG - Never include -service in the name
+./scripts/dev/scaffold-service.sh invitation-service 8004 "..."
+# Would create: invitation-service-service (WRONG!)
+```
+
+- Script location: `scripts/dev/scaffold-service.sh`
+- Takes 3 arguments: `<base-name>` `<port>` `<description>`
+- Automatically adds `-service` suffix to create service name
+- After scaffolding, follow: `docs/guides/development/service-implementation-guide.md`
 
 ## Project Structure
 

@@ -7,6 +7,7 @@ This guide provides a comprehensive strategy for managing the Unity Platform pro
 ## Current Architecture Complexity
 
 ### Multi-Component System
+
 - **Multi-pod architecture**: denmark, norway, sweden, europe (federation layer)
 - **Backend services**: auth-service, user-service, badge-service, territory-service, utility-service, shared-lib
 - **Frontend SPA**: Vite + React application
@@ -15,6 +16,7 @@ This guide provides a comprehensive strategy for managing the Unity Platform pro
 - **Development**: Dev pods, portal management interfaces
 
 ### Current Pain Points
+
 - ❌ Status scattered across multiple markdown files
 - ❌ Hard to track cross-service dependencies
 - ❌ No visual progress tracking
@@ -32,6 +34,7 @@ This guide provides a comprehensive strategy for managing the Unity Platform pro
 **Current Setup:** All components in one repository ✅
 
 **Pros:**
+
 - Single source of truth
 - Easy cross-component refactoring
 - Shared infrastructure code
@@ -39,6 +42,7 @@ This guide provides a comprehensive strategy for managing the Unity Platform pro
 - Simplified CI/CD
 
 **Structure:**
+
 ```
 unityplatform/
 ├── services/          (Backend microservices)
@@ -50,6 +54,7 @@ unityplatform/
 ```
 
 **Use Forgejo Labels to Separate Concerns:**
+
 - `area: auth-service`
 - `area: user-service`
 - `area: frontend`
@@ -62,6 +67,7 @@ unityplatform/
 #### **Option B: Multi-repo (Alternative)**
 
 Only consider if teams are completely independent:
+
 - `unityplatform-services` (all backend services)
 - `unityplatform-app` (frontend)
 - `unityplatform-infrastructure` (Docker, configs)
@@ -80,9 +86,11 @@ Forgejo/Gitea Projects = Kanban boards for visual tracking
 Create **4 Main Projects**:
 
 ##### **Project 1: Platform Core Development**
+
 **Purpose:** Track core feature development across all services
 
 **Columns:**
+
 1. 📋 **Backlog** - All planned features
 2. 🎯 **Ready** - Refined, ready to start
 3. 🚧 **In Progress** - Active development
@@ -91,21 +99,25 @@ Create **4 Main Projects**:
 6. ✅ **Done** - Completed & deployed
 
 **Scope:**
+
 - Feature development
 - Service implementations
 - API endpoints
 - Frontend components
 
 ##### **Project 2: Infrastructure & DevOps**
+
 **Purpose:** Track infrastructure, deployment, and operational tasks
 
 **Columns:**
+
 1. 📋 **Planned**
 2. 🚧 **In Progress**
 3. 🔍 **Testing**
 4. ✅ **Live**
 
 **Scope:**
+
 - Docker configurations
 - Pod deployments
 - CI/CD pipelines
@@ -113,30 +125,36 @@ Create **4 Main Projects**:
 - Database migrations
 
 ##### **Project 3: Security & Compliance**
+
 **Purpose:** Track security features, audits, and compliance
 
 **Columns:**
+
 1. 🔍 **Identified**
 2. 🎯 **Prioritized**
 3. 🔧 **Implementing**
 4. ✅ **Resolved**
 
 **Scope:**
+
 - Security features (auth, session lock, etc.)
 - Vulnerability fixes
 - Compliance requirements
 - Audit tasks
 
 ##### **Project 4: Documentation**
+
 **Purpose:** Track documentation needs
 
 **Columns:**
+
 1. 📝 **Needed**
 2. ✍️ **Writing**
 3. 👀 **Review**
 4. ✅ **Published**
 
 **Scope:**
+
 - API documentation
 - User guides
 - Developer guides
@@ -149,12 +167,14 @@ Create **4 Main Projects**:
 #### **Issue Types (via Labels)**
 
 **Priority Labels:**
+
 - 🔴 `priority: critical` - Blocking production
 - 🟠 `priority: high` - Important for release
 - 🟡 `priority: medium` - Planned work
 - 🟢 `priority: low` - Nice to have
 
 **Type Labels:**
+
 - `type: feature` - New functionality
 - `type: bug` - Something broken
 - `type: enhancement` - Improvement to existing feature
@@ -164,6 +184,7 @@ Create **4 Main Projects**:
 - `type: infrastructure` - DevOps/infra work
 
 **Area Labels (Component):**
+
 - `area: auth-service`
 - `area: user-service`
 - `area: badge-service`
@@ -176,6 +197,7 @@ Create **4 Main Projects**:
 - `area: monitoring`
 
 **Pod Labels:**
+
 - `pod: denmark`
 - `pod: norway`
 - `pod: sweden`
@@ -183,12 +205,14 @@ Create **4 Main Projects**:
 - `pod: all` (affects all pods)
 
 **Status Labels:**
+
 - `status: blocked` - Cannot proceed
 - `status: needs-review` - Awaiting feedback
 - `status: ready` - Ready to start
 - `status: in-progress` - Active work
 
 **Special Labels:**
+
 - `good-first-issue` - For new contributors
 - `help-wanted` - Need assistance
 - `breaking-change` - API/schema breaking change
@@ -199,6 +223,7 @@ Create **4 Main Projects**:
 Create templates in `.forgejo/ISSUE_TEMPLATE/`:
 
 **1. Feature Request**
+
 ```markdown
 ## Feature Description
 Brief description of the feature
@@ -224,6 +249,7 @@ Any technical considerations
 ```
 
 **2. Bug Report**
+
 ```markdown
 ## Bug Description
 What went wrong?
@@ -248,6 +274,7 @@ What actually happened?
 ```
 
 **3. Infrastructure Task**
+
 ```markdown
 ## Task Description
 What needs to be done?
@@ -278,6 +305,7 @@ How to revert if needed?
 Use Milestones for **Phases** and **Releases**:
 
 ##### **Phase-Based Milestones (Strategic)**
+
 - **Phase 1: MVP Foundation** (Current)
   - Due: 2025-12-31
   - Goal: Core authentication, user profiles, basic infrastructure
@@ -291,6 +319,7 @@ Use Milestones for **Phases** and **Releases**:
   - Goal: Courses, badges, LMS integration
 
 ##### **Release Milestones (Tactical)**
+
 - **v0.1.0-alpha.1** (Current)
   - Backend services operational
   - Frontend auth complete
@@ -317,16 +346,19 @@ Use Milestones for **Phases** and **Releases**:
 #### **Since Gitea 1.22.0 may not have built-in roadmaps:**
 
 **Option A: Milestone-Based Roadmap**
+
 - Use milestones as roadmap items
 - Create `roadmap` label for roadmap-specific issues
 - Pin important roadmap issues to repository
 
 **Option B: Project Board Roadmap**
+
 - Create dedicated "Roadmap" project
 - Columns: Q1 2026, Q2 2026, Q3 2026, Q4 2026
 - Add high-level feature cards
 
 **Option C: Wiki Roadmap (Recommended)**
+
 - Use Forgejo Wiki for roadmap
 - Link to issues and milestones
 - Update monthly
@@ -339,6 +371,7 @@ Use Milestones for **Phases** and **Releases**:
 #### **Issue → Branch → PR → Merge Workflow**
 
 1. **Create Issue**
+
    ```
    Title: [AUTH] Add session lock feature
    Labels: type: feature, area: frontend, priority: high
@@ -347,11 +380,13 @@ Use Milestones for **Phases** and **Releases**:
    ```
 
 2. **Create Branch from Issue**
+
    ```bash
    git checkout -b feature/auth-session-lock-#123
    ```
 
 3. **Reference Issue in Commits**
+
    ```bash
    git commit -m "feat(auth): add session lock component
 
@@ -398,21 +433,25 @@ jobs:
 ### 7. Migration Plan (Markdown → Forgejo)
 
 #### **Step 1: Audit Current Status**
+
 - [ ] Review `docs/status/current/phase-1-status.md`
 - [ ] List all tracked items
 - [ ] Identify owners and status
 
 #### **Step 2: Create Label Structure**
+
 - [ ] Create all recommended labels in Forgejo
 - [ ] Add label descriptions
 - [ ] Set label colors
 
 #### **Step 3: Create Milestones**
+
 - [ ] Phase 1: MVP Foundation
 - [ ] v0.1.0-alpha.2
 - [ ] v0.2.0-beta.1
 
 #### **Step 4: Create Project Boards**
+
 - [ ] Platform Core Development
 - [ ] Infrastructure & DevOps
 - [ ] Security & Compliance
@@ -421,6 +460,7 @@ jobs:
 #### **Step 5: Convert Status to Issues**
 
 For each item in phase-1-status.md:
+
 1. Create issue with:
    - Title from status item
    - Description with details
@@ -429,6 +469,7 @@ For each item in phase-1-status.md:
    - Add to project board
 
 **Bulk Creation Script:**
+
 ```bash
 #!/bin/bash
 # create-issues-from-status.sh
@@ -446,11 +487,13 @@ curl -X POST "https://your-forgejo.com/api/v1/repos/Unityplan/unityplatform/issu
 ```
 
 #### **Step 6: Archive Old Status Files**
+
 - [ ] Move `docs/status/current/*.md` to `docs/status/archived/`
 - [ ] Update README to point to Forgejo issues/projects
 - [ ] Keep architecture docs in markdown
 
 #### **Step 7: Establish New Workflow**
+
 - [ ] Document issue creation process
 - [ ] Train team on new workflow
 - [ ] Set up weekly review meetings
@@ -460,7 +503,9 @@ curl -X POST "https://your-forgejo.com/api/v1/repos/Unityplan/unityplatform/issu
 ### 8. Best Practices
 
 #### **Issue Writing**
+
 ✅ **Good:**
+
 ```
 Title: [USER] Add profile avatar upload endpoint
 Body: 
@@ -477,24 +522,28 @@ Acceptance:
 ```
 
 ❌ **Bad:**
+
 ```
 Title: fix avatar
 Body: avatar broken
 ```
 
 #### **Project Board Hygiene**
+
 - **Daily:** Move cards as work progresses
 - **Weekly:** Review "In Progress" - is anything stuck?
 - **Bi-weekly:** Groom backlog - add estimates, refine
 - **Monthly:** Close completed project, start new one
 
 #### **Milestone Management**
+
 - **Don't overload** - Max 20-30 issues per milestone
 - **Review weekly** - Are we on track?
 - **Be flexible** - Move issues to next milestone if needed
 - **Celebrate** - Close milestone with team review
 
 #### **Label Discipline**
+
 - **Always use labels** - At minimum: type, area, priority
 - **Update labels** - Change priority if needed
 - **Create sparingly** - Don't create redundant labels
@@ -505,6 +554,7 @@ Body: avatar broken
 ### 9. Example Issue Structure
 
 #### **Example 1: Backend Feature**
+
 ```
 Title: [AUTH] Implement refresh token rotation
 Labels: type: feature, area: auth-service, priority: high
@@ -542,6 +592,7 @@ Implement refresh token rotation for improved security.
 ```
 
 #### **Example 2: Infrastructure Task**
+
 ```
 Title: [INFRA] Deploy Norway pod
 Labels: type: infrastructure, pod: norway, priority: medium
@@ -579,6 +630,7 @@ Set up production Norway territory pod.
 ```
 
 #### **Example 3: Cross-Service Feature**
+
 ```
 Title: [PLATFORM] Implement badge system
 Labels: type: feature, area: badge-service, area: user-service, area: frontend, priority: medium
@@ -625,21 +677,25 @@ Full badge/achievement system implementation.
 ### 10. Maintenance Schedule
 
 #### **Daily**
+
 - Review new issues (triage)
 - Update issue status
 - Move project board cards
 
 #### **Weekly**
+
 - **Monday:** Sprint planning (assign issues for week)
 - **Wednesday:** Mid-week check-in
 - **Friday:** Week review, close completed issues
 
 #### **Bi-weekly**
+
 - Backlog grooming
 - Label cleanup
 - Project board review
 
 #### **Monthly**
+
 - Milestone review
 - Roadmap update
 - Archive old issues
@@ -702,6 +758,7 @@ Full badge/achievement system implementation.
 ### 12. Integration with Existing Docs
 
 #### **Keep These in Markdown:**
+
 - ✅ Architecture documentation (`docs/architecture/`)
 - ✅ API specifications (`docs/architecture/services/*/API.md`)
 - ✅ Database schemas (`docs/architecture/services/*/DATABASE.md`)
@@ -709,16 +766,19 @@ Full badge/achievement system implementation.
 - ✅ Deployment runbooks (`docs/guides/deployment/`)
 
 #### **Move to Forgejo Issues:**
+
 - ❌ Status tracking (`docs/status/current/`)
 - ❌ Task lists
 - ❌ Individual feature tracking
 
 #### **Hybrid Approach:**
+
 - **Markdown:** Technical specifications, architecture decisions
 - **Forgejo Issues:** Work tracking, task management
 - **Link Between:** Reference issues in markdown, link to docs in issues
 
 **Example:**
+
 ```markdown
 <!-- In docs/architecture/services/badge-service/ARCHITECTURE.md -->
 
@@ -736,23 +796,27 @@ Track progress in [Platform Core Development](https://forgejo.com/Unityplan/unit
 ## Quick Start Guide
 
 ### Day 1: Setup
+
 1. Create labels (30 min)
 2. Create milestones (15 min)
 3. Create project boards (30 min)
 4. Create issue templates (30 min)
 
 ### Day 2-3: Migration
+
 1. Review phase-1-status.md
 2. Create issues for all active work
 3. Assign to milestones and projects
 4. Add labels
 
 ### Day 4-5: Training
+
 1. Document new workflow
 2. Train team
 3. Run pilot sprint
 
 ### Week 2+: Optimize
+
 1. Collect feedback
 2. Adjust labels/boards
 3. Refine process
@@ -763,6 +827,7 @@ Track progress in [Platform Core Development](https://forgejo.com/Unityplan/unit
 ## Conclusion
 
 This structure provides:
+
 - ✅ Clear visual progress tracking (Project boards)
 - ✅ Organized issue management (Labels, milestones)
 - ✅ Cross-component visibility (Multi-label system)

@@ -1,7 +1,7 @@
 # Database Migrations Master Plan
 
-**Last Updated:** November 15, 2025  
-**Current Version:** 20251113000007  
+**Last Updated:** November 18, 2025  
+**Current Version:** 20251118000009  
 **Database:** PostgreSQL 15+ with TimescaleDB  
 **Migration Strategy:** Service-specific migrations with dependency management  
 **Naming Convention:** Service-prefixed table names for clear ownership
@@ -44,6 +44,7 @@ This document defines the database migration strategy for the Unity Platform's m
 
 - `registry_badge` - Badge catalog shared across all territories
 - `registry_email` - Email uniqueness enforcement
+- `registry_invitation` - Invitation token uniqueness enforcement
 - `registry_territories` - Territory registry
 - `registry_username` - Username uniqueness enforcement
 
@@ -90,6 +91,11 @@ This document defines the database migration strategy for the Unity Platform's m
 - `territory_territories_settings` - Territory configuration
 - `territory_territories_managers` - Manager assignments
 - `territory_territories_stats` - Aggregated statistics
+
+**Invitation Service:**
+
+- `invitation_invitations_tokens` - Invitation token storage
+- `invitation_invitations_uses` - Usage tracking
 
 **Benefits:**
 
@@ -225,7 +231,9 @@ services/shared-lib/migrations/
 ├── 20251113000004_user_service_tables.sql               # ✅ User service tables
 ├── 20251113000005_territory_service_tables.sql          # ✅ Territory service tables
 ├── 20251113000006_badge_service_tables.sql              # ✅ Badge service tables
-└── 20251113000007_create_users_settings_table.sql       # ✅ User settings table
+├── 20251113000007_create_users_settings_table.sql       # ✅ User settings table
+├── 20251116000008_create_global_language_registry.sql   # ✅ Language registry
+└── 20251118000009_invitation_service_tables.sql         # ✅ Invitation service tables
 ```
 
 **Archived Migrations (Pre-Naming Convention):**
@@ -253,7 +261,7 @@ services/shared-lib/migrations/
 
 ## Current Database Schema (November 15, 2025)
 
-### Global Schema (4 tables)
+### Global Schema (5 tables)
 
 **Purpose:** Cross-territory shared data and uniqueness enforcement
 
@@ -261,10 +269,11 @@ services/shared-lib/migrations/
 |-------|---------|---------|-------|
 | `registry_badge` | 15 | Global badge catalog across all territories | badge-service |
 | `registry_email` | 5 | Email uniqueness enforcement | auth-service |
+| `registry_invitation` | 4 | Invitation token uniqueness enforcement | invitation-service |
 | `registry_territories` | 12 | Territory/pod registry | territory-service |
 | `registry_username` | 4 | Username uniqueness enforcement | auth-service |
 
-### Territory Schema (14 tables)
+### Territory Schema (16 tables)
 
 **Purpose:** Territory-specific user data (data sovereignty)
 
@@ -302,7 +311,14 @@ services/shared-lib/migrations/
 | `territory_territories_managers` | 6 | Manager assignments (requires badge + entry) |
 | `territory_territories_stats` | 8 | Aggregated statistics (read-only, calculated) |
 
-**Total:** 18 tables (4 global + 14 territory-specific)
+**Invitation Service (2 tables):**
+
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| `invitation_invitations_tokens` | 12 | Invitation token storage (manager-only creation) |
+| `invitation_invitations_uses` | 5 | Invitation usage tracking (trust graph) |
+
+**Total:** 21 tables (5 global + 16 territory-specific)
 
 ---
 

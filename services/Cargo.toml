@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "auth-service",
     "badge-service",
+    "invitation-service",
     "shared-lib",
     "territory-service",
     "user-service",
@@ -88,3 +89,6 @@ utoipa-swagger-ui = { version = "9.0", features = ["actix-web"] }
 
 # HTTP client
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+
+# Testing
+wiremock = "0.6"

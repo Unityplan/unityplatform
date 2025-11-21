@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Forgejo Issue Tracking Migration** - Complete Phase 1 MVP migration to Forgejo
+  - 137 total issues created across 14 stages
+  - **Closed Issues (55):** Historical work (Stages 1-4, 6, 14)
+  - **Open Issues (82):** Active development (Stage 5) + Future work (Stages 7-13)
+  - 24 labels created (priority, type, area, status)
+  - All issues assigned to milestone v0.1.0-alpha.2
+  - **Migration Scripts:**
+    - `create-stages-1-4-closed-issues.sh` - Foundation work (26 issues)
+    - `create-stage5-open-issues.sh` - Frontend development (27 issues)
+    - `create-stage6-closed-issues.sh` - Territory/Badge services (11 issues)
+    - `create-stage7-open-issues.sh` - Course Service (6 issues)
+    - `create-stage8-open-issues.sh` - Matrix Protocol (6 issues)
+    - `create-stage9-open-issues.sh` - IPFS Service (6 issues)
+    - `create-stage10-open-issues.sh` - Forum Service (8 issues)
+    - `create-stage11-open-issues.sh` - Translation Service (3 issues)
+    - `create-stage12-open-issues.sh` - Frontend UI (10 issues)
+    - `create-stage13-open-issues.sh` - Testing/Deploy (11 issues)
+    - `create-stage14-closed-issues.sh` - Utility Service (18 issues)
+  - **Documentation Updates:**
+    - Created `docs/guides/development/forgejo-workflow.md` - Complete workflow guide
+    - Updated `scripts/forgejo/README.md` - Migration scripts documentation
+    - Created `.forgejo/issue_template/` - 4 issue templates (bug, feature, service, component)
+    - Updated `docs/status/current/phase-1-status.md` - All stages link to Forgejo issues
+    - Updated root `README.md` - Project status with Forgejo links
+  - **Issue Ranges:**
+    - #4-#30: Stage 5 (Frontend, open)
+    - #31-#41: Stage 6 (Territory/Badge, closed)
+    - #42-#67: Stages 1-4 (Foundation, closed)
+    - #68-#73: Stage 7 (Course Service, open)
+    - #74-#79: Stage 8 (Matrix, open)
+    - #82-#87: Stage 9 (IPFS, open)
+    - #88-#95: Stage 10 (Forum, open)
+    - #96-#98: Stage 11 (Translation, open)
+    - #99-#108: Stage 12 (Frontend UI, open)
+    - #109-#119: Stage 13 (Testing/Deploy, open)
+    - #120-#136: Stage 14 (Utility Service, closed)
+
 ### Changed
 
 - **Database Schema Refactoring:** Implemented service-based table naming convention across all 18 tables

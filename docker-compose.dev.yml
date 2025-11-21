@@ -106,6 +106,9 @@ services:
       - FORGEJO__server__SSH_DOMAIN=192.168.60.133
       - FORGEJO__server__SSH_PORT=2222
       - FORGEJO__security__INSTALL_LOCK=true
+      - FORGEJO__repository__DEFAULT_PUSH_CREATE_PRIVATE=true
+      - FORGEJO__repository__ENABLE_PUSH_CREATE_USER=true
+      - FORGEJO__repository__ENABLE_PUSH_CREATE_ORG=true
     volumes:
       - forgejo-data:/data
       - /etc/timezone:/etc/timezone:ro

@@ -14,6 +14,9 @@ pub struct ServerConfig {
     pub port: u16,
     pub pod_id: String,
     pub territory: String,
+    /// Allow open registration without invitation token (default: false for production)
+    #[serde(default)]
+    pub allow_open_registration: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -46,6 +49,7 @@ impl AppConfig {
         settings = settings
             .set_default("server.host", "0.0.0.0")?
             .set_default("server.port", 8080)?
+            .set_default("server.allow_open_registration", false)?
             .set_default("database.max_connections", 20)?
             .set_default("database.min_connections", 5)?
             .set_default("nats.cluster_name", "unityplatform-global")?

@@ -27,6 +27,9 @@ validator.workspace = true
 # Redis
 redis.workspace = true
 
+# Messaging
+async-nats = { workspace = true }
+
 # HTTP client for fetching favicons
 reqwest.workspace = true
 
@@ -57,5 +60,9 @@ anyhow.workspace = true
 # Statics
 lazy_static = "1.5"
 
+# UUID
+uuid = { workspace = true }
+
 [dev-dependencies]
-# None for now - add tests later
+wiremock = { workspace = true }
+jsonwebtoken = { workspace = true }

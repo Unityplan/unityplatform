@@ -29,9 +29,9 @@ use utoipa_swagger_ui::SwaggerUi;
     ),
     paths(
         // Health endpoints
-        health_check,
-        ready_check,
-        metrics,
+        user_service::handlers::health::health_check,
+        user_service::handlers::health::ready_check,
+        user_service::handlers::health::metrics,
         // Profile endpoints
         user_service::handlers::profile::get_own_profile,
         user_service::handlers::profile::update_own_profile,
@@ -200,9 +200,9 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/api/v1")
                     // Health endpoints
-                    .route("/health", web::get().to(health_check))
-                    .route("/ready", web::get().to(ready_check))
-                    .route("/metrics", web::get().to(metrics))
+                    .route("/health", web::get().to(user_service::handlers::health::health_check))
+                    .route("/ready", web::get().to(user_service::handlers::health::ready_check))
+                    .route("/metrics", web::get().to(user_service::handlers::health::metrics))
                     // User routes (all require JWT auth)
                     .service(
                         web::scope("/user")
@@ -250,93 +250,3 @@ async fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-/// Health check endpoint (no authentication required)
-#[utoipa::path(
-    get,
-    path = "/api/v1/health",
-    tag = "health",
-    responses(
-        (status = 200, description = "Service is healthy", body = serde_json::Value,
-            example = json!({
-                "status": "ok",
-                "service": "user-service",
-                "version": "0.1.0-alpha.1"
-            })
-        )
-    )
-)]
-async fn health_check() -> actix_web::HttpResponse {
-    actix_web::HttpResponse::Ok().json(serde_json::json!({
-        "status": "ok",
-        "service": "user-service",
-        "version": env!("CARGO_PKG_VERSION"),
-    }))
-}
-
-/// Ready check endpoint (database connectivity)
-#[utoipa::path(
-    get,
-    path = "/api/v1/ready",
-    tag = "health",
-    responses(
-        (status = 200, description = "Service is ready", body = serde_json::Value,
-            example = json!({
-                "status": "ready",
-                "service": "user-service",
-                "version": "0.1.0-alpha.1"
-            })
-        ),
-        (status = 503, description = "Service not ready", body = serde_json::Value,
-            example = json!({
-                "status": "not_ready",
-                "service": "user-service",
-                "version": "0.1.0-alpha.1",
-                "reason": "database_unavailable"
-            })
-        )
-    )
-)]
-async fn ready_check(db: web::Data<Database>) -> actix_web::HttpResponse {
-    // Check database connectivity
-    match sqlx::query("SELECT 1").fetch_one(db.pool()).await {
-        Ok(_) => actix_web::HttpResponse::Ok().json(serde_json::json!({
-            "status": "ready",
-            "service": "user-service",
-            "version": env!("CARGO_PKG_VERSION"),
-        })),
-        Err(_) => actix_web::HttpResponse::ServiceUnavailable().json(serde_json::json!({
-            "status": "not_ready",
-            "service": "user-service",
-            "version": env!("CARGO_PKG_VERSION"),
-            "reason": "database_unavailable"
-        })),
-    }
-}
-
-/// Metrics endpoint (Prometheus format)
-#[utoipa::path(
-    get,
-    path = "/api/v1/metrics",
-    tag = "health",
-    responses(
-        (status = 200, description = "Prometheus metrics", 
-            content_type = "text/plain",
-            body = String,
-            example = "# HELP user_service_http_requests_total Total HTTP requests\n# TYPE user_service_http_requests_total counter\nuser_service_http_requests_total 42"
-        )
-    )
-)]
-async fn metrics(
-    db: web::Data<Database>,
-    collector: web::Data<MetricsCollector>,
-) -> actix_web::HttpResponse {
-    // Get database pool stats
-    let pool_size = db.pool().size();
-    let pool_idle = db.pool().num_idle();
-
-    let metrics_text = collector.generate_prometheus_metrics(Some(pool_size), Some(pool_idle));
-
-    actix_web::HttpResponse::Ok()
-        .content_type("text/plain; version=0.0.4")
-        .body(metrics_text)
-}

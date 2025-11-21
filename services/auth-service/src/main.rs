@@ -123,6 +123,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors::development())
             .wrap(RateLimitMiddleware::development(redis_client.clone()))
             // Shared state
+            .app_data(web::Data::new(config.clone()))
             .app_data(web::Data::new(database.clone()))
             .app_data(web::Data::new(token_service.clone()))
             .app_data(web::Data::new(metrics_collector.clone()))

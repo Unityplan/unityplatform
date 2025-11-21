@@ -23,9 +23,9 @@ use utoipa_swagger_ui::SwaggerUi;
         )
     ),
     paths(
-        health_check,
-        ready_check,
-        metrics,
+        territory_service::handlers::health::health_check,
+        territory_service::handlers::health::ready_check,
+        territory_service::handlers::health::metrics,
         territory_service::handlers::territory::list_territories,
         territory_service::handlers::territory::get_territory,
         territory_service::handlers::territory::get_territory_stats,
@@ -157,9 +157,9 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/api/v1")
                     // Health endpoints
-                    .route("/health", web::get().to(health_check))
-                    .route("/ready", web::get().to(ready_check))
-                    .route("/metrics", web::get().to(metrics))
+                    .route("/health", web::get().to(territory_service::handlers::health::health_check))
+                    .route("/ready", web::get().to(territory_service::handlers::health::ready_check))
+                    .route("/metrics", web::get().to(territory_service::handlers::health::metrics))
                     // Territory routes
                     .service(
                         web::scope("/territory")
@@ -210,70 +210,6 @@ async fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-/// Health check endpoint
-#[utoipa::path(
-    get,
-    path = "/api/v1/health",
-    tag = "health",
-    responses(
-        (status = 200, description = "Service is healthy")
-    )
-)]
-async fn health_check() -> HttpResponse {
-    HttpResponse::Ok().json(serde_json::json!({
-        "status": "ok",
-        "service": "territory-service",
-        "version": env!("CARGO_PKG_VERSION"),
-    }))
-}
-
-/// Ready check endpoint
-#[utoipa::path(
-    get,
-    path = "/api/v1/ready",
-    tag = "health",
-    responses(
-        (status = 200, description = "Service is ready"),
-        (status = 503, description = "Service is not ready")
-    )
-)]
-async fn ready_check(db: web::Data<Database>) -> HttpResponse {
-    // Check database connectivity
-    match sqlx::query("SELECT 1").fetch_one(db.pool()).await {
-        Ok(_) => HttpResponse::Ok().json(serde_json::json!({
-            "status": "ready",
-            "service": "territory-service",
-            "version": env!("CARGO_PKG_VERSION"),
-        })),
-        Err(_) => HttpResponse::ServiceUnavailable().json(serde_json::json!({
-            "status": "not_ready",
-            "service": "territory-service",
-            "version": env!("CARGO_PKG_VERSION"),
-            "reason": "database_unavailable"
-        })),
-    }
-}
-
-/// Metrics endpoint (Prometheus format)
-#[utoipa::path(
-    get,
-    path = "/api/v1/metrics",
-    tag = "health",
-    responses(
-        (status = 200, description = "Prometheus metrics", content_type = "text/plain")
-    )
-)]
-async fn metrics(db: web::Data<Database>, collector: web::Data<MetricsCollector>) -> HttpResponse {
-    // Get database pool stats
-    let pool_size = db.pool().size();
-    let pool_idle = db.pool().num_idle();
-
-    let metrics_text = collector.generate_prometheus_metrics(Some(pool_size), Some(pool_idle));
-
-    HttpResponse::Ok()
-        .content_type("text/plain; version=0.0.4")
-        .body(metrics_text)
-}
 
 /// Register Territory Manager badge with badge-service on startup
 async fn register_territory_manager_badge(config: &AppConfig) {

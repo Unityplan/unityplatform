@@ -28,7 +28,10 @@ CREATE TABLE IF NOT EXISTS global.registry_username (
     
     -- Ensure username format
     CHECK (char_length(username) >= 3 AND char_length(username) <= 50),
-    CHECK (username ~ '^[a-z0-9_]+$')  -- lowercase, numbers, underscores only
+    CHECK (username ~ '^[a-z0-9_]+$'),  -- lowercase, numbers, underscores only
+
+    -- Ensure user_id is unique (1:1 mapping with username) - Required for FKs from other tables
+    CONSTRAINT uq_global_registry_user_id UNIQUE (user_id)
 );
 
 -- Indexes
