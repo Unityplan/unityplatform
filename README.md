@@ -51,34 +51,24 @@ This platform follows a microservices architecture with progressive decentraliza
 .
 ├── services/          # Rust microservices
 │   ├── auth-service/
-│   ├── user-service/
-│   ├── territory-service/
 │   ├── badge-service/
-│   ├── course-service/
-│   ├── forum-service/
-│   ├── ipfs-service/
-│   ├── translation-service/
-│   ├── matrix-gateway/
+│   ├── invitation-service/
+│   ├── territory-service/
+│   ├── user-service/
+│   ├── utility-service/
 │   └── shared-lib/    # Shared utilities and types
 ├── app/               # Vite + React application
 ├── docker/            # Docker configuration files
 │   ├── postgres/      # PostgreSQL init scripts
 │   └── [service-data] # Volume mounts (gitignored)
-├── docs/              # General documentation
-├── project_docs/      # Project planning documents
-│   ├── 1-project-summary.md
-│   ├── 2-project-overview.md
-│   ├── 3-project-techstack.md
-│   └── 4-project-infrastructure.md
-├── project_status/    # Implementation tracking
-│   ├── phase-1-implementation-checklist.md
-│   ├── phase-1-status.md
-│   ├── phase-1-mvp-roadmap.md
-│   ├── phase-2-scale-roadmap.md
-│   └── phase-3-decentralization-roadmap.md
+├── docs/              # Documentation
+│   ├── architecture/  # System design and architecture
+│   ├── guides/        # Implementation and operation guides
+│   ├── project/       # Project definition and summary
+│   └── status/        # Progress tracking and roadmaps
 ├── scripts/           # Utility scripts
 ├── temp/              # Temporary work files
-└── docker-compose.yml # Service orchestration
+└── docker-compose.dev.yml # Service orchestration
 ```
 
 ## 🚀 Getting Started
@@ -143,6 +133,36 @@ This platform follows a microservices architecture with progressive decentraliza
    cargo test
    ```
 
+7. **Start frontend:**
+
+   ```bash
+   cd frontend
+   pnpm install
+   pnpm dev
+   ```
+
+8. **Access the application and development tools:**
+
+   **🎯 Development Dashboard (Quick Access):**
+   - **Landing Page:** <http://localhost:80> - Main entry point
+   - **Dashboard:** <http://localhost:8888> - All tools in one place!
+
+   **Application:**
+   - Frontend: <http://localhost:5173>
+   - API Gateway: <http://localhost:8000>
+
+   **Infrastructure Management:**
+   - Adminer (PostgreSQL UI): <http://localhost:8080>
+   - Redis Commander: <http://localhost:8082>
+   - MailHog (Email Testing): <http://localhost:8025>
+
+   **Observability & Monitoring:**
+   - Prometheus (Metrics): <http://localhost:9090>
+   - Grafana (Dashboards): <http://localhost:3001> (admin/admin)
+   - Jaeger (Tracing): <http://localhost:16686>
+   - Traefik Dashboard: <http://localhost:8083/dashboard/>
+   - NATS Monitoring: <http://localhost:8222>
+
 ### Full Development Environment (Optional)
 
 For complete development setup with all tools:
@@ -173,9 +193,9 @@ docker compose -f docker-compose.dev.yml up -d
 docker compose -f docker-compose.monitoring.yml up -d
 
 # Access:
-# - Prometheus: http://192.168.60.133:9090
-# - Grafana: http://192.168.60.133:3001 (admin/admin)
-# - Jaeger: http://192.168.60.133:16686
+# - Prometheus: http://localhost:9090
+# - Grafana: http://localhost:3001 (admin/admin)
+# - Jaeger: http://localhost:16686
 ```
 
 ### Multi-Pod Deployment (Phase 2)
@@ -213,39 +233,6 @@ docker compose -f docker-compose.monitoring.yml up -d
 ./scripts/stop-new-architecture.sh --all --clean
 ```
 
-# Repeat for other services
-
-   ```
-
-6. **Start frontend:**
-   ```bash
-   cd frontend
-   pnpm install
-   pnpm dev
-   ```
-
-7. **Access the application and development tools:**
-
-   **🎯 Development Dashboard (Quick Access):**
-   - **Landing Page:** <http://192.168.60.133> - Main entry point
-   - **Dashboard:** <http://192.168.60.133:8888> - All tools in one place!
-
-   **Application:**
-   - Frontend: <http://192.168.60.133:5173>
-   - API Gateway: <http://192.168.60.133:8000>
-
-   **Infrastructure Management:**
-   - Adminer (PostgreSQL UI): <http://192.168.60.133:8080>
-   - Redis Commander: <http://192.168.60.133:8082>
-   - MailHog (Email Testing): <http://192.168.60.133:8025>
-
-   **Observability & Monitoring:**
-   - Prometheus (Metrics): <http://192.168.60.133:9090>
-   - Grafana (Dashboards): <http://192.168.60.133:3001> (admin/admin)
-   - Jaeger (Tracing): <http://192.168.60.133:16686>
-   - Traefik Dashboard: <http://192.168.60.133:8083/dashboard/>
-   - NATS Monitoring: <http://192.168.60.133:8222>
-
 ## 🧪 Testing
 
 ```bash
@@ -266,27 +253,26 @@ cd frontend && pnpm test:e2e
 
 ### Core Documentation
 
-- **[Project Summary](./project_docs/1-project-summary.md)** - Executive overview
-- **[Project Overview](./project_docs/2-project-overview.md)** - Detailed project description with **Territory ID Format**
-- **[Tech Stack](./project_docs/3-project-techstack.md)** - Technology documentation
-- **[Infrastructure](./project_docs/4-project-infrastructure.md)** - Infrastructure architecture
+- **[Project Summary](./docs/project/summary.md)** - Executive overview
+- **[Project Overview](./docs/project/overview.md)** - Detailed project description with **Territory ID Format**
+- **[Tech Stack](./docs/project/tech-stack.md)** - Technology documentation
+- **[Infrastructure](./docs/architecture/overview/infrastructure-overview.md)** - Infrastructure architecture
 
 ### Multi-Pod Architecture
 
-- **[Multi-Pod Architecture](./project_docs/5-multi-pod-architecture.md)** - Complete multi-pod design with **Territory ID Format**
-- **[Multi-Pod Deployment Guide](./project_docs/6-multi-pod-deployment-guide.md)** - Step-by-step deployment
-- **[NATS Clustering Guide](./project_docs/7-nats-clustering-guide.md)** - NATS configuration and operations
-- **[Testing & Verification Guide](./project_docs/8-testing-verification-guide.md)** - Comprehensive testing procedures
+- **[Multi-Pod Architecture](./docs/architecture/overview/multi-pod-architecture.md)** - Complete multi-pod design with **Territory ID Format**
+- **[Multi-Pod Deployment Guide](./docs/guides/deployment/multi-pod-deployment.md)** - Step-by-step deployment
+- **[NATS Clustering Guide](./docs/guides/deployment/nats-clustering.md)** - NATS configuration and operations
+- **[Testing & Verification Guide](./docs/guides/deployment/testing-verification.md)** - Comprehensive testing procedures
 - **[Multi-Pod Quick Start](./MULTI-POD-README.md)** - Quick reference
 
 ### Critical Standards
 
-- **[⚠️ Territory Management Standard](./project_docs/9-territory-management-standard.md)** - **CRITICAL:** Territory ID format for countries, First Nations, and communities
+- **[⚠️ Territory Management Standard](./docs/architecture/overview/territory-management-standard.md)** - **CRITICAL:** Territory ID format for countries, First Nations, and communities
 
 ### Implementation Tracking
 
-- **[Phase 1 Checklist](./project_status/phase-1-implementation-checklist.md)** - Implementation guide
-- **[Phase 1 Status](./project_status/phase-1-status.md)** - Current progress tracking
+- **[Phase 1 Status](./docs/status/current/phase-1-status.md)** - Current progress tracking
 
 ## 🎓 Key Concepts
 
