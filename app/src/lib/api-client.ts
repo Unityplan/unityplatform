@@ -20,7 +20,7 @@ import { useAuthStore } from '@/stores/authStore';
  * const response = await apiClient.get('/api/v1/users/me');
  * ```
  */
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',

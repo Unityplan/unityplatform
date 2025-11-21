@@ -1,13 +1,10 @@
-mod handlers;
-mod models;
-mod services;
-
 use actix_web::{web, App, HttpServer};
 use shared_lib::{
     cors, shutdown_grace_period, AppConfig, Database, LoggingMiddleware, MetricsCollector,
     NatsClient, RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware,
 };
 use std::sync::Arc;
+use utility_service::{handlers, models, services};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 

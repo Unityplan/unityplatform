@@ -749,6 +749,45 @@ mod tests {
 }
 ```
 
+### HTTP Client Tests (Wiremock)
+
+When your service calls another service via HTTP (e.g., auth-service calling invitation-service), use `wiremock` to simulate the external service.
+
+**Add to Cargo.toml:**
+
+```toml
+[dev-dependencies]
+wiremock = "0.6"
+```
+
+**Test Example:**
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    #[tokio::test]
+    async fn test_external_call() {
+        // 1. Start mock server
+        let mock_server = MockServer::start().await;
+
+        // 2. Define expected behavior
+        Mock::given(method("POST"))
+            .and(path("/api/v1/resource"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(MyResponse { ... }))
+            .mount(&mock_server)
+            .await;
+
+        // 3. Call your client with mock URI
+        let result = my_client_function(&mock_server.uri(), ...).await;
+        assert!(result.is_ok());
+    }
+}
+```
+
 ### Integration Tests
 
 ```rust

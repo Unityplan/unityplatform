@@ -60,5 +60,9 @@ anyhow.workspace = true
 # Statics
 lazy_static = "1.5"
 
+# UUID
+uuid = { workspace = true }
+
 [dev-dependencies]
-# None for now - add tests later
+wiremock = { workspace = true }
+jsonwebtoken = { workspace = true }

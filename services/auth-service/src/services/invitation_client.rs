@@ -9,7 +9,7 @@ pub struct ValidateInvitationRequest {
 }
 
 /// Invitation validation response
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ValidateInvitationResponse {
     pub valid: bool,
 }
@@ -24,12 +24,14 @@ pub struct UseInvitationRequest {
 }
 
 /// Use invitation response
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UseInvitationResponse {
     pub invitation_id: Uuid,
     pub uses_remaining: i32,
     pub fully_used: bool,
 }
+
+use std::time::Duration;
 
 /// Validate an invitation token
 ///
@@ -47,7 +49,11 @@ pub async fn validate_invitation(
     token: &str,
     allow_open_registration: bool,
 ) -> Result<bool> {
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(5))
+        .build()
+        .map_err(|e| AppError::Internal(format!("Failed to build HTTP client: {}", e)))?;
+
     let url = format!("{}/api/v1/invitations/validate", invitation_service_url);
 
     let request = ValidateInvitationRequest {
@@ -114,7 +120,11 @@ pub async fn use_invitation(
     user_agent: Option<String>,
     allow_open_registration: bool,
 ) -> Result<Option<UseInvitationResponse>> {
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(5))
+        .build()
+        .map_err(|e| AppError::Internal(format!("Failed to build HTTP client: {}", e)))?;
+
     let url = format!("{}/api/v1/invitations/use", invitation_service_url);
 
     let request = UseInvitationRequest {
@@ -168,5 +178,95 @@ pub async fn use_invitation(
                 Ok(None)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    #[tokio::test]
+    async fn test_validate_invitation_success() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("POST"))
+            .and(path("/api/v1/invitations/validate"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(ValidateInvitationResponse { valid: true }),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let result = validate_invitation(&mock_server.uri(), "valid-token", false).await;
+        assert!(result.is_ok());
+        assert!(result.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_validate_invitation_invalid() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("POST"))
+            .and(path("/api/v1/invitations/validate"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(ValidateInvitationResponse { valid: false }),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let result = validate_invitation(&mock_server.uri(), "invalid-token", false).await;
+        assert!(result.is_ok());
+        assert!(!result.unwrap()); // Should be false (invalid) but Ok (request succeeded)
+    }
+
+    #[tokio::test]
+    async fn test_validate_invitation_server_error() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("POST"))
+            .and(path("/api/v1/invitations/validate"))
+            .respond_with(ResponseTemplate::new(500))
+            .mount(&mock_server)
+            .await;
+
+        let result = validate_invitation(&mock_server.uri(), "token", false).await;
+        assert!(result.is_err()); // Should be error in production mode
+    }
+
+    #[tokio::test]
+    async fn test_validate_invitation_invalid_dev_mode() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("POST"))
+            .and(path("/api/v1/invitations/validate"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(ValidateInvitationResponse { valid: false }),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let result = validate_invitation(&mock_server.uri(), "invalid-token", true).await;
+        assert!(result.is_ok());
+        assert!(!result.unwrap()); // Should be false but Ok in dev mode
+    }
+
+    #[tokio::test]
+    async fn test_validate_invitation_service_unavailable() {
+        // No mock server running at this port
+        let result = validate_invitation("http://localhost:12345", "token", false).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_validate_invitation_service_unavailable_dev_mode() {
+        // No mock server running at this port
+        let result = validate_invitation("http://localhost:12345", "token", true).await;
+        assert!(result.is_ok());
+        assert!(!result.unwrap()); // Should be false but Ok in dev mode
     }
 }

@@ -70,3 +70,6 @@ reqwest = { workspace = true }
 # API Documentation
 utoipa = { workspace = true }
 utoipa-swagger-ui = { workspace = true }
+
+[dev-dependencies]
+wiremock = "0.6.5"

@@ -107,6 +107,7 @@ When writing integration tests for services:
 
 1. **Use `actix_web::test`**: Initialize the app with `test::init_service`.
 2. **Mock External Services**: If a service depends on another (e.g., auth depends on invitation), mock the dependency or use the real service if it's a core requirement (like database).
+   - **HTTP Clients**: Use `wiremock` to mock external HTTP services (standard practice).
 3. **Database Setup**: Use the real database connection from `AppConfig`. The test environment shares the dev database, so be careful to clean up test data.
 4. **Cleanup**: Always implement a cleanup function to remove test data (users, tokens, etc.) after the test runs.
 5. **Example**: See `services/auth-service/tests/integration_test.rs` or `services/invitation-service/tests/integration_test.rs` for reference implementations.

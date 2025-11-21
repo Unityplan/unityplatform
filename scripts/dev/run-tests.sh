@@ -51,7 +51,8 @@ if [ -z "$1" ]; then
     failed=0
     
     # Find all Cargo.toml files in services/ directory (depth 2)
-    services=$(find services -maxdepth 2 -name "Cargo.toml" -not -path "*/shared-lib/*" | xargs dirname | xargs basename)
+    # Exclude shared-lib and the workspace root Cargo.toml
+    services=$(find services -maxdepth 2 -name "Cargo.toml" -not -path "*/shared-lib/*" -not -path "services/Cargo.toml" | xargs -n 1 dirname | xargs -n 1 basename)
     
     # Always test shared-lib first
     run_service_tests "shared-lib" || failed=1

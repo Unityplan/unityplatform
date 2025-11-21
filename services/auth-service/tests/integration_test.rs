@@ -1,7 +1,7 @@
 use actix_web::{test, web, App};
 use auth_service::handlers;
 use auth_service::services::TokenService;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use shared_lib::{AppConfig, Database, NatsClient};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -328,6 +328,166 @@ async fn test_register_dev_mode_no_token() {
     }
 
     assert_eq!(resp.status(), 201);
+
+    // Cleanup
+    cleanup_test_data(database.pool(), &username, None).await;
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TestLoginRequest {
+    username: String,
+    password: String,
+    territory: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TestRefreshRequest {
+    refresh_token: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TestLogoutRequest {
+    refresh_token: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TestAuthResponse {
+    access_token: String,
+    refresh_token: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TestValidateResponse {
+    valid: bool,
+    user_id: Option<Uuid>,
+}
+
+#[derive(Deserialize)]
+struct TestRefreshResponse {
+    access_token: String,
+}
+
+#[actix_web::test]
+async fn test_auth_flow() {
+    dotenvy::dotenv().ok();
+    let mut config = AppConfig::from_env().expect("Failed to load config");
+
+    // Enable open registration for easier testing
+    config.server.allow_open_registration = true;
+
+    let database = Database::new(
+        &config.database_url(),
+        config.database.max_connections,
+        config.database.min_connections,
+    )
+    .await
+    .expect("Failed to connect to database");
+
+    let nats_client = NatsClient::new(config.nats_url(), config.nats.cluster_name.clone())
+        .await
+        .expect("Failed to connect to NATS");
+
+    let token_service = TokenService::new(&config.auth.jwt_secret);
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(config.clone()))
+            .app_data(web::Data::new(database.clone()))
+            .app_data(web::Data::new(nats_client))
+            .app_data(web::Data::new(token_service))
+            .service(handlers::register)
+            .service(handlers::login)
+            .service(handlers::refresh)
+            .service(handlers::logout)
+            .service(handlers::validate),
+    )
+    .await;
+
+    let username = format!("auth_flow_{}", Uuid::new_v4().simple());
+    let password = "Password123!";
+    let territory = "dk";
+
+    // 1. Register
+    let req = test::TestRequest::post()
+        .uri("/register")
+        .set_json(&TestRegisterRequest {
+            username: username.clone(),
+            email: Some(format!("{}@example.com", username)),
+            password: password.to_string(),
+            territory: territory.to_string(),
+            invitation_token: None,
+        })
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 201);
+
+    // 2. Login
+    let req = test::TestRequest::post()
+        .uri("/login")
+        .set_json(&TestLoginRequest {
+            username: username.clone(),
+            password: password.to_string(),
+            territory: territory.to_string(),
+        })
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200);
+
+    let auth_resp: TestAuthResponse = test::read_body_json(resp).await;
+    let access_token = auth_resp.access_token;
+    let refresh_token = auth_resp.refresh_token;
+
+    // 3. Validate Token
+    let req = test::TestRequest::get()
+        .uri("/validate")
+        .insert_header(("Authorization", format!("Bearer {}", access_token)))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200);
+
+    let validate_resp: TestValidateResponse = test::read_body_json(resp).await;
+    assert!(validate_resp.valid);
+    assert!(validate_resp.user_id.is_some());
+
+    // 4. Refresh Token
+    let req = test::TestRequest::post()
+        .uri("/refresh")
+        .set_json(&TestRefreshRequest {
+            refresh_token: refresh_token.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200);
+
+    let refresh_resp: TestRefreshResponse = test::read_body_json(resp).await;
+    let new_access_token = refresh_resp.access_token;
+    assert_ne!(access_token, new_access_token);
+
+    // 5. Logout
+    let req = test::TestRequest::post()
+        .uri("/logout")
+        .insert_header(("Authorization", format!("Bearer {}", new_access_token)))
+        .set_json(&TestLogoutRequest {
+            refresh_token: refresh_token.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 200);
+
+    // 6. Verify Logout (Refresh token should be invalid)
+    let req = test::TestRequest::post()
+        .uri("/refresh")
+        .set_json(&TestRefreshRequest {
+            refresh_token: refresh_token.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 401);
 
     // Cleanup
     cleanup_test_data(database.pool(), &username, None).await;

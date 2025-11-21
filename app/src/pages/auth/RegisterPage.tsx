@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useNavigate } from '@tanstack/react-router';
 import { useAuthStore } from '@/stores/authStore';
-import { validateInvitation } from '@/api/auth';
+import { invitationApi } from '@/api/invitations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,11 +59,12 @@ interface ValidatedInvitation {
     remaining_uses?: number;
 }
 
-export function RegisterPage() {
+export function RegisterPage({ initialToken }: { initialToken?: string }) {
     const { register: registerUser, isLoading, error } = useAuthStore();
+    const navigate = useNavigate();
     const [step, setStep] = useState<'invitation' | 'registration'>('invitation');
     const [validatedInvitation, setValidatedInvitation] = useState<ValidatedInvitation | null>(null);
-    const [invitationToken, setInvitationToken] = useState<string>('');
+    const [invitationToken, setInvitationToken] = useState<string>(initialToken || '');
     const [invitationError, setInvitationError] = useState<string>('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -70,7 +72,7 @@ export function RegisterPage() {
     const invitationForm = useForm<InvitationFormValues>({
         resolver: zodResolver(invitationSchema),
         defaultValues: {
-            invitation_token: '',
+            invitation_token: initialToken || '',
         },
     });
 
@@ -89,11 +91,20 @@ export function RegisterPage() {
         try {
             setInvitationError('');
             // ⭐ SECURE: Backend looks up territory from global registry
-            const response = await validateInvitation(data.invitation_token);
+            const response = await invitationApi.validateInvitation(data.invitation_token);
 
-            if (response.valid) {
+            if (response.data.valid) {
                 // Token is valid, store invitation details and move to registration step
-                setValidatedInvitation(response);
+                setValidatedInvitation({
+                    valid: response.data.valid,
+                    token_type: 'standard',
+                    territory: {
+                        code: 'dk', // TODO: #156 - Fetch territory from backend response
+                        name: 'Denmark',
+                    },
+                    remaining_uses: response.data.uses_remaining,
+                    expires_at: response.data.expires_at,
+                });
                 setInvitationToken(data.invitation_token);
                 setStep('registration');
             } else {
@@ -112,11 +123,12 @@ export function RegisterPage() {
                 email: data.email || '',
                 username: data.username,
                 password: data.password,
-                full_name: data.full_name || undefined,
-                invitation_token: invitationToken,  // From Step 1 validation
+                territory: validatedInvitation?.territory.code || 'dk', // Use validated territory
+                invitationToken: invitationToken,  // From Step 1 validation
             });
-            // TODO: Redirect to dashboard once routing is set up
+
             console.log('Registration successful!');
+            navigate({ to: '/dashboard' });
         } catch (err) {
             // Error is already handled by the store
             console.error('Registration failed:', err);
@@ -155,7 +167,7 @@ export function RegisterPage() {
                                                 <FormControl>
                                                     <Input
                                                         type="text"
-                                                        placeholder="inv_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                                        placeholder="XXXX-XXXX-XXXX-XXXX"
                                                         {...field}
                                                     />
                                                 </FormControl>
@@ -178,6 +190,18 @@ export function RegisterPage() {
                                     <Button type="submit" className="w-full">
                                         Validate Invitation
                                     </Button>
+
+                                    {/* Dev Mode Skip */}
+                                    {import.meta.env.DEV && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="w-full mt-2"
+                                            onClick={() => setStep('registration')}
+                                        >
+                                            Skip (Dev Mode)
+                                        </Button>
+                                    )}
                                 </form>
                             </Form>
                         </CardContent>

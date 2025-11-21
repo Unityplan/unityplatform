@@ -12,8 +12,8 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
     return error.message;
   }
   if (typeof error === 'object' && error !== null && 'response' in error) {
-    const response = (error as { response?: { data?: { detail?: string } } }).response;
-    return response?.data?.detail || defaultMessage;
+    const response = (error as { response?: { data?: { detail?: string; error?: string } } }).response;
+    return response?.data?.error || response?.data?.detail || defaultMessage;
   }
   return defaultMessage;
 }
