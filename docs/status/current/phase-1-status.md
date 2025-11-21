@@ -1,11 +1,11 @@
 # Phase 1 MVP - Implementation Status
 
-**Last Updated:** November 17, 2025  
+**Last Updated:** November 21, 2025  
 **Phase Duration:** 6-9 months  
 **Current Status:** In Progress  
-**Progress:** 42% (Stages 1-4,6,14: Complete | Stage 5: In Progress | Stages 7-13: Planned)  
+**Progress:** 48% (Stages 1-4,6,14: Complete | Stage 5,15: In Progress | Stages 7-13: Planned)  
 **Release Stage:** Alpha (0.1.0-alpha.1)  
-**Recent Update:** All Phase 1 stages migrated to Forgejo (137 issues total)
+**Recent Update:** Added Community Service MVP (Stage 15) and comprehensive integration tests
 
 **🔗 Forgejo Tracking:** [View All Phase 1 Issues](http://localhost:3000/henrik/unity_platform/issues?milestone=1) | [Milestone v0.1.0-alpha.2](http://localhost:3000/henrik/unity_platform/milestones)
 
@@ -14,7 +14,7 @@
 ## 📊 Overall Progress
 
 ```text
-[████████░░░░░░░░░░░░] 42% Complete
+[██████████░░░░░░░░░░] 48% Complete
 
 Stage 1:  Foundation & Infrastructure        [██████████] 100% → Forgejo #42-#47 (closed)
 Stage 2:  Database Schema & Migrations       [██████████] 100% → Forgejo #48-#50 (closed)
@@ -30,53 +30,48 @@ Stage 11: Translation Service                [░░░░░░░░░░]  0
 Stage 12: Frontend Course & Forum UI         [░░░░░░░░░░]  0% → Forgejo #99-#108 (open)
 Stage 13: Testing, Documentation & Deployment[░░░░░░░░░░]  0% → Forgejo #109-#119 (open)
 Stage 14: Utility Service & Language Registry[██████████] 100% → Forgejo #120-#136 (closed)
+Stage 15: Community Service MVP              [░░░░░░░░░░]  0% → Forgejo #158-#164 (open)
 ```
 
-**Total Issues:** 137 (55 closed, 82 open)  
+**Total Issues:** 144 (57 closed, 87 open)  
 **Closed Issues:** Historical work (Stages 1-4, 6, 14)  
-**Open Issues:** Active development (Stage 5) + Future work (Stages 7-13)
+**Open Issues:** Active development (Stage 5, 15) + Future work (Stages 7-13)
 
 ---
 
 ## 🎯 Current Sprint
 
-**Sprint:** Sprint 10 - Forgejo Migration Complete  
-**Sprint Goal:** Migrate all Phase 1 stages to Forgejo for comprehensive project tracking  
-**Sprint Dates:** November 17, 2025  
+**Sprint:** Sprint 10 - Community Service & Integration Tests  
+**Sprint Goal:** Implement Community Service MVP and ensure robust integration testing  
+**Sprint Dates:** November 21, 2025  
 **Team Members:** Henrik  
-**Status:** ✅ Complete - All 137 issues created in Forgejo
+**Status:** 🚧 In Progress
 
 ### Active Tasks
 
-- 🎯 **Next**: Continue Stage 5 Frontend Development
-  - Work through issues #4-#30 systematically
+- 🎯 **Next**: Implement Community Service MVP (Backend)
+  - Work through issues #158-#164
   - Track progress in [Forgejo Milestone](http://localhost:3000/henrik/unity_platform/milestones)
-  - View by label: [Frontend](http://localhost:3000/henrik/unity_platform/issues?labels=14) | [High Priority](http://localhost:3000/henrik/unity_platform/issues?labels=1)
 
 ### Completed This Sprint
 
-- ✅ **Forgejo Issue Migration (Stage 5)**
-  - Created 27 detailed issues for Frontend Auth & Profile (#4-#30)
-  - All issues tagged with priority/high|medium|low
-  - All issues assigned to milestone v0.1.0-alpha.2
-  - All issues labeled with area/frontend-app
-  - Detailed acceptance criteria included for each issue
+- ✅ **Integration Testing Framework**
+  - Implemented comprehensive integration tests for `auth-service` (Login, Refresh, Logout)
+  - Added health check handlers to all services
+  - Created integration tests for `badge`, `territory`, `user`, and `utility` services
+  - Verified all tests pass with `./scripts/dev/run-tests.sh`
 
-- ✅ **Forgejo API Scripts**
-  - Created scripts/forgejo/ directory with automation tools
-  - create-issue.sh - Quick CLI issue creator
-  - create-from-roadmap.sh - Interactive issue creator
-  - list-labels.sh, list-milestones.sh - Utilities
-  - Fixed label format (priority/high vs priority:high)
-  - All scripts tested and working
+- ✅ **Community Service Planning**
+  - Defined "Physical Communities" vs "Interest Bubbles" architecture
+  - Updated microservices architecture documentation
+  - Created detailed issues for Backend and Frontend implementation (#158-#164)
 
 - ✅ **Documentation Updates**
-  - Updated phase-1-status.md to reference Forgejo
-  - Created QUICKSTART.md for 5-minute setup
-  - Created comprehensive README.md for scripts
-  - Stage 5 tasks marked as migrated
+  - Updated README.md with correct project structure and URLs
+  - Updated port allocation and service status
+  - Refined API documentation for Community Service
 
-### Previous Sprint Completions (Sprint 8)
+### Previous Sprint Completions (Sprint 9)
 
 - ✅ **Utility-service complete (port 8014)**
   - Favicon fetching endpoint with URL validation and SSRF protection
