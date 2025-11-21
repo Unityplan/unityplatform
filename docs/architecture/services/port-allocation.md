@@ -53,15 +53,15 @@
 | 8003 | event-service | 📋 Planned | Phase 2 | Events & calendar |
 | 8004 | invitation-service | ⏳ Scaffolded | Phase 1 | Invitation management & trust graph |
 | 8005 | notification-service | ⏳ Scaffolded | Phase 1 | Notifications & email |
-| 8006 | community-service | ⏳ Scaffolded | Phase 2 | Communities & membership |
-| 8007 | badge-service | ✅ Complete | Phase 2 | Gamification & achievements |
-| 8008 | territory-service | ✅ Complete | Phase 2 | Pod management & federation |
+| 8006 | community-service | 🚧 In Development | Phase 1 | Communities & membership |
+| 8007 | badge-service | ✅ Complete | Phase 1 | Gamification & achievements |
+| 8008 | territory-service | ✅ Complete | Phase 1 | Pod management & federation |
 | 8009 | course-service | 📋 Planned | Phase 2 | LMS & certifications |
 | 8010 | forum-service | 📋 Planned | Phase 2 | Matrix-based forums |
 | 8011 | translation-service | 📋 Planned | Phase 2 | i18n & community translations |
 | 8012 | ipfs-service | 📋 Planned | Phase 2 | Decentralized file storage |
 | 8013 | _(reserved)_ | - | - | Reserved for future services |
-| 8014 | utility-service | 🚧 In Development | Phase 1 | Favicon fetching, utilities (no DB) |
+| 8014 | utility-service | ✅ Complete | Phase 1 | Favicon fetching, utilities (no DB) |
 
 ### Reserved Ranges
 
@@ -70,7 +70,7 @@
   - 8001-8002: Phase 1 core services (auth, user with settings)
   - 8003: Phase 2 event service (events & calendar)
   - 8004-8005: Phase 1 services (invitations, notifications)
-  - 8006-8008: Phase 2 core services (community, badge, territory)
+  - 8006-8008: Phase 1 core services (community, badge, territory)
   - 8009-8012: Phase 2 advanced services (course, forum, translation, ipfs)
   - 8013: Reserved for future services
   - 8014: Infrastructure utilities (favicon, QR codes, etc.) - Phase 1

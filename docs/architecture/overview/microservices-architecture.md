@@ -422,20 +422,24 @@ POST   /v1/notifications/send               - Create notification (internal)
 
 ### **6. community-service (Port 8006)** 👥
 
-**Bounded Context:** Communities & Groups
+**Bounded Context:** Communities, Guilds & Social Structures
 
 **Responsibilities:**
 
-- Community creation and management
-- Membership management
-- Community settings and permissions
-- Community roles (admin/moderator/member)
+- **Physical Communities ("Stalk Joints")**: Managing geographic communities (Cities, Villages) linked to territories.
+- **Interest Bubbles ("Leaves")**: Managing Guilds, Study Groups, and interest-based circles.
+- **Membership**: Managing members, roles, and join requests.
+- **Community Manager Badge**: Creating and assigning the `community-manager` badge required for governance.
+- **Settings**: Privacy, visibility, and join policies.
 
 **Database Tables (Owns):**
 
 ```sql
 territory_{code}.communities
-  - id, name, slug, description
+  - id, slug, name, description
+  - type (physical, guild, study_group)
+  - territory_id (FK to territory-service for physical)
+  - parent_community_id (Self-ref FK for nesting)
   - avatar_url, banner_url
   - is_public, member_count
   - created_by, created_at, updated_at
@@ -454,14 +458,15 @@ territory_{code}.community_settings
 **API Endpoints:**
 
 ```
-GET    /v1/communities                      - List communities
-POST   /v1/communities                      - Create community
-GET    /v1/communities/{id}                 - Get community
+GET    /v1/communities                      - List communities (filter by type/parent)
+POST   /v1/communities                      - Create community (Physical or Bubble)
+GET    /v1/communities/{id}                 - Get community details
 PUT    /v1/communities/{id}                 - Update community
 DELETE /v1/communities/{id}                 - Delete community
 GET    /v1/communities/{id}/members         - List members
 POST   /v1/communities/{id}/members/{user_id} - Add member
 DELETE /v1/communities/{id}/members/{user_id} - Remove member
+POST   /v1/communities/{id}/manager         - Assign manager (awards badge)
 ```
 
 **Service Dependencies:**

@@ -861,7 +861,7 @@ Track progress toward earning a badge (e.g., course completion).
 ## Community Service API
 
 **Base URL:** `/v1/communities`  
-**Port:** 8010  
+**Port:** 8006  
 **Database:** `territory_{id}.communities`
 
 ### Endpoints
@@ -874,7 +874,7 @@ GET /v1/communities
 
 **Query Parameters:**
 
-- `type`: `territory`, `guild`
+- `type`: `physical`, `guild`, `study_group`
 - `parent_id`: Filter by parent community
 - `scope`: `global`, `territory`, `community`
 - `search`: Search by name
@@ -888,15 +888,15 @@ GET /v1/communities
   "data": [
     {
       "community_id": "comm-123",
-      "code": "platform_dev",
-      "name": "Platform Development",
-      "description": "Building and maintaining the platform",
+      "code": "permaculture_guild_dk",
+      "name": "Danish Permaculture Guild",
+      "description": "A leaf in the ecosystem for sustainable agriculture enthusiasts",
       "community_type": "guild",
       "join_policy": "badge_required",
       "access_badge_id": "badge-456",
-      "parent_id": null,
-      "scope": "global",
-      "scope_id": null,
+      "parent_id": "comm-cph-physical",
+      "scope": "territory",
+      "scope_id": "territory-dk-uuid",
       "member_count": 47,
       "icon_url": "ipfs://Qm...",
       "created_at": "2025-01-01T00:00:00Z",
@@ -931,17 +931,17 @@ POST /v1/communities
 
 ```json
 {
-  "code": "beekeepers_dk",
-  "name": "Danish Beekeepers Guild",
-  "description": "Guild for beekeeping enthusiasts in Denmark",
-  "community_type": "guild",
+  "code": "urban_beekeeping_cph",
+  "name": "Urban Beekeeping Study Group",
+  "description": "A study group for urban apiarists in Copenhagen",
+  "community_type": "study_group",
   "join_policy": "open",
-  "parent_id": null,
-  "scope": "territory",
-  "scope_id": "territory-dk-uuid",
+  "parent_id": "comm-cph-physical",
+  "scope": "community",
+  "scope_id": "comm-cph-physical",
   "icon_url": "ipfs://Qm...",
   "metadata": {
-    "topics": ["beekeeping", "sustainability", "nature"]
+    "topics": ["beekeeping", "urban-farming", "biodiversity"]
   }
 }
 ```
@@ -2304,22 +2304,23 @@ Accept: application/vnd.platform.v1+json
 
 ### Implementation Priority (MVP Phase 1)
 
-1. ✅ **Authentication Service** - Core login/JWT (STARTED)
-2. ✅ **User Service** - Profiles, settings (STARTED)
-3. 🔲 **Badge Service** - Access control foundation
-4. 🔲 **Community Service** - Territory/guild communities
-5. 🔲 **Notification Service** - Badge expiry warnings
-6. 🔲 **Event Service** - Community calendar
-7. 🔲 **Course Service** - LMS basics (defer to Phase 2)
-8. 🔲 **Forum Service** - Build on groups system (defer to Phase 2)
+1. ✅ **Authentication Service** - Core login/JWT (COMPLETE)
+2. ✅ **User Service** - Profiles, settings (COMPLETE)
+3. ✅ **Territory Service** - Pod management (COMPLETE)
+4. ✅ **Badge Service** - Access control foundation (COMPLETE)
+5. ✅ **Utility Service** - Favicon/Language tools (COMPLETE)
+6. 🚧 **Community Service** - Physical & Bubble communities (IN PROGRESS)
+7. ⏳ **Invitation Service** - Trust graph (SCAFFOLDED)
+8. ⏳ **Notification Service** - Alerts & Email (SCAFFOLDED)
 
 ### Phase 2 Extensions
 
-- Matrix Gateway integration
-- Translation service
-- Advanced LMS features
-- Forum system with groups
-- File upload service (IPFS)
+- Event Service (Calendar)
+- Course Service (LMS)
+- Forum Service (Matrix-based)
+- Translation Service
+- IPFS Service
+- Matrix Gateway
 
 ### Testing Requirements
 
@@ -2339,6 +2340,6 @@ Each service must include:
 
 ---
 
-**Document Status:** Ready for Implementation  
-**Next Action:** Begin Badge Service API implementation  
-**Dependencies:** Database schema (COMPLETE), shared-lib (IN PROGRESS)
+**Document Status:** Active Reference  
+**Next Action:** Implement Community Service MVP  
+**Dependencies:** Database schema (COMPLETE), shared-lib (COMPLETE)
