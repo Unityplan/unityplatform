@@ -94,13 +94,13 @@ export function StructureMap() {
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
-                            variant={!showOnlyPhysical ? "default" : "outline"}
+                            variant={showOnlyPhysical ? "default" : "outline"}
                             size="sm"
                             onClick={() => setShowOnlyPhysical(!showOnlyPhysical)}
-                            className="h-8 text-xs"
+                            className="h-9"
                         >
-                            <MapPin className="mr-2 h-3 w-3" />
-                            Show only physical level
+                            <MapPin className="mr-2 h-4 w-4" />
+                            {showOnlyPhysical ? "Showing Physical Only" : "Show Physical Only"}
                         </Button>
                     </div>
                 </div>
@@ -124,6 +124,27 @@ export function StructureMap() {
 function buildTree(communities: Community[], requirementsMap: Map<string, EffectiveBadgeRequirement[]>): TreeNode[] {
     const map = new Map<string, TreeNode>()
     const roots: TreeNode[] = []
+
+    // Sort order: Zone first, then Neighborhood, then Group, then others
+    const getTypeSortOrder = (type: CommunityType): number => {
+        switch (type) {
+            case CommunityType.Zone: return 0
+            case CommunityType.Neighborhood: return 1
+            case CommunityType.Group: return 2
+            case CommunityType.Guild: return 3
+            case CommunityType.StudyGroup: return 4
+            default: return 5
+        }
+    }
+
+    const sortNodes = (nodes: TreeNode[]): TreeNode[] => {
+        return nodes.sort((a, b) => {
+            const typeOrder = getTypeSortOrder(a.type) - getTypeSortOrder(b.type)
+            if (typeOrder !== 0) return typeOrder
+            // Same type: sort alphabetically by name
+            return a.name.localeCompare(b.name)
+        })
+    }
 
     // Helper to get non-CoC badge requirements, deduplicated
     const getBadgeRequirements = (communityId: string) => {
@@ -163,7 +184,21 @@ function buildTree(communities: Community[], requirementsMap: Map<string, Effect
         }
     })
 
-    return roots
+    // Third pass: sort all children recursively
+    const sortChildrenRecursive = (nodes: TreeNode[]) => {
+        for (const node of nodes) {
+            if (node.children.length > 0) {
+                node.children = sortNodes(node.children)
+                sortChildrenRecursive(node.children)
+            }
+        }
+    }
+
+    // Sort roots and all children
+    const sortedRoots = sortNodes(roots)
+    sortChildrenRecursive(sortedRoots)
+
+    return sortedRoots
 }
 
 function getIconColors(type: CommunityType) {
