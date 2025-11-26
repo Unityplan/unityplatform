@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { communityService, CommunityType } from '@/api/community'
+import { communityService, CommunityType, type EffectiveBadgeRequirement } from '@/api/community'
 import { territoryService } from '@/api/territory'
-import { Loader2, Home, Map as MapIcon, Hammer, Users, BookOpen } from 'lucide-react'
+import { Loader2, Home, Map as MapIcon, Hammer, Users, BookOpen, Shield, Package, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Link } from '@tanstack/react-router'
 import { AppLayout } from '@/components/layouts/AppLayout'
 import {
@@ -16,8 +17,10 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { useAuthStore } from '@/stores/authStore'
+import { hasBadge } from '@/types/auth'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useMemo } from 'react'
 
 function getIconColors(type: CommunityType) {
     switch (type) {
@@ -29,6 +32,8 @@ function getIconColors(type: CommunityType) {
             return "border-amber-500 text-amber-600 dark:text-amber-400"
         case CommunityType.StudyGroup:
             return "border-purple-500 text-purple-600 dark:text-purple-400"
+        case CommunityType.Group:
+            return "border-orange-500 text-orange-600 dark:text-orange-400"
         default:
             return "border-gray-500 text-gray-600"
     }
@@ -66,6 +71,35 @@ function CommunityDetail() {
         enabled: !!communityId && !!user,
     })
 
+    // Fetch badge requirements
+    const { data: requirements } = useQuery({
+        queryKey: ['community-requirements', communityId],
+        queryFn: () => communityService.getEffectiveRequirements(communityId),
+        enabled: !!communityId,
+    })
+
+    // Deduplicate requirements (prefer direct over inherited, exclude CoC)
+    const badgeRequirements = useMemo(() => {
+        if (!requirements) return []
+        const byBadge = new Map<string, EffectiveBadgeRequirement>()
+        for (const req of requirements) {
+            if (req.badgeSlug === 'code-of-conduct') continue
+            const existing = byBadge.get(req.badgeId)
+            if (!existing || (!req.isInherited && existing.isInherited)) {
+                byBadge.set(req.badgeId, req)
+            }
+        }
+        return Array.from(byBadge.values())
+    }, [requirements])
+
+    // Check if user has all required badges
+    const missingBadges = useMemo(() => {
+        if (!badgeRequirements.length) return []
+        return badgeRequirements.filter(req => !hasBadge(user, req.badgeSlug))
+    }, [badgeRequirements, user])
+
+    const hasAllBadges = missingBadges.length === 0
+
     // Check if current user is a manager (closest distance)
     const isManager = managers && user && managers.length > 0 && (() => {
         const minDistance = Math.min(...managers.map(m => m.distance))
@@ -79,7 +113,17 @@ function CommunityDetail() {
             refetchMembership()
             queryClient.invalidateQueries({ queryKey: ['community', communityId] })
         },
-        onError: () => toast.error('Failed to join community'),
+        onError: (error: unknown) => {
+            // Check for 403 Forbidden (missing badges)
+            if (error && typeof error === 'object' && 'response' in error) {
+                const response = (error as { response?: { status?: number; data?: { message?: string } } }).response
+                if (response?.status === 403) {
+                    toast.error(response.data?.message || 'Missing required badges to join this community')
+                    return
+                }
+            }
+            toast.error('Failed to join community')
+        },
     })
 
     const leaveMutation = useMutation({
@@ -229,6 +273,47 @@ function CommunityDetail() {
                                         </dd>
                                     </div>
                                 )}
+                                {badgeRequirements.length > 0 && (
+                                    <div>
+                                        <dt className="font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                                            <Shield className="h-4 w-4" />
+                                            Required Badges
+                                        </dt>
+                                        <dd className="space-y-2">
+                                            {badgeRequirements.map((req) => {
+                                                const userHasBadge = hasBadge(user, req.badgeSlug)
+                                                return (
+                                                    <div key={req.badgeId} className="flex items-center gap-2">
+                                                        <Badge
+                                                            variant={userHasBadge ? "default" : "outline"}
+                                                            className={cn(
+                                                                "text-xs",
+                                                                !userHasBadge && "border-destructive/50 text-destructive"
+                                                            )}
+                                                        >
+                                                            {userHasBadge ? (
+                                                                <Shield className="mr-1 h-3 w-3" />
+                                                            ) : (
+                                                                <Lock className="mr-1 h-3 w-3" />
+                                                            )}
+                                                            {req.badgeName}
+                                                        </Badge>
+                                                        {req.isInherited && (
+                                                            <span className="text-[10px] text-muted-foreground">
+                                                                from {req.sourceCommunityName}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                            {!hasAllBadges && (
+                                                <p className="text-xs text-destructive mt-2">
+                                                    You need all required badges to join this community.
+                                                </p>
+                                            )}
+                                        </dd>
+                                    </div>
+                                )}
                             </dl>
 
                             <div className="mt-6">
@@ -245,6 +330,20 @@ function CommunityDetail() {
                                 ) : community.type === CommunityType.Zone ? (
                                     <div className="text-center text-sm text-muted-foreground p-2 bg-muted rounded-md">
                                         Zones are administrative areas and cannot be joined directly.
+                                    </div>
+                                ) : !hasAllBadges && badgeRequirements.length > 0 ? (
+                                    <div className="space-y-2">
+                                        <Button
+                                            className="w-full"
+                                            disabled
+                                            variant="outline"
+                                        >
+                                            <Lock className="mr-2 h-4 w-4" />
+                                            Badge Required
+                                        </Button>
+                                        <p className="text-xs text-center text-muted-foreground">
+                                            Obtain the required badges to join
+                                        </p>
                                     </div>
                                 ) : (
                                     <Button
@@ -275,6 +374,8 @@ function getCommunityIcon(type: CommunityType) {
             return Hammer // Tool icon for Guild
         case CommunityType.StudyGroup:
             return BookOpen
+        case CommunityType.Group:
+            return Package
         default:
             return Users
     }
