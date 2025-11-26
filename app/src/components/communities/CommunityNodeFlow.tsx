@@ -882,11 +882,24 @@ function CommunityNodeFlowInner() {
         return badges.filter(b => selectedBadgeIds.includes(b.id))
     }, [selectedBadgeIds, badges])
 
-    // Get requirements for selected community
+    // Get requirements for selected community, deduplicating by badge
+    // If same badge is both direct and inherited, show only the direct one
     const selectedRequirements = useMemo(() => {
         if (!selectedCommunityId || !allRequirements) return []
         const found = allRequirements.find(r => r.communityId === selectedCommunityId)
-        return found?.requirements || []
+        const requirements = found?.requirements || []
+
+        // Deduplicate: group by badgeId, prefer direct (isInherited=false) over inherited
+        const byBadge = new Map<string, EffectiveBadgeRequirement>()
+        for (const req of requirements) {
+            const existing = byBadge.get(req.badgeId)
+            // Keep the direct one (not inherited), or first if both are inherited
+            if (!existing || (!req.isInherited && existing.isInherited)) {
+                byBadge.set(req.badgeId, req)
+            }
+        }
+
+        return Array.from(byBadge.values())
     }, [selectedCommunityId, allRequirements])
 
     // Check membership for selected community
