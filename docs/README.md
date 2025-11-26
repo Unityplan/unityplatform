@@ -29,6 +29,7 @@ Learn how the system is designed and structured.
 - **[Infrastructure](architecture/infrastructure.md)** - Infrastructure design and pod architecture
 - **[Multi-Pod Architecture](architecture/multi-pod-architecture.md)** - Distributed pod deployment model
 - **[Territory Management Standard](architecture/territory-management-standard.md)** - **CRITICAL** Territory ID format standard (countries, First Nations, communities)
+- **[Security & Authentication](architecture/security-authentication.md)** - JWT-based auth, badge permissions, service security matrix
 
 ### 🛠️ Implementation Guides (DO)
 

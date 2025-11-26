@@ -11,7 +11,7 @@ use uuid::Uuid;
 const PLATFORM_MANAGER_BADGE: &str = "platform-manager";
 
 /// Register a new badge (Platform Manager only)
-/// 
+///
 /// Creates a new badge definition in the global registry.
 /// Only users with the Platform Manager badge can register new badges.
 #[utoipa::path(
