@@ -5,6 +5,8 @@ import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import { Link } from '@tanstack/react-router'
 import {
     Tooltip,
@@ -92,16 +94,16 @@ export function StructureMap() {
                         <MapIcon className="h-5 w-5 text-primary" />
                         <h3 className="text-lg font-semibold">Ecosystem Structure</h3>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant={showOnlyPhysical ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setShowOnlyPhysical(!showOnlyPhysical)}
-                            className="h-9"
-                        >
-                            <MapPin className="mr-2 h-4 w-4" />
-                            {showOnlyPhysical ? "Showing Physical Only" : "Show Physical Only"}
-                        </Button>
+                    <div className="flex items-center gap-3">
+                        <Switch
+                            id="physical-only"
+                            checked={showOnlyPhysical}
+                            onCheckedChange={setShowOnlyPhysical}
+                        />
+                        <Label htmlFor="physical-only" className="flex items-center gap-2 cursor-pointer">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span>Physical only</span>
+                        </Label>
                     </div>
                 </div>
 
