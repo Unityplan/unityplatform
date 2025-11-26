@@ -691,12 +691,13 @@ function CommunityNodeFlowInner() {
             }
 
             // Helper to get ALL badge requirements for a community (excluding CoC)
+            // Uses EffectiveBadgeRequirement which already has badgeName
             const getNonCocBadgeRequirements = (community: CommunityWithReqs): Array<{ id: string; name: string }> => {
                 const requirements = community.requirements || []
                 return requirements
-                    .map(r => badges.find(b => b.id === r.badge_id))
-                    .filter(badge => badge && (!cocBadge || badge.id !== cocBadge.id))
-                    .map(badge => ({ id: badge!.id, name: badge!.name }))
+                    .filter(r => !cocBadge || r.badgeId !== cocBadge.id)
+                    .filter(r => r.badgeSlug !== 'code-of-conduct') // Also filter by slug as fallback
+                    .map(r => ({ id: r.badgeId, name: r.badgeName }))
             }
 
             // 2. Build Nodes and Edges

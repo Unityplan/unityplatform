@@ -49,12 +49,14 @@ pub struct Claims {
 ### Badge Slugs in JWT
 
 When a user logs in or refreshes their token, the auth-service:
+
 1. Fetches all active badges for the user
 2. Includes badge slugs in the JWT claims
 3. Token is valid for 15 minutes
 4. Refresh token updates badges automatically
 
 **Benefits:**
+
 - No database lookup needed for permission checks
 - Low latency authorization decisions
 - Badges validated locally by each service
@@ -232,4 +234,3 @@ User authenticated but lacks required permissions.
 2. **Rate limiting** - Per-user and per-IP limits
 3. **Audit logging** - Track administrative actions
 4. **Token revocation** - Immediate logout capability
-
