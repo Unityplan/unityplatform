@@ -4,10 +4,16 @@ use crate::models::{
 };
 use crate::services::badge;
 use actix_web::{web, FromRequest, HttpRequest, HttpResponse};
-use shared_lib::{AuthUser, Database, NatsClient, Result, ValidatedJson};
+use shared_lib::{AppError, AuthUser, Database, NatsClient, Result, ValidatedJson};
 use uuid::Uuid;
 
-/// Register a new badge (service-to-service)
+/// Platform Manager badge slug - required for administrative badge operations
+const PLATFORM_MANAGER_BADGE: &str = "platform-manager";
+
+/// Register a new badge (Platform Manager only)
+/// 
+/// Creates a new badge definition in the global registry.
+/// Only users with the Platform Manager badge can register new badges.
 #[utoipa::path(
     post,
     path = "/api/v1/badges/register",
@@ -15,13 +21,26 @@ use uuid::Uuid;
     request_body = RegisterBadgeRequest,
     responses(
         (status = 201, description = "Badge registered successfully", body = BadgeResponse),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden - requires Platform Manager badge"),
         (status = 409, description = "Badge already exists"),
+    ),
+    security(
+        ("bearer_auth" = [])
     )
 )]
 pub async fn register_badge(
+    auth: AuthUser,
     body: ValidatedJson<RegisterBadgeRequest>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse> {
+    // Only Platform Managers can register new badges
+    if !auth.has_badge(PLATFORM_MANAGER_BADGE) {
+        return Err(AppError::Forbidden(
+            "Only Platform Managers can register new badges".into(),
+        ));
+    }
+
     let badge = badge::register_badge(&db, body.into_inner()).await?;
     Ok(HttpResponse::Created().json(badge))
 }
@@ -58,10 +77,15 @@ pub async fn list_badges(req: HttpRequest, db: web::Data<Database>) -> Result<Ht
     ),
     responses(
         (status = 200, description = "User's badges", body = Vec<UserBadgeResponse>),
+        (status = 401, description = "Unauthorized"),
         (status = 404, description = "User not found"),
+    ),
+    security(
+        ("bearer_auth" = [])
     )
 )]
 pub async fn get_user_badges(
+    _auth: AuthUser, // Require authentication to view user badges
     user_id: web::Path<Uuid>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse> {
@@ -69,7 +93,10 @@ pub async fn get_user_badges(
     Ok(HttpResponse::Ok().json(badges))
 }
 
-/// Award a badge to a user (admin/system only)
+/// Award a badge to a user (Platform Manager only)
+///
+/// Awards a badge to a user. Only users with the Platform Manager badge
+/// can manually award badges. System-awarded badges are handled via progress updates.
 #[utoipa::path(
     post,
     path = "/api/v1/badges/award",
@@ -78,6 +105,8 @@ pub async fn get_user_badges(
     responses(
         (status = 201, description = "Badge awarded successfully"),
         (status = 400, description = "User already has badge"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden - requires Platform Manager badge"),
         (status = 404, description = "Badge not found"),
     ),
     security(
@@ -85,17 +114,24 @@ pub async fn get_user_badges(
     )
 )]
 pub async fn award_badge(
-    _auth: AuthUser, // TODO: Check for Platform Manager badge
+    auth: AuthUser,
     body: ValidatedJson<AwardBadgeRequest>,
     db: web::Data<Database>,
     nats: web::Data<NatsClient>,
 ) -> Result<HttpResponse> {
+    // Only Platform Managers can manually award badges
+    if !auth.has_badge(PLATFORM_MANAGER_BADGE) {
+        return Err(AppError::Forbidden(
+            "Only Platform Managers can award badges".into(),
+        ));
+    }
+
     let award_id = badge::award_badge(
         &db,
         &nats,
         body.user_id,
         &body.badge_slug,
-        None, // TODO: Use auth.id when Platform Manager check is implemented
+        Some(auth.id), // Record who awarded the badge
         body.reason.clone(),
     )
     .await?;
@@ -106,7 +142,10 @@ pub async fn award_badge(
     })))
 }
 
-/// Revoke a badge from a user (admin/system only)
+/// Revoke a badge from a user (Platform Manager only)
+///
+/// Revokes a badge from a user. Only users with the Platform Manager badge
+/// can manually revoke badges.
 #[utoipa::path(
     post,
     path = "/api/v1/badges/revoke",
@@ -114,6 +153,8 @@ pub async fn award_badge(
     request_body = RevokeBadgeRequest,
     responses(
         (status = 200, description = "Badge revoked successfully"),
+        (status = 401, description = "Unauthorized"),
+        (status = 403, description = "Forbidden - requires Platform Manager badge"),
         (status = 404, description = "Badge not found or user doesn't have it"),
     ),
     security(
@@ -121,11 +162,18 @@ pub async fn award_badge(
     )
 )]
 pub async fn revoke_badge(
-    _auth: AuthUser, // TODO: Check for Platform Manager badge
+    auth: AuthUser,
     body: ValidatedJson<RevokeBadgeRequest>,
     db: web::Data<Database>,
     nats: web::Data<NatsClient>,
 ) -> Result<HttpResponse> {
+    // Only Platform Managers can revoke badges
+    if !auth.has_badge(PLATFORM_MANAGER_BADGE) {
+        return Err(AppError::Forbidden(
+            "Only Platform Managers can revoke badges".into(),
+        ));
+    }
+
     badge::revoke_badge(
         &db,
         &nats,
