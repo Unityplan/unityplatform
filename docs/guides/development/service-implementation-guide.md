@@ -21,6 +21,7 @@ This guide provides step-by-step instructions for implementing business logic in
 9. [Authentication & Authorization](#authentication--authorization)
 10. [Testing](#testing)
 11. [Examples](#examples)
+12. [Frontend Integration](#frontend-integration)
 
 ---
 
@@ -1025,6 +1026,54 @@ use uuid::Uuid;
 
 ---
 
+## Frontend Integration
+
+### Development vs. Production
+
+When integrating your new service with the frontend, you must handle the difference between local development and production environments.
+
+#### Development (Vite Proxy)
+
+In development (`npm run dev`), we use **Vite's Proxy** to act as a local API Gateway. This unifies all microservices (running on different ports) under a single origin (`localhost:5173`), avoiding CORS issues and simplifying configuration.
+
+**Action Required:**
+Update `app/vite.config.ts` to proxy your service's API path to its local port.
+
+```typescript
+// app/vite.config.ts
+proxy: {
+  // ... existing proxies
+  '/api/v1/your-service': {
+    target: 'http://localhost:80XX', // Your service port
+    changeOrigin: true,
+  },
+}
+```
+
+#### Production (Environment Variables)
+
+In production, we use **Environment Variables** to point to the real service URLs (or a real API Gateway). The Vite proxy is NOT used in production builds.
+
+**Action Required:**
+Ensure your API client uses the correct base URL strategy.
+
+```typescript
+// app/src/api/your-service.ts
+import { apiClient } from '@/lib/api-client'
+
+// apiClient automatically handles the base URL from VITE_API_URL
+// or defaults to the proxy in development.
+```
+
+**Why do we need the proxy if we have env vars?**
+
+- **Dev:** `VITE_API_URL` should be **empty** in `.env.development`. This forces the frontend to use relative paths (e.g., `/api/v1/auth`), which the Vite Proxy intercepts and routes to the correct backend port (8001, 8002, etc.).
+- **Prod:** `VITE_API_URL` points to the real production domain (e.g., `https://api.unityplan.one`), bypassing the proxy entirely.
+
+**Important:** Do NOT set absolute URLs (e.g., `http://localhost:8001`) in `.env.development` if you want to use the proxy, as Axios will bypass the proxy and hit the port directly (causing CORS issues).
+
+---
+
 ## Additional Resources
 
 - **Middleware Guide:** `docs/architecture/services/shared-lib/MIDDLEWARE.md`
@@ -1036,5 +1085,30 @@ use uuid::Uuid;
 
 ---
 
-**Last Updated:** 2025-11-18  
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Service Panic on Startup: "missing field `url`" or similar config error
+
+If your service panics with a configuration error, check your `.env` file. The `AppConfig` struct in `shared-lib` requires specific environment variables.
+
+**Critical Requirement:**
+Ensure `APP__AUTH__JWT_EXPIRATION_HOURS` is set in your `.env` file. This is required by the `AuthConfig` struct but might be missing from older `.env.example` templates.
+
+```dotenv
+# JWT Configuration
+APP__AUTH__JWT_SECRET=dev_jwt_secret_please_change_in_production
+APP__AUTH__JWT_EXPIRATION_HOURS=24  # <--- REQUIRED
+```
+
+#### 2. Database Connection Failures
+
+- Ensure the database container is healthy: `docker ps`
+- Check connection string in `.env`: `APP__DATABASE__URL`
+- Verify the database exists: `psql -h localhost -U unityplatform -l`
+
+---
+
+**Last Updated:** 2025-11-21  
 **Maintainer:** Unity Platform Team

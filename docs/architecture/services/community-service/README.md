@@ -148,26 +148,39 @@ CREATE INDEX idx_community_members_role ON community_members(community_id, role)
 CREATE TABLE territory_{code}.community_settings (
     community_id UUID PRIMARY KEY REFERENCES communities(id) ON DELETE CASCADE,
     
-    -- Member Permissions
-    members_can_invite BOOLEAN DEFAULT true,
-    members_can_post BOOLEAN DEFAULT true,
-    members_can_create_events BOOLEAN DEFAULT false,
-    
-    -- Moderation
-    auto_approve_posts BOOLEAN DEFAULT true,
-    auto_approve_members BOOLEAN DEFAULT true,
-    
-    -- Notifications
-    notify_on_new_member BOOLEAN DEFAULT true,
-    notify_on_new_post BOOLEAN DEFAULT true,
+    -- Access Control
+    inherit_requirements BOOLEAN NOT NULL DEFAULT true,
     
     -- Timestamps
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 
-**Purpose:** Community-specific settings  
+**Purpose:** Configuration settings for communities.
+
+#### **4. community_badge_requirements**
+
+```sql
+CREATE TABLE territory_{code}.community_badge_requirements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    community_id UUID NOT NULL REFERENCES communities(id) ON DELETE CASCADE,
+    badge_id UUID NOT NULL REFERENCES global.registry_badge(id) ON DELETE CASCADE,
+    
+    -- Requirement Context
+    -- 'view': Required to see content
+    -- 'participate': Required to post/comment/join
+    -- 'admin': Required to manage
+    context VARCHAR(50) NOT NULL DEFAULT 'participate',
+    
+    -- Metadata
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    UNIQUE(community_id, badge_id, context),
+    CHECK (context IN ('view', 'participate', 'admin'))
+);
+```
+
+**Purpose:** Links communities to badges required for access/participation.
 **Holochain Entry Type:** `CommunitySettings` (private to admins)
 
 ---

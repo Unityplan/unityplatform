@@ -6,6 +6,31 @@ export interface User {
   territory: string;
   isActive: boolean;
   createdAt: string;
+  /** Badge slugs from JWT claims (e.g., ["code-of-conduct", "community-manager"]) */
+  badges: string[];
+}
+
+/**
+ * Check if a user has a specific badge
+ */
+export function hasBadge(user: User | null, badgeSlug: string): boolean {
+  return user?.badges?.includes(badgeSlug) ?? false;
+}
+
+/**
+ * Check if a user has all specified badges
+ */
+export function hasAllBadges(user: User | null, badgeSlugs: string[]): boolean {
+  if (!user?.badges) return false;
+  return badgeSlugs.every(slug => user.badges.includes(slug));
+}
+
+/**
+ * Check if a user has any of the specified badges
+ */
+export function hasAnyBadge(user: User | null, badgeSlugs: string[]): boolean {
+  if (!user?.badges) return false;
+  return badgeSlugs.some(slug => user.badges.includes(slug));
 }
 
 export interface LoginRequest {

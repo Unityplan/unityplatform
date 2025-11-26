@@ -1,7 +1,8 @@
-use serde::Serialize;
-use uuid::Uuid;
+use crate::models::community::{Community, CommunityRole, CommunityType};
 use chrono::{DateTime, Utc};
-use crate::models::community::{Community, CommunityType, CommunityRole};
+use serde::Serialize;
+use utoipa::ToSchema;
+use uuid::Uuid;
 
 #[derive(Debug, Serialize)]
 pub struct CommunityResponse {
@@ -14,7 +15,6 @@ pub struct CommunityResponse {
     pub parent_community_id: Option<Uuid>,
     pub avatar_url: Option<String>,
     pub banner_url: Option<String>,
-    pub is_public: bool,
     pub member_count: i32,
     pub created_at: DateTime<Utc>,
     pub user_membership: Option<UserMembershipResponse>,
@@ -39,10 +39,48 @@ impl From<Community> for CommunityResponse {
             parent_community_id: c.parent_community_id,
             avatar_url: c.avatar_url,
             banner_url: c.banner_url,
-            is_public: c.is_public,
             member_count: c.member_count,
             created_at: c.created_at,
             user_membership: None, // Populated separately if needed
         }
     }
+}
+
+/// Summary of child groups (Guilds and Study Groups) under a community
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupSummary {
+    /// The parent community ID this summary is for
+    pub community_id: Uuid,
+    /// Number of direct child guilds
+    pub guild_count: i32,
+    /// Number of direct child study groups
+    pub study_group_count: i32,
+    /// Total number of guilds (including nested)
+    pub total_guild_count: i32,
+    /// Total number of study groups (including nested)
+    pub total_study_group_count: i32,
+    /// Total member count across all child groups
+    pub total_members: i32,
+    /// Whether any direct child group has a badge requirement
+    pub has_badge_requirement: bool,
+    /// Name of the first badge requirement found (if any)
+    pub badge_name: Option<String>,
+    /// ID of the first badge requirement found (if any)
+    pub badge_id: Option<Uuid>,
+    /// List of direct child communities (only Guild/StudyGroup types)
+    pub children: Vec<GroupChild>,
+}
+
+/// A child group community summary
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupChild {
+    pub id: Uuid,
+    pub name: String,
+    pub slug: String,
+    pub community_type: CommunityType,
+    pub member_count: i32,
+    pub has_badge_requirement: bool,
+    pub badge_name: Option<String>,
 }

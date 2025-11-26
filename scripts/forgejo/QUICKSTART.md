@@ -184,7 +184,7 @@ nano .env
 ./list-labels.sh
 
 # Use exact label names from the list
-./create-issue.sh "My Issue" "Description" "priority:high,type:feature"
+./create-issue.sh "My Issue" "Description" "priority/high,type/feature"
 ```
 
 ---

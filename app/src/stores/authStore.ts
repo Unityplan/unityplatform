@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AuthStore, LoginRequest, RegisterRequest, User } from '@/types/auth';
 import * as authApi from '@/api/auth';
 import { getFullProfile } from '@/api/users';
+import { parseJwt } from '@/lib/utils';
 
 /**
  * Extract error message from API error
@@ -119,8 +120,17 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
           });
         } catch (error: unknown) {
-          // If refresh fails, clear auth state and throw
-          get().clearAuth();
+          // Only clear auth if it's a 401/403 error (invalid token)
+          // or if it's a specific "invalid_grant" error
+          const isAuthError = 
+            (typeof error === 'object' && error !== null && 'response' in error && 
+              ((error as any).response?.status === 401 || (error as any).response?.status === 403)) ||
+            getErrorMessage(error, '').includes('invalid_grant');
+
+          if (isAuthError) {
+            get().clearAuth();
+          }
+          
           const errorMessage = getErrorMessage(error, 'Token refresh failed');
           set({ error: errorMessage, isLoading: false });
           throw error;
@@ -135,6 +145,11 @@ export const useAuthStore = create<AuthStore>()(
 
         set({ isLoading: true, error: null });
         try {
+          // Parse JWT to extract claims (badges, territory)
+          const claims = parseJwt(accessToken);
+          const badges = claims?.badges ?? [];
+          const territory = claims?.territory ?? 'dk';
+
           // Fetch user profile from user-service
           const profile = await getFullProfile();
           
@@ -144,9 +159,10 @@ export const useAuthStore = create<AuthStore>()(
             username: profile.username,
             email: profile.email || '',
             fullName: profile.fullName || null,
-            territory: 'dk', // TODO: Get from JWT token claims
+            territory,
             isActive: true,
             createdAt: profile.createdAt || new Date().toISOString(),
+            badges, // Include badges from JWT claims
           };
           
           set({
@@ -240,6 +256,7 @@ export const useAuthStore = create<AuthStore>()(
         refreshToken: state.refreshToken,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        isLocked: state.isLocked,
       }),
     }
   )

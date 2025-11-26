@@ -1,7 +1,5 @@
 import apiClient from '@/lib/api-client';
 
-const USER_BASE_URL = import.meta.env.VITE_USER_SERVICE_URL || 'http://localhost:8002';
-
 export interface UserProfile {
   id: string;
   username: string;
@@ -207,7 +205,7 @@ export interface ConnectionsListResponse {
  * @returns User profile
  */
 export async function getUserProfile(userId: string): Promise<UserProfile> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/profile/${userId}`);
+  const response = await apiClient.get(`/api/v1/user/profile/${userId}`);
   return response.data; // Backend returns data directly (camelCase)
 }
 
@@ -217,7 +215,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
  * @returns Full user profile
  */
 export async function getFullProfile(): Promise<UserProfile> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/profile`);
+  const response = await apiClient.get('/api/v1/user/profile');
   return response.data; // Backend returns data directly (camelCase)
 }
 
@@ -228,7 +226,7 @@ export async function getFullProfile(): Promise<UserProfile> {
  * @returns Updated profile
  */
 export async function updateProfile(data: UpdateProfileRequest): Promise<UserProfile> {
-  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/user/profile`, data);
+  const response = await apiClient.put('/api/v1/user/profile', data);
   return response.data; // Backend returns data directly (camelCase)
 }
 
@@ -243,7 +241,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<UserProf
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await apiClient.post(`${USER_BASE_URL}/api/v1/avatars/${userId}`, formData, {
+  const response = await apiClient.post(`/api/v1/avatars/${userId}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -258,7 +256,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<UserProf
  * @returns Updated profile without avatar
  */
 export async function deleteAvatar(userId: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/avatars/${userId}`);
+  await apiClient.delete(`/api/v1/avatars/${userId}`);
 }
 
 /**
@@ -267,7 +265,7 @@ export async function deleteAvatar(userId: string): Promise<void> {
  * @param targetId - Target user ID to follow
  */
 export async function followUser(targetId: string): Promise<void> {
-  await apiClient.post(`${USER_BASE_URL}/api/v1/user/connections/${targetId}/follow`);
+  await apiClient.post(`/api/v1/user/connections/${targetId}/follow`);
 }
 
 /**
@@ -276,7 +274,7 @@ export async function followUser(targetId: string): Promise<void> {
  * @param targetId - Target user ID to unfollow
  */
 export async function unfollowUser(targetId: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/user/connections/${targetId}/follow`);
+  await apiClient.delete(`/api/v1/user/connections/${targetId}/follow`);
 }
 
 /**
@@ -292,7 +290,7 @@ export async function getFollowers(
   limit: number = 20,
   offset: number = 0
 ): Promise<ConnectionsListResponse> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/connections/${userId}/followers`, {
+  const response = await apiClient.get(`/api/v1/user/connections/${userId}/followers`, {
     params: { limit, offset },
   });
   return response.data;
@@ -311,7 +309,7 @@ export async function getFollowing(
   limit: number = 20,
   offset: number = 0
 ): Promise<ConnectionsListResponse> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/connections/${userId}/following`, {
+  const response = await apiClient.get(`/api/v1/user/connections/${userId}/following`, {
     params: { limit, offset },
   });
   return response.data;
@@ -323,7 +321,7 @@ export async function getFollowing(
  * @param targetId - Target user ID to block
  */
 export async function blockUser(targetId: string): Promise<void> {
-  await apiClient.post(`${USER_BASE_URL}/api/v1/user/connections/${targetId}/block`);
+  await apiClient.post(`/api/v1/user/connections/${targetId}/block`);
 }
 
 /**
@@ -332,7 +330,7 @@ export async function blockUser(targetId: string): Promise<void> {
  * @param targetId - Target user ID to unblock
  */
 export async function unblockUser(targetId: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/user/connections/${targetId}/block`);
+  await apiClient.delete(`/api/v1/user/connections/${targetId}/block`);
 }
 
 // ============================================================================
@@ -345,7 +343,7 @@ export async function unblockUser(targetId: string): Promise<void> {
  * @returns List of profile links
  */
 export async function getProfileLinks(): Promise<ProfileLink[]> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/profile/links`);
+  const response = await apiClient.get('/api/v1/user/profile/links');
   return response.data;
 }
 
@@ -356,7 +354,7 @@ export async function getProfileLinks(): Promise<ProfileLink[]> {
  * @returns Created profile link
  */
 export async function createProfileLink(data: CreateProfileLinkRequest): Promise<ProfileLink> {
-  const response = await apiClient.post(`${USER_BASE_URL}/api/v1/user/profile/links`, data);
+  const response = await apiClient.post('/api/v1/user/profile/links', data);
   return response.data;
 }
 
@@ -371,7 +369,7 @@ export async function updateProfileLink(
   linkId: string,
   data: UpdateProfileLinkRequest
 ): Promise<ProfileLink> {
-  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/user/profile/links/${linkId}`, data);
+  const response = await apiClient.put(`/api/v1/user/profile/links/${linkId}`, data);
   return response.data;
 }
 
@@ -381,7 +379,7 @@ export async function updateProfileLink(
  * @param linkId - Link ID to delete
  */
 export async function deleteProfileLink(linkId: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/user/profile/links/${linkId}`);
+  await apiClient.delete(`/api/v1/user/profile/links/${linkId}`);
 }
 
 // ============================================================================
@@ -394,7 +392,7 @@ export async function deleteProfileLink(linkId: string): Promise<void> {
  * @returns List of language proficiencies
  */
 export async function getLanguageProficiencies(): Promise<LanguageProficiency[]> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/profile/languages`);
+  const response = await apiClient.get('/api/v1/user/profile/languages');
   return response.data;
 }
 
@@ -405,7 +403,7 @@ export async function getLanguageProficiencies(): Promise<LanguageProficiency[]>
  * @returns Created language proficiency
  */
 export async function createLanguageProficiency(data: CreateLanguageProficiencyRequest): Promise<LanguageProficiency> {
-  const response = await apiClient.post(`${USER_BASE_URL}/api/v1/user/profile/languages`, data);
+  const response = await apiClient.post('/api/v1/user/profile/languages', data);
   return response.data;
 }
 
@@ -420,7 +418,7 @@ export async function updateLanguageProficiency(
   langId: string,
   data: UpdateLanguageProficiencyRequest
 ): Promise<LanguageProficiency> {
-  const response = await apiClient.put(`${USER_BASE_URL}/api/v1/user/profile/languages/${langId}`, data);
+  const response = await apiClient.put(`/api/v1/user/profile/languages/${langId}`, data);
   return response.data;
 }
 
@@ -430,7 +428,7 @@ export async function updateLanguageProficiency(
  * @param langId - Language proficiency ID to delete
  */
 export async function deleteLanguageProficiency(langId: string): Promise<void> {
-  await apiClient.delete(`${USER_BASE_URL}/api/v1/user/profile/languages/${langId}`);
+  await apiClient.delete(`/api/v1/user/profile/languages/${langId}`);
 }
 
 // ============================================================================
@@ -443,7 +441,7 @@ export async function deleteLanguageProficiency(langId: string): Promise<void> {
  * @returns Complete user settings
  */
 export async function getUserSettings(): Promise<UserSettings> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/settings`);
+  const response = await apiClient.get('/api/v1/user/settings');
   return response.data;
 }
 
@@ -454,7 +452,7 @@ export async function getUserSettings(): Promise<UserSettings> {
  * @returns Updated settings
  */
 export async function updateUserSettings(data: UpdateSettingsRequest): Promise<UserSettings> {
-  const response = await apiClient.patch(`${USER_BASE_URL}/api/v1/user/settings`, data);
+  const response = await apiClient.patch('/api/v1/user/settings', data);
   return response.data;
 }
 
@@ -464,7 +462,7 @@ export async function updateUserSettings(data: UpdateSettingsRequest): Promise<U
  * @returns Privacy settings
  */
 export async function getPrivacySettings(): Promise<PrivacySettings> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/settings/privacy`);
+  const response = await apiClient.get('/api/v1/user/settings/privacy');
   return response.data;
 }
 
@@ -475,7 +473,7 @@ export async function getPrivacySettings(): Promise<PrivacySettings> {
  * @returns Updated privacy settings
  */
 export async function updatePrivacySettings(data: UpdatePrivacySettingsRequest): Promise<PrivacySettings> {
-  const response = await apiClient.patch(`${USER_BASE_URL}/api/v1/user/settings/privacy`, data);
+  const response = await apiClient.patch('/api/v1/user/settings/privacy', data);
   return response.data;
 }
 
@@ -485,7 +483,7 @@ export async function updatePrivacySettings(data: UpdatePrivacySettingsRequest):
  * @returns Notification settings
  */
 export async function getNotificationSettings(): Promise<NotificationSettings> {
-  const response = await apiClient.get(`${USER_BASE_URL}/api/v1/user/settings/notifications`);
+  const response = await apiClient.get('/api/v1/user/settings/notifications');
   return response.data;
 }
 
@@ -496,6 +494,6 @@ export async function getNotificationSettings(): Promise<NotificationSettings> {
  * @returns Updated notification settings
  */
 export async function updateNotificationSettings(data: UpdateNotificationSettingsRequest): Promise<NotificationSettings> {
-  const response = await apiClient.patch(`${USER_BASE_URL}/api/v1/user/settings/notifications`, data);
+  const response = await apiClient.patch('/api/v1/user/settings/notifications', data);
   return response.data;
 }

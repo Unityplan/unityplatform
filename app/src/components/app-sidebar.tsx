@@ -1,4 +1,4 @@
-import { Home, User, Settings, Shield } from "lucide-react"
+import { Home, User, Settings, Shield, Users, LayoutDashboard, Map, Ticket } from "lucide-react"
 import { Link, useRouterState } from "@tanstack/react-router"
 
 import {
@@ -23,6 +23,24 @@ const mainItems = [
         title: "Profile",
         path: "/profile",
         icon: User,
+    },
+]
+
+const communityItems = [
+    {
+        title: "Overview",
+        path: "/communities",
+        icon: LayoutDashboard,
+    },
+    {
+        title: "Structure",
+        path: "/communities/structure",
+        icon: Map,
+    },
+    {
+        title: "Invitations",
+        path: "/communities/invitations",
+        icon: Ticket,
     },
 ]
 
@@ -56,6 +74,23 @@ export function AppSidebar() {
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {mainItems.map((item) => (
+                                <SidebarMenuItem key={item.title}>
+                                    <SidebarMenuButton asChild isActive={pathname === item.path}>
+                                        <Link to={item.path}>
+                                            <item.icon />
+                                            <span>{item.title}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+                <SidebarGroup>
+                    <SidebarGroupLabel>Communities</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            {communityItems.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild isActive={pathname === item.path}>
                                         <Link to={item.path}>

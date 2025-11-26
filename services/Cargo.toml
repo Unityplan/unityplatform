@@ -4,6 +4,7 @@ members = [
     "auth-service",
     "badge-service",
     "invitation-service",
+    "community-service",
     "shared-lib",
     "territory-service",
     "user-service",

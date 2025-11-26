@@ -1,12 +1,12 @@
 use actix_web::{web, App, HttpServer};
+use community_service_service::handlers;
+use community_service_service::services::CommunityService;
 use shared_lib::{
     cors, shutdown_grace_period, shutdown_signal, AppConfig, Database, LoggingMiddleware,
     MetricsCollector, RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware,
 };
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use community_service_service::handlers;
-use community_service_service::services::CommunityService;
 
 /// OpenAPI documentation structure
 #[derive(OpenApi)]
@@ -25,16 +25,43 @@ use community_service_service::services::CommunityService;
         health_check,
         ready_check,
         metrics,
-        // TODO: Add service-specific endpoints here
+        // Community endpoints
+        community_service_service::handlers::community::list_communities,
+        community_service_service::handlers::community::create_community,
+        community_service_service::handlers::community::get_managed_communities,
+        community_service_service::handlers::community::get_community,
+        community_service_service::handlers::community::update_community,
+        community_service_service::handlers::community::assign_manager,
+        community_service_service::handlers::community::revoke_manager,
+        community_service_service::handlers::community::add_requirement,
+        community_service_service::handlers::community::remove_requirement,
+        community_service_service::handlers::community::list_requirements,
+        community_service_service::handlers::community::get_effective_requirements,
+        community_service_service::handlers::community::get_effective_managers,
+        community_service_service::handlers::community::join_community,
+        community_service_service::handlers::community::leave_community,
+        community_service_service::handlers::community::get_membership,
+        community_service_service::handlers::community::get_group_summary,
     ),
     components(
         schemas(
-            // TODO: Add service-specific schemas here
+            community_service_service::models::Community,
+            community_service_service::models::CommunityType,
+            community_service_service::models::CreateCommunityRequest,
+            community_service_service::models::UpdateCommunityRequest,
+            community_service_service::models::AssignManagerRequest,
+            community_service_service::models::AddRequirementRequest,
+            community_service_service::models::RemoveRequirementQuery,
+            community_service_service::models::CommunityBadgeRequirement,
+            community_service_service::models::RequirementContext,
+            community_service_service::models::EffectiveBadgeRequirement,
+            community_service_service::models::EffectiveManager,
+            community_service_service::models::GroupSummary,
         )
     ),
     tags(
         (name = "health", description = "Service health and monitoring"),
-        // TODO: Add service-specific tags here
+        (name = "communities", description = "Community management"),
     ),
     modifiers(&SecurityAddon)
 )]
@@ -72,7 +99,10 @@ async fn main() -> std::io::Result<()> {
         )
         .init();
 
-    tracing::info!("🚀 Starting Community Service v{}", env!("CARGO_PKG_VERSION"));
+    tracing::info!(
+        "🚀 Starting Community Service v{}",
+        env!("CARGO_PKG_VERSION")
+    );
 
     // Load configuration
     let config = AppConfig::from_env().expect("Failed to load configuration");
@@ -147,10 +177,7 @@ async fn main() -> std::io::Result<()> {
                     .route("/health", web::get().to(health_check))
                     .route("/ready", web::get().to(ready_check))
                     .route("/metrics", web::get().to(metrics))
-                    .service(
-                        web::scope("/communities")
-                            .configure(handlers::configure)
-                    )
+                    .service(web::scope("/communities").configure(handlers::configure)),
             )
     })
     .bind(&server_addr)?

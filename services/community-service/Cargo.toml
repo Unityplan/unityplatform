@@ -58,3 +58,6 @@ anyhow = { workspace = true }
 # API Documentation
 utoipa = { workspace = true }
 utoipa-swagger-ui = { workspace = true }
+
+[dev-dependencies]
+jsonwebtoken.workspace = true

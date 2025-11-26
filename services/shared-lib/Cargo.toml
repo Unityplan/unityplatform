@@ -5,6 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 build = "build.rs"
+exclude = ["migrations"]
 
 [dependencies]
 # Async runtime

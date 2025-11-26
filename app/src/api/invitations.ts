@@ -1,7 +1,5 @@
 import { apiClient } from '@/lib/api-client';
 
-const INVITATION_SERVICE_URL = import.meta.env.VITE_INVITATION_SERVICE_URL || 'http://localhost:8004';
-
 // --- Types ---
 
 export interface CreateInvitationRequest {
@@ -83,29 +81,29 @@ export const invitationApi = {
    * Create a new invitation token
    */
   createInvitation: (data: CreateInvitationRequest) =>
-    apiClient.post<CreateInvitationResponse>(`${INVITATION_SERVICE_URL}/api/v1/invitations`, data),
+    apiClient.post<CreateInvitationResponse>('/api/v1/invitations', data),
 
   /**
    * Validate an invitation token (Public)
    */
   validateInvitation: (token: string) =>
-    apiClient.post<ValidateInvitationResponse>(`${INVITATION_SERVICE_URL}/api/v1/invitations/validate`, { token }),
+    apiClient.post<ValidateInvitationResponse>('/api/v1/invitations/validate', { token }),
 
   /**
    * List invitations created by the current user
    */
   listMyInvitations: (params?: { status?: string; page?: number; limit?: number }) =>
-    apiClient.get<ListInvitationsResponse>(`${INVITATION_SERVICE_URL}/api/v1/invitations/me`, { params }),
+    apiClient.get<ListInvitationsResponse>('/api/v1/invitations/me', { params }),
 
   /**
    * Get detailed usage history for an invitation
    */
   getInvitationUses: (id: string) =>
-    apiClient.get<GetInvitationUsesResponse>(`${INVITATION_SERVICE_URL}/api/v1/invitations/${id}/uses`),
+    apiClient.get<GetInvitationUsesResponse>(`/api/v1/invitations/${id}/uses`),
 
   /**
    * Revoke an invitation
    */
   revokeInvitation: (id: string) =>
-    apiClient.delete<RevokeInvitationResponse>(`${INVITATION_SERVICE_URL}/api/v1/invitations/${id}`),
+    apiClient.delete<RevokeInvitationResponse>(`/api/v1/invitations/${id}`),
 };

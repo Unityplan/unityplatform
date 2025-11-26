@@ -90,42 +90,68 @@ if [[ -n "$NEW_LABELS" ]]; then
     done
 fi
 
-# Build JSON payload
+# Build JSON payload for general updates
 payload="{}"
+has_general_updates=false
 
 if [[ -n "$NEW_TITLE" ]]; then
     payload=$(echo "$payload" | jq --arg title "$NEW_TITLE" '. + {title: $title}')
+    has_general_updates=true
 fi
 
 if [[ -n "$NEW_BODY" ]]; then
     payload=$(echo "$payload" | jq --arg body "$NEW_BODY" '. + {body: $body}')
+    has_general_updates=true
 fi
 
 if [[ -n "$NEW_STATE" ]]; then
     payload=$(echo "$payload" | jq --arg state "$NEW_STATE" '. + {state: $state}')
+    has_general_updates=true
 fi
 
+# 1. Perform General Updates (Title, Body, State) via PATCH
+if [[ "$has_general_updates" == "true" ]]; then
+    response=$(curl -s \
+        -X PATCH \
+        -H "Authorization: token $FORGEJO_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "$payload" \
+        "${API_BASE}/repos/${FORGEJO_OWNER}/${FORGEJO_REPO}/issues/${ISSUE_NUMBER}")
+
+    # Check for errors
+    if echo "$response" | jq -e '.message' > /dev/null 2>&1; then
+        echo "❌ Error updating issue details: $(echo "$response" | jq -r '.message')"
+        exit 1
+    fi
+fi
+
+# 2. Perform Label Updates via PUT (Replaces all labels)
 if [[ ${#label_ids[@]} -gt 0 ]]; then
     labels_json=$(printf '%s\n' "${label_ids[@]}" | jq -R 'tonumber' | jq -s .)
-    payload=$(echo "$payload" | jq --argjson labels "$labels_json" '. + {labels: $labels}')
+    labels_payload=$(echo "{}" | jq --argjson labels "$labels_json" '. + {labels: $labels}')
+    
+    response=$(curl -s \
+        -X PUT \
+        -H "Authorization: token $FORGEJO_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "$labels_payload" \
+        "${API_BASE}/repos/${FORGEJO_OWNER}/${FORGEJO_REPO}/issues/${ISSUE_NUMBER}/labels")
+
+    # Check for errors
+    if echo "$response" | jq -e '.message' > /dev/null 2>&1; then
+        echo "❌ Error updating labels: $(echo "$response" | jq -r '.message')"
+        exit 1
+    fi
 fi
 
-# Update issue
-response=$(curl -s \
-    -X PATCH \
+# Fetch final state for display
+final_response=$(curl -s \
     -H "Authorization: token $FORGEJO_TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$payload" \
     "${API_BASE}/repos/${FORGEJO_OWNER}/${FORGEJO_REPO}/issues/${ISSUE_NUMBER}")
-
-# Check for errors
-if echo "$response" | jq -e '.message' > /dev/null 2>&1; then
-    echo "❌ Error: $(echo "$response" | jq -r '.message')"
-    exit 1
-fi
 
 echo "✅ Issue #${ISSUE_NUMBER} updated successfully"
 echo ""
-echo "Title: $(echo "$response" | jq -r '.title')"
-echo "State: $(echo "$response" | jq -r '.state')"
-echo "URL: $(echo "$response" | jq -r '.html_url')"
+echo "Title: $(echo "$final_response" | jq -r '.title')"
+echo "State: $(echo "$final_response" | jq -r '.state')"
+echo "Labels: $(echo "$final_response" | jq -r '[.labels[].name] | join(", ")')"
+echo "URL: $(echo "$final_response" | jq -r '.html_url')"

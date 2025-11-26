@@ -1,0 +1,17 @@
+/* Override React Flow default node styling */
+.react-flow__node {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Ensure our custom nodes don't get extra padding from React Flow */
+.react-flow__node-badge,
+.react-flow__node-community,
+.react-flow__node-group {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}

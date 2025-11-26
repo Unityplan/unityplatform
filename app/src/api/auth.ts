@@ -1,8 +1,6 @@
 import apiClient from '@/lib/api-client';
 import type { LoginRequest, RegisterRequest, AuthResponse, User } from '@/types/auth';
 
-const AUTH_BASE_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8001';
-
 /**
  * Register a new user
  * 
@@ -10,7 +8,7 @@ const AUTH_BASE_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost
  * @returns Auth response with tokens and user data
  */
 export async function register(data: RegisterRequest): Promise<AuthResponse> {
-  const response = await apiClient.post(`${AUTH_BASE_URL}/api/v1/auth/register`, data);
+  const response = await apiClient.post('/api/v1/auth/register', data);
   return response.data;
 }
 
@@ -21,7 +19,7 @@ export async function register(data: RegisterRequest): Promise<AuthResponse> {
  * @returns Auth response with tokens and user data
  */
 export async function login(credentials: LoginRequest): Promise<AuthResponse> {
-  const response = await apiClient.post(`${AUTH_BASE_URL}/api/v1/auth/login`, credentials);
+  const response = await apiClient.post('/api/v1/auth/login', credentials);
   return response.data;
 }
 
@@ -31,7 +29,7 @@ export async function login(credentials: LoginRequest): Promise<AuthResponse> {
  * @param refreshToken - The refresh token to invalidate
  */
 export async function logout(refreshToken: string): Promise<void> {
-  await apiClient.post(`${AUTH_BASE_URL}/api/v1/auth/logout`, { refreshToken });
+  await apiClient.post('/api/v1/auth/logout', { refreshToken });
 }
 
 /**
@@ -41,7 +39,7 @@ export async function logout(refreshToken: string): Promise<void> {
  * @returns New auth response with fresh tokens
  */
 export async function refreshToken(refreshToken: string): Promise<AuthResponse> {
-  const response = await apiClient.post(`${AUTH_BASE_URL}/api/v1/auth/refresh`, {
+  const response = await apiClient.post('/api/v1/auth/refresh', {
     refreshToken,
   });
   return response.data;
@@ -53,7 +51,7 @@ export async function refreshToken(refreshToken: string): Promise<AuthResponse> 
  * @returns Current user data
  */
 export async function getCurrentUser(): Promise<User> {
-  const response = await apiClient.get(`${AUTH_BASE_URL}/api/v1/auth/me`);
+  const response = await apiClient.get('/api/v1/auth/me');
   return response.data;
 }
 
@@ -81,6 +79,6 @@ export async function validateInvitation(token: string): Promise<{
   remainingUses?: number;
 }> {
   // ⭐ No territory parameter - backend looks it up from global registry
-  const response = await apiClient.get(`${AUTH_BASE_URL}/api/v1/auth/invitations/validate/${token}`);
+  const response = await apiClient.get(`/api/v1/auth/invitations/validate/${token}`);
   return response.data;
 }

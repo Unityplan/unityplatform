@@ -136,9 +136,42 @@ All future stages are tracked as open issues for planning:
 
 ---
 
-## 🔧 Original Utility Scripts
+## 🛠️ Utility Scripts
 
-### 🔄 `convert-status-to-issues.sh`
+### `update-issue.sh`
+
+Updates an existing issue's title, body, state, or labels.
+
+**Usage:**
+
+```bash
+./update-issue.sh <issue_number> [options]
+```
+
+**Options:**
+
+- `--title "New Title"`: Update issue title
+- `--body "New Body"`: Update issue description
+- `--state open|closed`: Change issue state
+- `--labels "label1,label2"`: **Replace** existing labels with new ones
+
+**Note on Labels:**
+This script uses the `PUT /issues/{id}/labels` endpoint when updating labels, which **replaces** the entire label set. Ensure you include all desired labels in the command.
+
+**Examples:**
+
+```bash
+# Close an issue
+./update-issue.sh 147 --state closed
+
+# Update labels (replaces existing)
+./update-issue.sh 147 --labels "priority/high,status/in-progress"
+
+# Update multiple fields
+./update-issue.sh 147 --title "New Title" --body "New description" --state open
+```
+
+### `convert-status-to-issues.sh`
 
 Convert incomplete tasks from `phase-1-status.md` to Forgejo issues (legacy tool, migration complete).
 
@@ -200,10 +233,10 @@ List all labels in your repository.
 ```
 📋 Labels in Unityplan/unityplatform:
 
-  1 - priority:critical (d73a4a)
-  2 - priority:high (ff6b6b)
-  3 - priority:medium (feca57)
-  4 - type:feature (48dbfb)
+  1 - priority/critical (d73a4a)
+  2 - priority/high (ff6b6b)
+  3 - priority/medium (feca57)
+  4 - type/feature (48dbfb)
   ...
 
 Total: 18
@@ -251,13 +284,13 @@ Quick helper to create a single issue from command line.
 ./create-issue.sh "Fix login bug" "Users cannot login with special characters"
 
 # With labels
-./create-issue.sh "Add dark mode" "Implement dark theme toggle" "priority:medium,type:feature,area:frontend"
+./create-issue.sh "Add dark mode" "Implement dark theme toggle" "priority/medium,type/feature,area/frontend-app"
 
 # With labels and milestone
 ./create-issue.sh \
   "Implement JWT refresh" \
   "Add automatic token refresh on 401" \
-  "priority:high,type:feature,area:backend" \
+  "priority/high,type/feature,area/auth-service" \
   "v0.1.0-alpha.2"
 ```
 
@@ -294,7 +327,7 @@ Quick helper to create a single issue from command line.
 ./create-issue.sh \
   "Update documentation" \
   "Add API examples to README" \
-  "priority:low,type:docs" \
+  "priority/low,type/docs" \
   "v0.1.0-alpha.2"
 ```
 
@@ -333,7 +366,7 @@ nano .env  # Add your token
 3. Repository owner/name in `.env` is correct
 4. Forgejo is running (`curl http://localhost:3000`)
 
-### "Label not found: priority:high"
+### "Label not found: priority/high"
 
 **Solution:**
 Create the label first in Forgejo UI or check the exact label name:
