@@ -1,6 +1,7 @@
 use crate::models::community::{Community, CommunityRole, CommunityType};
 use chrono::{DateTime, Utc};
 use serde::Serialize;
+use sqlx::FromRow;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -83,4 +84,73 @@ pub struct GroupChild {
     pub member_count: i32,
     pub has_badge_requirement: bool,
     pub badge_name: Option<String>,
+}
+
+/// Minimal geo marker data for map view (lightweight)
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct GeoMarker {
+    pub id: Uuid,
+    pub name: String,
+    pub slug: String,
+    pub community_type: CommunityType,
+    pub location_lat: Option<f64>,
+    pub location_lng: Option<f64>,
+    pub coverage_area: Option<serde_json::Value>,
+    pub parent_community_id: Option<Uuid>,
+}
+
+/// Internal row type for geo marker query
+#[derive(Debug, FromRow)]
+pub struct GeoMarkerRow {
+    pub id: Uuid,
+    pub name: String,
+    pub slug: String,
+    pub community_type: CommunityType,
+    pub location_lat: Option<f64>,
+    pub location_lng: Option<f64>,
+    pub coverage_area: Option<sqlx::types::Json<serde_json::Value>>,
+    pub parent_community_id: Option<Uuid>,
+}
+
+impl From<GeoMarkerRow> for GeoMarker {
+    fn from(row: GeoMarkerRow) -> Self {
+        Self {
+            id: row.id,
+            name: row.name,
+            slug: row.slug,
+            community_type: row.community_type,
+            location_lat: row.location_lat,
+            location_lng: row.location_lng,
+            coverage_area: row.coverage_area.map(|j| j.0),
+            parent_community_id: row.parent_community_id,
+        }
+    }
+}
+
+/// Community with context (ancestors and children) for flow view
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CommunityContext {
+    /// The focal community
+    pub community: Community,
+    /// Ancestors from root to parent (ordered root-first)
+    pub ancestors: Vec<Community>,
+    /// Direct children of this community
+    pub children: Vec<Community>,
+    /// Whether this community has more children than returned
+    pub has_more_children: bool,
+    /// Total count of children
+    pub children_count: i64,
+}
+
+/// Paginated response for infinite scroll
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct PaginatedCommunities {
+    pub items: Vec<Community>,
+    pub total: i64,
+    pub limit: i64,
+    pub offset: i64,
+    pub has_more: bool,
 }

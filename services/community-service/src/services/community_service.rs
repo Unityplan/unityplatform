@@ -173,13 +173,245 @@ impl CommunityService {
             query_builder.push(")");
         }
 
-        query_builder.push(" ORDER BY created_at DESC LIMIT 50");
+        query_builder.push(" ORDER BY name ASC");
+
+        // Apply pagination with sensible defaults
+        let limit = filter.limit.unwrap_or(100).min(500).max(1);
+        let offset = filter.offset.unwrap_or(0).max(0);
+
+        query_builder.push(" LIMIT ");
+        query_builder.push_bind(limit);
+        query_builder.push(" OFFSET ");
+        query_builder.push_bind(offset);
 
         query_builder
             .build_query_as::<Community>()
             .fetch_all(&self.pool)
             .await
             .map_err(AppError::Database)
+    }
+
+    /// List communities with pagination metadata (for infinite scroll)
+    pub async fn list_communities_paginated(
+        &self,
+        filter: CommunityFilter,
+    ) -> Result<crate::models::PaginatedCommunities> {
+        // First get total count
+        let mut count_builder: QueryBuilder<Postgres> =
+            QueryBuilder::new("SELECT COUNT(*) FROM territory_dk.community_communities WHERE 1=1");
+
+        if let Some(ref ctype) = filter.community_type {
+            count_builder.push(" AND type = ");
+            count_builder.push_bind(ctype.clone());
+        }
+
+        if let Some(pid) = filter.parent_id {
+            count_builder.push(" AND parent_community_id = ");
+            count_builder.push_bind(pid);
+        }
+
+        if let Some(ref tid) = filter.territory_id {
+            count_builder.push(" AND territory_id = ");
+            count_builder.push_bind(tid.clone());
+        }
+
+        if let Some(ref search) = filter.search {
+            let search_term = format!("%{}%", search);
+            count_builder.push(" AND (name ILIKE ");
+            count_builder.push_bind(search_term.clone());
+            count_builder.push(" OR slug ILIKE ");
+            count_builder.push_bind(search_term);
+            count_builder.push(")");
+        }
+
+        let total: (i64,) = count_builder
+            .build_query_as()
+            .fetch_one(&self.pool)
+            .await
+            .map_err(AppError::Database)?;
+
+        // Then get items
+        let limit = filter.limit.unwrap_or(50).min(500).max(1) as i64;
+        let offset = filter.offset.unwrap_or(0).max(0) as i64;
+        let items = self.list_communities(filter).await?;
+
+        Ok(crate::models::PaginatedCommunities {
+            has_more: offset + (items.len() as i64) < total.0,
+            total: total.0,
+            limit,
+            offset,
+            items,
+        })
+    }
+
+    /// Get root communities (communities with no parent)
+    pub async fn get_root_communities(&self) -> Result<Vec<Community>> {
+        sqlx::query_as::<_, Community>(
+            r#"
+            SELECT * FROM territory_dk.community_communities 
+            WHERE parent_community_id IS NULL
+            ORDER BY name ASC
+            "#,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(AppError::Database)
+    }
+
+    /// Get direct children of a community
+    pub async fn get_children(&self, community_id: Uuid, limit: Option<i64>) -> Result<Vec<Community>> {
+        let limit = limit.unwrap_or(100).min(500);
+        sqlx::query_as::<_, Community>(
+            r#"
+            SELECT * FROM territory_dk.community_communities 
+            WHERE parent_community_id = $1
+            ORDER BY name ASC
+            LIMIT $2
+            "#,
+        )
+        .bind(community_id)
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(AppError::Database)
+    }
+
+    /// Get count of direct children
+    pub async fn get_children_count(&self, community_id: Uuid) -> Result<i64> {
+        let result: (i64,) = sqlx::query_as(
+            r#"
+            SELECT COUNT(*) FROM territory_dk.community_communities 
+            WHERE parent_community_id = $1
+            "#,
+        )
+        .bind(community_id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(AppError::Database)?;
+        Ok(result.0)
+    }
+
+    /// Get ancestors of a community (from root to parent)
+    pub async fn get_ancestors(&self, community_id: Uuid) -> Result<Vec<Community>> {
+        // Use recursive CTE to get all ancestors
+        sqlx::query_as::<_, Community>(
+            r#"
+            WITH RECURSIVE ancestors AS (
+                SELECT c.*, 0 as depth
+                FROM territory_dk.community_communities c
+                WHERE c.id = (
+                    SELECT parent_community_id 
+                    FROM territory_dk.community_communities 
+                    WHERE id = $1
+                )
+                
+                UNION ALL
+                
+                SELECT c.*, a.depth + 1
+                FROM territory_dk.community_communities c
+                JOIN ancestors a ON c.id = a.parent_community_id
+            )
+            SELECT id, slug, name, description, type, territory_id, parent_community_id,
+                   avatar_url, banner_url, member_count, created_by, created_at, updated_at,
+                   location_lat, location_lng, coverage_area
+            FROM ancestors
+            ORDER BY depth DESC
+            "#,
+        )
+        .bind(community_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(AppError::Database)
+    }
+
+    /// Get community with full context (ancestors + children) for flow view
+    pub async fn get_community_context(
+        &self,
+        community_id: Uuid,
+        children_limit: Option<i64>,
+    ) -> Result<crate::models::CommunityContext> {
+        let community = self.get_community(community_id).await?;
+        let ancestors = self.get_ancestors(community_id).await?;
+        let children = self.get_children(community_id, children_limit).await?;
+        let children_count = self.get_children_count(community_id).await?;
+
+        Ok(crate::models::CommunityContext {
+            community,
+            ancestors,
+            has_more_children: children.len() as i64 > children_count,
+            children_count,
+            children,
+        })
+    }
+
+    /// Get geo markers for map view (minimal data)
+    pub async fn get_geo_markers(
+        &self,
+        community_types: Option<Vec<CommunityType>>,
+    ) -> Result<Vec<crate::models::GeoMarker>> {
+        use crate::models::GeoMarkerRow;
+        
+        let types = community_types.unwrap_or_else(|| {
+            vec![CommunityType::Zone, CommunityType::Neighborhood]
+        });
+
+        let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
+            r#"SELECT id, name, slug, type as community_type, 
+                      location_lat, location_lng, coverage_area,
+                      parent_community_id
+               FROM territory_dk.community_communities 
+               WHERE (location_lat IS NOT NULL OR coverage_area IS NOT NULL)
+                 AND type IN ("#
+        );
+        
+        // Build IN clause for types
+        let mut separated = query_builder.separated(", ");
+        for t in &types {
+            separated.push_bind(t.clone());
+        }
+        query_builder.push(") ORDER BY type, name");
+
+        let rows: Vec<GeoMarkerRow> = query_builder
+            .build_query_as()
+            .fetch_all(&self.pool)
+            .await
+            .map_err(AppError::Database)?;
+        
+        Ok(rows.into_iter().map(|r| r.into()).collect())
+    }
+
+    /// Get communities up to a certain depth (for hierarchy view)
+    pub async fn get_hierarchy(
+        &self,
+        max_depth: i32,
+    ) -> Result<Vec<Community>> {
+        sqlx::query_as::<_, Community>(
+            r#"
+            WITH RECURSIVE hierarchy AS (
+                -- Start with roots
+                SELECT c.*, 0 as depth
+                FROM territory_dk.community_communities c
+                WHERE c.parent_community_id IS NULL
+                
+                UNION ALL
+                
+                -- Recurse to children up to max_depth
+                SELECT c.*, h.depth + 1
+                FROM territory_dk.community_communities c
+                JOIN hierarchy h ON c.parent_community_id = h.id
+                WHERE h.depth < $1
+            )
+            SELECT id, slug, name, description, type, territory_id, parent_community_id,
+                   avatar_url, banner_url, member_count, created_by, created_at, updated_at,
+                   location_lat, location_lng, coverage_area
+            FROM hierarchy
+            ORDER BY depth, name
+            "#,
+        )
+        .bind(max_depth)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(AppError::Database)
     }
 
     pub async fn assign_manager(

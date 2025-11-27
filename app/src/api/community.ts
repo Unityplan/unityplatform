@@ -74,6 +74,38 @@ export interface CommunityFilter {
   parent_id?: string
   territory_id?: string
   search?: string
+  limit?: number
+  offset?: number
+}
+
+/** Paginated response for infinite scroll */
+export interface PaginatedCommunities {
+  items: Community[]
+  total: number
+  limit: number
+  offset: number
+  hasMore: boolean
+}
+
+/** Community with context (ancestors and children) for flow view */
+export interface CommunityContext {
+  community: Community
+  ancestors: Community[]
+  children: Community[]
+  hasMoreChildren: boolean
+  childrenCount: number
+}
+
+/** Minimal geo marker data for map view (lightweight) */
+export interface GeoMarker {
+  id: string
+  name: string
+  slug: string
+  communityType: CommunityType
+  locationLat?: number
+  locationLng?: number
+  coverageArea?: CoverageArea
+  parentCommunityId?: string
 }
 
 export const RequirementContext = {
@@ -226,6 +258,52 @@ export const communityService = {
   /** Get effective badge requirements including inherited ones from parent communities */
   getEffectiveRequirements: async (communityId: string): Promise<EffectiveBadgeRequirement[]> => {
     const response = await apiClient.get(`/api/v1/communities/${communityId}/effective-requirements`)
+    return response.data
+  },
+
+  // ====== New endpoints for lazy loading ======
+
+  /** Get communities with pagination metadata (for infinite scroll) */
+  listCommunitiesPaginated: async (filter: CommunityFilter): Promise<PaginatedCommunities> => {
+    const response = await apiClient.get('/api/v1/communities/paginated', { params: filter })
+    return response.data
+  },
+
+  /** Get root communities (communities with no parent) */
+  getRootCommunities: async (): Promise<Community[]> => {
+    const response = await apiClient.get('/api/v1/communities/roots')
+    return response.data
+  },
+
+  /** Get direct children of a community */
+  getChildren: async (communityId: string, limit?: number): Promise<Community[]> => {
+    const response = await apiClient.get(`/api/v1/communities/${communityId}/children`, {
+      params: { limit },
+    })
+    return response.data
+  },
+
+  /** Get community with context (ancestors + children) for flow view */
+  getCommunityContext: async (communityId: string, childrenLimit?: number): Promise<CommunityContext> => {
+    const response = await apiClient.get(`/api/v1/communities/${communityId}/context`, {
+      params: { children_limit: childrenLimit },
+    })
+    return response.data
+  },
+
+  /** Get geo markers for map view (minimal data for all geographic communities) */
+  getGeoMarkers: async (types?: CommunityType[]): Promise<GeoMarker[]> => {
+    const response = await apiClient.get('/api/v1/communities/geo-markers', {
+      params: { types: types?.join(',') },
+    })
+    return response.data
+  },
+
+  /** Get community hierarchy up to a certain depth */
+  getHierarchy: async (maxDepth?: number): Promise<Community[]> => {
+    const response = await apiClient.get('/api/v1/communities/hierarchy', {
+      params: { max_depth: maxDepth },
+    })
     return response.data
   },
 }

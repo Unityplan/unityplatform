@@ -46,6 +46,10 @@ pub struct CommunityFilter {
     pub parent_id: Option<Uuid>,
     pub territory_id: Option<String>,
     pub search: Option<String>,
+    /// Maximum number of results to return (default: 100, max: 500)
+    pub limit: Option<i32>,
+    /// Number of results to skip for pagination
+    pub offset: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]

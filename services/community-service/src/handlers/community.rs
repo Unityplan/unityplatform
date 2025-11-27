@@ -524,3 +524,198 @@ pub async fn get_group_summary(
     let summary = service.get_group_summary(path.into_inner()).await?;
     Ok(HttpResponse::Ok().json(summary))
 }
+
+/// Query params for children endpoint
+#[derive(Debug, serde::Deserialize)]
+pub struct ChildrenQuery {
+    pub limit: Option<i64>,
+}
+
+/// Query params for context endpoint
+#[derive(Debug, serde::Deserialize)]
+pub struct ContextQuery {
+    pub children_limit: Option<i64>,
+}
+
+/// Query params for hierarchy endpoint
+#[derive(Debug, serde::Deserialize)]
+pub struct HierarchyQuery {
+    pub max_depth: Option<i32>,
+}
+
+/// Query params for geo markers endpoint
+#[derive(Debug, serde::Deserialize)]
+pub struct GeoMarkersQuery {
+    /// Comma-separated community types (default: zone,neighborhood)
+    pub types: Option<String>,
+}
+
+/// List communities with pagination metadata (for infinite scroll)
+#[utoipa::path(
+    get,
+    path = "/api/v1/communities/paginated",
+    tag = "communities",
+    params(
+        ("community_type" = Option<CommunityType>, Query, description = "Filter by community type"),
+        ("parent_id" = Option<Uuid>, Query, description = "Filter by parent community ID"),
+        ("territory_id" = Option<String>, Query, description = "Filter by territory ID"),
+        ("search" = Option<String>, Query, description = "Search by name or slug"),
+        ("limit" = Option<i64>, Query, description = "Number of items per page (default: 50, max: 500)"),
+        ("offset" = Option<i64>, Query, description = "Offset for pagination")
+    ),
+    responses(
+        (status = 200, description = "Paginated list of communities", body = crate::models::PaginatedCommunities),
+        (status = 401, description = "Unauthorized")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn list_communities_paginated(
+    service: web::Data<CommunityService>,
+    _auth_user: AuthUser,
+    query: web::Query<CommunityFilter>,
+) -> Result<HttpResponse> {
+    let result = service.list_communities_paginated(query.into_inner()).await?;
+    Ok(HttpResponse::Ok().json(result))
+}
+
+/// Get root communities (communities with no parent)
+#[utoipa::path(
+    get,
+    path = "/api/v1/communities/roots",
+    tag = "communities",
+    responses(
+        (status = 200, description = "List of root communities", body = Vec<Community>),
+        (status = 401, description = "Unauthorized")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn get_root_communities(
+    service: web::Data<CommunityService>,
+    _auth_user: AuthUser,
+) -> Result<HttpResponse> {
+    let communities = service.get_root_communities().await?;
+    Ok(HttpResponse::Ok().json(communities))
+}
+
+/// Get direct children of a community
+#[utoipa::path(
+    get,
+    path = "/api/v1/communities/{id}/children",
+    tag = "communities",
+    params(
+        ("id" = Uuid, Path, description = "Community ID"),
+        ("limit" = Option<i64>, Query, description = "Maximum number of children to return (default: 100, max: 500)")
+    ),
+    responses(
+        (status = 200, description = "List of child communities", body = Vec<Community>),
+        (status = 401, description = "Unauthorized"),
+        (status = 404, description = "Community not found")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn get_children(
+    service: web::Data<CommunityService>,
+    _auth_user: AuthUser,
+    path: web::Path<Uuid>,
+    query: web::Query<ChildrenQuery>,
+) -> Result<HttpResponse> {
+    let children = service.get_children(path.into_inner(), query.limit).await?;
+    Ok(HttpResponse::Ok().json(children))
+}
+
+/// Get community with context (ancestors and children) for flow view
+#[utoipa::path(
+    get,
+    path = "/api/v1/communities/{id}/context",
+    tag = "communities",
+    params(
+        ("id" = Uuid, Path, description = "Community ID"),
+        ("children_limit" = Option<i64>, Query, description = "Maximum number of children to return (default: 100)")
+    ),
+    responses(
+        (status = 200, description = "Community with context", body = crate::models::CommunityContext),
+        (status = 401, description = "Unauthorized"),
+        (status = 404, description = "Community not found")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn get_community_context(
+    service: web::Data<CommunityService>,
+    _auth_user: AuthUser,
+    path: web::Path<Uuid>,
+    query: web::Query<ContextQuery>,
+) -> Result<HttpResponse> {
+    let context = service.get_community_context(path.into_inner(), query.children_limit).await?;
+    Ok(HttpResponse::Ok().json(context))
+}
+
+/// Get geo markers for map view (minimal data for all geographic communities)
+#[utoipa::path(
+    get,
+    path = "/api/v1/communities/geo-markers",
+    tag = "communities",
+    params(
+        ("types" = Option<String>, Query, description = "Comma-separated community types (default: zone,neighborhood)")
+    ),
+    responses(
+        (status = 200, description = "List of geo markers", body = Vec<crate::models::GeoMarker>),
+        (status = 401, description = "Unauthorized")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn get_geo_markers(
+    service: web::Data<CommunityService>,
+    _auth_user: AuthUser,
+    query: web::Query<GeoMarkersQuery>,
+) -> Result<HttpResponse> {
+    let types = query.types.as_ref().map(|s| {
+        s.split(',')
+            .filter_map(|t| match t.trim().to_lowercase().as_str() {
+                "zone" => Some(CommunityType::Zone),
+                "neighborhood" => Some(CommunityType::Neighborhood),
+                "guild" => Some(CommunityType::Guild),
+                "study_group" => Some(CommunityType::StudyGroup),
+                "group" => Some(CommunityType::Group),
+                _ => None,
+            })
+            .collect()
+    });
+    let markers = service.get_geo_markers(types).await?;
+    Ok(HttpResponse::Ok().json(markers))
+}
+
+/// Get community hierarchy up to a certain depth
+#[utoipa::path(
+    get,
+    path = "/api/v1/communities/hierarchy",
+    tag = "communities",
+    params(
+        ("max_depth" = Option<i32>, Query, description = "Maximum depth to fetch (default: 2)")
+    ),
+    responses(
+        (status = 200, description = "List of communities in hierarchy", body = Vec<Community>),
+        (status = 401, description = "Unauthorized")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn get_hierarchy(
+    service: web::Data<CommunityService>,
+    _auth_user: AuthUser,
+    query: web::Query<HierarchyQuery>,
+) -> Result<HttpResponse> {
+    let max_depth = query.max_depth.unwrap_or(2).min(10).max(0);
+    let communities = service.get_hierarchy(max_depth).await?;
+    Ok(HttpResponse::Ok().json(communities))
+}

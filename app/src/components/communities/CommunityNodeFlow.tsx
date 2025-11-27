@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import './CommunityNodeFlow.css'
-import { BookOpen, Users, Shield, Map as MapIcon, Hammer, Loader2, Package, ChevronRight, Home, Lock, X, UserPlus, LogOut, ExternalLink, GraduationCap, Award } from 'lucide-react'
+import { BookOpen, Users, Shield, Map as MapIcon, Hammer, Loader2, Package, ChevronRight, Home, Lock, X, UserPlus, LogOut, ExternalLink, GraduationCap, Award, Search } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { communityService, CommunityType, type Community, type EffectiveBadgeRequirement } from '@/api/community'
 import { badgeService, type Badge as BadgeType } from '@/api/badge'
@@ -25,6 +25,7 @@ import ELK from 'elkjs/lib/elk.bundled.js'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { Link } from '@tanstack/react-router'
@@ -564,6 +565,10 @@ function CommunityNodeFlowInner() {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
+    // Search state for finding communities
+    const [searchQuery, setSearchQuery] = useState('')
+    const [selectedSearchResult, setSelectedSearchResult] = useState<string | null>(null)
+    
     // Drill-down state: null = show full tree, string = show subtree from that community
     const [viewRoot, setViewRoot] = useState<string | null>(null)
     // Breadcrumb trail for navigation
@@ -573,10 +578,32 @@ function CommunityNodeFlowInner() {
     // Selected badges for badge info panel (supports multiple)
     const [selectedBadgeIds, setSelectedBadgeIds] = useState<string[]>([])
 
-    const { data: communities, isLoading: isLoadingCommunities } = useQuery({
-        queryKey: ['communities'],
-        queryFn: () => communityService.listCommunities({}),
+    // Search results query
+    const { data: searchResults, isLoading: isSearching } = useQuery({
+        queryKey: ['community-search', searchQuery],
+        queryFn: () => communityService.listCommunities({ search: searchQuery, limit: 20 }),
+        enabled: searchQuery.length >= 2,
     })
+
+    // Load context when a community is selected from search
+    const { data: communityContext, isLoading: isLoadingContext } = useQuery({
+        queryKey: ['community-context', selectedSearchResult],
+        queryFn: () => communityService.getCommunityContext(selectedSearchResult!, 50),
+        enabled: !!selectedSearchResult,
+    })
+
+    // Build communities array from context
+    const communities = useMemo(() => {
+        if (!communityContext) return undefined
+        // Combine ancestors + community + children into one array
+        return [
+            ...communityContext.ancestors,
+            communityContext.community,
+            ...communityContext.children,
+        ]
+    }, [communityContext])
+
+    const isLoadingCommunities = isLoadingContext
 
     // Fetch EFFECTIVE requirements for all communities (includes inherited from parent Groups)
     const { data: allRequirements } = useQuery({
@@ -947,6 +974,84 @@ function CommunityNodeFlowInner() {
         }
     }, [selectedCommunityId, leaveMutation])
 
+    // Handle selecting a search result
+    const handleSelectSearchResult = useCallback((communityId: string) => {
+        setSelectedSearchResult(communityId)
+        setSearchQuery('')
+    }, [])
+
+    // Show search UI when no community is selected for context
+    if (!selectedSearchResult) {
+        return (
+            <div className="flex flex-col h-[600px] lg:h-[800px] items-center justify-center rounded-lg border bg-muted/10 gap-6 p-8">
+                <div className="text-center space-y-2">
+                    <Search className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                    <h3 className="text-lg font-semibold">Explore Community Structure</h3>
+                    <p className="text-sm text-muted-foreground max-w-md">
+                        Search for a community to see its place in the hierarchy, including its ancestors and children.
+                    </p>
+                </div>
+                
+                <div className="w-full max-w-md space-y-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search communities..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+                    
+                    {isSearching && (
+                        <div className="flex items-center justify-center py-4">
+                            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        </div>
+                    )}
+                    
+                    {searchResults && searchResults.length > 0 && (
+                        <div className="border rounded-lg divide-y max-h-64 overflow-auto">
+                            {searchResults.map((community) => (
+                                <button
+                                    key={community.id}
+                                    onClick={() => handleSelectSearchResult(community.id)}
+                                    className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 text-left transition-colors"
+                                >
+                                    <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                                        community.type === CommunityType.Zone ? 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400' :
+                                        community.type === CommunityType.Neighborhood ? 'bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400' :
+                                        community.type === CommunityType.Guild ? 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400' :
+                                        community.type === CommunityType.StudyGroup ? 'bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400' :
+                                        'bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400'
+                                    }`}>
+                                        {community.type === CommunityType.Zone ? <MapIcon className="h-4 w-4" /> :
+                                         community.type === CommunityType.Neighborhood ? <Users className="h-4 w-4" /> :
+                                         community.type === CommunityType.Guild ? <Hammer className="h-4 w-4" /> :
+                                         community.type === CommunityType.StudyGroup ? <BookOpen className="h-4 w-4" /> :
+                                         <Package className="h-4 w-4" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium truncate">{community.name}</div>
+                                        <div className="text-xs text-muted-foreground capitalize">
+                                            {community.type.replace('_', ' ')}
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    
+                    {searchQuery.length >= 2 && !isSearching && searchResults?.length === 0 && (
+                        <p className="text-center text-sm text-muted-foreground py-4">
+                            No communities found matching "{searchQuery}"
+                        </p>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
     if (isLoadingCommunities || isLoadingBadges) {
         return (
             <div className="flex h-[600px] items-center justify-center rounded-lg border bg-muted/10">
@@ -981,6 +1086,22 @@ function CommunityNodeFlowInner() {
                         </Button>
                     </div>
                 ))}
+                {/* Back to search button */}
+                <div className="ml-auto">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                            setSelectedSearchResult(null)
+                            setViewRoot(null)
+                            setBreadcrumbs([])
+                        }}
+                        className="h-7 px-2"
+                    >
+                        <Search className="h-4 w-4 mr-1" />
+                        New Search
+                    </Button>
+                </div>
             </div>
 
             <div className="h-[600px] lg:h-[800px] w-full rounded-lg border bg-background shadow-sm relative">
