@@ -1,7 +1,23 @@
 #!/usr/bin/env python3
+"""
+Community Seed Script - Guilds, Study Groups, and Groups
+
+This script seeds non-geographic communities:
+- Guilds (practice-based communities)
+- Study Groups (learning-focused communities)  
+- Groups (container communities)
+- Local chapters attached to geographic zones
+
+Prerequisites:
+- Run seed-denmark-geo.py first to create geographic hierarchy
+- Auth service and Community service must be running
+
+Usage:
+    python3 scripts/dev/seed-communities.py
+"""
+
 import requests
 import json
-import time
 import sys
 
 # Configuration
@@ -21,6 +37,7 @@ def log(msg):
     print(f"[Seed] {msg}")
 
 def get_token():
+    """Get auth token - try login first, then register if needed."""
     # Try login first
     try:
         log(f"Attempting login for {SEED_USER['username']}...")
@@ -56,27 +73,33 @@ def get_token():
         log(f"Registration error: {e}")
         sys.exit(1)
 
+def find_community_by_slug(token, slug):
+    """Find a community by its slug."""
+    headers = {"Authorization": f"Bearer {token}"}
+    try:
+        response = requests.get(COMMUNITY_SERVICE_URL, params={"search": slug}, headers=headers)
+        if response.status_code == 200:
+            for c in response.json():
+                if c.get("slug") == slug:
+                    return c.get("id")
+    except Exception as e:
+        log(f"Error finding community by slug '{slug}': {e}")
+    return None
+
 def create_community(token, data):
+    """Create a community, returning its ID."""
     headers = {"Authorization": f"Bearer {token}"}
     
-    # Check if exists first (by slug)
     try:
-        # We can't easily check by slug via API without listing, but create will fail with 409
         response = requests.post(COMMUNITY_SERVICE_URL, json=data, headers=headers)
         
         if response.status_code == 201:
-            log(f"Created community: {data['name']}")
+            log(f"Created: {data['name']}")
             return response.json()["id"]
         elif response.status_code == 409:
-            log(f"Community already exists: {data['name']}")
+            log(f"Already exists: {data['name']}")
             # Try to find it to return ID
-            # This is a bit hacky, assuming list returns it
-            list_resp = requests.get(COMMUNITY_SERVICE_URL, params={"search": data["slug"]}, headers=headers)
-            if list_resp.status_code == 200:
-                for c in list_resp.json():
-                    if c["slug"] == data["slug"]:
-                        return c["id"]
-            return None
+            return find_community_by_slug(token, data["slug"])
         else:
             log(f"Failed to create {data['name']}: {response.text}")
             return None
@@ -85,149 +108,31 @@ def create_community(token, data):
         return None
 
 def seed_communities(token):
-    # 1. Root Physical Community (Denmark)
-    dk_id = create_community(token, {
-        "name": "Denmark",
-        "slug": "denmark",
-        "description": "The sovereign territory of Denmark.",
-        "community_type": "zone",
-        "territory_id": "dk",
-        "inherit_requirements": False,
-        "location_lat": 56.2639,
-        "location_lng": 9.5018,
-        "coverage_area": {
-            "type": "polygon",
-            "coordinates": [
-                {"lat": 57.75, "lng": 10.6},
-                {"lat": 57.75, "lng": 8.0},
-                {"lat": 54.5, "lng": 8.0},
-                {"lat": 54.5, "lng": 12.7},
-                {"lat": 56.0, "lng": 12.7}
-            ]
-        }
-    })
-
+    """Seed guilds, study groups, groups, and local chapters."""
+    
+    # =========================================================================
+    # Step 1: Find root Denmark community (created by geo script)
+    # =========================================================================
+    log("Looking for Danmark root community...")
+    dk_id = find_community_by_slug(token, "danmark")
+    
     if not dk_id:
-        log("Could not get root community ID. Aborting.")
+        # Fallback - try "denmark" slug
+        dk_id = find_community_by_slug(token, "denmark")
+    
+    if not dk_id:
+        log("ERROR: Root community (Danmark/Denmark) not found!")
+        log("Please run seed-denmark-geo.py first to create geographic hierarchy.")
         return
+    
+    log(f"Found Danmark: {dk_id}")
 
-    # 2. Regions/Cities
-    cities = [
-        {
-            "name": "Copenhagen", "slug": "copenhagen", "desc": "Capital city", 
-            "territory_id": "dk", "inherit_requirements": False,
-            "lat": 55.6761, "lng": 12.5683,
-            "coverage": {
-                "type": "polygon",
-                "coordinates": [
-                    {"lat": 55.73, "lng": 12.45},
-                    {"lat": 55.73, "lng": 12.65},
-                    {"lat": 55.61, "lng": 12.65},
-                    {"lat": 55.61, "lng": 12.45}
-                ]
-            }
-        },
-        {
-            "name": "Aarhus", "slug": "aarhus", "desc": "City of smiles", 
-            "territory_id": "dk", "inherit_requirements": False,
-            "lat": 56.1629, "lng": 10.2039,
-            "coverage": {
-                "type": "polygon",
-                "coordinates": [
-                    {"lat": 56.25, "lng": 10.10},
-                    {"lat": 56.25, "lng": 10.30},
-                    {"lat": 56.10, "lng": 10.30},
-                    {"lat": 56.10, "lng": 10.10}
-                ]
-            }
-        },
-        {
-            "name": "Odense", "slug": "odense", "desc": "H.C. Andersen's hometown", 
-            "territory_id": "dk", "inherit_requirements": False,
-            "lat": 55.4038, "lng": 10.4024,
-            "coverage": {
-                "type": "polygon",
-                "coordinates": [
-                    {"lat": 55.45, "lng": 10.30},
-                    {"lat": 55.45, "lng": 10.50},
-                    {"lat": 55.35, "lng": 10.50},
-                    {"lat": 55.35, "lng": 10.30}
-                ]
-            }
-        },
-        {
-            "name": "Aalborg", "slug": "aalborg", "desc": "North Jutland hub", 
-            "territory_id": "dk", "inherit_requirements": False,
-            "lat": 57.0488, "lng": 9.9217,
-            "coverage": {
-                "type": "polygon",
-                "coordinates": [
-                    {"lat": 57.10, "lng": 9.80},
-                    {"lat": 57.10, "lng": 10.05},
-                    {"lat": 57.00, "lng": 10.05},
-                    {"lat": 57.00, "lng": 9.80}
-                ]
-            }
-        }
-    ]
-
-    city_ids = {}
-    for city in cities:
-        cid = create_community(token, {
-            "name": city["name"],
-            "slug": city["slug"],
-            "description": city["desc"],
-            "community_type": "zone",
-            "territory_id": city["territory_id"],
-            "parent_community_id": dk_id,
-            "inherit_requirements": city["inherit_requirements"],
-            "location_lat": city["lat"],
-            "location_lng": city["lng"],
-            "coverage_area": city["coverage"]
-        })
-        if cid:
-            city_ids[city["slug"]] = cid
-
-    # 3. Neighborhoods in Copenhagen
-    cph_hoods = [
-        {
-            "name": "Nørrebro", "slug": "noerrebro", "desc": "Multicultural and vibrant",
-            "lat": 55.6906, "lng": 12.5553, "radius": 1500.0
-        },
-        {
-            "name": "Vesterbro", "slug": "vesterbro", "desc": "Hipster paradise",
-            "lat": 55.6694, "lng": 12.5486, "radius": 1500.0
-        },
-        {
-            "name": "Østerbro", "slug": "oesterbro", "desc": "Family friendly",
-            "lat": 55.7083, "lng": 12.5783, "radius": 1500.0
-        },
-        {
-            "name": "Christianshavn", "slug": "christianshavn", "desc": "Canals and history",
-            "lat": 55.6722, "lng": 12.5917, "radius": 1000.0
-        }
-    ]
-
-    for hood in cph_hoods:
-        if "copenhagen" in city_ids:
-            create_community(token, {
-                "name": hood["name"],
-                "slug": hood["slug"],
-                "description": hood["desc"],
-                "community_type": "neighborhood",
-                "territory_id": "dk",
-                "parent_community_id": city_ids["copenhagen"],
-                "inherit_requirements": False,
-                "location_lat": hood["lat"],
-                "location_lng": hood["lng"],
-                "coverage_area": {
-                    "type": "circle",
-                    "center": {"lat": hood["lat"], "lng": hood["lng"]},
-                    "radius": hood["radius"]
-                }
-            })
-
-    # 4. Guilds (Interest-based practice communities)
+    # =========================================================================
+    # Step 2: Guilds (Interest-based practice communities)
+    # =========================================================================
+    log("")
+    log("=== Creating Guilds ===")
+    
     guilds = [
         {"name": "Sovereignty & Self-Governance", "slug": "sovereignty-guild", 
          "desc": "Practices for personal and collective sovereignty, consent-based decision making, and self-determination"},
@@ -261,7 +166,12 @@ def seed_communities(token):
         if gid:
             guild_ids[guild["slug"]] = gid
 
-    # 5. Study Groups (Learning-focused communities)
+    # =========================================================================
+    # Step 3: Study Groups (Learning-focused communities)
+    # =========================================================================
+    log("")
+    log("=== Creating Study Groups ===")
+    
     study_groups = [
         {"name": "Introduction to Permaculture Design", "slug": "permaculture-intro", 
          "desc": "72-hour PDC curriculum covering ethics, principles, and design methodology"},
@@ -292,7 +202,11 @@ def seed_communities(token):
             "inherit_requirements": False
         })
 
-    # 6. Groups (Container communities for related topics)
+    # =========================================================================
+    # Step 4: Groups (Container communities for related topics)
+    # =========================================================================
+    log("")
+    log("=== Creating Groups ===")
     
     # Healing & Wellness Group
     healing_id = create_community(token, {
@@ -414,7 +328,31 @@ def seed_communities(token):
             "inherit_requirements": True
         })
 
-    # 7. Local Chapters of Guilds (attached to cities)
+    # =========================================================================
+    # Step 5: Local Chapters (attached to geographic communities)
+    # =========================================================================
+    log("")
+    log("=== Creating Local Chapters ===")
+    
+    # Look up municipality communities created by geo script
+    # Using "Kommune" suffix as created by seed-denmark-geo.py
+    city_slugs = {
+        "copenhagen": "koebenhavn-kommune",  # København Kommune
+        "aarhus": "aarhus-kommune",           # Århus Kommune  
+        "odense": "odense-kommune",           # Odense Kommune
+        "aalborg": "aalborg-kommune"          # Aalborg Kommune
+    }
+    
+    city_ids = {}
+    for city_key, slug in city_slugs.items():
+        cid = find_community_by_slug(token, slug)
+        if cid:
+            city_ids[city_key] = cid
+            log(f"Found {city_key}: {cid}")
+        else:
+            log(f"Note: {city_key} ({slug}) not found - skipping local chapters")
+
+    # Copenhagen chapters
     if "copenhagen" in city_ids:
         create_community(token, {
             "name": "Copenhagen Food Forest Network",
@@ -435,6 +373,7 @@ def seed_communities(token):
             "inherit_requirements": True
         })
 
+    # Aarhus chapters
     if "aarhus" in city_ids:
         create_community(token, {
             "name": "Aarhus Seed Library",
@@ -455,6 +394,7 @@ def seed_communities(token):
             "inherit_requirements": True
         })
 
+    # Odense chapters
     if "odense" in city_ids:
         create_community(token, {
             "name": "Fyn Regenerative Farmers",
@@ -466,6 +406,7 @@ def seed_communities(token):
             "inherit_requirements": True
         })
 
+    # Aalborg chapters
     if "aalborg" in city_ids:
         create_community(token, {
             "name": "Nordjylland Herbal Guild",
@@ -477,7 +418,8 @@ def seed_communities(token):
             "inherit_requirements": True
         })
 
-    log("Seeding complete!")
+    log("")
+    log("=== Seeding complete! ===")
 
 if __name__ == "__main__":
     token = get_token()

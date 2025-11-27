@@ -419,9 +419,22 @@ def create_circular_coverage(lat: float, lng: float, radius_m: float):
     }
 
 
-def get_coc_badge_id(cursor) -> Optional[str]:
+def get_coc_badge_id(conn, cursor) -> Optional[str]:
     """Get the Code of Conduct badge ID."""
     try:
+        # Check if the table exists first
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'territory_dk' 
+                AND table_name = 'badge_definitions'
+            )
+        """)
+        table_exists = cursor.fetchone()[0]
+        
+        if not table_exists:
+            return None
+            
         cursor.execute("""
             SELECT id FROM territory_dk.badge_definitions 
             WHERE slug = 'code-of-conduct'
@@ -430,13 +443,31 @@ def get_coc_badge_id(cursor) -> Optional[str]:
         row = cursor.fetchone()
         return row["id"] if row else None
     except Exception:
+        # If anything fails, rollback to clean state and return None
+        conn.rollback()
         return None
+
+
+def generate_slug(name: str) -> str:
+    """Generate a URL-friendly slug from a name."""
+    import re
+    # Convert to lowercase
+    slug = name.lower()
+    # Replace Danish characters
+    slug = slug.replace('æ', 'ae').replace('ø', 'oe').replace('å', 'aa')
+    slug = slug.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
+    # Replace spaces and special chars with hyphens
+    slug = re.sub(r'[^a-z0-9]+', '-', slug)
+    # Remove leading/trailing hyphens
+    slug = slug.strip('-')
+    return slug
 
 
 def create_community(cursor, data: dict, dry_run: bool = False) -> str:
     """Create a community in the database."""
     community_id = generate_uuid()
     now = datetime.utcnow()
+    slug = data.get("slug") or generate_slug(data["name"])
     
     if dry_run:
         print(f"  [DRY-RUN] Would create: {data['name']} ({data['type']}) -> {community_id}")
@@ -444,15 +475,16 @@ def create_community(cursor, data: dict, dry_run: bool = False) -> str:
     
     cursor.execute("""
         INSERT INTO territory_dk.community_communities (
-            id, territory_id, name, description, type, 
+            id, slug, territory_id, name, description, type, 
             parent_community_id, location_lat, location_lng, coverage_area,
             created_at, updated_at
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
         RETURNING id
     """, (
         community_id,
+        slug,
         TERRITORY_ID,
         data["name"],
         data.get("description", ""),
@@ -623,8 +655,13 @@ def seed_neighborhoods(cursor, municipality_ids: dict, coc_badge_id: Optional[st
         for nb_name, lat, lng in neighborhoods:
             coverage = create_circular_coverage(lat, lng, NEIGHBORHOOD_RADIUS_M)
             
+            # Generate unique slug including municipality to avoid duplicates
+            # e.g., "strandby-esbjerg" vs "strandby-frederikshavn"
+            unique_slug = generate_slug(f"{nb_name}-{muni_name}")
+            
             community_id = create_community(cursor, {
                 "name": nb_name,
+                "slug": unique_slug,
                 "description": f"Neighborhood in {muni_name}",
                 "type": "neighborhood",
                 "parent_community_id": muni_id,
@@ -663,7 +700,7 @@ def main():
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cursor:
             # Get Code of Conduct badge ID
-            coc_badge_id = get_coc_badge_id(cursor)
+            coc_badge_id = get_coc_badge_id(conn, cursor)
             if coc_badge_id:
                 print(f"\nFound Code of Conduct badge: {coc_badge_id}")
             else:
