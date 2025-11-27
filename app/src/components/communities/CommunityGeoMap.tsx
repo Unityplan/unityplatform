@@ -93,7 +93,7 @@ function createCustomIcon(type: CommunityType, isTopLevel: boolean = false) {
     });
 } export function CommunityGeoMap() {
     const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null)
-    
+
     // Load only geo markers (lightweight) - zones and neighborhoods only
     const { data: geoMarkers, isLoading: isLoadingMarkers } = useQuery({
         queryKey: ['geo-markers', 'zone', 'neighborhood'],
@@ -185,8 +185,8 @@ function createCustomIcon(type: CommunityType, isTopLevel: boolean = false) {
 
                     return (
                         <div key={marker.id}>
-                            <Marker 
-                                position={position} 
+                            <Marker
+                                position={position}
                                 icon={createCustomIcon(marker.communityType, isTopLevel)}
                                 eventHandlers={{
                                     click: () => setSelectedCommunityId(marker.id),

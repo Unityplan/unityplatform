@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { communityService, CommunityType, type Community, type EffectiveBadgeRequirement } from '@/api/community'
 import { Loader2, Map as MapIcon, ChevronRight, ChevronDown, Users, MapPin, BookOpen, Hammer, Shield, Package } from 'lucide-react'
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -30,11 +30,24 @@ export function StructureMap() {
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
     const queryClient = useQueryClient()
 
-    // Load first 2 levels of hierarchy
+    // Load first 3 levels of hierarchy (roots + 2 more levels)
     const { data: initialCommunities, isLoading, error } = useQuery({
-        queryKey: ['communities-hierarchy', 2],
-        queryFn: () => communityService.getHierarchy(2),
+        queryKey: ['communities-hierarchy', 3],
+        queryFn: () => communityService.getHierarchy(3),
     })
+
+    // Auto-expand root nodes when data loads
+    useEffect(() => {
+        if (initialCommunities && expandedNodes.size === 0) {
+            // Find root communities (no parent) and expand them
+            const rootIds = initialCommunities
+                .filter(c => !c.parent_community_id)
+                .map(c => c.id)
+            if (rootIds.length > 0) {
+                setExpandedNodes(new Set(rootIds))
+            }
+        }
+    }, [initialCommunities, expandedNodes.size])
 
     // Fetch all requirements for visible communities
     const visibleCommunityIds = useMemo(() => {
@@ -162,9 +175,9 @@ export function StructureMap() {
                 ) : (
                     <div className="space-y-2">
                         {tree.map((node) => (
-                            <TreeNodeItem 
-                                key={node.id} 
-                                node={node} 
+                            <TreeNodeItem
+                                key={node.id}
+                                node={node}
                                 level={0}
                                 expandedNodes={expandedNodes}
                                 onToggleExpand={toggleExpanded}
@@ -251,13 +264,20 @@ function buildTree(communities: Community[], requirementsMap: Map<string, Effect
         }
     })
 
-    // Third pass: update hasChildren based on actual children and sort all children recursively
-    const sortChildrenRecursive = (nodes: TreeNode[]) => {
+    // Third pass: update hasChildren and mark deepest level nodes as potentially having more children
+    // Nodes at depth 3 (the max loaded depth) that are Zones or Neighborhoods likely have children
+    const sortChildrenRecursive = (nodes: TreeNode[], depth: number = 0) => {
         for (const node of nodes) {
-            node.hasChildren = node.children.length > 0
             if (node.children.length > 0) {
+                node.hasChildren = true
                 node.children = sortNodes(node.children)
-                sortChildrenRecursive(node.children)
+                sortChildrenRecursive(node.children, depth + 1)
+            } else {
+                // At the deepest loaded level, Zones and Neighborhoods likely have children
+                // Mark them as having children so they can be expanded to lazy load
+                const isPhysicalType = node.type === CommunityType.Zone || node.type === CommunityType.Neighborhood
+                node.hasChildren = isPhysicalType // Assume physical types have children
+                node.childrenLoaded = !isPhysicalType // Only mark as loaded if not physical type
             }
         }
     }
@@ -295,17 +315,17 @@ interface TreeNodeItemProps {
 function TreeNodeItem({ node, level, expandedNodes, onToggleExpand, onLoadChildren }: TreeNodeItemProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [loadedChildren, setLoadedChildren] = useState<TreeNode[]>([])
-    
+
     const isExpanded = expandedNodes.has(node.id)
     const hasChildren = node.hasChildren || node.children.length > 0
     const hasBadges = node.badgeRequirements.length > 0
-    
+
     // Use loaded children if available, otherwise use tree children
     const childrenToShow = loadedChildren.length > 0 ? loadedChildren : node.children
 
     const handleToggle = async () => {
         if (!hasChildren) return
-        
+
         // If expanding and children not yet loaded, load them
         if (!isExpanded && node.children.length === 0 && !loadedChildren.length) {
             setIsLoading(true)
@@ -324,7 +344,7 @@ function TreeNodeItem({ node, level, expandedNodes, onToggleExpand, onLoadChildr
                 setIsLoading(false)
             }
         }
-        
+
         onToggleExpand(node.id)
     }
 
@@ -439,9 +459,9 @@ function TreeNodeItem({ node, level, expandedNodes, onToggleExpand, onLoadChildr
                     "md:ml-5 md:pl-4 md:border-l md:border-border/40"
                 )}>
                     {childrenToShow.map((child) => (
-                        <TreeNodeItem 
-                            key={child.id} 
-                            node={child} 
+                        <TreeNodeItem
+                            key={child.id}
+                            node={child}
                             level={level + 1}
                             expandedNodes={expandedNodes}
                             onToggleExpand={onToggleExpand}

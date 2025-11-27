@@ -72,7 +72,7 @@ export function CommunitiesIndexPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [typeFilter, setTypeFilter] = useState<CommunityType | 'all'>('all')
     const loadMoreRef = useRef<HTMLDivElement>(null)
-    
+
     // Debounced search query
     const [debouncedSearch, setDebouncedSearch] = useState('')
     useEffect(() => {
@@ -89,14 +89,14 @@ export function CommunitiesIndexPage() {
         isFetchingNextPage,
     } = useInfiniteQuery({
         queryKey: ['communities-paginated', debouncedSearch, typeFilter],
-        queryFn: ({ pageParam = 0 }) => 
+        queryFn: ({ pageParam = 0 }) =>
             communityService.listCommunitiesPaginated({
                 search: debouncedSearch || undefined,
                 community_type: typeFilter === 'all' ? undefined : typeFilter,
                 limit: PAGE_SIZE,
                 offset: pageParam,
             }),
-        getNextPageParam: (lastPage: PaginatedCommunities) => 
+        getNextPageParam: (lastPage: PaginatedCommunities) =>
             lastPage.hasMore ? lastPage.offset + lastPage.limit : undefined,
         initialPageParam: 0,
     })

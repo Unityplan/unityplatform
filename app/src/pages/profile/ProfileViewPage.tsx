@@ -151,7 +151,7 @@ export function ProfileViewPage() {
         );
     }
 
-    if (error || !profile) {
+    if (error || !profile || !user) {
         return (
             <AppLayout
                 breadcrumbs={
@@ -230,8 +230,8 @@ export function ProfileViewPage() {
                 {/* Profile Header - Social Network Style */}
                 <ProfileHeader
                     user={{
-                        id: user!.id,
-                        username: user!.username,
+                        id: user.id,
+                        username: user.username,
                         fullName: profile.fullName || null,
                         avatarUrl: profile.avatarUrl || null,
                         bio: profile.bio || null,
@@ -267,10 +267,10 @@ export function ProfileViewPage() {
                                     <div className="flex items-start justify-between">
                                         <div className="flex gap-3">
                                             <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                                                {user!.username.substring(0, 2).toUpperCase()}
+                                                {user.username?.substring(0, 2).toUpperCase() ?? 'UN'}
                                             </div>
                                             <div>
-                                                <CardTitle className="text-base">{user!.username}</CardTitle>
+                                                <CardTitle className="text-base">{user.username ?? 'Unknown'}</CardTitle>
                                                 <CardDescription className="flex items-center gap-1">
                                                     <Calendar className="size-3" />
                                                     {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
@@ -320,7 +320,7 @@ export function ProfileViewPage() {
                                     </div>
                                     <div className="flex-1 space-y-1">
                                         <p className="text-sm">
-                                            <span className="font-semibold">{user!.username}</span> {activity.action}
+                                            <span className="font-semibold">{user.username ?? 'Unknown'}</span> {activity.action}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
                                             {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}

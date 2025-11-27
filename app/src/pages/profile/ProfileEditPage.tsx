@@ -93,9 +93,17 @@ export function ProfileEditPage() {
             try {
                 setIsLoading(true);
 
-                const profileData = await getUserProfile(user.id);
+                // Load profile, links, and languages in parallel
+                const [profileData, linksData, languagesData] = await Promise.all([
+                    getUserProfile(user.id),
+                    getProfileLinks().catch(() => []),
+                    getLanguageProficiencies().catch(() => []),
+                ]);
 
                 setProfile(profileData);
+                // Ensure we always have arrays even if API returns unexpected data
+                setLinks(Array.isArray(linksData) ? linksData : []);
+                setLanguages(Array.isArray(languagesData) ? languagesData : []);
 
                 // Set form default values
                 reset({
@@ -111,12 +119,6 @@ export function ProfileEditPage() {
                 if (profileData.avatarUrl) {
                     setAvatarPreview(profileData.avatarUrl);
                 }
-
-                // Load links
-                await loadLinks();
-
-                // Load languages
-                await loadLanguages();
             } catch (err) {
                 toast.error('Failed to load profile data');
                 console.error('Failed to load profile:', err);
@@ -259,7 +261,7 @@ export function ProfileEditPage() {
         );
     }
 
-    if (!profile) {
+    if (!profile || !user) {
         return (
             <AppLayout
                 breadcrumbs={
@@ -371,7 +373,7 @@ export function ProfileEditPage() {
                                                 className="h-full w-full object-cover"
                                             />
                                         ) : (
-                                            <span>{user?.username.charAt(0).toUpperCase()}</span>
+                                            <span>{user.username?.charAt(0).toUpperCase() ?? 'U'}</span>
                                         )}
                                     </div>
                                 </div>
