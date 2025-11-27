@@ -227,29 +227,58 @@ def seed_communities(token):
                 }
             })
 
-    # 4. Guilds (Interest based, can be global or attached to root)
+    # 4. Guilds (Interest-based practice communities)
     guilds = [
-        {"name": "Permaculture Guild", "slug": "permaculture-guild", "desc": "Sustainable living practices"},
-        {"name": "Rust Developers", "slug": "rust-devs", "desc": "Ferris fans unite"},
-        {"name": "Holochain Architects", "slug": "holochain-arch", "desc": "Building the distributed web"},
-        {"name": "Urban Farming", "slug": "urban-farming", "desc": "Growing food in the city"}
+        {"name": "Sovereignty & Self-Governance", "slug": "sovereignty-guild", 
+         "desc": "Practices for personal and collective sovereignty, consent-based decision making, and self-determination"},
+        {"name": "Earth Regeneration", "slug": "earth-regeneration", 
+         "desc": "Restoring ecosystems, rewilding, and healing damaged landscapes"},
+        {"name": "Syntropic Agroforestry", "slug": "syntropic-agroforestry", 
+         "desc": "Practicing Ernst Götsch's methods of regenerative agriculture through forest succession"},
+        {"name": "Clean Water Stewardship", "slug": "clean-water-stewards", 
+         "desc": "Protecting, purifying, and restoring water sources and watersheds"},
+        {"name": "Seed Keepers", "slug": "seed-keepers", 
+         "desc": "Preserving heirloom seeds, seed saving, and maintaining genetic diversity"},
+        {"name": "Natural Building", "slug": "natural-building", 
+         "desc": "Building with earth, straw, timber, and natural materials"},
+        {"name": "Holistic Health Practitioners", "slug": "holistic-health", 
+         "desc": "Natural medicine, herbalism, bodywork, and preventive health practices"},
+        {"name": "Food Sovereignty", "slug": "food-sovereignty", 
+         "desc": "Local food systems, community gardens, and food independence"}
     ]
 
+    guild_ids = {}
     for guild in guilds:
-        create_community(token, {
+        gid = create_community(token, {
             "name": guild["name"],
             "slug": guild["slug"],
             "description": guild["desc"],
             "community_type": "guild",
             "territory_id": "dk",
-            "parent_community_id": dk_id, # Attached to Denmark for now
+            "parent_community_id": dk_id,
             "inherit_requirements": False
         })
+        if gid:
+            guild_ids[guild["slug"]] = gid
 
-    # 5. Study Groups
+    # 5. Study Groups (Learning-focused communities)
     study_groups = [
-        {"name": "Rust 101", "slug": "rust-101", "desc": "Beginner Rust course"},
-        {"name": "Advanced Systems", "slug": "adv-systems", "desc": "Deep dive into systems programming"},
+        {"name": "Introduction to Permaculture Design", "slug": "permaculture-intro", 
+         "desc": "72-hour PDC curriculum covering ethics, principles, and design methodology"},
+        {"name": "Nonviolent Communication Circle", "slug": "nvc-circle", 
+         "desc": "Learning Marshall Rosenberg's NVC for compassionate communication"},
+        {"name": "Water Harvesting & Retention", "slug": "water-harvesting", 
+         "desc": "Designing swales, ponds, and water retention landscapes"},
+        {"name": "Fermentation Fundamentals", "slug": "fermentation-fundamentals", 
+         "desc": "Learning the art of fermented foods for gut health and preservation"},
+        {"name": "Trauma-Informed Facilitation", "slug": "trauma-informed-facilitation", 
+         "desc": "Creating safe spaces and understanding nervous system regulation"},
+        {"name": "Mushroom Cultivation Basics", "slug": "mushroom-cultivation", 
+         "desc": "Growing gourmet and medicinal mushrooms at home"},
+        {"name": "Herbal Medicine Making", "slug": "herbal-medicine", 
+         "desc": "Creating tinctures, salves, and herbal preparations"},
+        {"name": "Sociocracy & Consent Decision Making", "slug": "sociocracy-study", 
+         "desc": "Learning circular governance and consent-based organizational structures"}
     ]
 
     for group in study_groups:
@@ -263,58 +292,188 @@ def seed_communities(token):
             "inherit_requirements": False
         })
 
-    # 6. Groups (Container communities)
-    # Mycology is now a Group that contains related communities
-    mycology_id = create_community(token, {
-        "name": "Mycology",
-        "slug": "mycology-group",
-        "description": "Container for all fungi-related communities",
+    # 6. Groups (Container communities for related topics)
+    
+    # Healing & Wellness Group
+    healing_id = create_community(token, {
+        "name": "Healing & Wellness",
+        "slug": "healing-wellness",
+        "description": "Container for all healing modalities and wellness practices",
         "community_type": "group",
         "territory_id": "dk",
         "parent_community_id": dk_id,
         "inherit_requirements": False
     })
 
-    # Create child communities inside the Mycology group
-    if mycology_id:
+    if healing_id:
         create_community(token, {
-            "name": "Mushroom Foraging",
-            "slug": "mushroom-foraging",
-            "description": "Finding and identifying wild mushrooms",
+            "name": "Breathwork & Meditation",
+            "slug": "breathwork-meditation",
+            "description": "Exploring conscious breathing techniques and meditation practices",
             "community_type": "guild",
             "territory_id": "dk",
-            "parent_community_id": mycology_id,
+            "parent_community_id": healing_id,
             "inherit_requirements": True
         })
         create_community(token, {
-            "name": "Fungi Cultivation",
-            "slug": "fungi-cultivation",
-            "description": "Growing mushrooms at home and in farms",
-            "community_type": "study_group",
+            "name": "Plant Medicine Circle",
+            "slug": "plant-medicine",
+            "description": "Respectful exploration of sacred plant allies and traditional ceremonies",
+            "community_type": "guild",
             "territory_id": "dk",
-            "parent_community_id": mycology_id,
+            "parent_community_id": healing_id,
             "inherit_requirements": True
         })
         create_community(token, {
-            "name": "Medicinal Mushrooms",
-            "slug": "medicinal-mushrooms",
-            "description": "Research and discussion on therapeutic fungi",
+            "name": "Somatic Healing",
+            "slug": "somatic-healing",
+            "description": "Body-based approaches to healing trauma and restoring vitality",
             "community_type": "study_group",
             "territory_id": "dk",
-            "parent_community_id": mycology_id,
+            "parent_community_id": healing_id,
             "inherit_requirements": True
         })
 
-    # 7. Sub-communities for Guilds (Chapters)
-    # Assuming we can find the guild IDs, but for simplicity let's just create some attached to cities
+    # Regenerative Land Group
+    land_id = create_community(token, {
+        "name": "Regenerative Land Practices",
+        "slug": "regenerative-land",
+        "description": "All practices related to healing and working with land",
+        "community_type": "group",
+        "territory_id": "dk",
+        "parent_community_id": dk_id,
+        "inherit_requirements": False
+    })
+
+    if land_id:
+        create_community(token, {
+            "name": "Food Forest Design",
+            "slug": "food-forest-design",
+            "description": "Designing multi-layered edible ecosystems",
+            "community_type": "guild",
+            "territory_id": "dk",
+            "parent_community_id": land_id,
+            "inherit_requirements": True
+        })
+        create_community(token, {
+            "name": "Soil Regeneration",
+            "slug": "soil-regeneration",
+            "description": "Building living soil through composting, cover crops, and no-till methods",
+            "community_type": "study_group",
+            "territory_id": "dk",
+            "parent_community_id": land_id,
+            "inherit_requirements": True
+        })
+        create_community(token, {
+            "name": "Wildcraft & Foraging",
+            "slug": "wildcraft-foraging",
+            "description": "Ethical wildcrafting, foraging, and connecting with local ecosystems",
+            "community_type": "guild",
+            "territory_id": "dk",
+            "parent_community_id": land_id,
+            "inherit_requirements": True
+        })
+
+    # Community Building Group
+    community_building_id = create_community(token, {
+        "name": "Intentional Community Building",
+        "slug": "intentional-community",
+        "description": "Resources for creating and sustaining intentional communities",
+        "community_type": "group",
+        "territory_id": "dk",
+        "parent_community_id": dk_id,
+        "inherit_requirements": False
+    })
+
+    if community_building_id:
+        create_community(token, {
+            "name": "Ecovillage Design",
+            "slug": "ecovillage-design",
+            "description": "Planning and developing sustainable human settlements",
+            "community_type": "study_group",
+            "territory_id": "dk",
+            "parent_community_id": community_building_id,
+            "inherit_requirements": True
+        })
+        create_community(token, {
+            "name": "Conflict Transformation",
+            "slug": "conflict-transformation",
+            "description": "Tools and practices for healthy conflict resolution in communities",
+            "community_type": "guild",
+            "territory_id": "dk",
+            "parent_community_id": community_building_id,
+            "inherit_requirements": True
+        })
+        create_community(token, {
+            "name": "Gift Economy Experiments",
+            "slug": "gift-economy",
+            "description": "Exploring alternatives to transactional economics",
+            "community_type": "study_group",
+            "territory_id": "dk",
+            "parent_community_id": community_building_id,
+            "inherit_requirements": True
+        })
+
+    # 7. Local Chapters of Guilds (attached to cities)
+    if "copenhagen" in city_ids:
+        create_community(token, {
+            "name": "Copenhagen Food Forest Network",
+            "slug": "cph-food-forest",
+            "description": "Urban food forests and edible landscapes in Copenhagen",
+            "community_type": "guild",
+            "territory_id": "dk",
+            "parent_community_id": city_ids["copenhagen"],
+            "inherit_requirements": True
+        })
+        create_community(token, {
+            "name": "København Healing Circle",
+            "slug": "cph-healing-circle",
+            "description": "Weekly gathering for holistic health practitioners in Copenhagen",
+            "community_type": "guild",
+            "territory_id": "dk",
+            "parent_community_id": city_ids["copenhagen"],
+            "inherit_requirements": True
+        })
+
     if "aarhus" in city_ids:
         create_community(token, {
-            "name": "Aarhus Rust Meetup",
-            "slug": "aarhus-rust",
-            "description": "Local Rust chapter",
+            "name": "Aarhus Seed Library",
+            "slug": "aarhus-seed-library",
+            "description": "Community seed saving and sharing initiative",
             "community_type": "guild",
             "territory_id": "dk",
             "parent_community_id": city_ids["aarhus"],
+            "inherit_requirements": True
+        })
+        create_community(token, {
+            "name": "Aarhus Water Protectors",
+            "slug": "aarhus-water-protectors",
+            "description": "Protecting and restoring local waterways",
+            "community_type": "guild",
+            "territory_id": "dk",
+            "parent_community_id": city_ids["aarhus"],
+            "inherit_requirements": True
+        })
+
+    if "odense" in city_ids:
+        create_community(token, {
+            "name": "Fyn Regenerative Farmers",
+            "slug": "fyn-regen-farmers",
+            "description": "Network of regenerative farmers on Funen island",
+            "community_type": "guild",
+            "territory_id": "dk",
+            "parent_community_id": city_ids["odense"],
+            "inherit_requirements": True
+        })
+
+    if "aalborg" in city_ids:
+        create_community(token, {
+            "name": "Nordjylland Herbal Guild",
+            "slug": "nordjylland-herbal",
+            "description": "Traditional herbalism and wildcrafting in North Jutland",
+            "community_type": "guild",
+            "territory_id": "dk",
+            "parent_community_id": city_ids["aalborg"],
             "inherit_requirements": True
         })
 
