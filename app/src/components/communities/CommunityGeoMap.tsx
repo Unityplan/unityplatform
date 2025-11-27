@@ -5,6 +5,7 @@ import { Loader2, Map as MapIcon, Users, Hammer, BookOpen } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Icon, DivIcon } from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { useState } from 'react'
 import 'leaflet/dist/leaflet.css'
 
 // Fix for default marker icon in React Leaflet
@@ -91,12 +92,22 @@ function createCustomIcon(type: CommunityType, isTopLevel: boolean = false) {
         popupAnchor: [0, -50],
     });
 } export function CommunityGeoMap() {
-    const { data: communities, isLoading } = useQuery({
-        queryKey: ['communities'],
-        queryFn: () => communityService.listCommunities({}),
+    const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null)
+    
+    // Load only geo markers (lightweight) - zones and neighborhoods only
+    const { data: geoMarkers, isLoading: isLoadingMarkers } = useQuery({
+        queryKey: ['geo-markers', 'zone', 'neighborhood'],
+        queryFn: () => communityService.getGeoMarkers([CommunityType.Zone, CommunityType.Neighborhood]),
     })
 
-    if (isLoading) {
+    // Lazy load full community details when a marker is clicked
+    const { data: selectedCommunity, isLoading: isLoadingDetails } = useQuery({
+        queryKey: ['community', selectedCommunityId],
+        queryFn: () => communityService.getCommunity(selectedCommunityId!),
+        enabled: !!selectedCommunityId,
+    })
+
+    if (isLoadingMarkers) {
         return (
             <div className="flex h-[600px] items-center justify-center rounded-lg border bg-muted/10">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -104,9 +115,9 @@ function createCustomIcon(type: CommunityType, isTopLevel: boolean = false) {
         )
     }
 
-    // Filter for communities with location data
-    const locatedCommunities = communities?.filter(
-        (c) => c.location_lat && c.location_lng
+    // Filter for markers with location data
+    const locatedMarkers = geoMarkers?.filter(
+        (m) => m.locationLat && m.locationLng
     ) || []
 
     // Center on Denmark (default)
@@ -152,11 +163,11 @@ function createCustomIcon(type: CommunityType, isTopLevel: boolean = false) {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
 
-                {locatedCommunities.map((community) => {
-                    const position: [number, number] = [community.location_lat!, community.location_lng!]
-                    const isTopLevel = community.type === CommunityType.Zone && !community.parent_community_id
+                {locatedMarkers.map((marker) => {
+                    const position: [number, number] = [marker.locationLat!, marker.locationLng!]
+                    const isTopLevel = marker.communityType === CommunityType.Zone && !marker.parentCommunityId
 
-                    let color = getCommunityColor(community.type)
+                    let color = getCommunityColor(marker.communityType)
                     if (isTopLevel) {
                         color = '#f87171' // Light red (red-400)
                     }
@@ -169,42 +180,63 @@ function createCustomIcon(type: CommunityType, isTopLevel: boolean = false) {
                         pathOptions = { color: color, fillColor: 'transparent', fillOpacity: 0 }
                     }
 
+                    // Get coverage area if available
+                    const coverageArea = marker.coverageArea as { type?: string; radius?: number; center?: { lat: number; lng: number }; coordinates?: Array<{ lat: number; lng: number }> } | undefined
+
                     return (
-                        <div key={community.id}>
-                            <Marker position={position} icon={createCustomIcon(community.type, isTopLevel)}>
+                        <div key={marker.id}>
+                            <Marker 
+                                position={position} 
+                                icon={createCustomIcon(marker.communityType, isTopLevel)}
+                                eventHandlers={{
+                                    click: () => setSelectedCommunityId(marker.id),
+                                }}
+                            >
                                 <Popup>
                                     <div className="min-w-[200px]">
-                                        <h3 className="font-semibold">{community.name}</h3>
-                                        <p className="text-sm text-muted-foreground mb-2">
-                                            {community.description}
-                                        </p>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs bg-secondary px-2 py-1 rounded-full">
-                                                {community.member_count} members
-                                            </span>
-                                            <Link
-                                                to="/communities/$communityId/dashboard"
-                                                params={{ communityId: community.id }}
-                                                className="text-sm text-primary hover:underline"
-                                            >
-                                                View Dashboard
-                                            </Link>
-                                        </div>
+                                        <h3 className="font-semibold">{marker.name}</h3>
+                                        {isLoadingDetails && selectedCommunityId === marker.id ? (
+                                            <div className="flex items-center justify-center py-2">
+                                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                            </div>
+                                        ) : selectedCommunity && selectedCommunityId === marker.id ? (
+                                            <>
+                                                <p className="text-sm text-muted-foreground mb-2">
+                                                    {selectedCommunity.description}
+                                                </p>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs bg-secondary px-2 py-1 rounded-full">
+                                                        {selectedCommunity.member_count} members
+                                                    </span>
+                                                    <Link
+                                                        to="/communities/$communityId/dashboard"
+                                                        params={{ communityId: marker.id }}
+                                                        className="text-sm text-primary hover:underline"
+                                                    >
+                                                        View Dashboard
+                                                    </Link>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground">
+                                                Click to load details...
+                                            </p>
+                                        )}
                                     </div>
                                 </Popup>
                             </Marker>
 
-                            {community.coverage_area?.type === 'circle' && community.coverage_area.radius && (
+                            {coverageArea?.type === 'circle' && coverageArea.radius && (
                                 <Circle
                                     center={position}
-                                    radius={community.coverage_area.radius}
+                                    radius={coverageArea.radius}
                                     pathOptions={pathOptions}
                                 />
                             )}
 
-                            {community.coverage_area?.type === 'polygon' && community.coverage_area.coordinates && (
+                            {coverageArea?.type === 'polygon' && coverageArea.coordinates && (
                                 <Polygon
-                                    positions={community.coverage_area.coordinates.map(p => [p.lat, p.lng])}
+                                    positions={coverageArea.coordinates.map(p => [p.lat, p.lng])}
                                     pathOptions={pathOptions}
                                 />
                             )}
