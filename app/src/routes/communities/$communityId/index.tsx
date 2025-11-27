@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { communityService, CommunityType, type EffectiveBadgeRequirement } from '@/api/community'
 import { territoryService } from '@/api/territory'
-import { Loader2, Home, Map as MapIcon, Hammer, Users, BookOpen, Shield, Package, Lock } from 'lucide-react'
+import { Loader2, Home, Map as MapIcon, Hammer, Users, BookOpen, Shield, Package, Lock, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Link } from '@tanstack/react-router'
@@ -202,8 +202,9 @@ function CommunityDetail() {
                         <div className="ml-auto flex items-center gap-2">
                             {isManager && (
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link to="/communities/$communityId/edit" params={{ communityId }}>
-                                        Edit
+                                    <Link to="/communities/$communityId/dashboard/settings" params={{ communityId }}>
+                                        <Settings className="mr-1.5 h-4 w-4" />
+                                        Settings
                                     </Link>
                                 </Button>
                             )}
