@@ -259,7 +259,11 @@ impl CommunityService {
     }
 
     /// Get direct children of a community
-    pub async fn get_children(&self, community_id: Uuid, limit: Option<i64>) -> Result<Vec<Community>> {
+    pub async fn get_children(
+        &self,
+        community_id: Uuid,
+        limit: Option<i64>,
+    ) -> Result<Vec<Community>> {
         let limit = limit.unwrap_or(100).min(500);
         sqlx::query_as::<_, Community>(
             r#"
@@ -350,10 +354,9 @@ impl CommunityService {
         community_types: Option<Vec<CommunityType>>,
     ) -> Result<Vec<crate::models::GeoMarker>> {
         use crate::models::GeoMarkerRow;
-        
-        let types = community_types.unwrap_or_else(|| {
-            vec![CommunityType::Zone, CommunityType::Neighborhood]
-        });
+
+        let types = community_types
+            .unwrap_or_else(|| vec![CommunityType::Zone, CommunityType::Neighborhood]);
 
         let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
             r#"SELECT id, name, slug, type as community_type, 
@@ -361,9 +364,9 @@ impl CommunityService {
                       parent_community_id
                FROM territory_dk.community_communities 
                WHERE (location_lat IS NOT NULL OR coverage_area IS NOT NULL)
-                 AND type IN ("#
+                 AND type IN ("#,
         );
-        
+
         // Build IN clause for types
         let mut separated = query_builder.separated(", ");
         for t in &types {
@@ -376,15 +379,12 @@ impl CommunityService {
             .fetch_all(&self.pool)
             .await
             .map_err(AppError::Database)?;
-        
+
         Ok(rows.into_iter().map(|r| r.into()).collect())
     }
 
     /// Get communities up to a certain depth (for hierarchy view)
-    pub async fn get_hierarchy(
-        &self,
-        max_depth: i32,
-    ) -> Result<Vec<Community>> {
+    pub async fn get_hierarchy(&self, max_depth: i32) -> Result<Vec<Community>> {
         sqlx::query_as::<_, Community>(
             r#"
             WITH RECURSIVE hierarchy AS (

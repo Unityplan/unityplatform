@@ -568,7 +568,7 @@ function CommunityNodeFlowInner() {
     // Search state for finding communities
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedSearchResult, setSelectedSearchResult] = useState<string | null>(null)
-    
+
     // Drill-down state: null = show full tree, string = show subtree from that community
     const [viewRoot, setViewRoot] = useState<string | null>(null)
     // Breadcrumb trail for navigation
@@ -991,7 +991,7 @@ function CommunityNodeFlowInner() {
                         Search for a community to see its place in the hierarchy, including its ancestors and children.
                     </p>
                 </div>
-                
+
                 <div className="w-full max-w-md space-y-4">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1002,13 +1002,13 @@ function CommunityNodeFlowInner() {
                             className="pl-10"
                         />
                     </div>
-                    
+
                     {isSearching && (
                         <div className="flex items-center justify-center py-4">
                             <Loader2 className="h-5 w-5 animate-spin text-primary" />
                         </div>
                     )}
-                    
+
                     {searchResults && searchResults.length > 0 && (
                         <div className="border rounded-lg divide-y max-h-64 overflow-auto">
                             {searchResults.map((community) => (
@@ -1017,18 +1017,17 @@ function CommunityNodeFlowInner() {
                                     onClick={() => handleSelectSearchResult(community.id)}
                                     className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 text-left transition-colors"
                                 >
-                                    <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                                        community.type === CommunityType.Zone ? 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400' :
-                                        community.type === CommunityType.Neighborhood ? 'bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400' :
-                                        community.type === CommunityType.Guild ? 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400' :
-                                        community.type === CommunityType.StudyGroup ? 'bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400' :
-                                        'bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400'
-                                    }`}>
+                                    <div className={`h-8 w-8 rounded-full flex items-center justify-center ${community.type === CommunityType.Zone ? 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400' :
+                                            community.type === CommunityType.Neighborhood ? 'bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400' :
+                                                community.type === CommunityType.Guild ? 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400' :
+                                                    community.type === CommunityType.StudyGroup ? 'bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400' :
+                                                        'bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400'
+                                        }`}>
                                         {community.type === CommunityType.Zone ? <MapIcon className="h-4 w-4" /> :
-                                         community.type === CommunityType.Neighborhood ? <Users className="h-4 w-4" /> :
-                                         community.type === CommunityType.Guild ? <Hammer className="h-4 w-4" /> :
-                                         community.type === CommunityType.StudyGroup ? <BookOpen className="h-4 w-4" /> :
-                                         <Package className="h-4 w-4" />}
+                                            community.type === CommunityType.Neighborhood ? <Users className="h-4 w-4" /> :
+                                                community.type === CommunityType.Guild ? <Hammer className="h-4 w-4" /> :
+                                                    community.type === CommunityType.StudyGroup ? <BookOpen className="h-4 w-4" /> :
+                                                        <Package className="h-4 w-4" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="font-medium truncate">{community.name}</div>
@@ -1041,7 +1040,7 @@ function CommunityNodeFlowInner() {
                             ))}
                         </div>
                     )}
-                    
+
                     {searchQuery.length >= 2 && !isSearching && searchResults?.length === 0 && (
                         <p className="text-center text-sm text-muted-foreground py-4">
                             No communities found matching "{searchQuery}"

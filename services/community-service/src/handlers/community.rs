@@ -576,7 +576,9 @@ pub async fn list_communities_paginated(
     _auth_user: AuthUser,
     query: web::Query<CommunityFilter>,
 ) -> Result<HttpResponse> {
-    let result = service.list_communities_paginated(query.into_inner()).await?;
+    let result = service
+        .list_communities_paginated(query.into_inner())
+        .await?;
     Ok(HttpResponse::Ok().json(result))
 }
 
@@ -653,7 +655,9 @@ pub async fn get_community_context(
     path: web::Path<Uuid>,
     query: web::Query<ContextQuery>,
 ) -> Result<HttpResponse> {
-    let context = service.get_community_context(path.into_inner(), query.children_limit).await?;
+    let context = service
+        .get_community_context(path.into_inner(), query.children_limit)
+        .await?;
     Ok(HttpResponse::Ok().json(context))
 }
 
