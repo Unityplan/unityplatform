@@ -59,6 +59,12 @@ function CommunityDetail() {
         enabled: !!communityId,
     })
 
+    // Check if current user can manage this community
+    const { data: managedCommunityIds } = useQuery({
+        queryKey: ['managed-communities'],
+        queryFn: () => communityService.getManagedCommunities(),
+    })
+
     const { data: territory } = useQuery({
         queryKey: ['territory', community?.territory_id],
         queryFn: () => community?.territory_id ? territoryService.getTerritory(community.territory_id) : null,
@@ -100,11 +106,8 @@ function CommunityDetail() {
 
     const hasAllBadges = missingBadges.length === 0
 
-    // Check if current user is a manager (closest distance)
-    const isManager = managers && user && managers.length > 0 && (() => {
-        const minDistance = Math.min(...managers.map(m => m.distance))
-        return managers.some(m => m.user_id === user.id && m.distance === minDistance)
-    })()
+    // Check if current user can manage this community
+    const canManage = managedCommunityIds?.includes(communityId) ?? false
 
     const joinMutation = useMutation({
         mutationFn: () => communityService.joinCommunity(communityId),
@@ -200,7 +203,7 @@ function CommunityDetail() {
                         <h1 className="text-3xl font-bold tracking-tight">{community.name}</h1>
 
                         <div className="ml-auto flex items-center gap-2">
-                            {isManager && (
+                            {canManage && (
                                 <Button variant="outline" size="sm" asChild>
                                     <Link to="/communities/$communityId/dashboard/settings" params={{ communityId }}>
                                         <Settings className="mr-1.5 h-4 w-4" />
