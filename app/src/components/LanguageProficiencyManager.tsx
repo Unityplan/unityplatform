@@ -65,12 +65,15 @@ const calculateAverage = (lang: LanguageProficiency): number => {
 };
 
 export function LanguageProficiencyManager({
-    languages,
+    languages: languagesProp,
     onAdd,
     onUpdate,
     onDelete,
     disabled = false,
 }: LanguageProficiencyManagerProps) {
+    // Ensure languages is always an array
+    const languages = Array.isArray(languagesProp) ? languagesProp : [];
+
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingLanguage, setEditingLanguage] = useState<LanguageProficiency | null>(null);
     const [formData, setFormData] = useState({

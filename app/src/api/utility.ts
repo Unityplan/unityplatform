@@ -7,7 +7,8 @@
 
 import { useAuthStore } from '@/stores/authStore';
 
-const UTILITY_BASE_URL = import.meta.env.VITE_UTILITY_SERVICE_URL || 'http://localhost:8014/api/v1/utility';
+// Use the Vite proxy path - the proxy forwards /api/v1/utility to localhost:8014
+const UTILITY_BASE_URL = '/api/v1/utility';
 
 /**
  * Fetch a website's favicon

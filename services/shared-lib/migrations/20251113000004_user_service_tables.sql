@@ -28,12 +28,12 @@ CREATE TABLE IF NOT EXISTS territory_dk.user_users_profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_users_profiles_display_name ON territory_dk.user_users_profiles(display_name);
-CREATE INDEX idx_users_profiles_interests ON territory_dk.user_users_profiles USING GIN(interests);
-CREATE INDEX idx_users_profiles_skills ON territory_dk.user_users_profiles USING GIN(skills);
+CREATE INDEX IF NOT EXISTS idx_users_profiles_display_name ON territory_dk.user_users_profiles(display_name);
+CREATE INDEX IF NOT EXISTS idx_users_profiles_interests ON territory_dk.user_users_profiles USING GIN(interests);
+CREATE INDEX IF NOT EXISTS idx_users_profiles_skills ON territory_dk.user_users_profiles USING GIN(skills);
 
 -- Full-text search
-CREATE INDEX idx_users_profiles_search ON territory_dk.user_users_profiles USING GIN(
+CREATE INDEX IF NOT EXISTS idx_users_profiles_search ON territory_dk.user_users_profiles USING GIN(
     to_tsvector('english', 
         COALESCE(display_name, '') || ' ' || 
         COALESCE(bio, '') || ' ' || 

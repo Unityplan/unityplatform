@@ -26,6 +26,13 @@ import {
     FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2, Copy, Check } from 'lucide-react';
 
@@ -41,6 +48,7 @@ const formSchema = z.object({
         .optional()
         .or(z.literal('')),
     purpose: z.string().max(200, 'Max 200 characters').optional(),
+    role: z.enum(['member', 'moderator', 'admin']).default('member'),
 });
 
 export function CreateInvitationDialog() {
@@ -59,6 +67,7 @@ export function CreateInvitationDialog() {
             max_uses: 1,
             expires_in_days: 7,
             purpose: '',
+            role: 'member',
         },
     });
 
@@ -85,7 +94,10 @@ export function CreateInvitationDialog() {
         createMutation.mutate({
             max_uses: values.max_uses,
             expires_in_days: values.expires_in_days === '' ? undefined : Number(values.expires_in_days),
-            metadata: values.purpose ? { purpose: values.purpose } : undefined,
+            metadata: {
+                ...(values.purpose ? { purpose: values.purpose } : {}),
+                role: values.role,
+            },
         });
     };
 
@@ -122,6 +134,31 @@ export function CreateInvitationDialog() {
                 {!createdToken ? (
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="role"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Role</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a role" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="member">Member</SelectItem>
+                                                <SelectItem value="moderator">Moderator</SelectItem>
+                                                <SelectItem value="admin">Admin</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormDescription>
+                                            The role assigned to users who join with this invite.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             <FormField
                                 control={form.control}
                                 name="max_uses"

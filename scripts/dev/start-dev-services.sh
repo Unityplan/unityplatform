@@ -2,16 +2,25 @@
 
 # Start all development services for Unity Platform
 # This script starts infrastructure, backend services, and frontend
-# Usage: ./start-dev-services.sh [--build]
-#   --build    Rebuild Rust services in release mode before starting
+# Usage: ./start-dev-services.sh [--build] [--release]
+#   --build    Rebuild Rust services before starting (uses debug mode for faster builds)
+#   --release  Use release mode build (slower build, faster runtime)
 
 set -e
 
 # Parse arguments
 BUILD_SERVICES=false
-if [[ "$1" == "--build" ]]; then
-    BUILD_SERVICES=true
-fi
+RELEASE_MODE=false
+for arg in "$@"; do
+    case $arg in
+        --build)
+            BUILD_SERVICES=true
+            ;;
+        --release)
+            RELEASE_MODE=true
+            ;;
+    esac
+done
 
 echo "🚀 Starting Unity Platform Development Environment"
 echo "=============================================="
@@ -90,12 +99,32 @@ echo ""
 # 2. Start Backend Services
 echo -e "${BLUE}🦀 Step 2: Starting Rust Backend Services${NC}"
 
+# Determine build profile and binary path
+if [ "$RELEASE_MODE" = true ]; then
+    BUILD_PROFILE="release"
+    BINARY_DIR="release"
+    BUILD_FLAGS="--release"
+else
+    BUILD_PROFILE="debug"
+    BINARY_DIR="debug"
+    BUILD_FLAGS=""
+fi
+
 # Build services if --build flag provided
 if [ "$BUILD_SERVICES" = true ]; then
-    echo -e "${YELLOW}🔨 Building Rust services in release mode...${NC}"
+    echo -e "${YELLOW}🔨 Building Rust services in ${BUILD_PROFILE} mode...${NC}"
     cd "$WORKSPACE_ROOT/services"
-    cargo build --release
-    echo -e "${GREEN}✅ Build complete${NC}"
+    
+    # Use cargo build with optional release flag
+    # For debug builds, we can also use incremental compilation (default)
+    if [ "$RELEASE_MODE" = true ]; then
+        cargo build --release
+    else
+        # Debug build is much faster (incremental by default)
+        cargo build
+    fi
+    
+    echo -e "${GREEN}✅ Build complete (${BUILD_PROFILE} mode)${NC}"
     cd "$WORKSPACE_ROOT"
     echo ""
 fi
@@ -110,7 +139,7 @@ else
     source .env
     set +a
     cd "$WORKSPACE_ROOT"
-    ./services/target/release/auth-service > "$WORKSPACE_ROOT/logs/auth-service.log" 2>&1 &
+    ./services/target/${BINARY_DIR}/auth-service > "$WORKSPACE_ROOT/logs/auth-service.log" 2>&1 &
     
     wait_for_service "auth-service" 8001 || exit 1
 fi
@@ -136,7 +165,7 @@ else
     source .env
     set +a
     cd "$WORKSPACE_ROOT"
-    ./services/target/release/user-service > "$WORKSPACE_ROOT/logs/user-service.log" 2>&1 &
+    ./services/target/${BINARY_DIR}/user-service > "$WORKSPACE_ROOT/logs/user-service.log" 2>&1 &
     
     wait_for_service "user-service" 8002 || exit 1
 fi
@@ -150,9 +179,23 @@ else
     source .env
     set +a
     cd "$WORKSPACE_ROOT"
-    ./services/target/release/invitation-service > "$WORKSPACE_ROOT/logs/invitation-service.log" 2>&1 &
+    ./services/target/${BINARY_DIR}/invitation-service > "$WORKSPACE_ROOT/logs/invitation-service.log" 2>&1 &
     
     wait_for_service "invitation-service" 8004 || exit 1
+fi
+
+if check_port 8006; then
+    echo -e "  ${YELLOW}⚠ community-service already running on port 8006${NC}"
+else
+    echo "Starting community-service on port 8006..."
+    cd "$WORKSPACE_ROOT/services/community-service"
+    set -a
+    source .env
+    set +a
+    cd "$WORKSPACE_ROOT"
+    ./services/target/${BINARY_DIR}/community-service > "$WORKSPACE_ROOT/logs/community-service.log" 2>&1 &
+    
+    wait_for_service "community-service" 8006 || exit 1
 fi
 
 if check_port 8007; then
@@ -164,7 +207,7 @@ else
     source .env
     set +a
     cd "$WORKSPACE_ROOT"
-    ./services/target/release/badge-service > "$WORKSPACE_ROOT/logs/badge-service.log" 2>&1 &
+    ./services/target/${BINARY_DIR}/badge-service > "$WORKSPACE_ROOT/logs/badge-service.log" 2>&1 &
     
     wait_for_service "badge-service" 8007 || exit 1
 fi
@@ -178,7 +221,7 @@ else
     source .env
     set +a
     cd "$WORKSPACE_ROOT"
-    ./services/target/release/territory-service > "$WORKSPACE_ROOT/logs/territory-service.log" 2>&1 &
+    ./services/target/${BINARY_DIR}/territory-service > "$WORKSPACE_ROOT/logs/territory-service.log" 2>&1 &
     
     wait_for_service "territory-service" 8008 || exit 1
 fi
@@ -192,7 +235,7 @@ else
     source .env
     set +a
     cd "$WORKSPACE_ROOT"
-    ./services/target/release/utility-service > "$WORKSPACE_ROOT/logs/utility-service.log" 2>&1 &
+    ./services/target/${BINARY_DIR}/utility-service > "$WORKSPACE_ROOT/logs/utility-service.log" 2>&1 &
     
     wait_for_service "utility-service" 8014 || exit 1
 fi
@@ -223,6 +266,7 @@ echo "📱 Frontend:          http://localhost:5173"
 echo "🔐 Auth Service:      http://localhost:8001"
 echo "👤 User Service:      http://localhost:8002"
 echo "💌 Invitation Service: http://localhost:8004"
+echo "🏘️  Community Service:  http://localhost:8006"
 echo "🏆 Badge Service:     http://localhost:8007"
 echo "🌍 Territory Service: http://localhost:8008"
 echo "🛠️  Utility Service:   http://localhost:8014"
@@ -238,6 +282,7 @@ echo "📝 Logs:"
 echo "   Auth Service:      tail -f logs/auth-service.log"
 echo "   User Service:      tail -f logs/user-service.log"
 echo "   Invitation Service: tail -f logs/invitation-service.log"
+echo "   Community Service: tail -f logs/community-service.log"
 echo "   Badge Service:     tail -f logs/badge-service.log"
 echo "   Territory Service: tail -f logs/territory-service.log"
 echo "   Utility Service:   tail -f logs/utility-service.log"

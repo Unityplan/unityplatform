@@ -14,6 +14,10 @@ pub struct Claims {
     pub sub: Uuid,
     /// Territory code
     pub territory: String,
+    /// Badge slugs the user has (e.g., ["code-of-conduct", "community-manager"])
+    /// Used for permission validation without database lookups
+    #[serde(default)]
+    pub badges: Vec<String>,
     /// Expiration time (as UTC timestamp)
     pub exp: u64,
     /// Issued at (as UTC timestamp)
@@ -25,6 +29,25 @@ pub struct Claims {
 pub struct AuthUser {
     pub id: Uuid,
     pub territory: String,
+    /// Badge slugs from JWT claims - used for permission checks
+    pub badges: Vec<String>,
+}
+
+impl AuthUser {
+    /// Check if the user has a specific badge by slug
+    pub fn has_badge(&self, badge_slug: &str) -> bool {
+        self.badges.iter().any(|b| b == badge_slug)
+    }
+
+    /// Check if the user has all required badges
+    pub fn has_all_badges(&self, required_slugs: &[&str]) -> bool {
+        required_slugs.iter().all(|slug| self.has_badge(slug))
+    }
+
+    /// Check if the user has any of the specified badges
+    pub fn has_any_badge(&self, badge_slugs: &[&str]) -> bool {
+        badge_slugs.iter().any(|slug| self.has_badge(slug))
+    }
 }
 
 impl FromRequest for AuthUser {
@@ -75,6 +98,7 @@ impl FromRequest for AuthUser {
             Ok(token_data) => ready(Ok(AuthUser {
                 id: token_data.claims.sub,
                 territory: token_data.claims.territory,
+                badges: token_data.claims.badges,
             })),
             Err(e) => ready(Err(
                 AppError::Unauthorized(format!("Invalid token: {}", e)).into()

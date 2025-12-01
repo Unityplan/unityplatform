@@ -161,7 +161,56 @@ echo -e "${GREEN}✅ Database verification complete${NC}"
 echo ""
 
 # ============================================================================
-# Step 5: Summary
+# Step 5: Seed Data (Optional)
+# ============================================================================
+
+# Check if --seed flag is passed
+SEED_DATA=false
+for arg in "$@"; do
+    if [ "$arg" == "--seed" ]; then
+        SEED_DATA=true
+    fi
+done
+
+if [ "$SEED_DATA" == true ]; then
+    echo -e "${YELLOW}🌱 Seeding database...${NC}"
+    echo ""
+    
+    # Wait for services to be ready
+    echo "   Waiting for services to be ready..."
+    sleep 2
+    
+    # Step 5a: Run Denmark geographic seed script FIRST (creates zones/neighborhoods)
+    GEO_SEED_SCRIPT="$SCRIPT_DIR/../dev/seed-denmark-geo.py"
+    if [ -f "$GEO_SEED_SCRIPT" ]; then
+        echo "   Running Denmark geographic seed script..."
+        if python3 "$GEO_SEED_SCRIPT" 2>&1; then
+            echo -e "${GREEN}   ✅ Denmark geographic data seeded${NC}"
+        else
+            echo -e "${YELLOW}   ⚠️  Geographic seeding failed${NC}"
+        fi
+    else
+        echo -e "${YELLOW}   ⚠️  Denmark geo seed script not found: $GEO_SEED_SCRIPT${NC}"
+    fi
+    
+    # Step 5b: Run community seed script AFTER geo (creates guilds, study groups, groups)
+    SEED_SCRIPT="$SCRIPT_DIR/../dev/seed-communities.py"
+    if [ -f "$SEED_SCRIPT" ]; then
+        echo "   Running community seed script..."
+        if python3 "$SEED_SCRIPT" 2>&1; then
+            echo -e "${GREEN}   ✅ Communities seeded${NC}"
+        else
+            echo -e "${YELLOW}   ⚠️  Community seeding failed (services may not be running)${NC}"
+        fi
+    else
+        echo -e "${YELLOW}   ⚠️  Community seed script not found: $SEED_SCRIPT${NC}"
+    fi
+    
+    echo ""
+fi
+
+# ============================================================================
+# Step 6: Summary
 # ============================================================================
 
 echo -e "${BLUE}============================================================================${NC}"
@@ -172,11 +221,18 @@ echo "📊 Summary:"
 echo "   • Database: $DB_NAME (fresh)"
 echo "   • Migrations: Applied via sqlx migrate run"
 echo "   • Schemas: global, territory_dk"
+if [ "$SEED_DATA" == true ]; then
+echo "   • Seed data: Applied"
+fi
 echo ""
 echo "🔗 Connection info:"
 echo "   • Host: localhost"
 echo "   • Port: 5432"
 echo "   • Database: $DB_NAME"
 echo "   • User: $DB_USER"
+echo ""
+echo "💡 Tips:"
+echo "   • Run with --seed to populate test data"
+echo "   • Example: ./scripts/db/setup-database.sh --seed"
 echo ""
 echo -e "${BLUE}============================================================================${NC}"

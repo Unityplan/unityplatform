@@ -12,6 +12,9 @@ pub struct Claims {
     pub sub: Uuid,
     /// Territory code
     pub territory: String,
+    /// Badge slugs the user has (for permission validation without DB lookups)
+    #[serde(default)]
+    pub badges: Vec<String>,
     /// Expiration time (Unix timestamp)
     pub exp: i64,
     /// Issued at (Unix timestamp)
@@ -44,16 +47,23 @@ impl TokenService {
     /// # Arguments
     /// * `user_id` - The user's UUID
     /// * `territory` - The territory code (e.g., "dk")
+    /// * `badges` - List of badge slugs the user has
     ///
     /// # Returns
     /// * `Result<String>` - The encoded JWT token
-    pub fn generate_access_token(&self, user_id: Uuid, territory: &str) -> Result<String> {
+    pub fn generate_access_token(
+        &self,
+        user_id: Uuid,
+        territory: &str,
+        badges: Vec<String>,
+    ) -> Result<String> {
         let now = Utc::now();
         let expiration = now + Duration::minutes(15);
 
         let claims = Claims {
             sub: user_id,
             territory: territory.to_string(),
+            badges,
             exp: expiration.timestamp(),
             iat: now.timestamp(),
             jti: Uuid::new_v4().to_string(),
@@ -122,12 +132,34 @@ mod tests {
         let service = TokenService::new("test_secret_key_1234567890");
         let user_id = Uuid::new_v4();
         let territory = "dk";
+        let badges = vec![
+            "code-of-conduct".to_string(),
+            "community-manager".to_string(),
+        ];
 
-        let token = service.generate_access_token(user_id, territory).unwrap();
+        let token = service
+            .generate_access_token(user_id, territory, badges.clone())
+            .unwrap();
         let claims = service.validate_token(&token).unwrap();
 
         assert_eq!(claims.sub, user_id);
         assert_eq!(claims.territory, territory);
+        assert_eq!(claims.badges, badges);
+    }
+
+    #[test]
+    fn test_generate_access_token_no_badges() {
+        let service = TokenService::new("test_secret_key_1234567890");
+        let user_id = Uuid::new_v4();
+        let territory = "dk";
+
+        let token = service
+            .generate_access_token(user_id, territory, vec![])
+            .unwrap();
+        let claims = service.validate_token(&token).unwrap();
+
+        assert_eq!(claims.sub, user_id);
+        assert!(claims.badges.is_empty());
     }
 
     #[test]
@@ -150,6 +182,7 @@ mod tests {
         let claims = Claims {
             sub: Uuid::new_v4(),
             territory: "dk".to_string(),
+            badges: vec![],
             exp: (Utc::now() - Duration::hours(1)).timestamp(),
             iat: (Utc::now() - Duration::hours(2)).timestamp(),
             jti: Uuid::new_v4().to_string(),

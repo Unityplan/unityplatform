@@ -43,6 +43,44 @@ struct UserRegisteredPayload {
     // NO email - security best practice (PII minimization)
 }
 
+/// Fetch user's badge slugs from the database
+///
+/// This queries the badge_users_badges table (owned by badge-service) for read-only access
+/// and joins with global.registry_badge to get badge slugs for JWT claims.
+///
+/// Returns a list of badge slugs (e.g., ["code-of-conduct", "community-manager"])
+async fn fetch_user_badge_slugs(
+    pool: &sqlx::PgPool,
+    user_id: Uuid,
+    territory: &str,
+) -> Result<Vec<String>> {
+    let query = format!(
+        r#"
+        SELECT rb.slug
+        FROM territory_{territory}.badge_users_badges bub
+        INNER JOIN global.registry_badge rb ON rb.id = bub.badge_id
+        WHERE bub.user_id = $1
+          AND (bub.expires_at IS NULL OR bub.expires_at > NOW())
+        "#,
+        territory = territory
+    );
+
+    let rows = sqlx::query(&query).bind(user_id).fetch_all(pool).await;
+
+    // If the query fails (e.g., table doesn't exist), return empty badges
+    // This allows the service to work even before badge tables are created
+    match rows {
+        Ok(rows) => {
+            let slugs: Vec<String> = rows.iter().map(|r| r.get("slug")).collect();
+            Ok(slugs)
+        }
+        Err(e) => {
+            tracing::warn!("Failed to fetch user badges (non-fatal): {}", e);
+            Ok(vec![])
+        }
+    }
+}
+
 /// Register a new user
 #[utoipa::path(
     post,
@@ -217,8 +255,12 @@ pub async fn register(
         }
     }
 
+    // Fetch user's badges for JWT claims
+    // For newly registered users, this will typically be empty or just "code-of-conduct"
+    let badges = fetch_user_badge_slugs(pool, user_id, &req.territory).await?;
+
     // Generate tokens
-    let access_token = token_service.generate_access_token(user_id, &req.territory)?;
+    let access_token = token_service.generate_access_token(user_id, &req.territory, badges)?;
     let refresh_token = TokenService::generate_refresh_token();
 
     // Hash the refresh token for storage (never store plain tokens)
@@ -318,8 +360,11 @@ pub async fn login(
         return Err(AppError::Unauthorized("Invalid credentials".to_string()));
     }
 
+    // Fetch user's badges for JWT claims
+    let badges = fetch_user_badge_slugs(pool, user_id, &req.territory).await?;
+
     // Generate tokens
-    let access_token = token_service.generate_access_token(user_id, &req.territory)?;
+    let access_token = token_service.generate_access_token(user_id, &req.territory, badges)?;
     let refresh_token = TokenService::generate_refresh_token();
 
     // Hash the refresh token for storage (never store plain tokens)
@@ -398,8 +443,12 @@ pub async fn refresh(
                     return Err(AppError::Unauthorized("Refresh token expired".to_string()));
                 }
 
+                // Fetch user's badges for JWT claims (refreshed with each token refresh)
+                let badges = fetch_user_badge_slugs(pool, user_id, territory).await?;
+
                 // Generate new access token
-                let access_token = token_service.generate_access_token(user_id, territory)?;
+                let access_token =
+                    token_service.generate_access_token(user_id, territory, badges)?;
 
                 let response = serde_json::json!({
                     "access_token": access_token,

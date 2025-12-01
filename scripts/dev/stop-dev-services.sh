@@ -34,6 +34,9 @@ pkill -f "user-service" || echo "  (not running)"
 echo "Stopping invitation-service..."
 pkill -f "invitation-service" || echo "  (not running)"
 
+echo "Stopping community-service..."
+pkill -f "community-service" || echo "  (not running)"
+
 echo "Stopping badge-service..."
 pkill -f "badge-service" || echo "  (not running)"
 

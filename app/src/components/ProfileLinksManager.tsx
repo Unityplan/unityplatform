@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Pencil, Plus, Trash2, ExternalLink, Globe } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Pencil, Plus, Trash2, ExternalLink, Globe, Loader2 } from 'lucide-react';
 import type { ProfileLink, CreateProfileLinkRequest, UpdateProfileLinkRequest } from '@/api/users';
 import { fetchFavicon } from '@/api/utility';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,62 @@ import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+
+// Lazy-loading favicon component - loads when visible
+function LazyFavicon({
+    link,
+    faviconUrl,
+    isLoading,
+    onLoad
+}: {
+    link: ProfileLink;
+    faviconUrl?: string;
+    isLoading?: boolean;
+    onLoad: () => void;
+}) {
+    const ref = useRef<HTMLDivElement>(null);
+    const [hasTriggered, setHasTriggered] = useState(false);
+
+    useEffect(() => {
+        if (hasTriggered || faviconUrl) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    setHasTriggered(true);
+                    onLoad();
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (ref.current) {
+            observer.observe(ref.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasTriggered, faviconUrl, onLoad]);
+
+    return (
+        <div ref={ref} className="h-6 w-6">
+            {isLoading ? (
+                <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+            ) : faviconUrl ? (
+                <img
+                    src={faviconUrl}
+                    alt={`${link.label} icon`}
+                    className="h-6 w-6 rounded"
+                    onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                    }}
+                />
+            ) : (
+                <Globe className="h-6 w-6 text-muted-foreground" />
+            )}
+        </div>
+    );
+}
 
 interface ProfileLinksManagerProps {
     links: ProfileLink[];
@@ -48,47 +104,33 @@ export function ProfileLinksManager({
         url: '',
     });
 
-    // Store favicon URLs for each link
+    // Store favicon URLs for each link - lazy loaded individually
     const [faviconUrls, setFaviconUrls] = useState<Record<string, string>>({});
+    const [loadingFavicons, setLoadingFavicons] = useState<Record<string, boolean>>({});
 
-    // Fetch favicons for all links
-    useEffect(() => {
-        const loadFavicons = async () => {
-            // Cleanup old URLs before fetching new ones
-            Object.values(faviconUrls).forEach(url => {
-                if (url.startsWith('blob:')) {
-                    URL.revokeObjectURL(url);
-                }
-            });
+    // Lazy load favicon for a single link
+    const loadFavicon = async (link: ProfileLink) => {
+        if (faviconUrls[link.id] || loadingFavicons[link.id]) return;
 
-            const newFaviconUrls: Record<string, string> = {};
+        setLoadingFavicons(prev => ({ ...prev, [link.id]: true }));
 
-            for (const link of links) {
-                try {
-                    const faviconUrl = await fetchFavicon(link.url, 32);
-                    newFaviconUrls[link.id] = faviconUrl;
-                } catch (error) {
-                    console.error(`Failed to fetch favicon for ${link.url}:`, error);
-                    // Don't set a URL if fetch fails, component will show fallback
-                }
-            }
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout
 
-            setFaviconUrls(newFaviconUrls);
-        };
+            const faviconUrl = await fetchFavicon(link.url, 32);
+            clearTimeout(timeoutId);
 
-        if (links.length > 0) {
-            loadFavicons();
-        } else {
-            // Cleanup when no links
-            Object.values(faviconUrls).forEach(url => {
-                if (url.startsWith('blob:')) {
-                    URL.revokeObjectURL(url);
-                }
-            });
-            setFaviconUrls({});
+            setFaviconUrls(prev => ({ ...prev, [link.id]: faviconUrl }));
+        } catch {
+            // Silently fail - will show fallback icon
+        } finally {
+            setLoadingFavicons(prev => ({ ...prev, [link.id]: false }));
         }
+    };
 
-        // Cleanup on unmount
+    // Cleanup blob URLs on unmount
+    useEffect(() => {
         return () => {
             Object.values(faviconUrls).forEach(url => {
                 if (url.startsWith('blob:')) {
@@ -97,7 +139,7 @@ export function ProfileLinksManager({
             });
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [links]);
+    }, []);
 
     // Sort links by displayOrder
     const sortedLinks = [...links].sort((a, b) => a.displayOrder - b.displayOrder);
@@ -224,28 +266,15 @@ export function ProfileLinksManager({
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {sortedLinks.map((link) => (
-                                <TableRow key={link.id}>
+                            {sortedLinks.map((link, index) => (
+                                <TableRow key={link.id || `link-${index}`}>
                                     <TableCell>
-                                        {faviconUrls[link.id] ? (
-                                            <img
-                                                src={faviconUrls[link.id]}
-                                                alt={`${link.label} icon`}
-                                                className="h-6 w-6 rounded"
-                                                onError={(e) => {
-                                                    // Fallback to globe icon if image fails to load
-                                                    e.currentTarget.style.display = 'none';
-                                                    const parent = e.currentTarget.parentElement;
-                                                    if (parent && !parent.querySelector('svg')) {
-                                                        const fallback = document.createElement('div');
-                                                        fallback.innerHTML = '<svg class="h-6 w-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke-width="2"/></svg>';
-                                                        parent.appendChild(fallback.firstChild!);
-                                                    }
-                                                }}
-                                            />
-                                        ) : (
-                                            <Globe className="h-6 w-6 text-muted-foreground" />
-                                        )}
+                                        <LazyFavicon
+                                            link={link}
+                                            faviconUrl={faviconUrls[link.id]}
+                                            isLoading={loadingFavicons[link.id]}
+                                            onLoad={() => loadFavicon(link)}
+                                        />
                                     </TableCell>
                                     <TableCell className="font-medium">{link.label}</TableCell>
                                     <TableCell>

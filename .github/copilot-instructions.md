@@ -1,13 +1,14 @@
+````instructions
 # Workspace Instructions for Copilot
 
 ## Project Overview
 
-**Platform Name:** Unity Platform  
-**Platform Type:** User sovereignty-first learning and collaboration platform  
-**Version:** 0.1.0-alpha.1 (MVP Phase 1 - Early Development)  
-**Status:** Infrastructure complete, auth-service operational, backend services in development  
-**Example Deployment:** unityplan.org (test project using this platform)  
-**Database Naming:** `unityplatform_${TERRITORY_CODE}` (e.g., `unityplatform_dk` for Denmark)  
+**Platform Name:** Unity Platform
+**Platform Type:** User sovereignty-first learning and collaboration platform
+**Version:** 0.1.0-alpha.1 (MVP Phase 1 - Early Development)
+**Status:** Infrastructure complete, auth-service operational, backend services in development
+**Example Deployment:** unityplan.org (test project using this platform)
+**Database Naming:** `unityplatform_${TERRITORY_CODE}` (e.g., `unityplatform_dk` for Denmark)
 **Important:** Use `unityplatform` (not `unityplan`) for all new naming
 
 This workspace contains a microservices platform with:
@@ -53,6 +54,11 @@ This workspace contains a microservices platform with:
 - Follow Rust best practices and idiomatic patterns
 - Use TypeScript for React components with shadcn and tailwind where possible
 - Maintain clear separation between frontend and backend concerns
+- **Frontend Architecture**:
+  - **Routes vs Pages**: Keep routing logic separate from UI components.
+    - `app/src/routes/`: Only for route definitions, loaders, and AuthGuards.
+    - `app/src/pages/`: For the actual page components and UI logic.
+  - **Components**: Use `app/src/components/` for reusable UI elements.
 - **Versioning**: Follow SemVer 2.0.0 - see `docs/guides/development/versioning-strategy.md`
 - **Changelogs**: Update `CHANGELOG.md` and service-specific changelogs for all changes
 - **Version Info**: Use `shared_lib::version` module for runtime version access
@@ -87,6 +93,15 @@ This workspace contains a microservices platform with:
 - **Terminal Commands**: NEVER chain commands with `&&` - always use single commands for easier auto-approval
   - ❌ Bad: `cd services && cargo build && cargo test`
   - ✅ Good: Single command per tool call
+- **Working Directory**: ALWAYS verify the current working directory before running commands.
+  - Use `pwd` to check location if unsure.
+  - Prefer absolute paths or explicit `cd` commands in your instructions to ensure execution in the correct folder.
+  - Example: `cd services/auth-service` before running cargo commands.
+- **Logging Best Practices**:
+  - **Implementation**: All services MUST use `shared_lib` logging middleware.
+  - **Configuration**: Log levels MUST be configurable via `.env` (e.g., `RUST_LOG=info` or `RUST_LOG=debug`).
+  - **Error Logging**: ALL errors (especially 500s) MUST be logged with sufficient detail (stack trace or context) before returning a response.
+  - **Verification**: When debugging, always check if the log level allows the error to be seen.
 - **MCP Tools**: ALWAYS use MCP (Model Context Protocol) tools when available:
   - PostgreSQL operations: Use `pgsql_*` tools instead of raw `psql` commands
   - Git operations: Use git MCP tools instead of terminal git commands (where it makes sense)
@@ -392,3 +407,4 @@ This organic model emphasizes:
 - **Wisdom Flow**: Knowledge circulates like nutrients through the mycorrhizal network
 - **Regeneration**: Communities create new knowledge that enriches the whole system
 - **Resilience**: Distributed structure ensures ecosystem thrives even if individual parts face challenges
+````
