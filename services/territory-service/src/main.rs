@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpResponse, HttpServer};
+use actix_web::{web, App, HttpServer};
 use shared_lib::{
     cors, shutdown_grace_period, shutdown_signal, AppConfig, Database, LoggingMiddleware,
     MetricsCollector, RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware,
