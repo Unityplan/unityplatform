@@ -77,12 +77,14 @@ impl ErrorResponse {
 /// # Example
 ///
 /// ```rust
-/// use actix_web::App;
-/// use shared_lib::middleware::error_response_handler;
+/// use actix_web::{App, web};
+/// use shared_lib::middleware::error_handler::error_response_handler;
 ///
-/// App::new()
-///     .app_data(actix_web::web::JsonConfig::default()
-///         .error_handler(error_response_handler))
+/// let app = App::new()
+///     .app_data(web::JsonConfig::default()
+///         .error_handler(|err, req| {
+///             error_response_handler(actix_web::Error::from(err), req)
+///         }));
 /// ```
 pub fn error_response_handler(err: actix_web::Error, req: &HttpRequest) -> actix_web::Error {
     let request_id = get_request_id(req);

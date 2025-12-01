@@ -33,27 +33,16 @@ use super::request_id::get_request_id;
 /// # Example
 ///
 /// ```rust
-/// use actix_web::{web, App, HttpServer};
+/// use actix_web::App;
 /// use shared_lib::middleware::RateLimitMiddleware;
 /// use redis::Client;
 ///
-/// #[actix_web::main]
-/// async fn main() -> std::io::Result<()> {
-///     let redis_client = Client::open("redis://127.0.0.1/").unwrap();
-///     
-///     HttpServer::new(move || {
-///         App::new()
-///             .wrap(RateLimitMiddleware::new(
-///                 redis_client.clone(),
-///                 30,  // 30 requests
-///                 60,  // per 60 seconds
-///             ))
-///             // ... routes
-///     })
-///     .bind(("127.0.0.1", 8080))?
-///     .run()
-///     .await
-/// }
+/// let redis_client = Client::open("redis://127.0.0.1/").unwrap();
+/// 
+/// let app = App::new()
+///     .wrap(RateLimitMiddleware::development(redis_client))
+///     // ... routes
+///     ;
 /// ```
 #[derive(Clone)]
 pub struct RateLimitMiddleware {

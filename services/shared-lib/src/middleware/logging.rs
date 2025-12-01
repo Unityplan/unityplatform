@@ -33,20 +33,13 @@ use crate::metrics::MetricsCollector;
 /// # Example
 ///
 /// ```rust
-/// use actix_web::{web, App, HttpServer};
+/// use actix_web::App;
 /// use shared_lib::middleware::LoggingMiddleware;
 ///
-/// #[actix_web::main]
-/// async fn main() -> std::io::Result<()> {
-///     HttpServer::new(|| {
-///         App::new()
-///             .wrap(LoggingMiddleware::new(false)) // false = production
-///             // ... routes
-///     })
-///     .bind(("127.0.0.1", 8080))?
-///     .run()
-///     .await
-/// }
+/// let app = App::new()
+///     .wrap(LoggingMiddleware::production())
+///     // ... routes
+///     ;
 /// ```
 #[derive(Debug, Clone)]
 pub struct LoggingMiddleware {

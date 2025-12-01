@@ -28,20 +28,13 @@ use std::future::{ready, Ready};
 /// # Example
 ///
 /// ```rust
-/// use actix_web::{web, App, HttpServer};
+/// use actix_web::App;
 /// use shared_lib::middleware::SecurityHeadersMiddleware;
 ///
-/// #[actix_web::main]
-/// async fn main() -> std::io::Result<()> {
-///     HttpServer::new(|| {
-///         App::new()
-///             .wrap(SecurityHeadersMiddleware::phase2()) // Production
-///             // ... routes
-///     })
-///     .bind(("127.0.0.1", 8080))?
-///     .run()
-///     .await
-/// }
+/// let app = App::new()
+///     .wrap(SecurityHeadersMiddleware::production())
+///     // ... routes
+///     ;
 /// ```
 #[derive(Debug, Clone)]
 pub struct SecurityHeadersMiddleware {

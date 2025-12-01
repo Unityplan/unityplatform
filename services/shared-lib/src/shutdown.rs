@@ -11,14 +11,19 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,no_run
+//! use actix_web::{web, App, HttpResponse, HttpServer};
 //! use shared_lib::shutdown_signal;
+//!
+//! async fn health() -> HttpResponse {
+//!     HttpResponse::Ok().body("OK")
+//! }
 //!
 //! #[actix_web::main]
 //! async fn main() -> std::io::Result<()> {
 //!     // Create server
 //!     let server = HttpServer::new(|| {
-//!         App::new().service(handler)
+//!         App::new().route("/health", web::get().to(health))
 //!     })
 //!     .bind("0.0.0.0:8001")?
 //!     .run();

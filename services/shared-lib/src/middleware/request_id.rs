@@ -15,20 +15,13 @@ use uuid::Uuid;
 /// # Example
 ///
 /// ```rust
-/// use actix_web::{web, App, HttpServer};
+/// use actix_web::App;
 /// use shared_lib::middleware::RequestIdMiddleware;
 ///
-/// #[actix_web::main]
-/// async fn main() -> std::io::Result<()> {
-///     HttpServer::new(|| {
-///         App::new()
-///             .wrap(RequestIdMiddleware)
-///             // ... other middleware and routes
-///     })
-///     .bind(("127.0.0.1", 8080))?
-///     .run()
-///     .await
-/// }
+/// let app = App::new()
+///     .wrap(RequestIdMiddleware)
+///     // ... other middleware and routes
+///     ;
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct RequestIdMiddleware;

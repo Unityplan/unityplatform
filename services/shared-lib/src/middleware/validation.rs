@@ -13,11 +13,11 @@ use super::error_handler::{validation_failed, ErrorResponse};
 ///
 /// ```rust
 /// use actix_web::{web, HttpResponse};
-/// use serde::Deserialize;
+/// use serde::{Deserialize, Serialize};
 /// use validator::Validate;
 /// use shared_lib::middleware::ValidatedJson;
 ///
-/// #[derive(Deserialize, Validate)]
+/// #[derive(Deserialize, Serialize, Validate)]
 /// struct CreateUserRequest {
 ///     #[validate(length(min = 3, max = 30))]
 ///     username: String,

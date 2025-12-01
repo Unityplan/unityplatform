@@ -21,16 +21,16 @@ use actix_web::http::header;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// use actix_web::{web, App, HttpServer};
 /// use shared_lib::middleware::cors;
 ///
 /// #[actix_web::main]
 /// async fn main() -> std::io::Result<()> {
-///     // Phase 1 (Development)
+///     // Development mode
 ///     HttpServer::new(|| {
 ///         App::new()
-///             .wrap(cors::phase1())
+///             .wrap(cors::development())
 ///             // ... routes
 ///     })
 ///     .bind(("127.0.0.1", 8080))?
@@ -39,21 +39,27 @@ use actix_web::http::header;
 /// }
 /// ```
 ///
-/// ```rust
-/// // Phase 2 (Production)
-/// let allowed_origins = vec![
-///     "https://unityplan.org",
-///     "https://app.unityplan.org",
-/// ];
+/// ```rust,no_run
+/// use actix_web::{App, HttpServer};
+/// use shared_lib::middleware::cors;
 ///
-/// HttpServer::new(move || {
-///     App::new()
-///         .wrap(cors::phase2(allowed_origins.clone()))
-///         // ... routes
-/// })
-/// .bind(("0.0.0.0", 8080))?
-/// .run()
-/// .await
+/// #[actix_web::main]
+/// async fn main() -> std::io::Result<()> {
+///     // Production mode
+///     let allowed_origins = vec![
+///         "https://unityplan.org".to_string(),
+///         "https://app.unityplan.org".to_string(),
+///     ];
+///
+///     HttpServer::new(move || {
+///         App::new()
+///             .wrap(cors::production(allowed_origins.clone()))
+///             // ... routes
+///     })
+///     .bind(("0.0.0.0", 8080))?
+///     .run()
+///     .await
+/// }
 /// ```
 
 /// Phase 1 (Development) - Permissive CORS for localhost development
