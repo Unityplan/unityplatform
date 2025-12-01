@@ -28,6 +28,11 @@ interface UseInactivityDetectorOptions {
  * This hook tracks user activity (mouse movements, keyboard input, touch, etc.)
  * and triggers a callback after a specified period of inactivity.
  * 
+ * **Handles Background Tabs:**
+ * - Uses localStorage to persist last activity time across tabs
+ * - Checks on visibility change when tab becomes active
+ * - Works correctly even when browser throttles setTimeout in background tabs
+ * 
  * **Security Use Cases:**
  * - Auto-lock session after 10 minutes of inactivity
  * - Auto-logout after 30 minutes of inactivity
@@ -51,13 +56,46 @@ export function useInactivityDetector({
 }: UseInactivityDetectorOptions) {
   const timeoutRef = useRef<number | null>(null);
   const onInactiveRef = useRef(onInactive);
+  const lastActivityKey = 'lastActivityTime';
 
   // Keep onInactive ref up to date
   useEffect(() => {
     onInactiveRef.current = onInactive;
   }, [onInactive]);
 
+  /**
+   * Get last activity timestamp from localStorage (shared across tabs)
+   */
+  const getLastActivity = useCallback((): number => {
+    const stored = localStorage.getItem(lastActivityKey);
+    return stored ? parseInt(stored, 10) : Date.now();
+  }, []);
+
+  /**
+   * Update last activity timestamp in localStorage
+   */
+  const updateLastActivity = useCallback(() => {
+    localStorage.setItem(lastActivityKey, Date.now().toString());
+  }, []);
+
+  /**
+   * Check if inactivity timeout has been exceeded
+   */
+  const checkInactivity = useCallback(() => {
+    const lastActivity = getLastActivity();
+    const elapsed = Date.now() - lastActivity;
+    
+    if (elapsed >= timeout) {
+      onInactiveRef.current();
+      return true;
+    }
+    return false;
+  }, [timeout, getLastActivity]);
+
   const resetTimer = useCallback(() => {
+    // Update last activity timestamp
+    updateLastActivity();
+    
     // Clear existing timer
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -65,9 +103,43 @@ export function useInactivityDetector({
 
     // Set new timer
     timeoutRef.current = window.setTimeout(() => {
-      onInactiveRef.current();
+      // Double-check using stored timestamp (handles background throttling)
+      if (!checkInactivity()) {
+        // Not actually inactive yet (timer was throttled), reschedule
+        const lastActivity = getLastActivity();
+        const remaining = timeout - (Date.now() - lastActivity);
+        if (remaining > 0) {
+          timeoutRef.current = window.setTimeout(() => {
+            checkInactivity();
+          }, remaining);
+        }
+      }
     }, timeout);
-  }, [timeout]);
+  }, [timeout, updateLastActivity, checkInactivity, getLastActivity]);
+
+  /**
+   * Handle visibility change - check inactivity when tab becomes visible
+   */
+  const handleVisibilityChange = useCallback(() => {
+    if (document.visibilityState === 'visible' && enabled) {
+      // Check if we should have triggered inactivity while in background
+      if (!checkInactivity()) {
+        // Still active, reset the timer with remaining time
+        const lastActivity = getLastActivity();
+        const elapsed = Date.now() - lastActivity;
+        const remaining = timeout - elapsed;
+        
+        if (remaining > 0) {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+          timeoutRef.current = window.setTimeout(() => {
+            checkInactivity();
+          }, remaining);
+        }
+      }
+    }
+  }, [enabled, timeout, checkInactivity, getLastActivity]);
 
   useEffect(() => {
     if (!enabled) {
@@ -81,7 +153,7 @@ export function useInactivityDetector({
     // Initialize timer
     resetTimer();
 
-    // Attach event listeners
+    // Attach event listeners for activity
     const handleActivity = () => {
       resetTimer();
     };
@@ -89,6 +161,9 @@ export function useInactivityDetector({
     events.forEach((event) => {
       window.addEventListener(event, handleActivity, { passive: true });
     });
+
+    // Listen for visibility changes to handle background tabs
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Cleanup
     return () => {
@@ -98,11 +173,13 @@ export function useInactivityDetector({
       events.forEach((event) => {
         window.removeEventListener(event, handleActivity);
       });
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [enabled, events, resetTimer]);
+  }, [enabled, events, resetTimer, handleVisibilityChange]);
 
   // Public method to manually reset the timer
   return {
     resetTimer,
+    checkInactivity,
   };
 }

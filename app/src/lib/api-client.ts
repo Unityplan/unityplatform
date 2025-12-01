@@ -3,16 +3,28 @@ import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 
 /**
+ * Check if the request is to the auth service
+ */
+function isAuthServiceRequest(url?: string): boolean {
+  if (!url) return false;
+  return url.includes('/auth/') || url.includes(':8001/');
+}
+
+/**
  * Axios instance with automatic token management and refresh
  * 
  * **Security Features:**
  * - Automatically adds Authorization header with access token
  * - Intercepts 401 responses and attempts token refresh
  * - Retries failed requests after successful token refresh
- * - Redirects to login if token refresh fails
+ * - Only clears auth on auth-service failures (not other services)
  * - Prevents infinite retry loops with _retry flag
- * - Clears auth state on refresh failure
  * - Request timeout of 30 seconds
+ * 
+ * **Best Practices:**
+ * - Differentiates between auth failures and service failures
+ * - User stays logged in even if non-auth services are down
+ * - Token refresh is handled transparently
  * 
  * @example
  * ```typescript
@@ -74,6 +86,13 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+    // Check if this is a network error (service unavailable)
+    if (!error.response) {
+      // Network error - don't clear auth, just reject
+      console.warn('[API] Network error or service unavailable:', error.message);
+      return Promise.reject(error);
+    }
+
     // If error is 401 Unauthorized and we haven't retried yet
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -111,21 +130,26 @@ apiClient.interceptors.response.use(
         }
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Token refresh failed - clear auth and redirect to login
+        // Token refresh failed
         isRefreshing = false;
         refreshSubscribers = [];
-        useAuthStore.getState().clearAuth();
         
-        // Only redirect if not already on login/register page
-        if (typeof window !== 'undefined') {
-          const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
-          const currentPath = window.location.pathname;
-          const isPublicPath = publicPaths.some(path => currentPath.includes(path));
+        // Only clear auth and redirect if this was an auth-service call that failed
+        // This prevents logging out users just because user-service is down
+        if (isAuthServiceRequest(originalRequest?.url)) {
+          useAuthStore.getState().clearAuth();
           
-          if (!isPublicPath) {
-            // Store current path for post-login redirect
-            sessionStorage.setItem('redirectAfterLogin', currentPath);
-            window.location.href = '/login';
+          // Only redirect if not already on login/register page
+          if (typeof window !== 'undefined') {
+            const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
+            const currentPath = window.location.pathname;
+            const isPublicPath = publicPaths.some(path => currentPath.includes(path));
+            
+            if (!isPublicPath) {
+              // Store current path for post-login redirect
+              sessionStorage.setItem('redirectAfterLogin', currentPath);
+              window.location.href = '/login';
+            }
           }
         }
         
@@ -133,13 +157,17 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Handle other errors
+    // Handle other errors - log but don't clear auth for non-auth services
     if (error.response?.status === 403) {
-      console.error('Forbidden: You do not have permission to access this resource');
+      console.warn('[API] Forbidden: You do not have permission to access this resource');
     }
 
     if (error.response?.status === 500) {
-      console.error('Server error: Please try again later');
+      console.warn('[API] Server error:', originalRequest?.url);
+    }
+
+    if (error.response?.status === 503) {
+      console.warn('[API] Service unavailable:', originalRequest?.url);
     }
 
     return Promise.reject(error);

@@ -171,11 +171,34 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
           });
         } catch (error: unknown) {
-          // If loading user fails, clear auth state
-          console.error('Load user failed:', error);
-          get().clearAuth();
-          const errorMessage = getErrorMessage(error, 'Failed to load user');
-          set({ error: errorMessage, isLoading: false });
+          // DON'T clear auth state just because user-service fails
+          // The user may still have a valid token - let them continue
+          // Auth will be cleared if token refresh fails (401/403 from auth-service)
+          console.error('Load user profile failed:', error);
+          
+          // Try to create a minimal user from JWT claims
+          const claims = parseJwt(accessToken);
+          if (claims?.sub) {
+            const minimalUser: User = {
+              id: claims.sub,
+              username: 'Unknown', // Will be updated when user-service is available
+              email: '',
+              fullName: null,
+              territory: claims.territory ?? 'dk',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              badges: claims.badges ?? [],
+            };
+            set({
+              user: minimalUser,
+              isLoading: false,
+              error: 'Unable to load full profile. Some features may be limited.',
+            });
+          } else {
+            // Only now do we have a real auth problem
+            const errorMessage = getErrorMessage(error, 'Failed to load user');
+            set({ error: errorMessage, isLoading: false });
+          }
         }
       },
 
