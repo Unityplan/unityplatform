@@ -85,7 +85,10 @@ This workspace contains a microservices platform with:
 - **Migration Strategy**: Service-specific migrations in `services/shared-lib/migrations/`.
 - **Global Tables**: `registry_{resource}` (e.g., `registry_username`).
 - **Territory Tables**: `{service}_{entity}_{data}` (e.g., `auth_users_core`).
-- **No Cross-Service FKs**: Services share the DB but NOT foreign keys.
+- **No Cross-Service FKs (Target)**: Services share the DB but should NOT have foreign keys between services.
+  - **Current State (MVP)**: FKs to `auth_users_core` exist for data integrity during development
+  - **Future State**: Remove FKs, validate user_id via JWT tokens instead of database constraints
+  - **Testing**: Always respect service boundaries - use wiremock to mock HTTP calls, never write to other services' tables
 - **Data Sovereignty**: Personal data MUST stay in territory schemas (`territory_{code}`).
 
 ## AI Assistant Guidelines
