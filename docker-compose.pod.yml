@@ -54,7 +54,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # NATS with JetStream (clustered with other pods)
+  # NATS with JetStream (standalone for single-pod, clustered for multi-pod)
   nats:
     image: nats:latest
     container_name: service-nats-${POD_ID}
@@ -62,15 +62,14 @@ services:
     ports:
       - "${NATS_CLIENT_PORT}:4222"    # Client connections
       - "${NATS_MONITOR_PORT}:8222"   # HTTP monitoring
-      - "${NATS_CLUSTER_PORT}:6222"   # Cluster connections
+      - "${NATS_CLUSTER_PORT}:6222"   # Cluster connections (only needed for multi-pod)
     command:
       - "-js"                                      # Enable JetStream
       - "-m=8222"                                 # HTTP monitoring port
       - "--store_dir=/data"                       # JetStream storage directory
-      - "--name=nats-${POD_ID}"                   # Server name for clustering
-      - "--cluster=nats://0.0.0.0:6222"          # Cluster listen address
-      - "--cluster_name=unityplatform-global"        # Global cluster name
-      - "--routes=${NATS_ROUTES:-}"              # Cluster routes to other pods (optional)
+      - "--name=nats-${POD_ID}"                   # Server name
+      # Note: Clustering disabled for single-pod development
+      # For multi-pod: add --cluster, --cluster_name, --routes flags via NATS_EXTRA_FLAGS env var
     volumes:
       - ./docker/pods/${POD_ID}/nats-data:/data
     networks:
@@ -195,7 +194,7 @@ services:
       - '--path.rootfs=/host'
     pid: host
     volumes:
-      - '/:/host:ro,rslave'
+      - '/:/host:ro'
     networks:
       - pod-net
       - mesh-network

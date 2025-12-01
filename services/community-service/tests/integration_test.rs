@@ -15,14 +15,21 @@ use uuid::Uuid;
 struct Claims {
     sub: Uuid,
     territory: String,
+    #[serde(default)]
+    badges: Vec<String>,
     exp: usize,
     iat: usize,
 }
 
 fn generate_test_token(user_id: Uuid) -> String {
+    generate_test_token_with_badges(user_id, vec![])
+}
+
+fn generate_test_token_with_badges(user_id: Uuid, badges: Vec<String>) -> String {
     let my_claims = Claims {
         sub: user_id,
         territory: "dk".to_string(),
+        badges,
         exp: 10000000000,
         iat: 10000000000,
     };
@@ -83,7 +90,7 @@ async fn create_test_community(pool: &PgPool, user_id: Uuid) -> Uuid {
     // Create community
     sqlx::query(
         r#"
-        INSERT INTO territory_dk.communities (
+        INSERT INTO territory_dk.community_communities (
             id, slug, name, description, type, created_by
         )
         VALUES ($1, $2, 'Test Community', 'Test', 'guild', $3)
@@ -123,18 +130,28 @@ async fn create_test_community(pool: &PgPool, user_id: Uuid) -> Uuid {
     .await
     .expect("Failed to assign community-manager badge");
 
-    // Add user as admin
+    // Add user as manager (not just member)
     sqlx::query(
-        "INSERT INTO territory_dk.community_members (community_id, user_id, role) VALUES ($1, $2, 'admin')"
+        "INSERT INTO territory_dk.community_communities_managers (community_id, user_id) VALUES ($1, $2)"
     )
     .bind(community_id)
     .bind(user_id)
     .execute(pool)
     .await
-    .expect("Failed to add admin");
+    .expect("Failed to add manager");
+
+    // Also add as member
+    sqlx::query(
+        "INSERT INTO territory_dk.community_communities_members (community_id, user_id) VALUES ($1, $2)"
+    )
+    .bind(community_id)
+    .bind(user_id)
+    .execute(pool)
+    .await
+    .expect("Failed to add member");
 
     // Create settings
-    sqlx::query("INSERT INTO territory_dk.community_settings (community_id) VALUES ($1)")
+    sqlx::query("INSERT INTO territory_dk.community_communities_settings (community_id) VALUES ($1)")
         .bind(community_id)
         .execute(pool)
         .await
@@ -174,7 +191,8 @@ async fn test_badge_requirements() {
     let community_id = create_test_community(database.pool(), admin_id).await;
     let badge_id = create_test_badge(database.pool()).await;
 
-    let admin_token = generate_test_token(admin_id);
+    // Admin gets token with community-manager badge (which is assigned in create_test_community)
+    let admin_token = generate_test_token_with_badges(admin_id, vec!["community-manager".to_string()]);
     let user_token = generate_test_token(user_id);
 
     let app = test::init_service(
@@ -279,7 +297,7 @@ async fn test_badge_requirements() {
     assert_eq!(requirements.len(), 0);
 
     // Cleanup
-    sqlx::query("DELETE FROM territory_dk.communities WHERE id = $1")
+    sqlx::query("DELETE FROM territory_dk.community_communities WHERE id = $1")
         .bind(community_id)
         .execute(database.pool())
         .await

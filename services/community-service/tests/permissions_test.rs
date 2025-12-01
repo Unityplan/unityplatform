@@ -50,7 +50,7 @@ async fn create_community(pool: &PgPool, name: &str, parent_id: Option<Uuid>) ->
     let id = Uuid::new_v4();
     let slug = format!("{}-{}", name.to_lowercase(), Uuid::new_v4());
     sqlx::query(
-        "INSERT INTO territory_dk.communities (id, slug, name, type, parent_community_id) VALUES ($1, $2, $3, 'zone', $4)",
+        "INSERT INTO territory_dk.community_communities (id, slug, name, type, parent_community_id) VALUES ($1, $2, $3, 'zone', $4)",
     )
     .bind(id)
     .bind(slug)
@@ -63,8 +63,9 @@ async fn create_community(pool: &PgPool, name: &str, parent_id: Option<Uuid>) ->
 }
 
 async fn assign_community_admin(pool: &PgPool, community_id: Uuid, user_id: Uuid) {
+    // Add to managers table (not members table)
     sqlx::query(
-        "INSERT INTO territory_dk.community_members (community_id, user_id, role) VALUES ($1, $2, 'admin')",
+        "INSERT INTO territory_dk.community_communities_managers (community_id, user_id) VALUES ($1, $2)",
     )
     .bind(community_id)
     .bind(user_id)

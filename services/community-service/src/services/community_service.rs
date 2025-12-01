@@ -816,10 +816,15 @@ impl CommunityService {
                 SELECT * FROM community_admins
                 UNION ALL
                 SELECT * FROM global_admins
+            ),
+            min_distance AS (
+                SELECT MIN(distance) as min_dist FROM all_managers
             )
-            -- Deduplicate by user_id, keeping the one with the smallest distance
-            SELECT DISTINCT ON (user_id) *
-            FROM all_managers
+            -- Only return managers at the minimum distance (closest level)
+            SELECT DISTINCT ON (user_id) am.*
+            FROM all_managers am
+            CROSS JOIN min_distance md
+            WHERE am.distance = md.min_dist
             ORDER BY user_id, distance ASC
             "#,
         )
