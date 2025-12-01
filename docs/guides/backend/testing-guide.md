@@ -500,10 +500,98 @@ Before merging tests:
 
 ---
 
+## Service Separation in Tests
+
+### Critical Principle: Never Access Another Service's Tables
+
+**❌ WRONG - Violating Service Boundaries:**
+
+```rust
+// Auth-service test directly writing to invitation-service tables
+async fn create_test_invitation(pool: &PgPool) -> String {
+    let token = Uuid::new_v4().to_string();
+    
+    // ❌ WRONG: Writing to invitation-service tables from auth-service test
+    sqlx::query("INSERT INTO territory_dk.invitation_invitations_tokens ...")
+        .bind(token)
+        .execute(pool)
+        .await?;
+    
+    token
+}
+```
+
+**Issues:**
+
+- Violates service separation (auth-service doesn't own invitation tables)
+- Creates tight coupling between services
+- Makes refactoring difficult
+- Hides integration failures
+
+**✅ CORRECT - Mock External Services:**
+
+```rust
+use wiremock::{MockServer, Mock, ResponseTemplate};
+use wiremock::matchers::{method, path};
+
+#[actix_web::test]
+async fn test_register_with_invitation() {
+    // Mock the invitation-service HTTP endpoint
+    let mock_server = MockServer::start().await;
+    
+    Mock::given(method("POST"))
+        .and(path("/api/v1/invitations/validate"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "valid": true
+        })))
+        .mount(&mock_server)
+        .await;
+    
+    // Point auth-service to mock server
+    std::env::set_var("INVITATION_SERVICE_URL", mock_server.uri());
+    
+    // Test auth-service behavior without touching invitation tables
+    let token = format!("TEST-{}", Uuid::new_v4());
+    // ... registration test ...
+}
+```
+
+**Benefits:**
+
+- Respects service boundaries
+- Tests actual HTTP integration
+- Allows services to evolve independently
+- Reveals integration contract issues
+- No database pollution from other services
+
+### When to Use Wiremock
+
+Use `wiremock` to mock external HTTP services when:
+
+1. **Inter-service HTTP calls** - Service A calls Service B's HTTP endpoint
+2. **Optional integrations** - Feature works with graceful degradation
+3. **External APIs** - Third-party services (not applicable for internal DB)
+
+**Example services using wiremock:**
+
+- `auth-service` mocks `invitation-service` validation endpoint
+- `user-service` could mock `badge-service` for achievement checks
+
+### Service Separation Checklist
+
+- [ ] Test only writes to its own service's tables
+- [ ] External service calls use wiremock mocks
+- [ ] No foreign key references to other services
+- [ ] HTTP client configured with mock server URL
+- [ ] Cleanup only touches own service's data
+
+---
+
 ## References
 
 - **Production Config:** `services/auth-service/src/main.rs`
 - **Middleware Implementation:** `services/auth-service/src/middleware/auth.rs`
-- **Test Examples:** `services/auth-service/tests/integration/`
-- **TestContext Implementation:** `services/auth-service/tests/common/mod.rs`
+- **Test Examples:** `services/auth-service/tests/integration_test.rs`
+- **Wiremock Example:** `services/auth-service/tests/integration_test.rs` (test_register_production_mode_success)
+- **Service Separation:** `docs/architecture/MIGRATIONS-MASTER.md`
 - **Database Schema:** `services/shared-lib/migrations/`

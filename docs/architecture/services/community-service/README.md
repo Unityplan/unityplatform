@@ -108,44 +108,46 @@ CREATE INDEX idx_communities_member_count ON communities(member_count DESC);
 - `private` - Listed in directory, requires approval
 - `hidden` - Not listed, invitation only
 
-#### **2. community_members**
+#### **2. community_communities_members**
 
 ```sql
-CREATE TABLE territory_{code}.community_members (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    
-    -- Relationship
-    community_id UUID NOT NULL REFERENCES communities(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- Role
-    role VARCHAR(20) DEFAULT 'member',  -- owner/admin/moderator/member
+CREATE TABLE territory_{code}.community_communities_members (
+    community_id UUID NOT NULL REFERENCES community_communities(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth_users_core(id) ON DELETE CASCADE,
     
     -- Timestamps
     joined_at TIMESTAMPTZ DEFAULT NOW(),
     
-    UNIQUE(community_id, user_id),
-    CONSTRAINT valid_role CHECK (role IN ('owner', 'admin', 'moderator', 'member'))
+    PRIMARY KEY (community_id, user_id)
 );
 
-CREATE INDEX idx_community_members_community ON community_members(community_id);
-CREATE INDEX idx_community_members_user ON community_members(user_id);
-CREATE INDEX idx_community_members_role ON community_members(community_id, role);
+CREATE INDEX idx_community_members_user ON community_communities_members(user_id);
 ```
 
-**Purpose:** Community membership tracking  
-**Holochain Entry Type:** `CommunityMember` (link: Community → Member)  
-**Roles:**
+**Purpose:** Community membership tracking (no roles - see managers table for admin roles)
 
-- `owner` - Community creator, full control
-- `admin` - Can manage members, settings
-- `moderator` - Can moderate content
-- `member` - Regular member
-
-#### **3. community_settings**
+#### **2b. community_communities_managers**
 
 ```sql
-CREATE TABLE territory_{code}.community_settings (
+CREATE TABLE territory_{code}.community_communities_managers (
+    community_id UUID NOT NULL REFERENCES community_communities(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth_users_core(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    assigned_by UUID REFERENCES auth_users_core(id) ON DELETE SET NULL,
+    
+    PRIMARY KEY (community_id, user_id)
+);
+
+CREATE INDEX idx_community_managers_user ON community_communities_managers(user_id);
+```
+
+**Purpose:** Community manager assignments  
+**Note:** Users must also have the `community-manager` badge to be effective managers
+
+#### **3. community_communities_settings**
+
+```sql
+CREATE TABLE territory_{code}.community_communities_settings (
     community_id UUID PRIMARY KEY REFERENCES communities(id) ON DELETE CASCADE,
     
     -- Access Control
@@ -226,7 +228,8 @@ Create a new community (authenticated users only)
 **Actions:**
 
 - Create community
-- Add creator as `owner` in `community_members`
+- Add creator to `community_communities_managers` (requires `community-manager` badge)
+- Add creator to `community_communities_members`
 - Publish `community.created` NATS event
 
 ---

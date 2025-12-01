@@ -258,8 +258,8 @@ Mark invitation as used after successful registration (called by auth-service)
 
 **Actions:**
 
-- Insert into `invitation_uses`
-- Increment `invitation_tokens.uses_count`
+- Insert into `invitation_invitations_uses`
+- Increment `invitation_invitations_tokens.uses_count`
 - If `uses_count >= max_uses`, set `is_active = false`
 - Publish `invitation.used` NATS event
 

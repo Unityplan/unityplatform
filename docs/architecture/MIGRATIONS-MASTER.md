@@ -122,9 +122,9 @@ Denmark Pod (Single Database):
 │ global.username_registry            │
 │ global.email_registry               │
 ├─────────────────────────────────────┤
-│ territory_dk.users          ← auth  │
-│ territory_dk.users_profiles ← user  │
-│ territory_dk.communities    ← comm  │
+│ territory_dk.auth_users_core ← auth │
+│ territory_dk.user_users_profiles ← user │
+│ territory_dk.community_communities ← comm │
 └─────────────────────────────────────┘
      ↑      ↑      ↑      ↑
      │      │      │      │
@@ -588,21 +588,19 @@ nats.subscribe("user.deleted", |event| {
 
 | Service | Tables | Data Type |
 |---------|--------|-----------|
-| **auth-service** | users, refresh_tokens | Authentication |
-| **user-service** | users_profiles, users_profile_links, users_language_proficiency, user_connections, data_exports, account_deletion_requests, file_uploads, activities, audit_log | User data + GDPR |
-| **settings-service** | users_settings, users_notification_settings | User preferences |
-| **invitation-service** | invitation_tokens, invitation_uses | Territory invitations |
-| **notification-service** | notifications | User notifications |
-| **community-service** | communities, community_members, roles, role_assignments | Territory communities |
-| **badge-service** | badge_awards, badge_progress | User achievements |
-| **event-service** | community_events, event_rsvps | Territory events |
+| **auth-service** | auth_users_core, auth_refresh_tokens | Authentication |
+| **user-service** | user_users_profiles, user_users_profile_links, user_users_language_proficiency, user_user_connections, user_data_exports, user_account_deletion_requests, user_file_uploads, user_activities, user_audit_log | User data + GDPR |
+| **settings-service** | settings_users_settings, settings_users_notification_settings | User preferences |
+| **invitation-service** | invitation_invitations_tokens, invitation_invitations_uses | Territory invitations |
+| **notification-service** | notification_notifications | User notifications |
+| **community-service** | community_communities, community_communities_members, community_communities_managers, community_communities_settings, community_communities_badge_requirements | Territory communities |
+| **badge-service** | badge_users_badges, badge_badge_progress | User achievements |
+| **event-service** | event_community_events, event_event_rsvps | Territory events |
 | **course-service** | course_enrollments, course_progress | User course progress |
 | **forum-service** | forum_memberships | User forum participation |
-| **ipfs-service** | file_uploads (shared) | File metadata |
+| **ipfs-service** | ipfs_file_uploads | File metadata |
 
-**Total:** 30 tables (existing in core migration)
-
----
+**Total:** Territory-scoped tables with service prefixes (naming convention: `{service}_{entity}_{data}`)
 
 ---
 

@@ -919,12 +919,13 @@ territory_{id}:
   - territory_settings       -- Language, timezone, localization preferences
   - matrix_server_config     -- Local Matrix homeserver configuration
   - user_activity_feed       -- Aggregated feed of user activities
-  - communities              -- Communities within this territory
-  - community_members        -- User-community memberships with role assignments
+  - community_communities    -- Communities within this territory
+  - community_communities_members -- User-community memberships
+  - community_communities_managers -- Community manager assignments
   - courses                  -- Territory-specific courses (can reference or customize global)
   - course_enrollments       -- User course progress and completion tracking
   - course_categories        -- Territory-specific category assignments
-  - achievements             -- User learning credentials and badge awards within territory
+  - badge_users_badges       -- User learning credentials and badge awards within territory
   - forums                   -- Territory and community forums (Matrix room references)
   - forum_categories         -- Territory-specific forum category assignments
   - forum_topics             -- Forum discussion topics
@@ -932,7 +933,7 @@ territory_{id}:
   - forum_hidden_levels      -- Which forums are hidden at which community/territory levels
   - topic_collaborations     -- Voting, whiteboard, brainstorming session data
   - moderation_actions       -- Warning system logs for Code of Conduct violations
-  - invitations              -- Pending user invitations to territory
+  - invitation_invitations_tokens -- Pending user invitations to territory
   - voting_sessions          -- Democratic voting for content/structure changes
   - unhiding_votes           -- Votes to unhide forums at community/territory level
   - content_visibility       -- Which global courses/forums are shown/hidden
