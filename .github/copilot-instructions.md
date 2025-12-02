@@ -45,11 +45,20 @@ This workspace contains a microservices platform with:
 - Microservices architecture with individual Rust services
 - Docker containerization for all services
 - React frontend built with Vite for fast development
+- **Multi-Pod Architecture**: Territory-based pod deployment
+  - **Pod = Complete Platform** (ALL services deployed together per territory)
+  - **NOT** individual service separation - pods contain the full service stack
+  - Each pod has ONE PostgreSQL database with:
+    - `global` schema (federated/replicated across all pods via NATS/Matrix)
+    - `territory_{code}` schemas (pod-local user data - data sovereignty)
+  - Example: Denmark pod runs all services with `territory_dk`, `territory_no`, `territory_se` schemas
+  - Pods communicate via NATS mesh network for cross-territory operations
 
 ## Development Guidelines
 
 - **Current Stage**: Alpha (0.1.0-alpha.1) - Infrastructure complete, services in development
 - Each microservice should be independently deployable and scalable (scalable only if it makes sense)
+- **Service Boundaries**: Logical separation for independent evolution (even though sharing same DB in pod)
 - Use Docker Compose for local development orchestration
 - Follow Rust best practices and idiomatic patterns
 - Use TypeScript for React components with shadcn and tailwind where possible
@@ -83,11 +92,20 @@ This workspace contains a microservices platform with:
 ## Database Guidelines
 
 - **Migration Strategy**: Service-specific migrations in `services/shared-lib/migrations/`.
-- **Global Tables**: `registry_{resource}` (e.g., `registry_username`).
-- **Territory Tables**: `{service}_{entity}_{data}` (e.g., `auth_users_core`).
+  - **Why shared-lib?** All services in a pod share the same PostgreSQL database
+  - Each pod independently applies migrations to its own database instance
+  - Migrations create both `global` and `territory_{code}` schema tables
+- **Global Tables**: `registry_{resource}` (e.g., `registry_username`, `registry_badge`).
+  - Federated/replicated across all pods via NATS/Matrix
+  - Cross-pod references: which user is in which territory/pod, global badge definitions
+  - Ensures username/email uniqueness across entire platform
+- **Territory Tables**: `{service}_{entity}_{data}` (e.g., `auth_users_core`, `user_users_profiles`).
+  - Pod-local data, stays within territory (data sovereignty principle)
+  - Personal/sensitive data never leaves the territory pod
 - **No Cross-Service FKs (Target)**: Services share the DB but should NOT have foreign keys between services.
   - **Current State (MVP)**: FKs to `auth_users_core` exist for data integrity during development
   - **Future State**: Remove FKs, validate user_id via JWT tokens instead of database constraints
+  - **Reason**: Logical service boundaries for independent evolution, even though physically in same DB
   - **Testing**: Always respect service boundaries - use wiremock to mock HTTP calls, never write to other services' tables
 - **Data Sovereignty**: Personal data MUST stay in territory schemas (`territory_{code}`).
 
