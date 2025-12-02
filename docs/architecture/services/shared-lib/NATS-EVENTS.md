@@ -235,6 +235,87 @@ cross.dk.*.announcement.broadcast    # DK admin → all territories
 **Publishers:** user-service, admin-service  
 **Subscribers:** auth-service (revoke tokens), notification-service
 
+#### `user.deleted` ✅ **IMPLEMENTED**
+
+**Scope:** Global (GDPR compliance, cross-territory deletion)  
+**Implementation:** `shared-lib/src/events/user.rs`
+
+```json
+{
+  "user_id": "123e4567-e89b-12d3-a456-426614174000",
+  "territory": "dk",
+  "deleted_at": "2025-12-02T10:30:00Z"
+}
+```
+
+**Publishers:** auth-service (when user requests account deletion)  
+**Subscribers:** All services, task-scheduler-service (audit logging)
+
+**Deletion Flow:**
+
+1. **Day 0 - User Requests Deletion** (`DELETE /api/v1/users/me`)
+   - auth-service soft-deletes user in `auth_users_core`
+   - Sets `deleted_at` timestamp in `global.registry_username`
+   - Publishes `user.deleted` event to NATS
+   - User immediately cannot login
+
+2. **Day 0 - Services React to Event**
+   - user-service: Soft-deletes profiles, settings
+   - badge-service: Soft-deletes badges, progress
+   - community-service: Soft-deletes memberships, managers
+   - All services set `deleted_at` on their user data
+
+3. **Days 1-29 - Waiting Period (GDPR Right to Erasure)**
+   - Data marked deleted but retained
+   - User cannot access account
+   - Admin can restore if requested within 30 days
+
+4. **Day 30+ - Hard Deletion (Automated)**
+   - task-scheduler-service cron job runs (Sunday 2:00 AM UTC)
+   - Queries `global.registry_username WHERE deleted_at < NOW() - INTERVAL '30 days'`
+   - Permanently deletes from ALL tables in transaction
+   - Removes from global registries
+
+**Event Struct:**
+```rust
+use shared_lib::UserDeletedEvent;
+
+// Publishing (auth-service)
+let event = UserDeletedEvent::new(user_id, territory);
+nats_client.publish(
+    UserDeletedEvent::SUBJECT, // "user.deleted"
+    &serde_json::to_vec(&event)?
+).await?;
+
+// Subscribing (all services)
+let mut sub = nats_client.subscribe(UserDeletedEvent::SUBJECT).await?;
+while let Some(msg) = sub.next().await {
+    let event: UserDeletedEvent = serde_json::from_slice(&msg.payload)?;
+    // Soft-delete user data
+    sqlx::query("UPDATE users SET deleted_at = $1 WHERE user_id = $2")
+        .bind(event.deleted_at)
+        .bind(event.user_id)
+        .execute(pool).await?;
+}
+```
+
+**Hard Deletion Details:**
+- **Trigger:** Cron job in task-scheduler-service
+- **Schedule:** Weekly (Sunday 2:00 AM UTC)
+- **Criteria:** `deleted_at > 30 days ago`
+- **Scope:** All services, all territories
+- **Safety:** Transaction-safe, all-or-nothing deletion
+- **Tables:** 18+ tables across 5 services
+
+**Admin Endpoints:**
+- `GET /api/v1/cleanup/stats` - View pending deletions (dry-run)
+- `POST /api/v1/cleanup/users` - Manual trigger (requires `task-admin` badge)
+
+**Monitoring:**
+- task-scheduler logs all deletion events
+- Statistics tracked: soft_deleted, eligible, deleted, territories
+- Audit trail maintained for compliance
+
 ### Auth Domain Events
 
 #### `auth.login`

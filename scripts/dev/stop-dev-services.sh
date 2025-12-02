@@ -45,6 +45,8 @@ pkill -f "territory-service" || echo "  (not running)"
 
 echo "Stopping utility-service..."
 pkill -f "utility-service" || echo "  (not running)"
+echo "Stopping task-scheduler-service..."
+pkill -f "task-scheduler-service" || echo "  (not running)"
 
 # Stop Docker Infrastructure
 echo "Stopping Docker infrastructure..."

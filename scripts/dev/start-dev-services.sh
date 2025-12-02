@@ -240,6 +240,20 @@ else
     wait_for_service "utility-service" 8014 || exit 1
 fi
 
+if check_port 8015; then
+    echo -e "  ${YELLOW}⚠ task-scheduler-service already running on port 8015${NC}"
+else
+    echo "Starting task-scheduler-service on port 8015..."
+    cd "$WORKSPACE_ROOT/services/task-scheduler-service"
+    set -a
+    source .env
+    set +a
+    cd "$WORKSPACE_ROOT"
+    ./services/target/${BINARY_DIR}/task-scheduler-service > "$WORKSPACE_ROOT/logs/task-scheduler-service.log" 2>&1 &
+    
+    wait_for_service "task-scheduler-service" 8015 || exit 1
+fi
+
 echo ""
 
 # 3. Start Frontend
@@ -270,6 +284,7 @@ echo "🏘️  Community Service:  http://localhost:8006"
 echo "🏆 Badge Service:     http://localhost:8007"
 echo "🌍 Territory Service: http://localhost:8008"
 echo "🛠️  Utility Service:   http://localhost:8014"
+echo "⏰ Task Scheduler:    http://localhost:8015"
 echo "🗄️  PostgreSQL:        localhost:5432"
 echo "📨 NATS:              localhost:4222"
 echo "🗃️  Redis:             localhost:6379"

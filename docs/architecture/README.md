@@ -164,8 +164,9 @@ Detailed implementation documentation for each microservice.
 | Service | Port | Status | Docs |
 |---------|------|--------|------|
 | **utility-service** | 8014 | 🚧 In Development | [README](services/utility-service/README.md) · [API](services/utility-service/API.md) |
+| **task-scheduler-service** | 8015 | ✅ Complete (2/2 endpoints) | [README](services/task-scheduler-service/README.md) · [API](services/task-scheduler-service/API.md) |
 
-**Note:** Infrastructure services are stateless utilities that support other services. They use Redis caching but no database.
+**Note:** Infrastructure services are stateless utilities that support other services. task-scheduler-service uses database for cleanup operations and NATS for event subscriptions.
 
 **Port Allocation:** See [services/port-allocation.md](services/port-allocation.md)
 
