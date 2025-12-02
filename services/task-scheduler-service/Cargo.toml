@@ -58,3 +58,5 @@ anyhow = { workspace = true }
 # API Documentation
 utoipa = { workspace = true }
 utoipa-swagger-ui = { workspace = true }
+tokio-cron-scheduler = "0.15.1"
+futures-util.workspace = true

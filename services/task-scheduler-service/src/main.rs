@@ -1,4 +1,5 @@
 use actix_web::{web, App, HttpServer};
+use futures_util::StreamExt;
 use shared_lib::{
     cors, shutdown_grace_period, shutdown_signal, AppConfig, Database, LoggingMiddleware,
     MetricsCollector, RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware,
@@ -106,6 +107,53 @@ async fn main() -> std::io::Result<()> {
     // Initialize cleanup service
     let cleanup_service = task_scheduler_service_service::services::CleanupService::new(database.pool().clone());
     tracing::info!("✅ Cleanup service initialized");
+
+    // Start cron scheduler for automated cleanup jobs
+    let cleanup_service_arc = std::sync::Arc::new(cleanup_service.clone());
+    let _scheduler = task_scheduler_service_service::services::start_scheduler(cleanup_service_arc)
+        .await
+        .expect("Failed to start scheduler");
+    tracing::info!("✅ Cron scheduler started");
+
+    // Subscribe to NATS user.deleted events (currently just logs, services handle their own soft-delete)
+    let nats_clone = nats_client.clone();
+    let pool_clone = database.pool().clone();
+    tokio::spawn(async move {
+        if let Ok(mut subscription) = nats_clone.subscribe("user.deleted").await {
+            tracing::info!("✅ Subscribed to NATS user.deleted events");
+            
+            loop {
+                match subscription.next().await {
+                    Some(msg) => {
+                        match serde_json::from_slice::<shared_lib::UserDeletedEvent>(&msg.payload) {
+                            Ok(event) => {
+                                tracing::info!(
+                                    user_id = %event.user_id,
+                                    territory = %event.territory,
+                                    deleted_at = %event.deleted_at,
+                                    "📨 Received user.deleted event (hard deletion will occur in 30 days)"
+                                );
+                                // Note: Services handle their own soft-delete logic
+                                // This service only performs hard deletion via cron job
+                            }
+                            Err(e) => {
+                                tracing::error!(
+                                    error = %e,
+                                    "Failed to deserialize user.deleted event"
+                                );
+                            }
+                        }
+                    }
+                    None => {
+                        tracing::warn!("NATS subscription ended, reconnecting...");
+                        break;
+                    }
+                }
+            }
+        } else {
+            tracing::error!("Failed to subscribe to user.deleted events");
+        }
+    });
 
     // Initialize metrics collector
     let metrics_collector =
