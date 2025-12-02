@@ -8,6 +8,7 @@ pub mod middleware;
 pub mod nats;
 pub mod permission;
 pub mod shutdown;
+pub mod validation;
 
 // Re-export commonly used types
 pub use circuit_breaker::{CircuitBreaker, CircuitBreakerError, CircuitState};
@@ -19,6 +20,7 @@ pub use metrics::MetricsCollector;
 pub use nats::NatsClient;
 pub use permission::{PermissionChecker, RequireAnyPermission, RequirePermission};
 pub use shutdown::{shutdown_grace_period, shutdown_signal};
+pub use validation::{validate_user_from_jwt, validate_user_via_registry};
 
 // Re-export middleware
 pub use middleware::{
