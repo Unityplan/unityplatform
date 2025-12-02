@@ -5,6 +5,7 @@ members = [
     "badge-service",
     "invitation-service",
     "community-service",
+    "task-scheduler-service",
     "shared-lib",
     "territory-service",
     "user-service",
