@@ -173,8 +173,13 @@ impl CleanupService {
             .map_err(AppError::Database)?;
 
         // 5. Auth service data (refresh tokens, then core user)
-        Self::delete_from_table(&mut tx, &schema, "auth_refresh_tokens", user_id).await?;
-        Self::delete_from_table(&mut tx, &schema, "auth_users_core", user_id).await?;
+        Self::delete_from_table(&mut tx, &schema, "auth_users_refresh_tokens", user_id).await?;
+        // auth_users_core uses 'id' not 'user_id'
+        sqlx::query(&format!("DELETE FROM {}.auth_users_core WHERE id = $1", schema))
+            .bind(user_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(AppError::Database)?;
 
         // 6. Finally, delete from global registry
         sqlx::query("DELETE FROM global.registry_username WHERE user_id = $1")
