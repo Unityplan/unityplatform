@@ -259,12 +259,23 @@ echo ""
 # 3. Start Frontend
 echo -e "${BLUE}⚛️  Step 3: Starting Frontend (Vite)${NC}"
 
+# Ensure Node/npm from WSL (nvm) are available in this shell
+# This avoids Windows CMD being used for npm scripts (UNC path errors)
+if [ -d "$HOME/.nvm" ]; then
+    export NVM_DIR="$HOME/.nvm"
+    # shellcheck disable=SC1091
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    # Use default LTS if available
+    nvm use default >/dev/null 2>&1 || true
+fi
+
 if check_port 5173; then
     echo -e "  ${YELLOW}⚠ Vite dev server already running on port 5173${NC}"
 else
     echo "Starting Vite dev server on port 5173..."
     cd "$WORKSPACE_ROOT/app"
-    npm run dev > "$WORKSPACE_ROOT/logs/frontend.log" 2>&1 &
+    # Force npm to use bash inside WSL to prevent CMD/UNC path issues
+    NPM_CONFIG_SCRIPT_SHELL=/usr/bin/bash npm run dev > "$WORKSPACE_ROOT/logs/frontend.log" 2>&1 &
     
     wait_for_service "Vite" 5173 || exit 1
 fi

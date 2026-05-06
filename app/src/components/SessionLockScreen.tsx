@@ -34,7 +34,8 @@ export function SessionLockScreen() {
             return;
         }
 
-        if (!user?.email) {
+        // Check for username since that's what unlockSession uses for authentication
+        if (!user?.username) {
             toast.error('User information not available');
             return;
         }
@@ -46,6 +47,8 @@ export function SessionLockScreen() {
             await unlockSession(user.email, password);
             toast.success('Session unlocked successfully');
         } catch (error) {
+            // If we get here, unlockSession didn't redirect (not a 401)
+            // This means wrong password, not expired session
             console.error('Unlock failed:', error);
             toast.error('Incorrect password. Please try again.');
             setPassword('');
@@ -76,7 +79,7 @@ export function SessionLockScreen() {
                         Your session has been locked due to inactivity.
                         {user && (
                             <span className="mt-2 block text-sm">
-                                Signed in as <span className="font-medium">{user.email}</span>
+                                Signed in as <span className="font-medium">{user.email || user.username}</span>
                             </span>
                         )}
                     </CardDescription>

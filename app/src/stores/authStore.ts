@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthStore>()(
             isAuthenticated: true,
             error: null,
           });
-          
+
           // Step 2: Load user profile from user-service
           // loadUser() handles its own loading state
           await get().loadUser();
@@ -76,7 +76,7 @@ export const useAuthStore = create<AuthStore>()(
             isAuthenticated: true,
             error: null,
           });
-          
+
           // Step 2: Load user profile from user-service
           // loadUser() handles its own loading state
           await get().loadUser();
@@ -122,15 +122,15 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error: unknown) {
           // Only clear auth if it's a 401/403 error (invalid token)
           // or if it's a specific "invalid_grant" error
-          const isAuthError = 
-            (typeof error === 'object' && error !== null && 'response' in error && 
+          const isAuthError =
+            (typeof error === 'object' && error !== null && 'response' in error &&
               ((error as any).response?.status === 401 || (error as any).response?.status === 403)) ||
             getErrorMessage(error, '').includes('invalid_grant');
 
           if (isAuthError) {
             get().clearAuth();
           }
-          
+
           const errorMessage = getErrorMessage(error, 'Token refresh failed');
           set({ error: errorMessage, isLoading: false });
           throw error;
@@ -152,7 +152,7 @@ export const useAuthStore = create<AuthStore>()(
 
           // Fetch user profile from user-service
           const profile = await getFullProfile();
-          
+
           // Map UserProfile to User type for auth store
           const user: User = {
             id: profile.id,
@@ -164,7 +164,7 @@ export const useAuthStore = create<AuthStore>()(
             createdAt: profile.createdAt || new Date().toISOString(),
             badges, // Include badges from JWT claims
           };
-          
+
           set({
             user,
             isLoading: false,
@@ -175,7 +175,7 @@ export const useAuthStore = create<AuthStore>()(
           // The user may still have a valid token - let them continue
           // Auth will be cleared if token refresh fails (401/403 from auth-service)
           console.error('Load user profile failed:', error);
-          
+
           // Try to create a minimal user from JWT claims
           const claims = parseJwt(accessToken);
           if (claims?.sub) {
@@ -254,7 +254,7 @@ export const useAuthStore = create<AuthStore>()(
 
           // Verify credentials by attempting login
           const response = await authApi.login(credentials);
-          
+
           // Update tokens and unlock session
           set({
             accessToken: response.accessToken,
@@ -264,6 +264,21 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
           });
         } catch (error: unknown) {
+          // If login fails with 401 (invalid credentials or expired session),
+          // clear auth and let user login fresh
+          const is401 = typeof error === 'object' && error !== null &&
+            'response' in error && (error as any).response?.status === 401;
+
+          if (is401) {
+            // Session truly expired or credentials wrong - clear and redirect
+            get().clearAuth();
+            // Redirect to login page
+            if (typeof window !== 'undefined') {
+              window.location.href = '/login';
+            }
+            return;
+          }
+
           const errorMessage = getErrorMessage(error, 'Unlock failed');
           set({ error: errorMessage, isLoading: false });
           throw error;

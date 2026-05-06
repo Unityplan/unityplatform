@@ -45,12 +45,12 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const { accessToken, isLocked } = useAuthStore.getState();
-    
+
     // Block requests if session is locked (except auth endpoints)
     if (isLocked && !config.url?.includes('/auth/')) {
       return Promise.reject(new Error('Session is locked. Please unlock to continue.'));
     }
-    
+
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -93,8 +93,12 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // If error is 401 Unauthorized and we haven't retried yet
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    // Skip token refresh for login/register endpoints - these use credentials, not tokens
+    const isCredentialRequest = originalRequest?.url?.includes('/auth/login') ||
+      originalRequest?.url?.includes('/auth/register');
+
+    // If error is 401 Unauthorized and we haven't retried yet (and it's not a credential request)
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isCredentialRequest) {
       originalRequest._retry = true;
 
       // If already refreshing, wait for the new token
@@ -114,7 +118,7 @@ apiClient.interceptors.response.use(
       try {
         // Attempt to refresh the access token
         await useAuthStore.getState().refreshAccessToken();
-        
+
         const { accessToken } = useAuthStore.getState();
         if (!accessToken) {
           throw new Error('No access token after refresh');
@@ -133,18 +137,18 @@ apiClient.interceptors.response.use(
         // Token refresh failed
         isRefreshing = false;
         refreshSubscribers = [];
-        
+
         // Only clear auth and redirect if this was an auth-service call that failed
         // This prevents logging out users just because user-service is down
         if (isAuthServiceRequest(originalRequest?.url)) {
           useAuthStore.getState().clearAuth();
-          
+
           // Only redirect if not already on login/register page
           if (typeof window !== 'undefined') {
             const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
             const currentPath = window.location.pathname;
             const isPublicPath = publicPaths.some(path => currentPath.includes(path));
-            
+
             if (!isPublicPath) {
               // Store current path for post-login redirect
               sessionStorage.setItem('redirectAfterLogin', currentPath);
@@ -152,7 +156,7 @@ apiClient.interceptors.response.use(
             }
           }
         }
-        
+
         return Promise.reject(refreshError);
       }
     }
